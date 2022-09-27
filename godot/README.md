@@ -1,4 +1,6 @@
 # godot.rs
+# godot的服务端和数据交互p2p
+
 
 - cargo build --release
 - sudo chmod -R 777 .
