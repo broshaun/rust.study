@@ -10,7 +10,7 @@
     - sudo n stable
 
     3、重启终端后配合国内源
-    - npm install -g cnpm --registry=https://registry.npm.taobao.org
+    - sudo npm install -g cnpm --registry=https://registry.npm.taobao.org
 
 ## 安装 TAURI CLI
     sudo curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
