@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { useLocalStorageState, useLatest } from 'ahooks'; // ✅ 只加 useLatest
-import { fetch } from '@tauri-apps/plugin-http';
+// import { fetch } from '@tauri-apps/plugin-http';
 
 function replacer(key, value) {
   if (value instanceof Map) return Object.fromEntries(value)
@@ -10,7 +10,8 @@ function replacer(key, value) {
 }
 
 
-const apiBase = 'http://localhost:5015'
+// const apiBase = 'http://localhost:5015'
+const apiBase = ''
 
 export function useHttpClient(baseUrl) {
   const [loginToken] = useLocalStorageState('zustand:login_token');
