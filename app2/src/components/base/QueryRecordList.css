@@ -1,0 +1,223 @@
+/* 🔴 核心容器 - 严格左右50%分半布局 无间隙 */
+.record-list-detail-container {
+  width: 100%;
+  height: calc(100% - 10px);
+  display: flex;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+/* 左侧 50% 列表容器 */
+.record-list-wrap {
+  width: 50%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* 右侧 50% 详情容器 */
+.record-detail-wrap {
+  width: 50%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* 列表样式 - 原有样式不变 */
+.query-record-list {
+  width: 100%;
+  margin: 0;
+	border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  background: #ffffff;
+  box-sizing: border-box;
+  height: 100%;
+}
+.record-empty-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.record-empty {
+  text-align: center;
+  padding: 1rem;
+  color: #6a737d;
+  font-size: 11px;
+  background: #fafbfc;
+  width: 100%;
+  box-sizing: border-box;
+}
+.record-item {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #f1f3f5;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+  box-sizing: border-box;
+}
+.record-item:last-child {
+  border-bottom: none;
+}
+.record-item.active {
+  background-color: #f8f9fa;
+  border-left: 2px solid #2c3e50;
+  padding-left: calc(1rem - 2px);
+}
+.record-item:hover:not(.active) {
+  background-color: #fafbfc;
+}
+.record-basic {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  width: 100%;
+}
+.query-time {
+  color: #24292e;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.record-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+.data-count {
+  color: #444d56;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+/* ✅ 删除按钮 固定样式 永不悬浮变色 永不改变 */
+.delete-btn {
+  font-size: 10px;
+  color: #ff4d4f;
+  cursor: pointer;
+  padding: 2px 8px;
+  line-height: 1.4;
+  border-radius: 4px;
+  background-color: #fff5f5;
+  border: 1px solid #ffe3e3;
+  flex-shrink: 0;
+}
+
+/* ✅ 右侧详情区样式 - 核心新增标题布局+下载按钮样式 */
+.detail-inner {
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+/* 标题+下载按钮 父容器 - 左右布局，下载按钮靠右 */
+.detail-title-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f3f5;
+}
+/* 修改后的标题：查询条件参数 */
+.detail-title {
+  font-size: 12px;
+  color: #24292e;
+  font-weight: 500;
+  margin: 0;
+}
+/* ✅ 新增：下载按钮样式 - 和删除按钮风格统一，无悬浮变色，固定样式 */
+.download-btn {
+  font-size: 10px;
+  color: #1890ff;
+  cursor: pointer;
+  padding: 2px 8px;
+  line-height: 1.4;
+  border-radius: 4px;
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+  flex-shrink: 0;
+}
+/* 未选中记录时，下载按钮置灰不可点击 */
+.download-btn[disabled] {
+  color: #c9c9c9;
+  background-color: #f5f5f5;
+  border: 1px solid #e1e1e1;
+  cursor: not-allowed;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.detail-label {
+  color: #6a737d;
+  font-weight: 500;
+  width: 80px;
+  text-align: right;
+  padding-right: 0.8rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.detail-content {
+  flex: 1;
+  color: #24292e;
+}
+/* 参数最多展示5条，样式不变 */
+.param-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  font-size: 10px;
+}
+.param-key {
+  color: #6a737d;
+  width: 100px;
+  text-align: right;
+  padding-right: 0.8rem;
+  flex-shrink: 0;
+}
+.param-separator {
+  color: #e1e4e8;
+  margin: 0 0.5rem;
+  flex-shrink: 0;
+}
+.param-value {
+  color: #24292e;
+  flex: 1;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .record-list-detail-container {
+    flex-direction: column;
+  }
+  .record-list-wrap, .record-detail-wrap {
+    width: 100%;
+    height: 50%;
+  }
+  .record-item {
+    padding: 0.4rem 0.8rem;
+  }
+  .record-item.active {
+    padding-left: calc(0.8rem - 2px);
+  }
+  .delete-btn, .download-btn {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+}

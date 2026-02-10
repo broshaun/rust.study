@@ -1,0 +1,50 @@
+/* Message Container */
+.message {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Increase space between icon and text */
+  padding: 20px;
+  border-radius: 12px;
+  background-color: #f8f9fa; /* Light gray background */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  max-width: 600px; /* Optional: Limit message width */
+  margin: 20px auto; /* Center message on the page */
+  transition: transform 0.3s ease; /* Smooth transition for hover effect */
+}
+
+
+
+/* Spinning Icon */
+.icon-spin i {
+  font-size: 24px; /* Icon size */
+  color: white; /* Icon color */
+  animation: spin 2s linear infinite; /* Smooth spinning animation */
+}
+
+/* Message Content */
+.message-content {
+  flex: 1; /* Take up remaining space */
+}
+
+.message-header {
+  margin: 0 0 8px 0;
+  font-size: 18px; /* Larger header font */
+  font-weight: 700; /* Bold header */
+  color: #333; /* Darker text for header */
+}
+
+.message-text {
+  margin: 0;
+  font-size: 14px; /* Smaller text for content */
+  color: #666; /* Gray text for content */
+}
+
+/* Spinning Animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

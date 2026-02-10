@@ -1,0 +1,82 @@
+/* ========== 单选组件专属样式 ========== */
+.single-radio-container {
+  width: 100%;
+  max-width: 600px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 12px 0;
+}
+
+/* 标题样式 */
+.single-radio-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* 单个Radio项 */
+.radio-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1f2937;
+  user-select: none;
+}
+
+/* 禁用状态 */
+.radio-item.disabled {
+  cursor: not-allowed;
+  color: #9ca3af;
+}
+
+/* 原生Radio样式 */
+.native-radio {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #2563eb; /* 选中颜色 */
+  border-radius: 50%; /* 圆形Radio */
+}
+
+/* 禁用状态的Radio */
+.radio-item.disabled .native-radio {
+  cursor: not-allowed;
+  accent-color: #d1d5db;
+}
+
+/* Radio标签 */
+.radio-label {
+  flex: 1;
+}
+
+/* 横向布局 */
+.radio-options-list.horizontal-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 20px; /* 水平20px，垂直16px */
+  align-items: center;
+}
+.radio-item.horizontal-item {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+/* 纵向布局 */
+.radio-options-list.vertical-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 8px;
+}
+.radio-options-list.vertical-layout .radio-item {
+  margin-bottom: 0;
+}
+
+/* 横向Radio间距微调 */
+.radio-options-list.horizontal-layout .native-radio {
+  margin-right: 6px;
+}

@@ -1,12 +1,18 @@
-import './App.css';
+import { HashRouter, Routes, Route } from "react-router-dom";
+import Home2 from "pages/home";
+import { RsUser } from "pages/user";
+import { RsDisplay } from "pages/display";
+
 
 const App = () => {
-  return (
-    <div className="content">
-      <h1>Rsbuild with React</h1>
-      <p>Start building amazing things with Rsbuild.</p>
-    </div>
-  );
-};
+  return <HashRouter>
+    <Routes>
+      <Route path="" element={<Home2 />} />
+      {RsUser}
+      {RsDisplay}
+
+    </Routes>
+  </HashRouter>
+}
 
 export default App;

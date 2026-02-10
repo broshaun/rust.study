@@ -1,0 +1,142 @@
+/* 全局通用：统一盒模型，避免重复书写 box-sizing */
+:global(*) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 桌面整体容器：全屏铺满+浅灰背景，精简冗余属性 */
+.desktop-container {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  padding: 40px 20px;
+  background-color: #f5f5f5;
+  position: relative;
+}
+
+/* 标题区域：居中+自适应间距，精简冗余宽度 */
+.desktop-title-section {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+/* 主标题：柔化样式+自适应字号，合并重复文字优化属性 */
+.desktop-main-title {
+  color: #767676;
+  font-size: clamp(1.4rem, 5vw, 1.8rem);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(255,255,255,0.6), 0 1px 2px rgba(0,0,0,0.05);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 分隔线：渐变+自适应宽度，精简冗余边框配置 */
+.desktop-divider {
+  height: 3px;
+  width: 400px;
+  max-width: 90vw;
+  margin: 0 auto;
+  background: linear-gradient(to right, transparent, #d1d1d1 20%, #d1d1d1 80%, transparent);
+  border: none;
+}
+
+/* 应用卡片：自适应宽度+圆角阴影，精简内边距冗余配置 */
+.desktop-apps-wrapper {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  background-color: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* 图标网格：flex布局+自适应间距，精简冗余内边距 */
+.desktop-icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 35px;
+  padding: 10px 0;
+}
+
+/* 单个图标项：垂直布局+手型光标，精简冗余盒模型配置 */
+.desktop-icon-item {
+  width: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* 图标容器：圆角阴影+居中对齐，合并过渡动画属性 */
+.desktop-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  background-color: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+/* 图标悬浮：强化阴影+上移动画，精简冗余阴影配置 */
+.desktop-icon:hover {
+  box-shadow: 0 12px 25px rgba(0,0,0,0.18), inset 0 1px 2px rgba(0,0,0,0.08);
+  transform: translateY(-4px);
+}
+
+/* 图标标签：文字省略+居中对齐，合并重复文字样式 */
+.desktop-icon-label {
+  color: #34495e;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+  width: 100%;
+}
+
+/* 空数据提示：居中显示+统一文字样式，精简冗余高度配置 */
+.desktop-empty {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #34495e;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+}
+
+/* 移动端媒体查询：精简冗余配置，保留核心自适应效果 */
+@media (max-width: 768px) {
+  .desktop-container {
+    padding: 20px 10px;
+  }
+
+  .desktop-title-section {
+    margin-bottom: 20px;
+  }
+
+  .desktop-icon-grid {
+    gap: 25px;
+  }
+
+  .desktop-icon-item {
+    width: 90px;
+  }
+
+  .desktop-icon {
+    width: 70px;
+    height: 70px;
+  }
+}
