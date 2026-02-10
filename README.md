@@ -1,4 +1,4 @@
-# 项目搭建
+# Tauri
 
 ## 使用Rsbuild框架创建项目
 - cnpm create rsbuild@latest
