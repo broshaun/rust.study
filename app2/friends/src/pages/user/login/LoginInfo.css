@@ -1,0 +1,73 @@
+.login-info-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.login-info-segment {
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  background-color: #fff;
+  border: 1px solid #eee;
+}
+
+.login-info-card {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.login-info-card-content {
+  padding: 16px 20px;
+}
+
+.login-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.login-info-list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.login-info-list-item:last-child {
+  border-bottom: none;
+}
+
+.login-info-list-icon {
+  font-size: 20px;
+  width: 36px;
+  text-align: center;
+  margin-right: 14px;
+  color: #666;
+}
+
+.login-info-list-content {
+  flex: 1;
+}
+
+.login-info-list-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.login-info-list-description {
+  font-size: 14px;
+  color: #666;
+  word-break: break-word;
+}
+
+.login-info-empty {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+}

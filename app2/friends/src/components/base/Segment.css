@@ -1,0 +1,48 @@
+/* 基础 Segment 样式（复刻 semantic-ui 核心样式） */
+.custom-segment {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 0.28571429rem; /* 匹配 semantic-ui 圆角 */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* 默认内边距（匹配 semantic-ui 的 padded 属性） */
+.custom-segment-padded {
+  padding: 1.5em;
+}
+
+/* 紧凑模式（减小内边距） */
+.custom-segment-compact {
+  padding: 0.5em 1em;
+}
+
+/* 凸起样式（增强阴影） */
+.custom-segment-raised {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+/* 行内显示 */
+.custom-segment-inline {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 悬浮交互效果（复刻 semantic-ui） */
+.custom-segment:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 兼容 semantic-ui 原有类名（无缝替换） */
+.custom-segment.inline {
+  display: inline-block;
+}
+.custom-segment.compact {
+  padding: 0.5em 1em;
+}
+.custom-segment.raised {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

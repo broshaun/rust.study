@@ -1,0 +1,105 @@
+/* 核心容器：适配label+左侧icon */
+.simple-select-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 350px;
+  height: 40px;
+  box-sizing: border-box;
+  border: 1px solid rgba(34,36,38,.15);
+  border-radius: 0.35rem;
+  background: #ffffff;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* 带标签的容器：左内边距适配label宽度 */
+.simple-select-container.labeled {
+  padding-left: var(--label-width, 0);
+}
+
+/* 带左侧图标的容器：调整内边距 */
+.simple-select-container.icon.left {
+  padding-left: calc(var(--label-width, 0) + 3em);
+}
+
+/* 标签样式：绝对定位+背景填充 */
+.simple-select-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  padding: 0 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  border-right: 1px solid rgba(34,36,38,.15);
+  color: #666666;
+  font-size: 16px;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* 左侧图标样式：绝对定位+背景填充 */
+.simple-select-icon {
+  position: absolute;
+  left: var(--label-width, 0);
+  top: 0;
+  width: 3em;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  border-right: 1px solid rgba(34,36,38,.15);
+  color: rgba(0,0,0,.6);
+  z-index: 1;
+}
+
+/* 原生select样式：填充容器+隐藏原生样式 */
+.native-select {
+  width: 100%;
+  height: 100%;
+  padding: 0 1.2em;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  color: #666666;
+  /* 隐藏原生下拉箭头，统一样式 */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  /* 自定义下拉箭头 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12L6 8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1em center;
+  background-size: 12px;
+  cursor: pointer;
+}
+
+/* 聚焦态 */
+.native-select:focus {
+  border-color: #85b7d9;
+  box-shadow: 0 0 0 2px rgba(133, 183, 217, 0.2);
+}
+
+/* 禁用选项样式 */
+.native-select option:disabled {
+  color: #999;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .simple-select-container {
+    width: 100%;
+    height: 36px;
+  }
+  .simple-select-label, .native-select {
+    font-size: 14px;
+  }
+  .simple-select-icon {
+    width: 2.5em;
+  }
+}
