@@ -19,3 +19,4 @@ export * from './AutoHeightTextarea';
 export * from './TrueWaterfall';
 export * from './MenuMobile';
 export * from './Container';
+export * from './ChatBox';
