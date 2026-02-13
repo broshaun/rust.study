@@ -6,7 +6,6 @@ import { Desktop } from 'components';
 export const Home2 = () => {
     const navigate = useNavigate();
     const desktopData = [
-        // { label: '超管员', iconName: 'user-secret2', onClick: () => { navigate('/super') } },
         { label: '用户认证', iconName: 'user-tie', onClick: () => { navigate('/user') } },
         { label: '交友互动', iconName: 'heartbeat', onClick: () => { navigate('/display') } },
         { label: '即时聊天', iconName: 'chat-bubble-left-right', onClick: () => { navigate('/chat') } },

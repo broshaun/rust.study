@@ -1,0 +1,107 @@
+/* 好友列表容器 */
+.friendListContainer {
+    width: 240px;
+    height: 100%;
+    background: #f0f2f5;
+    border-right: 1px solid #e5e6eb;
+    box-sizing: border-box;
+}
+
+/* QQ风格列表标题 */
+.friendListHeader {
+    height: 38px;
+    line-height: 38px;
+    padding: 0 15px;
+    background: #f7f9fa;
+    border-bottom: 1px solid #e5e6eb;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* 好友列表 */
+.friendList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    height: calc(100% - 38px);
+    overflow-y: auto; /* 好友过多时滚动 */
+}
+
+/* QQ风格滚动条 */
+.friendList::-webkit-scrollbar {
+    width: 6px;
+}
+.friendList::-webkit-scrollbar-track {
+    background: transparent;
+}
+.friendList::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+/* 好友项样式（QQ风格） */
+.friendItem {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin: 0;
+    border-bottom: 1px solid #f0f2f5;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+/* 鼠标悬浮效果（QQ经典） */
+.friendItem:hover {
+    background-color: #e5efff;
+}
+
+/* 好友头像（QQ风格圆形） */
+.friendAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #409eff;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+/* 好友信息容器 */
+.friendInfo {
+    flex: 1;
+    overflow: hidden;
+}
+
+/* 好友名称 */
+.friendName {
+    margin: 0;
+    font-size: 15px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 好友辅助信息 */
+.friendSubInfo {
+    margin: 2px 0 0 0;
+    font-size: 12px;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 在线状态（QQ绿色圆点） */
+.onlineStatus {
+    color: #00b500;
+    font-size: 12px;
+    margin-left: 8px;
+}

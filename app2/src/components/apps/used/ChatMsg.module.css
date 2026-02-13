@@ -1,0 +1,276 @@
+/* ChatMsg.module.css */
+
+/* 全屏居中容器 */
+.center {
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #f3f4f6;
+}
+
+/* 固定尺寸聊天框 */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+  min-height: 0;
+}
+
+/* Head：左图标 + 居中标题 + 右占位 */
+.head {
+  flex: 0 0 56px;
+  height: 56px;
+
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+
+  padding: 0 8px;
+
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+
+  overflow: hidden;
+}
+
+.headBtn {
+  width: 44px;
+  height: 44px;
+  margin-left: 4px;
+
+  border: none;
+  background: transparent;
+  color: #111827;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  padding: 0;
+}
+
+.headBtnHidden {
+  visibility: hidden;
+}
+
+.headTitle {
+  justify-self: center;
+
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  font-weight: 600;
+  color: #111827;
+}
+
+.headRightPlaceholder {
+  width: 56px;
+  height: 1px;
+}
+
+/* 中部：唯一滚动容器（✅可滚动但滚动条不可见） */
+.message {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  padding: 16px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  /* ✅ 隐藏滚动条（最稳） */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/old Edge */
+
+  position: relative;
+}
+
+.message::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+.message::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.message::-webkit-scrollbar-thumb {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* （极端情况下：系统强制显示滚动条，可启用遮罩；默认开启） */
+.message::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 14px;
+  height: 100%;
+  background: #fff;
+  pointer-events: none;
+}
+
+.bottomAnchor {
+  height: 1px;
+}
+
+/* ====== 聊天气泡（你 JSX 用到的类，我补齐） ====== */
+.chatRow {
+  display: flex;
+  align-items: flex-start;
+  max-width: 80%;
+}
+
+.selfRow {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.otherRow {
+  align-self: flex-start;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+
+  background: #e5e7eb;
+  color: #555;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 12px;
+  flex-shrink: 0;
+
+  margin: 0 8px;
+}
+
+.bubbleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bubble {
+  padding: 8px 12px;
+  border-radius: 12px;
+
+  font-size: 14px;
+  line-height: 1.45;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.selfBubble {
+  background: #3b82f6;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.otherBubble {
+  background: #f3f4f6;
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+
+.time {
+  font-size: 10px;
+  opacity: 0.6;
+  padding: 0 2px;
+}
+
+/* 底部冻结 */
+.send {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+
+  overflow: hidden;
+}
+
+/* 输入框：可换行，不能拖拽 */
+.input {
+  flex: 1;
+
+  height: 40px;
+  min-height: 40px;
+
+  padding: 8px 12px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+
+  outline: none;
+
+  font-size: 14px;
+  line-height: 20px;
+
+  resize: none;
+  overflow-y: hidden; /* JS 会按需改成 auto */
+  overflow-x: hidden;
+
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #3b82f6;
+}
+
+/* 发送按钮：无 hover 视觉变化 */
+.btn {
+  padding: 8px 16px;
+
+  background: #3b82f6;
+  color: #fff;
+
+  border: none;
+  border-radius: 20px;
+
+  cursor: pointer;
+  transition: none;
+}
+
+.btn:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btn:active {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btn:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}

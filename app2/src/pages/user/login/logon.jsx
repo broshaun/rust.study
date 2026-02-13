@@ -22,7 +22,7 @@ export function LogOn() {
         } else if (password === "") {
             msgFn('error', "请输入密码")
         } else {
-            http.requestBodyJson('POST', { 'phone': phone, 'pass_word': password }).then((results) => {
+            http.requestBodyJson('POST', { 'email': phone, 'pass_word': password }).then((results) => {
                 console.log('results', results)
                 if (results.code === 200) {
                     setToken(results.data?.login_token)

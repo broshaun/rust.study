@@ -42,7 +42,7 @@ const handleMenuClick = (state, action) => {
 
 
 export default function Login() {
-    const { http } = useHttpClient('/api/friend/user/login/')
+    const { http } = useHttpClient('/api/chat/login/')
     const navigate = useNavigate();
     const location = useLocation();
     const { msg, msgFn } = useMsg();
