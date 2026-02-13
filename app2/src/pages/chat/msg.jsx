@@ -72,7 +72,7 @@ export function Msg() {
 
     return <React.Fragment>
         <ChatMsg width={700} height={640}>
-            <ChatMsg.Head title={apiData?.remark} leftIcon='left-chevron' onClick={() => window.close()} />
+            {/* <ChatMsg.Head title={apiData?.remark} leftIcon='left-chevron' onClick={() => window.close()} /> */}
             <ChatMsg.Message>{msgs}</ChatMsg.Message>
             <ChatMsg.Send onSend={(newMsg) => { fnSend(newMsg) }} />
         </ChatMsg>

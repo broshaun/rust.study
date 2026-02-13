@@ -1,5 +1,8 @@
 # Tauri
 
+- cargo install create-tauri-app --locked
+- cargo create-tauri-app
+
 ## 使用Rsbuild框架创建项目
 - cnpm create rsbuild@latest
 - cnpm install react-router-dom@7.6.x

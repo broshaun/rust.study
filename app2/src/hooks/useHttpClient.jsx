@@ -12,6 +12,7 @@ function replacer(key, value) {
 // const apiBase = 'http://localhost:5015'
 
 const apiBase = ''
+console.log('window.__TAURI__',window.__TAURI__);
 
 
 export function useHttpClient(baseUrl) {
