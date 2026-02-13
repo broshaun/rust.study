@@ -12,23 +12,22 @@ export const List = () => {
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/')
 
-    const { loading } = useRequest(
-        () => {
-            http.requestBodyJson('POST', { "skip": 0, "limit": 10 }).then((results) => {
-                console.log('results',results)
-                if (!results) return;
-                const { code, message, data } = results
-                code === 200 && startTransition(() => {
-                    setApiData(data)
-                })
+    const { loading } = useRequest(() => {
+        http.requestBodyJson('POST', { "skip": 0, "limit": 10 }).then((results) => {
+            console.log('results', results)
+            if (!results) return;
+            const { code, message, data } = results
+            code === 200 && startTransition(() => {
+                setApiData(data)
             })
+        })
 
-        }, { refreshDeps: [], }
-    )
+    }, { refreshDeps: [], })
+
     return <Suspense fallback={<div>加载中...</div>}>
         {apiData &&
             <Container verticalScroll={true} horizontalScroll={true}>
-                <FriendList friendsData={apiData?.detail} onSelectFriend={(select) => { window.open(`/#/msg/?id=${select?.friend_id}`, "_blank") }} />
+                <FriendList friendsData={apiData?.detail} onSelectFriend={(select) => { window.open(`/#/msg/?id=${select?.id}`, "_blank") }} />
             </Container>
         }
     </Suspense>
