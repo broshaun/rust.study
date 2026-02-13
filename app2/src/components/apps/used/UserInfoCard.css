@@ -1,0 +1,98 @@
+.info-card {
+  background-color: #ffffff;
+  width: 350px;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ebf0;
+  transition: box-shadow 0.3s ease;
+  position: relative; /* 为按钮定位提供容器 */
+}
+
+.info-card.clickable {
+  transition: all 0.2s ease;
+}
+
+.info-card.clickable:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  border-color: #d0e0f0;
+}
+
+.info-card.clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.info-card:not(.clickable) {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.info-label {
+  width: 80px;
+  font-size: 14px;
+  color: #667085;
+  font-weight: 500;
+}
+
+.info-value {
+  flex: 1;
+  font-size: 14px;
+  color: #1f2937;
+  word-break: break-all; /* 防止长ID超出容器 */
+}
+
+/* 新增：添加好友按钮样式 */
+.add-friend-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: #4096ff;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.add-friend-btn:hover {
+  background-color: #3388ee;
+  box-shadow: 0 2px 8px rgba(64, 150, 255, 0.3);
+}
+
+.add-friend-btn:active {
+  background-color: #2677dd;
+}
+
+/* 加载状态按钮 */
+.add-friend-btn.loading {
+  background-color: #8cb8ff;
+  cursor: not-allowed;
+}
+
+/* 禁用状态按钮 */
+.add-friend-btn.disabled {
+  background-color: #cccccc;
+  color: #999999;
+  cursor: not-allowed;
+  box-shadow: none;
+}

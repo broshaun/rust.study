@@ -15,9 +15,14 @@ export function Chat() {
       onClick: () => { window.open("/#/msg/", "_blank"); setTitle('展示栏') }
     },
     {
-      key: 'image', display: true,
+      key: 'users', display: true,
       icon: { name: 'user-group-oline', label: '群聊' },
-      onClick: () => { navigate('/chat/group/'); setTitle('群聊') }
+      // onClick: () => { navigate('/chat/group/'); setTitle('群聊') }
+    },
+      {
+      key: 'find', display: true,
+      icon: { name: 'magnifying-glass-circle', label: '查找' },
+      onClick: () => { navigate('/chat/find/'); setTitle('查找') }
     },
   ];
   const { winSize } = useWinWidth()
