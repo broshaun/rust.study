@@ -1,6 +1,5 @@
 import { useMemo, useCallback } from 'react'
 import { useLocalStorageState, useLatest } from 'ahooks'; // ✅ 只加 useLatest
-import { isTauri } from "@tauri-apps/api/core";
 
 function replacer(key, value) {
   if (value instanceof Map) return Object.fromEntries(value)
@@ -9,20 +8,10 @@ function replacer(key, value) {
   return value
 }
 
-let apiBase;
-let fnFetch;
+import { fetch } from '@tauri-apps/plugin-http';
+const apiBase = 'http://localhost:5015'
 
-if (isTauri()) {
-  import('@tauri-apps/plugin-http').then(({ fetch }) => {
-    fnFetch = fetch;
-    apiBase = 'http://localhost:5015';
-  });
-} else {
-  fnFetch = window.fetch;
-  apiBase = ''
-}
-
-
+// const apiBase = ''
 
 
 
@@ -37,7 +26,7 @@ export function useHttpClient(baseUrl) {
 
   const requestBodyJson = useCallback(
     async (method, payload = {}) => {
-      const response = await fnFetch(`${apiBase}${baseUrl}`, {
+      const response = await fetch(`${apiBase}${baseUrl}`, {
         method: method.toUpperCase(),
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +42,7 @@ export function useHttpClient(baseUrl) {
   const requestParams = useCallback(
     async (method, payload = {}) => {
       const url_params = new URLSearchParams(payload).toString()
-      const response = await fnFetch(`${apiBase}${baseUrl}?${url_params}`, {
+      const response = await fetch(`${apiBase}${baseUrl}?${url_params}`, {
         method: method.toUpperCase(),
         headers: getAuthHeaders(), // ✅ 每次请求取最新 token
       })
@@ -66,7 +55,7 @@ export function useHttpClient(baseUrl) {
     async (file, method = 'PUT') => {
       const formData = new FormData()
       formData.append('file', file)
-      const response = await fnFetch(`${apiBase}${baseUrl}`, {
+      const response = await fetch(`${apiBase}${baseUrl}`, {
         method,
         headers: getAuthHeaders(), // ✅ 每次请求取最新 token
         body: formData,
