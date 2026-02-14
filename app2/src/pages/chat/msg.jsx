@@ -16,25 +16,18 @@ const nowStr = () => {
 export function Msg() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [apiData, setApiData] = useState([]);
-    const params = new URLSearchParams(location.search);
+    const [apiData, setApiData] = useState(location.state);
+    
 
 
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/msg/private/')
-    const [msgs, setMsgs] = useLocalStorageState(params.get('id'), { defaultValue: '' })
-    // const [msgs, setMsgs] = useState([
-    //     // { from: "698d51f3d63d2413753b8bdd", msg: "来自对方的消息。。。", timestamp: "2026-02-12 16:15:22" },
-    //     // { from: "698d51f3d63d2413753b8bdd", msg: "来自对方的消息。。。", timestamp: "2026-02-12 16:15:22" },
-    //     // { from: "698d51f3d63d2413753b8bdd", msg: "来自对方的消息。。。", timestamp: "2026-02-12 16:15:22" },
-    //     // { to: "698d51f3d63d2413753b8bdd", msg: "收到～", timestamp: "2026-02-12 16:15:22" },
-    //     // { to: "698d51f3d63d2413753b8bdd", msg: "继续发", timestamp: "2026-02-12 16:15:22" },
-    //     // { to: "698d51f3d63d2413753b8bdd", msg: "OK", timestamp: "2026-02-12 16:15:22" },
-    // ])
+    const [msgs, setMsgs] = useLocalStorageState(apiData?.id, { defaultValue: [] })
+
     const { http: http2 } = useHttpClient('/api/chat/friend/')
     console.log('http2', http2)
     const { loading } = useRequest(() => {
-        http2.requestParams('GET', { id: params.get('id') }).then((results) => {
+        http2.requestParams('GET', { id: apiData?.id }).then((results) => {
             if (!results) return;
             const { code, message, data } = results
             code === 200 && startTransition(() => {
@@ -50,7 +43,7 @@ export function Msg() {
                 if (!results) return;
                 const { code, message, data } = results
                 if (code === 200) {
-                    setMsgs(p => [...p, { to: params.get('id'), msg: msgText, timestamp: nowStr() }])
+                    setMsgs(p => [...p, { to: apiData?.id, msg: msgText, timestamp: nowStr() }])
                     console.log('发送成功')
                 }
             })
@@ -72,7 +65,7 @@ export function Msg() {
 
     return <React.Fragment>
         <ChatMsg width={700} height={640}>
-            {/* <ChatMsg.Head title={apiData?.remark} leftIcon='left-chevron' onClick={() => window.close()} /> */}
+            <ChatMsg.Head title={apiData?.remark} leftIcon='left-chevron' onClick={() => window.close()} />
             <ChatMsg.Message>{msgs}</ChatMsg.Message>
             <ChatMsg.Send onSend={(newMsg) => { fnSend(newMsg) }} />
         </ChatMsg>

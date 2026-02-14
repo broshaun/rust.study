@@ -13,7 +13,7 @@ export const Find = () => {
     const [apiData, setApiData] = useState([]);
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/find/')
-    const { http:http2 } = useHttpClient('/api/chat/friend/')
+    const { http: http2 } = useHttpClient('/api/chat/friend/')
     const [keyword, setKeyword] = useState();
     const debouncedKeyword = useDebounce(keyword, { wait: 500 });
 
@@ -32,7 +32,7 @@ export const Find = () => {
     }, { manual: true })
 
 
-        const { runAsync: run2 } = useRequest((id) => {
+    const { runAsync: run2 } = useRequest((id) => {
         if (!id) return;
         http2.requestBodyJson('PUT', { 'id': id })
             .then((results) => {
@@ -56,12 +56,12 @@ export const Find = () => {
             right_icon='magnifying-glass-circle'
             placeholder="搜索好友"
             onChangeValue={handleEmailChange}
-            right_icon_onClick={()=>run(debouncedKeyword)}
+            right_icon_onClick={() => run(debouncedKeyword)}
         />
         <Divider />
         {apiData && Object.keys(apiData).length !== 0 &&
             <Container verticalScroll={true} horizontalScroll={true}>
-                <UserInfoCard email={apiData?.email} id={apiData?.id} onAddFriend={(v)=>{run2(v?.id)}}/>
+                <UserInfoCard email={apiData?.email} id={apiData?.id} onAddFriend={(v) => { run2(v?.id) }} />
             </Container>
         }
     </Suspense>

@@ -9,11 +9,12 @@ export function Chat() {
   const [title, setTitle] = useState('主页')
   const items2 = [
     { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { navigate('/chat/friend/') } },
-    {
-      key: 'msg', display: true,
-      icon: { name: 'chat-bubble-bottom-center-text', label: '聊天' },
-      onClick: () => { window.open("/#/msg/", "_blank"); setTitle('展示栏') }
-    },
+    { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { navigate('/chat/news/') } },
+    // {
+    //   key: 'msg', display: true,
+    //   icon: { name: 'chat-bubble-bottom-center-text', label: '聊天' },
+    //   onClick: () => { window.open("/#/msg/", "_blank"); setTitle('展示栏') }
+    // },
     {
       key: 'users', display: true,
       icon: { name: 'user-group-oline', label: '群聊' },
