@@ -10,20 +10,22 @@
 - cnpm install
 
 ## 核心库
-- cnpm install @tauri-apps/api
+- cnpm install @tauri-apps/api@2.10.2
 - cnpm install @tauri-apps/plugin-http
 
 # 进入app现有项目路径
 ## 安装 Tauri 的 CLI 工具
 ## 初始化项目
-- cd app
-- cargo install tauri-cli
-<!-- - cargo tauri add http -->
 - cargo tauri init
+
+- cd src-tauri
+- cargo uninstall tauri-cli
+- cargo install tauri-cli --version "^2.10" --locked
+<!-- - cargo tauri add http -->
 - cargo add tauri-plugin-http
 
-## 运行开发服务器
-## 执行编译
+## 运行调试
 - cargo tauri dev
+## 执行编译
 - cargo tauri build
 
