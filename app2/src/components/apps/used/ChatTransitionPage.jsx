@@ -29,57 +29,55 @@ const ChatTransitionPage = ({
   const avatarText = remark.charAt(0);
 
   return (
+    // 移除全屏居中逻辑，直接渲染过渡容器
+    <div className={styles.transitionContainer}>
+      {/* 关闭按钮（可选） */}
+      {onClose && (
+        <button className={styles.closeBtn} onClick={onClose}>×</button>
+      )}
 
-    <div className={styles.pageContainer}>
-      <div className={styles.transitionContainer}>
-        {/* 关闭按钮（可选） */}
-        {onClose && (
-          <button className={styles.closeBtn} onClick={onClose}>×</button>
-        )}
-
-        {/* 内容区域（头像+备注）- 垂直居中 */}
-        <div className={styles.contentWrapper}>
-          {/* 好友头像区域 */}
-          <div className={styles.avatarWrapper}>
-            <div className={styles.friendAvatar}>
-              {avatar ? (
-                <img 
-                  src={avatar} 
-                  alt={remark} 
-                  className={styles.avatarImg}
-                  onError={(e) => {
-                    // 头像加载失败显示文字占位
-                    e.target.style.display = 'none';
-                    e.target.nextElementSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <span className={styles.avatarText}>{avatarText}</span>
-            </div>
-          </div>
-
-          {/* 好友备注区域 */}
-          <div className={styles.friendInfo}>
-            <h2 className={styles.friendName}>{remark}</h2>
-            <p className={styles.friendId}>ID: {friend_id.slice(-6)}</p>
+      {/* 内容区域（头像+备注）- 垂直居中 */}
+      <div className={styles.contentWrapper}>
+        {/* 好友头像区域 */}
+        <div className={styles.avatarWrapper}>
+          <div className={styles.friendAvatar}>
+            {avatar ? (
+              <img 
+                src={avatar} 
+                alt={remark} 
+                className={styles.avatarImg}
+                onError={(e) => {
+                  // 头像加载失败显示文字占位
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <span className={styles.avatarText}>{avatarText}</span>
           </div>
         </div>
 
-        {/* 操作按钮区域 - 固定在最底部，左右分栏 */}
-        <div className={styles.btnGroup}>
-          <button 
-            className={`${styles.operBtn} ${styles.chatBtn}`}
-            onClick={() => onChat?.(friendData)}
-          >
-            发起聊天
-          </button>
-          <button 
-            className={`${styles.operBtn} ${styles.videoBtn}`}
-            onClick={() => onVideo?.(friendData)}
-          >
-            发起视频
-          </button>
+        {/* 好友备注区域 */}
+        <div className={styles.friendInfo}>
+          <h2 className={styles.friendName}>{remark}</h2>
+          <p className={styles.friendId}>ID: {friend_id.slice(-6)}</p>
         </div>
+      </div>
+
+      {/* 操作按钮区域 - 固定在最底部，左右分栏 */}
+      <div className={styles.btnGroup}>
+        <button 
+          className={`${styles.operBtn} ${styles.chatBtn}`}
+          onClick={() => onChat?.(friendData)}
+        >
+          发起聊天
+        </button>
+        <button 
+          className={`${styles.operBtn} ${styles.videoBtn}`}
+          onClick={() => onVideo?.(friendData)}
+        >
+          发起视频
+        </button>
       </div>
     </div>
   );

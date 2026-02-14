@@ -1,0 +1,46 @@
+/* 聊天容器整体样式 */
+.chatContainer {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background-color: #f0f2f5;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* 左面板基础样式 */
+.chatLeft {
+  height: 100%;
+  background-color: #ffffff;
+  border-right: var(--divider-width) solid var(--divider-color);
+  box-sizing: border-box;
+  overflow-y: auto;
+  flex-shrink: 0; /* 防止被挤压 */
+}
+
+/* 右面板基础样式 */
+.chatRight {
+  height: 100%;
+  flex: 1; /* 未指定size时自动占满剩余空间 */
+  background-color: #ffffff;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* 滚动条样式优化（适配聊天场景） */
+.chatLeft::-webkit-scrollbar,
+.chatRight::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.chatLeft::-webkit-scrollbar-track,
+.chatRight::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatLeft::-webkit-scrollbar-thumb,
+.chatRight::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}

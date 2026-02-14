@@ -1,4 +1,3 @@
-// ChatMsg.jsx
 import React, {
   createContext,
   useContext,
@@ -20,8 +19,8 @@ function useChatMsg() {
   return ctx;
 }
 
-/** Root：全屏居中 + 固定尺寸 */
-function ChatMsgRoot({ children, className, width = 700, height = 840 }) {
+/** Root：自适应父容器（移除固定尺寸+全屏居中） */
+function ChatMsgRoot({ children, className, width, height }) {
   const messageRef = useRef(null);
   const stickToBottomRef = useRef(true);
 
@@ -38,15 +37,22 @@ function ChatMsgRoot({ children, className, width = 700, height = 840 }) {
     []
   );
 
+  // 样式处理：width/height 优先用父容器，传入值仅作为兜底
+  const wrapperStyle = useMemo(() => {
+    const style = {};
+    if (width) style.width = typeof width === 'number' ? `${width}px` : width;
+    if (height) style.height = typeof height === 'number' ? `${height}px` : height;
+    return style;
+  }, [width, height]);
+
   return (
     <ChatMsgContext.Provider value={api}>
-      <div className={styles.center}>
-        <div
-          className={`${styles.wrapper} ${className || ""}`.trim()}
-          style={{ width, height }}
-        >
-          {children}
-        </div>
+      {/* 移除全屏居中的center容器，直接渲染wrapper */}
+      <div
+        className={`${styles.wrapper} ${className || ""}`.trim()}
+        style={wrapperStyle}
+      >
+        {children}
       </div>
     </ChatMsgContext.Provider>
   );
@@ -124,7 +130,7 @@ function Message({
     Array.isArray(x) && (x.length === 0 || isMsgObject(x[0]));
 
   const normalize = (m, index) => {
-    // ✅ 你指定的规则：to=自己发（右），from=对方发（左）
+    // ✅ 规则：to=自己发（右），from=对方发（左）
     const isSelf = !!m?.to;
 
     return {

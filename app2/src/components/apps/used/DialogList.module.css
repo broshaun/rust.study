@@ -1,14 +1,16 @@
-/* 消息列表容器 */
-.msgListContainer {
-    width: 240px;
+/* 对话列表容器 - 核心：自适应父容器 */
+.dialogListContainer { /* msgListContainer → dialogListContainer */
+    width: 100%;
     height: 100%;
     background: #f0f2f5;
     border-right: 1px solid #e5e6eb;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
-/* QQ风格消息列表标题 */
-.msgListHeader {
+/* QQ风格对话列表标题 */
+.dialogListHeader { /* msgListHeader → dialogListHeader */
     height: 38px;
     line-height: 38px;
     padding: 0 15px;
@@ -17,37 +19,41 @@
     font-size: 14px;
     font-weight: 500;
     color: #333;
+    flex-shrink: 0;
 }
 
-/* 消息列表 */
-.msgList {
+/* 对话列表 */
+.dialogList { /* msgList → dialogList */
     list-style: none;
     padding: 0;
     margin: 0;
-    height: calc(100% - 38px);
-    overflow-y: auto; /* 消息过多时滚动 */
+    flex: 1;
+    overflow-y: auto;
+    box-sizing: border-box;
 }
 
 /* QQ风格滚动条 */
-.msgList::-webkit-scrollbar {
+.dialogList::-webkit-scrollbar {
     width: 6px;
 }
-.msgList::-webkit-scrollbar-track {
+.dialogList::-webkit-scrollbar-track {
     background: transparent;
 }
-.msgList::-webkit-scrollbar-thumb {
+.dialogList::-webkit-scrollbar-thumb {
     background: #d1d5db;
     border-radius: 50%;
 }
 
-/* 空消息项 */
-.emptyMsgItem {
+/* 空对话项 */
+.emptyDialogItem { /* emptyMsgItem → emptyDialogItem */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 0;
+    height: 100%;
     color: #999;
+    padding: 20px 0;
+    box-sizing: border-box;
 }
 
 .emptyIcon {
@@ -59,8 +65,8 @@
     font-size: 14px;
 }
 
-/* 消息项样式（QQ风格） */
-.msgItem {
+/* 对话项样式（QQ风格） */
+.dialogItem { /* msgItem → dialogItem */
     display: flex;
     align-items: center;
     padding: 10px 15px;
@@ -69,15 +75,42 @@
     background-color: #fff;
     cursor: pointer;
     transition: background-color 0.2s;
+    position: relative;
+    box-sizing: border-box;
 }
 
 /* 鼠标悬浮效果（QQ经典） */
-.msgItem:hover {
+.dialogItem:hover {
     background-color: #e5efff;
 }
 
-/* 好友头像（QQ风格圆形） */
-.msgAvatar {
+/* 右上角删除按钮 */
+.deleteBtn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 14px;
+    height: 14px;
+    border: none;
+    background: transparent;
+    color: #999;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.deleteBtn:hover {
+    background: transparent;
+    color: #666;
+}
+
+/* 联系人头像（QQ风格圆形） */
+.dialogAvatar { /* msgAvatar → dialogAvatar */
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -114,14 +147,14 @@
     z-index: 1;
 }
 
-/* 好友信息容器 */
-.msgInfo {
+/* 联系人信息容器 */
+.dialogInfo { /* msgInfo → dialogInfo */
     flex: 1;
     overflow: hidden;
 }
 
-/* 好友备注名称 */
-.msgSender {
+/* 联系人备注名称 */
+.dialogSender { /* msgSender → dialogSender */
     margin: 0;
     font-size: 15px;
     color: #333;
@@ -130,8 +163,8 @@
     text-overflow: ellipsis;
 }
 
-/* 好友ID信息 */
-.msgPreview {
+/* 联系人ID信息 */
+.dialogPreview { /* msgPreview → dialogPreview */
     margin: 2px 0 0 0;
     font-size: 12px;
     color: #999;
@@ -141,16 +174,4 @@
     line-height: 1.4;
 }
 
-/* 消息元信息（在线状态） */
-.msgMeta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-left: 8px;
-}
-
-/* 在线状态（QQ绿色圆点） */
-.onlineStatus {
-    color: #00b500;
-    font-size: 12px;
-}
+/* 移除在线状态相关样式 */

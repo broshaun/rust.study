@@ -1,18 +1,6 @@
-/* ChatMsg.module.css */
+/* 移除全屏居中的center容器样式 */
 
-/* 全屏居中容器 */
-.center {
-  width: 100vw;
-  height: 100vh;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  background: #f3f4f6;
-}
-
-/* 固定尺寸聊天框 */
+/* 自适应聊天框（完全继承父容器尺寸） */
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -25,9 +13,11 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 
   min-height: 0;
+  width: 100%;  /* 宽度默认100%适配父容器 */
+  height: 100%; /* 高度默认100%适配父容器 */
 }
 
-/* Head：左图标 + 居中标题 + 右占位 */
+/* Head：左图标 + 居中标题 + 右占位（保留原有样式） */
 .head {
   flex: 0 0 56px;
   height: 56px;
@@ -82,10 +72,10 @@
   height: 1px;
 }
 
-/* 中部：唯一滚动容器（✅可滚动但滚动条不可见） */
+/* 中部：唯一滚动容器（保留滚动隐藏，适配父容器高度） */
 .message {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 0; /* 关键：让flex子元素能收缩到父容器高度内 */
 
   padding: 16px;
 
@@ -99,7 +89,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 
-  /* ✅ 隐藏滚动条（最稳） */
+  /* 隐藏滚动条（最稳） */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/old Edge */
 
@@ -118,7 +108,7 @@
   border: none !important;
 }
 
-/* （极端情况下：系统强制显示滚动条，可启用遮罩；默认开启） */
+/* 滚动条遮罩：适配父容器宽度，避免遮挡内容 */
 .message::after {
   content: "";
   position: absolute;
@@ -134,7 +124,7 @@
   height: 1px;
 }
 
-/* ====== 聊天气泡（你 JSX 用到的类，我补齐） ====== */
+/* ====== 聊天气泡（保留原有样式） ====== */
 .chatRow {
   display: flex;
   align-items: flex-start;
@@ -203,7 +193,7 @@
   padding: 0 2px;
 }
 
-/* 底部冻结 */
+/* 底部冻结（保留原有样式） */
 .send {
   flex: 0 0 auto;
   padding: 12px 16px;
@@ -218,7 +208,7 @@
   overflow: hidden;
 }
 
-/* 输入框：可换行，不能拖拽 */
+/* 输入框：可换行，不能拖拽（保留原有样式） */
 .input {
   flex: 1;
 
@@ -246,7 +236,7 @@
   border-color: #3b82f6;
 }
 
-/* 发送按钮：无 hover 视觉变化 */
+/* 发送按钮：无 hover 视觉变化（保留原有样式） */
 .btn {
   padding: 8px 16px;
 

@@ -52,7 +52,6 @@ export const Find = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         <InputText
-            label='邮箱'
             right_icon='magnifying-glass-circle'
             placeholder="搜索好友"
             onChangeValue={handleEmailChange}

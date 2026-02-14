@@ -1,13 +1,15 @@
-/* 好友列表容器 */
+/* 好友列表容器 - 核心：移除固定宽度，100%适配父容器 */
 .friendListContainer {
-    width: 240px;
-    height: 100%;
+    width: 100%;          /* 不再固定240px，完全适配父容器宽度 */
+    height: 100%;         /* 高度适配父容器 */
     background: #f0f2f5;
     border-right: 1px solid #e5e6eb;
     box-sizing: border-box;
+    display: flex;        /* 弹性布局，让header和列表垂直分布 */
+    flex-direction: column; /* 垂直排列 */
 }
 
-/* QQ风格列表标题 */
+/* QQ风格列表标题 - 固定高度，不滚动 */
 .friendListHeader {
     height: 38px;
     line-height: 38px;
@@ -17,18 +19,20 @@
     font-size: 14px;
     font-weight: 500;
     color: #333;
+    flex-shrink: 0;       /* 标题不被挤压，保持固定高度 */
 }
 
-/* 好友列表 */
+/* 好友列表 - 核心：占满剩余高度，自适应 */
 .friendList {
     list-style: none;
     padding: 0;
     margin: 0;
-    height: calc(100% - 38px);
-    overflow-y: auto; /* 好友过多时滚动 */
+    flex: 1;              /* 占满容器剩余高度（关键自适应属性） */
+    overflow-y: auto;     /* 好友过多时滚动，高度不足时自动出现滚动条 */
+    box-sizing: border-box;
 }
 
-/* QQ风格滚动条 */
+/* QQ风格滚动条 - 保留 */
 .friendList::-webkit-scrollbar {
     width: 6px;
 }
@@ -40,7 +44,27 @@
     border-radius: 3px;
 }
 
-/* 好友项样式（QQ风格） */
+/* 空数据占位 - 新增：自适应居中 */
+.emptyItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;         /* 占满列表区域高度 */
+    color: #999;
+    padding: 20px 0;
+}
+
+.emptyIcon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.emptyText {
+    font-size: 14px;
+}
+
+/* 好友项样式（QQ风格）- 保留，宽度自适应 */
 .friendItem {
     display: flex;
     align-items: center;
@@ -50,6 +74,7 @@
     background-color: #fff;
     cursor: pointer;
     transition: background-color 0.2s;
+    box-sizing: border-box;
 }
 
 /* 鼠标悬浮效果（QQ经典） */
@@ -57,7 +82,7 @@
     background-color: #e5efff;
 }
 
-/* 好友头像（QQ风格圆形） */
+/* 好友头像（QQ风格圆形）- 保留 */
 .friendAvatar {
     width: 40px;
     height: 40px;
@@ -73,13 +98,13 @@
     flex-shrink: 0;
 }
 
-/* 好友信息容器 */
+/* 好友信息容器 - 自适应剩余宽度 */
 .friendInfo {
-    flex: 1;
+    flex: 1;              /* 占满好友项剩余宽度 */
     overflow: hidden;
 }
 
-/* 好友名称 */
+/* 好友名称 - 保留，溢出省略 */
 .friendName {
     margin: 0;
     font-size: 15px;
@@ -89,7 +114,7 @@
     text-overflow: ellipsis;
 }
 
-/* 好友辅助信息 */
+/* 好友辅助信息 - 保留 */
 .friendSubInfo {
     margin: 2px 0 0 0;
     font-size: 12px;
@@ -99,9 +124,10 @@
     text-overflow: ellipsis;
 }
 
-/* 在线状态（QQ绿色圆点） */
+/* 在线状态（QQ绿色圆点）- 保留 */
 .onlineStatus {
     color: #00b500;
     font-size: 12px;
     margin-left: 8px;
+    flex-shrink: 0;       /* 状态圆点不被挤压 */
 }

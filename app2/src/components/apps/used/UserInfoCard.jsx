@@ -1,4 +1,3 @@
-// UserInfoCard.jsx - 纯JS版本
 import React from 'react';
 import './UserInfoCard.css';
 
@@ -47,8 +46,8 @@ const UserInfoCard = ({
       className={`info-card ${clickable ? 'clickable' : ''}`}
       onClick={handleCardClick}
       style={{ 
-        cursor: clickable ? 'pointer' : 'default',
-        position: 'relative' // 新增：为右上角按钮提供定位容器
+        cursor: clickable ? 'pointer' : 'default'
+        // 移除内联的position:relative，移到CSS中统一管理
       }}
     >
       {/* 卡片标题 */}

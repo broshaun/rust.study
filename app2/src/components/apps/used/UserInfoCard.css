@@ -1,14 +1,19 @@
+/* 核心：移除固定宽度，100%适配父容器 */
 .info-card {
   background-color: #ffffff;
-  width: 350px;
+  width: 100%;          /* 不再固定350px，完全继承父容器宽度 */
+  max-width: 500px;     /* 可选：限制最大宽度，避免在过宽容器中变形 */
+  min-width: 280px;     /* 可选：限制最小宽度，保证小容器下布局正常 */
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   border: 1px solid #e8ebf0;
   transition: box-shadow 0.3s ease;
-  position: relative; /* 为按钮定位提供容器 */
+  position: relative;   /* 为按钮定位提供容器（移到这里统一管理） */
+  box-sizing: border-box; /* 关键：padding不会撑大宽度 */
 }
 
+/* 保留点击交互样式 */
 .info-card.clickable {
   transition: all 0.2s ease;
 }
@@ -29,6 +34,7 @@
   opacity: 0.8;
 }
 
+/* 标题样式：适配不同宽度容器 */
 .card-title {
   font-size: 18px;
   font-weight: 600;
@@ -36,29 +42,39 @@
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 1px solid #f0f2f5;
+  padding-right: 80px; /* 给右上角按钮留出空间，避免标题被遮挡 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 标题过长时省略 */
 }
 
+/* 信息项：自适应剩余空间 */
 .info-item {
   display: flex;
   align-items: center;
   margin-bottom: 15px;
+  width: 100%; /* 确保占满卡片宽度 */
 }
 
+/* 标签固定宽度，内容自适应 */
 .info-label {
-  width: 80px;
+  width: 80px;          /* 固定宽度，保证对齐 */
+  flex-shrink: 0;       /* 防挤压 */
   font-size: 14px;
   color: #667085;
   font-weight: 500;
 }
 
+/* 内容占满剩余宽度，溢出自动换行 */
 .info-value {
-  flex: 1;
+  flex: 1;              /* 占满剩余宽度 */
   font-size: 14px;
   color: #1f2937;
-  word-break: break-all; /* 防止长ID超出容器 */
+  word-break: break-all; /* 防止长ID/邮箱超出容器 */
+  padding-right: 10px;  /* 右侧留白，避免贴边 */
 }
 
-/* 新增：添加好友按钮样式 */
+/* 新增：添加好友按钮样式（位置不变，适配不同宽度卡片） */
 .add-friend-btn {
   position: absolute;
   top: 20px;
@@ -72,6 +88,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
+  flex-shrink: 0; /* 防挤压 */
+  z-index: 10;    /* 确保在最上层 */
 }
 
 .add-friend-btn:hover {
@@ -95,4 +113,32 @@
   color: #999999;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+/* 响应式优化：小容器下调整按钮和内边距 */
+@media (max-width: 320px) {
+  .info-card {
+    padding: 20px 15px;
+  }
+  
+  .add-friend-btn {
+    top: 15px;
+    right: 15px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .card-title {
+    padding-right: 70px;
+    font-size: 16px;
+  }
+  
+  .info-label {
+    width: 70px;
+    font-size: 13px;
+  }
+  
+  .info-value {
+    font-size: 13px;
+  }
 }

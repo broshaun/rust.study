@@ -6,7 +6,7 @@ import { useMemo } from 'react';
  * @returns {Object} 包含各种格式的时间字符串和原始Date对象
  */
 const useDateTime = (time) => {
-    // 处理入参，转换为标准Date对象（兼容秒级/毫秒级时间戳、字符串、Date对象）
+    // 【关键修复1】确保useMemo在Hook顶层调用，且入参处理逻辑更健壮
     const date = useMemo(() => {
         let targetTime = time;
 
@@ -15,19 +15,24 @@ const useDateTime = (time) => {
             return new Date();
         }
 
-        // 如果是数字，判断是秒级还是毫秒级时间戳（秒级：长度10位，毫秒级：13位）
+        // 处理数字类型（时间戳）
         if (typeof targetTime === 'number') {
             const timestamp = targetTime;
-            // 秒级时间戳转毫秒
+            // 秒级时间戳（10位）转毫秒
             if (timestamp.toString().length === 10) {
                 targetTime = timestamp * 1000;
+            }
+            // 防止数字过大/过小导致无效日期
+            if (targetTime < 0 || targetTime > Date.now() * 2) {
+                console.warn('useDateTime: 时间戳超出合理范围，使用当前时间', targetTime);
+                return new Date();
             }
         }
 
         // 转换为Date对象
         const dateObj = new Date(targetTime);
 
-        // 校验Date对象是否有效
+        // 校验Date对象有效性
         if (isNaN(dateObj.getTime())) {
             console.warn('useDateTime: 无效的时间参数，已使用当前时间', targetTime);
             return new Date();
@@ -36,8 +41,11 @@ const useDateTime = (time) => {
         return dateObj;
     }, [time]);
 
-    // 补零函数：确保数字为两位数（如 1 → 01）
-    const padZero = (num) => num.toString().padStart(2, '0');
+    // 补零函数：提取到useMemo外（纯函数无需memo）
+    const padZero = (num) => {
+        const n = Number(num);
+        return isNaN(n) ? '00' : n.toString().padStart(2, '0');
+    };
 
     // 格式化：2021-01-01（日期）
     const dateStr = useMemo(() => {
