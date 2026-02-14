@@ -8,8 +8,8 @@ export function Chat() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('主页')
   const items2 = [
-    { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { navigate('/chat/friend/') } },
-    { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { navigate('/chat/dialog/') } },
+    { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { navigate('/chat/friend/'); setTitle('好友') } },
+    { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { navigate('/chat/dialog/'); setTitle('消息') } },
     {
       key: 'users', display: true,
       icon: { name: 'user-group-oline', label: '群聊' },
