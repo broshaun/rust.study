@@ -4,7 +4,7 @@ import { useUser, useWinWidth, useHttpClient } from 'hooks';
 import { ChatTransitionPage } from 'components/apps';
 import { Container } from 'components/base';
 import { useRequest, useLocalStorageState } from 'ahooks';
-
+import { debug } from '@tauri-apps/plugin-log';
 
 
 export function ToMsg() {
@@ -28,9 +28,23 @@ export function ToMsg() {
         })
     }, { refreshDeps: [] })
 
+ 
+    
+
+
+
 
     function openMsgWindow(select) {
+        console.log('select',select)
+        
+        debug('++++++++++++++++++++').catch()
+        debug(`select:${JSON.stringify(select)}`).catch()
+        debug('++++++++++++++++++++').catch()
+
+
+
         if (!select?.id) return;
+        
         navigate('/msg', { state: select })
     }
 

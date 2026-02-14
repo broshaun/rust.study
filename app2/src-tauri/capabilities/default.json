@@ -3,11 +3,11 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": [
-    "main"
+    "*"
   ],
   "permissions": [
     "core:default",
-    "http:default",
+    "http:allow-fetch",
     "core:webview:allow-create-webview-window",
     {
       "identifier": "http:default",
@@ -16,6 +16,7 @@
           "url": "http://localhost:5015/*"
         }
       ]
-    }
+    },
+    "log:default"
   ]
 }
