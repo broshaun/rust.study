@@ -1,7 +1,7 @@
 import React, { useTransition } from 'react'
 import { useLocation } from "react-router-dom";
 import { useDateTime, useHttpClient } from 'hooks';
-import { ChatMsg } from 'components/apps';
+import { ChatMsg } from 'components/chat';
 import { useRequest, useLocalStorageState } from 'ahooks';
 
 

@@ -1,15 +1,11 @@
 import { Route } from "react-router-dom";
-import { RsLogin } from "./login";
-import { RsRegister } from "./register";
 import { User } from "./main";
-
+import { LogOn } from "./login2";
 
 // 导出 User 相关的路由配置
 export const RsUser = (
   <Route path="user" element={<User />}>
-    {RsLogin}
-    {RsRegister}
-
+    <Route path="login" element={<LogOn />}/>
 
   </Route>
 );

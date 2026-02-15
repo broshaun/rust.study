@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useTransition, useReducer, Suspense
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks';
 import { useRequest, useLocalStorageState } from 'ahooks';
-import { FriendList } from 'components/apps';
+import { FriendList } from 'components/chat';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { isTauri } from "@tauri-apps/api/core";
 import { Chat, Container } from 'components';

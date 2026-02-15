@@ -9,7 +9,6 @@ export function LogOn() {
     const navigate = useNavigate();
     const location = useLocation();
     const [phone, setPhone] = useLocalStorageState('savedPhone')
-    // const [usrInfo, setUsrInfo] = useLocalStorageState('usrInfo')
     const [password, setPassword] = useState("")
     const refState = useRef(new Map())
     const { msgFn, http, setItems, showOnly } = useOutletContext();
@@ -28,8 +27,6 @@ export function LogOn() {
                     setToken(results.data?.login_token)
                     setTime(results.data?.login_expired)
                     setUser(results.data?.user || {})
-                    // setUsrInfo(results.data?.user || {})
-
                     msgFn('success', "登陆成功")
                 } else {
                     msgFn('error', results.message)

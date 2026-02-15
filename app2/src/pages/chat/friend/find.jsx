@@ -3,7 +3,7 @@ import { SimpleTable, SingleRadio, InputText, Divider, Container } from 'compone
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient, useNewWindow } from 'hooks';
 import { useRequest, useDebounce } from 'ahooks';
-import { UserInfoCard } from 'components/apps';
+import { UserInfoCard } from 'components/chat';
 import { IconCustomColor } from 'components/icon';
 
 

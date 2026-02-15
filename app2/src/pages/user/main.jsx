@@ -29,14 +29,5 @@ export function User() {
   </React.Fragment>
 }
 
-<Login>
-  <Login.Head title='登记界面' avatar='./favicon.png' />
-  <Login.Input>
-    <input/>
-  </Login.Input>
-  <Login.Submit>
-    <button>登录</button>
-  </Login.Submit>
-</Login>
 
 

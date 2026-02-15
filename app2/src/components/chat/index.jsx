@@ -1,7 +1,7 @@
-export * from './CardList'
 export * from './ChatMsg'
 export * from './FriendList'
 export * from './DialogList'
 export * from './UserInfoCard'
 export * from './ChatTransitionPage'
 export * from './Chat'
+export { default as Login } from './Login1'
