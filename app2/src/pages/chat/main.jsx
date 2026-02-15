@@ -8,6 +8,7 @@ export function Chat() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('主页')
   const items2 = [
+    { key: 'home', display: true, icon: { name: 'home', label: '主页' }, onClick: () => navigate('/apps/') },
     { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { navigate('/chat/friend/'); setTitle('好友') } },
     { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { navigate('/chat/dialog/'); setTitle('消息') } },
     {
@@ -27,7 +28,7 @@ export function Chat() {
   return <React.Fragment>
 
     <MenuMobile size={46}>
-      <MenuMobile.Head title={title} leftIcon='left-chevron' onClick={() => { navigate('/') }} />
+      <MenuMobile.Head title={title}  />
       <MenuMobile.Items position={winSize > 415 ? 'left' : 'bottom'}>{items2}</MenuMobile.Items>
       <MenuMobile.Content>
         <Outlet />

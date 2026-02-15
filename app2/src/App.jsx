@@ -7,7 +7,7 @@ import { RsChat } from "pages/chat";
 const App = () => {
   return <HashRouter>
     <Routes>
-      <Route path="" element={<Home2 />} />
+      <Route path="apps" element={<Home2 />} />
       {RsUser}
       {RsDisplay}
       {RsChat}
