@@ -79,4 +79,4 @@ const Chat = ({
 Chat.Left = ChatLeft;
 Chat.Right = ChatRight;
 
-export { Chat };
+export default Chat;

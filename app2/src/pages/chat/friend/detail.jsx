@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from "react-router-dom";
 import { useHttpClient } from 'hooks';
 import { ChatTransitionPage } from 'components/chat';
-import { Container } from 'components/base';
+import { Container } from 'components';
 import { useRequest, useLocalStorageState } from 'ahooks';
 
 

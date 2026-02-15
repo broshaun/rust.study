@@ -132,4 +132,4 @@ MenuMobile.Head = Head;
 MenuMobile.Items = Items;
 MenuMobile.Content = Content;
 
-export { MenuMobile };
+export default MenuMobile;

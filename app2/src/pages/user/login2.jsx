@@ -1,20 +1,21 @@
 
-import React, { useEffect, useReducer, useRef, useState } from 'react'
+import React, { useEffect, useReducer, useRef, useState, useTransition } from 'react'
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { useLogin, useUser } from 'hooks';
-import { useLocalStorageState } from 'ahooks';
-import { Button, Login, InputText, InputText2 } from "components";
+import { useLogin, useUser, useHttpClient } from 'hooks';
+import { useLocalStorageState, useRequest } from 'ahooks';
+import { Button, Login, Row, InputText2 } from "components";
 
 
 export function LogOn() {
     // const navigate = useNavigate();
     // const location = useLocation();
-    // const [phone, setPhone] = useLocalStorageState('savedPhone')
-    // const [password, setPassword] = useState("")
-    // const refState = useRef(new Map())
+    const [isPending, startTransition] = useTransition()
+    const [account, setAccount] = useLocalStorageState('savedAccount')
+    const [password, setPassword] = useState("")
 
-    // const { setToken, setTime } = useLogin()
-    // const { user, setUser } = useUser()
+    const { http } = useHttpClient('/api/chat/login/')
+    const { setToken, setTime } = useLogin()
+    const { user, setUser } = useUser()
 
     // const login = () => {
     //     if (phone === "") {
@@ -36,77 +37,49 @@ export function LogOn() {
     //     }
     // }
 
-    // const initialState = {
-    //     items: [
-    //         { key: 'yes', permission: true, display: true, icon: { name: 'check-circle', color: 'green', lable: '确认' }, onClick: (key) => dispatch({ click: key }) },
-    //         { key: 'no', permission: true, display: true, icon: { name: 'times-circle', color: 'red', lable: '取消' }, onClick: (key) => dispatch({ click: key }) },
-    //     ],
-    //     count: 0
-    // }
-    // const handleMenuClick = (state, action) => {
-    //     let { items, count } = state
-    //     if (refState.current.has('target')) refState.current.delete('target');
-    //     switch (action?.click) {
-    //         case 'init':
-    //             items = showOnly(items, ['yes', 'no'])
-    //             break
-    //         case 'yes':
-    //             login()
-    //         case 'no':
-    //             refState.current.set('target', refState.current.get('from'))
-    //             break
-    //     }
-    //     return { items, count: count + 1 };
-    // }
-    // const [state, dispatch] = useReducer(handleMenuClick, initialState)
-    // useEffect(() => {
-    //     setItems(state.items)
-    //     if (refState.current.has('target')) {
-    //         navigate(refState.current.get('target'), { state: { from: location.pathname } })
-    //     }
-    // }, [state])
-    // useEffect(() => {
-    //     if (location.state?.from) refState.current.set('from', location.state.from);
-    //     if (location.pathname === '/user/login/logon/') {
-    //         dispatch({ click: 'init' })
-    //     }
-    // }, [location.pathname])
+    const { data, runAsync: runLogin } = useRequest((account, password) => {
+        if (!account && !password) return '请输入账号或密码';
+        console.log('email', account, '\npass_word', password)
+        http.requestBodyJson('POST', { 'email': account, 'pass_word': password })
+            .then((results) => {
+                if (!results) return;
+                const { code, message, data } = results
+                if (code === 200) {
+                    console.log('success', '登录成功');
+                    setToken(results.data?.login_token)
+                    setTime(results.data?.login_expired)
+
+                } else console.log('error', message);
+            })
+        return 'ok'
+    }, { manual: true })
+
+
+    console.log("data: ", data)
+
+
 
 
     return <React.Fragment>
         <Login >
             <Login.Head title='登记界面' avatar='./favicon.png' />
             <Login.Input>
-                {/* <br />
-                <InputText
-                    icon="user-circle"
-                    placeholder="手机"
-                    // defaultValue={}
-                    onChange={(e) => { }}
-                />
                 <br />
-                <br />
-                <InputText
-                    icon="lock-closed"
-                    type="password"
-                    placeholder="密码"
-                    onChange={(e) => { }}
-                />
-                <br /> */}
-
-                <InputText2 placeholder="请输入账号..." position="center" defaultValue={'77254@qq.com'}>
+                <InputText2 placeholder="请输入账号..." position="center" defaultValue={'77254@qq.com'} onChangeValue={(value) => { setAccount(value) }}>
                     <InputText2.Left icon="user-circle" />
                 </InputText2>
                 <br />
-
-                <InputText2 type="password" placeholder="请输入密码..." position="center">
+                <InputText2 type="password" placeholder="请输入密码..." position="center" onChangeValue={(value) => { setPassword(value) }}>
                     <InputText2.Left icon="lock-closed" />
                 </InputText2>
 
             </Login.Input>
             <Login.Submit>
-                <Button>按钮</Button>
-
+                <br/>
+                <Row gap={60} align="center" justify="center">
+                    <Button position="center" size={{ width: '33%', height: '42px' }} onClick={() => { runLogin(account, password) }}>登录</Button>
+                    <Button position="center" size={{ width: '33%', height: '42px' }} onClick={() => { runLogin(account, password) }}>退出</Button>
+                </Row>
 
             </Login.Submit>
         </Login>
@@ -114,6 +87,10 @@ export function LogOn() {
     </React.Fragment>
 }
 
+
+    <Row size>
+  
+    </Row>
 
 
 

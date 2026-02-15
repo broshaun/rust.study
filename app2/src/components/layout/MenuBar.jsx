@@ -93,4 +93,4 @@ MenuBar.Items = Items;
 MenuBar.Message = Message;
 MenuBar.Content = Content;
 
-export { MenuBar };
+export default MenuBar ;
