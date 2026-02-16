@@ -9,18 +9,10 @@ export function Chat() {
   const [title, setTitle] = useState('主页')
   const items2 = [
     { key: 'home', display: true, icon: { name: 'home', label: '主页' }, onClick: () => navigate('/apps/') },
-    { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { navigate('/chat/friend/'); setTitle('好友') } },
     { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { navigate('/chat/dialog/'); setTitle('消息') } },
-    {
-      key: 'users', display: true,
-      icon: { name: 'user-group-oline', label: '群聊' },
-      // onClick: () => { navigate('/chat/group/'); setTitle('群聊') }
-    },
-    {
-      key: 'find', display: true,
-      icon: { name: 'magnifying-glass-circle', label: '查找' },
-      onClick: () => { navigate('/chat/friend/find/'); setTitle('查找') }
-    },
+    { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { navigate('/chat/friend/'); setTitle('好友') } },
+    { key: 'users', display: true, icon: { name: 'user-group-oline', label: '群聊' }, },
+    { key: 'find', display: true, icon: { name: 'magnifying-glass-circle', label: '查找' }, onClick: () => { navigate('/chat/friend/find/'); setTitle('查找') } },
   ];
   const { winSize } = useWinWidth()
 
@@ -28,7 +20,7 @@ export function Chat() {
   return <React.Fragment>
 
     <MenuMobile size={46}>
-      <MenuMobile.Head title={title}  />
+      <MenuMobile.Head title={title} />
       <MenuMobile.Items position={winSize > 415 ? 'left' : 'bottom'}>{items2}</MenuMobile.Items>
       <MenuMobile.Content>
         <Outlet />

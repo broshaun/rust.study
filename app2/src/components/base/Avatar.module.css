@@ -1,0 +1,24 @@
+/* 头像基础样式 */
+.avatar {
+  display: block;
+  object-fit: cover; /* 防止图片变形 */
+  border: 1px solid; /* 边框颜色由jsx的borderColor控制 */
+  transition: all 0.2s ease; /* hover过渡效果 */
+  cursor: pointer; /* 可选：鼠标悬浮指针 */
+}
+
+/* 鼠标悬浮效果（可选） */
+.avatar:hover {
+  transform: scale(1.05); /* 轻微放大 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 图片加载过渡 */
+.avatar[src] {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.avatar:not([src]) {
+  opacity: 0;
+}
