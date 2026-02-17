@@ -8,10 +8,10 @@ function replacer(key, value) {
   return value
 }
 
-// import { fetch } from '@tauri-apps/plugin-http';
-// const apiBase = 'http://192.168.2.2:5015'
+import { fetch } from '@tauri-apps/plugin-http';
+const apiBase = 'http://192.168.2.2:5015'
 
-const apiBase = ''
+// const apiBase = ''
 
 
 

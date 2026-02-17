@@ -25,7 +25,6 @@ export function LogOn() {
             return
         }
 
-        console.log('email', account, '\npass_word', password)
         http.requestBodyJson('POST', { 'email': account, 'pass_word': password })
             .then((results) => {
                 if (!results) return;

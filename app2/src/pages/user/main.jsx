@@ -13,6 +13,7 @@ export function User() {
 
   const items = [
     { key: 'home', display: true, icon: { name: 'home', label: '主页' }, onClick: () => navigate('/apps/') },
+
     { key: 'login', display: true, icon: { name: 'user-circle', label: '登陆' }, onClick: () => { navigate('/user/login/'); setTitle('用户登陆'); } },
     { key: 'register', display: true, icon: { name: 'user-plus', label: '注册' }, onClick: () => { navigate('/user/register/'); setTitle('注册账号'); } },
   ]
