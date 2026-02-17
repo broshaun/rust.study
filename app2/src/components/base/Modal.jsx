@@ -1,49 +1,32 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import styles from './Modal.module.css';
 
-export default function Modal({ visible, onClose, children }) {
-  // 优化body滚动锁定（避免多次执行）
+// 移除 onClose props，仅保留 visible 和 children
+export default function Modal({ visible, children }) {
+  // 优化body滚动锁定（仅保留核心逻辑，移除ESC关闭）
   useEffect(() => {
     if (visible) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-      
-      // 监听ESC键关闭（苹果原生支持）
-      const handleEsc = (e) => {
-        if (e.key === 'Escape') onClose?.();
-      };
-      window.addEventListener('keydown', handleEsc);
 
       return () => {
         document.body.style.overflow = originalOverflow;
-        window.removeEventListener('keydown', handleEsc);
       };
     }
     return () => {
       document.body.style.overflow = '';
     };
-  }, [visible, onClose]);
-
-  // 优化关闭逻辑（防止多次触发）
-  const handleClose = useCallback(() => {
-    onClose?.();
-  }, [onClose]);
+  }, [visible]); // 移除 onClose 依赖
 
   if (!visible) return null;
 
   return (
-    <div className={styles.overlay} onClick={handleClose}>
+    <div className={styles.overlay} onClick={(e) => e.stopPropagation()}> {/* 移除点击遮罩关闭 */}
       <div
         className={styles.box}
         onClick={(e) => e.stopPropagation()}
       >
-        <button 
-          className={styles.close} 
-          onClick={handleClose}
-          aria-label="关闭弹窗" // 无障碍优化
-        >
-          ×
-        </button>
+        {/* 移除右上角关闭按钮 */}
         <div className={styles.contentWrapper}>
           {children}
         </div>
@@ -52,12 +35,24 @@ export default function Modal({ visible, onClose, children }) {
   );
 }
 
-// 标题子组件（保持简洁）
+// 标题子组件（保持不变）
 Modal.Title = ({ children }) => (
   <div className={styles.title}>{children}</div>
 );
 
-// 消息子组件（保持简洁）
+// 消息子组件（保持不变）
 Modal.Message = ({ children }) => (
   <div className={styles.message}>{children}</div>
+);
+
+// 确定按钮子组件（保持不变）
+Modal.Confirm = ({ children, onClick, className, ...rest }) => (
+  <button 
+    className={`${styles.confirmBtn} ${className || ''}`}
+    onClick={onClick}
+    {...rest}
+    aria-label="确定"
+  >
+    {children || '确定'}
+  </button>
 );

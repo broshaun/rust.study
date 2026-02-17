@@ -13,9 +13,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': { target: 'http://localhost:5015', },
-      '/imgs': { target: 'http://localhost:5015', },
-      '/files': { target: 'http://localhost:5015/', },
+      '/api': { target: 'http://192.168.2.2:5015', },
+      '/imgs': { target: 'http://192.168.2.2:5015', },
+      '/files': { target: 'http://192.168.2.2:5015/', },
     },
   }
 });

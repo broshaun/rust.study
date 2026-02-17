@@ -6,19 +6,19 @@ import styles from './InputText2.module.css';
 const Left = ({ label, icon }) => null;
 const Right = ({ label, icon, onClick }) => null;
 
-// 核心 InputText2 组件（新增位置+尺寸配置）
+// 核心 InputText2 组件（新增 value 支持受控模式）
 const InputText2 = ({
   type = "text",
   placeholder = '',
   defaultValue = '',
+  // 新增：受控模式 value（优先级高于 defaultValue）
+  value,
   onChangeValue,
   maxLength,
   error = false,
   disabled = false,
   children,
-  // 新增：位置配置（left/center/right），默认left
   position = 'left',
-  // 新增：尺寸配置（small/medium/large），默认medium
   size = 'medium'
 }) => {
   // 解析子组件 props
@@ -42,7 +42,6 @@ const InputText2 = ({
   };
 
   const { left: leftProps, right: rightProps } = parseChildren();
-  // 判断右侧是否有可交互的图标
   const isRightIconInteractive = !!rightProps.icon && typeof rightProps.onClick === 'function' && !disabled;
 
   // 输入框变化处理
@@ -58,11 +57,11 @@ const InputText2 = ({
     rightProps.onClick(e);
   };
 
-  // 容器类名（新增位置+尺寸类名）
+  // 容器类名
   const containerClasses = [
     styles.inputContainer,
-    styles[`size-${size}`], // 尺寸类名：size-small/size-medium/size-large
-    styles[`position-${position}`], // 位置类名：position-left/position-center/position-right
+    styles[`size-${size}`],
+    styles[`position-${position}`],
     error && styles.error,
     disabled && styles.disabled,
     (leftProps.label || leftProps.icon) && styles.hasLeft,
@@ -72,7 +71,7 @@ const InputText2 = ({
 
   return (
     <div className={containerClasses}>
-      {/* 左侧内容（无点击） */}
+      {/* 左侧内容 */}
       {(leftProps.label || leftProps.icon) && (
         <div className={`${styles.sideContainer} ${styles.leftContainer}`}>
           {leftProps.label && <span className={styles.label}>{leftProps.label}</span>}
@@ -84,12 +83,14 @@ const InputText2 = ({
         </div>
       )}
 
-      {/* 输入框 */}
+      {/* 输入框：新增 value 受控属性（优先级高于 defaultValue） */}
       <input
         className={styles.input}
         type={type}
         placeholder={placeholder}
         defaultValue={defaultValue}
+        // 核心：受控模式用 value，非受控用 defaultValue
+        value={value !== undefined ? value : undefined}
         maxLength={maxLength}
         onChange={handleInputChange}
         disabled={disabled}
@@ -97,7 +98,7 @@ const InputText2 = ({
         spellCheck="false"
       />
 
-      {/* 右侧内容（label 兼容有无 onClick，仅图标绑定点击） */}
+      {/* 右侧内容 */}
       {(rightProps.label || rightProps.icon) && (
         <div className={`${styles.sideContainer} ${styles.rightContainer}`}>
           {rightProps.icon && (

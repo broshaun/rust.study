@@ -9,7 +9,7 @@ function replacer(key, value) {
 }
 
 // import { fetch } from '@tauri-apps/plugin-http';
-// const apiBase = 'http://localhost:5015'
+// const apiBase = 'http://192.168.2.2:5015'
 
 const apiBase = ''
 
