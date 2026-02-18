@@ -15,7 +15,7 @@ export const Settings = () => {
         {
             key: 'user',
             display: true,
-            icon: { name: 'user', label: '个人中心' },
+            icon: { name: 'user-circle', label: '头像' },
             // 无自定义onClick，使用默认打印逻辑
         },
         {

@@ -4,3 +4,4 @@ export { default as Container } from './Container';
 export { default as MenuMobile } from './MenuMobile';
 export { default as MenuBar } from './MenuBar';
 export { default as Chat } from './Chat';
+export { default as List } from './List';
