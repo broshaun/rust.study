@@ -15,6 +15,7 @@ export const Mian = () => {
     const [apiData, setApiData] = useState([]);
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/')
+    const { http:httpImgs } = useHttpClient('/imgs');
 
     useRequest(() => {
         http.requestBodyJson('POST', { "skip": 0, "limit": 10 }).then((results) => {
@@ -26,16 +27,21 @@ export const Mian = () => {
         })
     }, { refreshDeps: [], })
 
+    console.log('apiData', apiData)
 
     function openMsgWindow(select) {
-        console.log('选中了',select)
+        console.log('选中了', select)
         navigate('/chat/friend/detail/', { state: { select, from: location.pathname } })
     }
 
     return <Chat>
         <Chat.Left size={"20%"}>
             <Container verticalScroll={true} horizontalScroll={true}>
-                <FriendList friendsData={apiData?.detail} onSelectFriend={(select) => { openMsgWindow(select) }} />
+                <FriendList
+                    data={apiData}
+                    onSelectFriend={(select) => { openMsgWindow(select) }}
+                    buildAvatarUrl={(name) => httpImgs.buildUrl(name)}
+                />
             </Container>
         </Chat.Left>
         <Chat.Right size={"70%"}>

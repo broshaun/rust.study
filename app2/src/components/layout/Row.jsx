@@ -5,7 +5,6 @@ import styles from './Row.module.css'
  * Row.Item：负责自身内容对齐 + 边框等视觉样式
  * Row：只负责布局（span 等分 / gap / wrap / align）
  */
-
 const Item = memo(({
   span = 1,
   width,
@@ -28,7 +27,7 @@ const Item = memo(({
     alignItems: align,
     justifyContent: justify,
     boxSizing: 'border-box',
-    ...style, // ✅ 关键：让 Row 注入的 flex/width 生效
+    ...style,
   }
 
   return (
@@ -66,6 +65,7 @@ const Row = memo(({
     boxSizing: 'border-box',
     padding: 0,
     margin: 0,
+    background: 'transparent', // 显式声明Row透明背景
   }
 
   const rowClasses = [
@@ -75,31 +75,28 @@ const Row = memo(({
     wrap ? styles.wrap : styles.nowrap,
   ].filter(Boolean).join(' ')
 
-  // ✅ 核心：用 flex 直接按 span 分配（无需计算宽度）
   const renderItems = () => itemList.map((el, idx) => {
     const p = el.props
     const span = Number(p.span) || 1
 
     const injectedStyle = {}
-
-    // 1) 最高优先级：用户显式 flex
     if (p.flex) {
       injectedStyle.flex = p.flex
-    }
-    // 2) 次优先级：用户显式 width（固定宽）
-    else if (p.width != null) {
+    } else if (p.width != null) {
       injectedStyle.width = typeof p.width === 'number' ? `${p.width}px` : p.width
       injectedStyle.flex = '0 0 auto'
-    }
-    // 3) 默认：span 等分（按比例占位）
-    else {
+    } else {
       injectedStyle.flex = `${span} ${span} 0`
       injectedStyle.minWidth = 0
     }
 
     return React.cloneElement(el, {
       key: el.key ?? idx,
-      style: { ...injectedStyle, ...p.style },
+      style: { 
+        ...injectedStyle, 
+        background: 'transparent', // 显式声明Item透明背景
+        ...p.style 
+      },
     })
   })
 

@@ -1,13 +1,15 @@
-/* 核心容器：层级布局基础（组件只做层级，不处理显示逻辑） */
+/* List.module.css - 最终版：浅灰色主题 + 图标无固定色 + 悬浮无背景变化 */
+/* 核心容器：超浅灰主底色（接近白色，最浅层级） */
 .listContainer {
   position: relative;
   width: 100%;
   min-height: 200px;
   box-sizing: border-box;
   overflow: hidden;
+  background-color: #f9f9f9; /* 超浅灰（始终生效） */
 }
 
-/* Items 层：完全复用 TextList 样式 */
+/* Items 层：与容器同色，底层统一 */
 .itemsLayer {
   position: absolute;
   top: 0;
@@ -17,31 +19,34 @@
   padding: 8px 12px;
   box-sizing: border-box;
   z-index: 1; /* 底层 */
+  background-color: #f9f9f9; /* 同容器超浅灰 */
 }
 
-/* 列表项样式（TextList 核心样式） */
+/* 列表项样式：浅灰底色，取消悬浮/点击背景变化 */
 .item {
   display: flex;
   align-items: center;
   height: var(--item-height);
   cursor: pointer;
-  background: transparent !important;
+  background: #fafafa !important; /* 固定浅灰底色，不再变化 */
   -webkit-tap-highlight-color: transparent;
+  border-radius: 4px; /* 轻微圆角，弱化浅灰的生硬感 */
 }
 
+/* 取消 focus/active/hover 时的背景色变化 */
 .item:focus,
 .item:active,
 .item:hover {
-  background: transparent !important;
+  background: #fafafa !important; /* 保持和默认状态一致的背景色 */
   outline: none;
 }
 
-/* 分隔线 */
+/* 分隔线：极浅灰，适配浅灰背景 */
 .divider {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0; /* 极浅灰分隔线 */
 }
 
-/* 图标容器 */
+/* 图标容器：移除图标颜色控制，让图标使用默认色 */
 .icon {
   display: flex;
   align-items: center;
@@ -49,20 +54,21 @@
   margin-right: var(--icon-label-gap);
 }
 
-/* 文本标签（点击变黑） */
+/* 文本标签：浅灰背景下文字更清晰 */
 .label {
   font-size: var(--label-font-size);
-  color: #999;
+  color: #757575; /* 中灰文字 */
   font-weight: 500;
   user-select: none;
   transition: color 0.1s ease;
 }
 
+/* 保留文字点击变色（如需取消可删除这行） */
 .item:active .label {
-  color: #000;
+  color: #333333; /* 点击后文字稍深 */
 }
 
-/* Content 层：固定在上层（组件只做层级，显示逻辑由上层控制） */
+/* Content 层：透明背景，让 Container 主题生效 */
 .contentLayer {
   position: relative;
   z-index: 10; /* 上层，覆盖 Items */
@@ -70,23 +76,5 @@
   min-height: 100%;
   padding: 8px 12px;
   box-sizing: border-box;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .label {
-    color: #888;
-  }
-  .item:active .label {
-    color: #fff;
-  }
-  .divider {
-    border-bottom-color: #333;
-  }
-  .contentLayer {
-    background-color: rgba(0, 0, 0, 0.95);
-  }
+  background-color: transparent; /* 透明，不遮挡 Container 主题 */
 }

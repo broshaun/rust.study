@@ -17,6 +17,12 @@ export const Mian = () => {
             icon: { name: 'user-circle', label: '头像' },
             onClick: (key) => { setShow(true); navigate('image/'); }
         },
+                {
+            key: 'name',
+            display: true,
+            icon: { name: 'bookmark-square', label: '昵称' },
+            onClick: (key) => { setShow(true);navigate('name/') }
+        },
         {
             key: 'settings',
             display: true,

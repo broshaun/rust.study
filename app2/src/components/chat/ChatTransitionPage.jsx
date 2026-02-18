@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './ChatTransitionPage.module.css';
 
-// 默认头像（avatar为null时使用）
+// 默认头像（avatar为null/加载失败时使用）
 const DEFAULT_AVATAR = 'https://q1.qlogo.cn/g?b=qq&nk=0&s=640';
 
 /**
@@ -17,19 +17,23 @@ const ChatTransitionPage = ({
   onVideo, 
   onClose 
 }) => {
-  // 解构并处理空值
+  // 解构并处理空值，增加严格的兜底逻辑
   const {
-    remark = '未知好友',
+    remark = '未知好友', // 兜底为字符串，避免null/undefined
     avatar = null,
     friend_id = '无ID',
     id = ''
   } = friendData;
   
-  // 头像文字占位（备注首字符）
-  const avatarText = remark.charAt(0);
+  // 移除：删除头像文字占位相关代码，不再定义avatarText
+
+  // 修复friend_id切片异常：先转为字符串，空值兜底
+  const shortFriendId = () => {
+    const idStr = String(friend_id);
+    return idStr.length >= 6 ? idStr.slice(-6) : idStr;
+  };
 
   return (
-    // 移除全屏居中逻辑，直接渲染过渡容器
     <div className={styles.transitionContainer}>
       {/* 关闭按钮（可选） */}
       {onClose && (
@@ -47,20 +51,26 @@ const ChatTransitionPage = ({
                 alt={remark} 
                 className={styles.avatarImg}
                 onError={(e) => {
-                  // 头像加载失败显示文字占位
-                  e.target.style.display = 'none';
-                  e.target.nextElementSibling.style.display = 'flex';
+                  // 头像加载失败时显示默认头像，不再处理文字占位
+                  e.target.src = DEFAULT_AVATAR;
                 }}
               />
-            ) : null}
-            <span className={styles.avatarText}>{avatarText}</span>
+            ) : (
+              // 无头像时直接显示默认头像，不再渲染文字占位
+              <img 
+                src={DEFAULT_AVATAR} 
+                alt={remark} 
+                className={styles.avatarImg}
+              />
+            )}
+            {/* 移除：删除头像文字占位的span标签 */}
           </div>
         </div>
 
         {/* 好友备注区域 */}
         <div className={styles.friendInfo}>
           <h2 className={styles.friendName}>{remark}</h2>
-          <p className={styles.friendId}>ID: {friend_id.slice(-6)}</p>
+          <p className={styles.friendId}>ID: {shortFriendId()}</p>
         </div>
       </div>
 
@@ -76,7 +86,7 @@ const ChatTransitionPage = ({
           className={`${styles.operBtn} ${styles.videoBtn}`}
           onClick={() => onVideo?.(friendData)}
         >
-          发起视频
+          无头像时直接显示默认头像，不再渲染文字占位
         </button>
       </div>
     </div>

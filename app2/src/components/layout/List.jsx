@@ -1,8 +1,9 @@
+// List.jsx - 最终版：浅灰色主题 + 图标无固定色 + 悬浮无背景变化
 import React, { useMemo, Children, isValidElement } from 'react';
 import { IconCustomColor } from 'components/icon';
 import styles from './List.module.css';
 
-// 复用比例配置
+// 复用比例配置（适配浅灰主题的视觉比例）
 const RATIO = {
   icon: 0.45,
   label: 0.26,
@@ -53,7 +54,7 @@ const List = ({
 
   const { items, content, hasItems, hasContent } = slotMap;
 
-  // 计算动态尺寸（保留 TextList 逻辑）
+  // 计算动态尺寸（保留 TextList 逻辑，适配浅灰主题的视觉比例）
   const computed = useMemo(() => ({
     itemHeight: `${Math.round(size * RATIO.itemHeight)}px`,
     iconSize: Math.round(size * RATIO.icon),
@@ -87,14 +88,18 @@ const List = ({
               className={`${styles.item} ${
                 showDivider && index < items.length - 1 ? styles.divider : ''
               }`}
-              style={{ paddingLeft: `${computed.tierGap}px` }}
+              style={{ 
+                paddingLeft: `${computed.tierGap}px`,
+                // 浅灰主题优化：添加轻微的内边距，提升视觉呼吸感
+                paddingRight: `${computed.tierGap}px`
+              }}
               onClick={handleClick(item)}
             >
               {item.icon?.name && (
                 <div className={styles.icon}>
                   <IconCustomColor
                     name={item.icon.name}
-                    color={item.icon.color}
+                    // 关键修改：移除强制设置的颜色，让图标使用默认色
                     size={computed.iconSize}
                   />
                 </div>
