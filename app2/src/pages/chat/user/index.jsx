@@ -1,6 +1,7 @@
 import { Route } from "react-router-dom";
 import { Mian } from "./main";
-import { Image } from "./a";
+import { ImageShow } from "./imegs";
+
 
 
 
@@ -8,7 +9,6 @@ import { Image } from "./a";
 // 导出 Super 相关的路由配置
 export const RsSelf = (
     <Route path="self" element={<Mian />}>
-        <Route path="image" element={<Image />}/>
-    
+        <Route path="image" element={<ImageShow />}/>
     </Route>
 )

@@ -1,0 +1,102 @@
+/* 核心容器：单行布局 + 适配文本框 */
+.uploadContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+/* 单行布局核心：禁止换行 */
+.uploadWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+/* 隐藏文件输入框 */
+.fileInput { display: none; }
+
+/* 上传按钮：灰色系 + 精简样式 */
+.uploadBtn {
+  padding: 0 10px;
+  height: 32px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #f5f7fa;
+  color: #606266;
+  cursor: pointer;
+  font-size: 12px;
+  transition: color .2s;
+  white-space: nowrap;
+}
+.uploadBtn:hover {
+  color: #303133;
+  border-color: #c0c4cc;
+}
+
+/* 预览区：20px间距 + 精简布局 */
+.previewContainer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+/* 缩略图容器：38x32尺寸 + 精简样式 */
+.previewWrapper {
+  width: 38px;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f9fafb;
+}
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 按钮组：防误触10px间距 */
+.btnGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 确定/取消按钮通用样式：精简 + 统一灰色 */
+.confirmBtn, .clearBtn {
+  width: 36px;
+  height: 32px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #f5f7fa;
+  color: #909399; /* 统一灰色默认色 */
+  cursor: pointer;
+  font-size: 14px;
+  transition: color .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 悬浮效果：仅改文字色，背景不变 */
+.confirmBtn:hover { color: #52c41a; }
+.clearBtn:hover { color: #f5222d; }
+
+/* 错误提示：精简样式 */
+.errorTip {
+  font-size: 11px;
+  color: #f5222d;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

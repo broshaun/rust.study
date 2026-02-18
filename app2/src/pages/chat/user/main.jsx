@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { TextList, Image, List, Container } from 'components';
+import { Row, Image, List, Container, ImageUpload } from 'components';
+import { IconCustomColor } from 'components/icon';
 import { useHttpClient } from 'hooks';
 
 
@@ -8,13 +9,13 @@ import { useHttpClient } from 'hooks';
 export const Mian = () => {
     const navigate = useNavigate();
     const [show, setShow] = useState(false);
-    const { http } = useHttpClient('/imgs');
+
     const items = [
         {
             key: 'avatar',
             display: true,
             icon: { name: 'user-circle', label: '头像' },
-            onClick: (key) => { setShow(true); }
+            onClick: (key) => { setShow(true); navigate('image/'); }
         },
         {
             key: 'settings',
@@ -24,7 +25,6 @@ export const Mian = () => {
         },
     ];
 
-    console.log(http.buildUrl('7ffae106f9d5037f61de633b179db2e8.jpg'))
 
 
     return <List>
@@ -32,8 +32,7 @@ export const Mian = () => {
         {show &&
             <List.Content>
                 <Container>
-                    {/* <img src={http.buildUrl('7ffae106f9d5037f61de633b179db2e8.jpg')} /> */}
-                    <Image src={http.buildUrl('7ffae106f9d5037f61de633b179db2e8.jpg')} />
+                    <Outlet context={{ setShow }} />
                 </Container>
             </List.Content>
         }

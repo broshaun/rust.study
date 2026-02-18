@@ -1,44 +1,26 @@
-/* Row.module.css */
 .row {
   display: flex;
-  flex-wrap: nowrap;
   box-sizing: border-box;
   width: auto;
+  margin: 0;
+  padding: 0;
 }
 
 .fullWidth {
   width: 100%;
 }
 
-.align-start {
-  align-items: flex-start;
-}
-.align-center {
-  align-items: center;
-}
-.align-end {
-  align-items: flex-end;
-}
+/* Row 对 Item 的垂直对齐 */
+.align-start { align-items: flex-start; }
+.align-center { align-items: center; }
+.align-end { align-items: flex-end; }
 
-.justify-start {
-  justify-content: flex-start;
-}
-.justify-center {
-  justify-content: center;
-}
-.justify-end {
-  justify-content: flex-end;
-}
-.justify-between {
-  justify-content: space-between;
-}
-.justify-around {
-  justify-content: space-around;
-}
+.wrap { flex-wrap: wrap; }
+.nowrap { flex-wrap: nowrap; }
 
-.wrap {
-  flex-wrap: wrap;
-}
-.nowrap {
-  flex-wrap: nowrap;
+/* Item 基础样式（视觉由 props 控制） */
+.rowItem {
+  box-sizing: border-box;
+  padding: 8px 12px;
+  min-width: 0;      /* ✅ 防止内容撑爆 */
 }

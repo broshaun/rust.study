@@ -2,7 +2,7 @@ import { Route } from "react-router-dom";
 import { Chat } from "./main";
 import { RsFriend } from "./friend";
 import { RsDialog } from "./dialog";
-import { RsSelf } from "./self";
+import { RsSelf } from "./user";
 
 
 
