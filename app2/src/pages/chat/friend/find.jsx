@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useTransition, useReducer, Suspense } from 'react';
-import { SimpleTable, SingleRadio, InputText, Divider, Container } from 'components';
+import { SimpleTable, SingleRadio, InputText2, Divider, Container } from 'components';
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient, useNewWindow } from 'hooks';
 import { useRequest, useDebounce } from 'ahooks';
@@ -12,13 +12,14 @@ export const Find = () => {
     const navigate = useNavigate();
     const [apiData, setApiData] = useState([]);
     const [isPending, startTransition] = useTransition()
-    const { http } = useHttpClient('/api/chat/friend/find/')
-    const { http: http2 } = useHttpClient('/api/chat/friend/')
+    const { http } = useHttpClient('/api/chat/friend/')
+    const { http: httpImgs } = useHttpClient('/imgs');
     const [keyword, setKeyword] = useState();
     const debouncedKeyword = useDebounce(keyword, { wait: 500 });
 
-
+    // 查找好友
     const { runAsync: run } = useRequest((email) => {
+        console.log('email', email)
         if (!email) return;
         http.requestBodyJson('POST', { 'email': email })
             .then((results) => {
@@ -31,10 +32,10 @@ export const Find = () => {
         return 'ok'
     }, { manual: true })
 
-
+    // 添加好友
     const { runAsync: run2 } = useRequest((id) => {
         if (!id) return;
-        http2.requestBodyJson('PUT', { 'id': id })
+        http.requestBodyJson('PUT', { 'id': id })
             .then((results) => {
                 if (!results) return;
                 const { code, message, data } = results
@@ -51,17 +52,21 @@ export const Find = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <InputText
-            right_icon='magnifying-glass-circle'
-            placeholder="搜索好友"
-            onChangeValue={handleEmailChange}
-            right_icon_onClick={() => run(debouncedKeyword)}
-        />
-        <Divider />
-        {apiData && Object.keys(apiData).length !== 0 &&
-            <Container verticalScroll={true} horizontalScroll={true}>
-                <UserInfoCard email={apiData?.email} id={apiData?.id} onAddFriend={(v) => { run2(v?.id) }} />
-            </Container>
-        }
+        <Container alignItems='center'>
+            <be/>
+            <InputText2 placeholder="搜索好友" onChangeValue={handleEmailChange}>
+                <InputText2.Right icon='magnifying-glass-circle' onClick={() => run(debouncedKeyword)} />
+            </InputText2>
+            <Divider />
+            {apiData && Object.keys(apiData).length !== 0 &&
+                <UserInfoCard title='用户信息' onAddFriend={(v) => { run2(v?.id); navigate('/chat/friend/'); }}>
+                    <UserInfoCard.Avatar>
+                        <img src={httpImgs.buildUrl(apiData.avatar_url)} />
+                    </UserInfoCard.Avatar>
+                    <UserInfoCard.Info>{apiData}</UserInfoCard.Info>
+                </UserInfoCard>
+            }
+        </Container>
     </Suspense>
 }
+

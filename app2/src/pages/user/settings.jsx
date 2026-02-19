@@ -1,6 +1,6 @@
-
-import { InputText2 } from 'components';
 import { useLocalStorageState } from 'ahooks';
+import { InputText2, Container } from 'components';
+
 
 
 export const Settings = () => {
@@ -27,9 +27,10 @@ export const Settings = () => {
     ];
 
 
-    return <InputText2 defaultValue={apiBase} onChangeValue={(value) => { setApiBase(`http://${value}`) }}>
-        <InputText2.Left label={'服务地址'}></InputText2.Left>
-    </InputText2>
-
-
+    return <Container alignItems='center'>
+        <br/>
+        <InputText2 defaultValue={apiBase} onChangeValue={(value) => { setApiBase(value) }}>
+            <InputText2.Left label={'服务地址'}></InputText2.Left>
+        </InputText2>
+    </Container>
 }

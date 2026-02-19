@@ -1,12 +1,12 @@
-/* Row：仅保留布局，完全透明背景 */
+/* Row 核心样式：纯布局容器，无 span 相关样式 */
 .row {
   display: flex;
   box-sizing: border-box;
   width: auto;
   margin: 0;
   padding: 0;
-  background: transparent; /* 彻底移除Row背景色 */
-  border-radius: 4px;      /* 保留轻微圆角（可选，不影响透明） */
+  background: transparent; /* 完全透明背景 */
+  border-radius: 4px;      /* 保留轻微圆角（可选） */
 }
 
 /* 占满父容器宽度 */
@@ -14,46 +14,21 @@
   width: 100%;
 }
 
-/* 垂直对齐方式 */
-.align-start { align-items: flex-start; }
-.align-center { align-items: center; }
-.align-end { align-items: flex-end; }
-
-/* 换行控制 */
-.wrap { flex-wrap: wrap; }
-.nowrap { flex-wrap: nowrap; }
-
-/* Item：完全透明背景，仅保留盒模型 */
-.rowItem {
-  box-sizing: border-box;
-  min-width: 0;              /* 防止内容撑爆 */
-  background: transparent;   /* 彻底移除Item背景色 */
-  border-radius: 2px;        /* 保留轻微圆角（可选） */
-  padding: 8px 12px;         /* 保留内边距，保证内容排版 */
-}
-
-/* 按钮样式：保留基础视觉，不透明 + 有辨识度 */
-.rowItem button {
-  /* 核心：浅灰底色，不是完全透明 */
+/* 按钮样式：保留基础视觉（如需移除可删除） */
+.row button {
   background: #f5f7fa;       
-  /* 轻微边框，区分按钮边界 */
   border: 1px solid #e0e0e0; 
-  /* 小圆角，提升质感 */
   border-radius: 4px;        
-  /* 基础内边距，保证点击区域 */
   padding: 6px 12px;         
-  /* 鼠标悬浮样式，提升交互感 */
   cursor: pointer;           
   transition: all 0.2s ease;
 }
 
-/* 按钮悬浮效果：加深一点底色，不突兀 */
-.rowItem button:hover {
+.row button:hover {
   background: #eef0f3;       
   border-color: #d0d0d0;     
 }
 
-/* 按钮点击效果：轻微压暗 */
-.rowItem button:active {
+.row button:active {
   background: #e5e7eb;       
 }

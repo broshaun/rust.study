@@ -24,7 +24,6 @@ export const Logout = () => {
       })
     fnLogout()
     delUser()
-
   }
 
 

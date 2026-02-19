@@ -1,89 +1,59 @@
-import { useMemo } from 'react';
-
 /**
- * 处理时间戳/日期的通用Hook
- * @param {number | string | Date} time - 时间戳（秒/毫秒）、日期字符串、Date对象，不传则取当前时间
- * @returns {Object} 包含各种格式的时间字符串和原始Date对象
+ * 纯实时时间工具Hook（无需传参）
+ * 返回值均为函数，调用函数即可获取最新的实时时间
+ * @returns {Object} 包含获取各类时间格式的函数
  */
-const useDateTime = (time) => {
-    // 【关键修复1】确保useMemo在Hook顶层调用，且入参处理逻辑更健壮
-    const date = useMemo(() => {
-        let targetTime = time;
-
-        // 不传参数时取当前时间
-        if (targetTime === undefined || targetTime === null) {
-            return new Date();
-        }
-
-        // 处理数字类型（时间戳）
-        if (typeof targetTime === 'number') {
-            const timestamp = targetTime;
-            // 秒级时间戳（10位）转毫秒
-            if (timestamp.toString().length === 10) {
-                targetTime = timestamp * 1000;
-            }
-            // 防止数字过大/过小导致无效日期
-            if (targetTime < 0 || targetTime > Date.now() * 2) {
-                console.warn('useDateTime: 时间戳超出合理范围，使用当前时间', targetTime);
-                return new Date();
-            }
-        }
-
-        // 转换为Date对象
-        const dateObj = new Date(targetTime);
-
-        // 校验Date对象有效性
-        if (isNaN(dateObj.getTime())) {
-            console.warn('useDateTime: 无效的时间参数，已使用当前时间', targetTime);
-            return new Date();
-        }
-
-        return dateObj;
-    }, [time]);
-
-    // 补零函数：提取到useMemo外（纯函数无需memo）
+const useDateTime = () => {
+    // 补零工具函数
     const padZero = (num) => {
         const n = Number(num);
         return isNaN(n) ? '00' : n.toString().padStart(2, '0');
     };
 
-    // 格式化：2021-01-01（日期）
-    const dateStr = useMemo(() => {
+    // 核心：获取最新的实时Date对象（每次调用都生成新的）
+    const getDate = () => new Date();
+
+    // 获取最新日期字符串：2021-01-01
+    const getDateStr = () => {
+        const date = getDate();
         const year = date.getFullYear();
-        const month = padZero(date.getMonth() + 1); // 月份从0开始，需+1
+        const month = padZero(date.getMonth() + 1);
         const day = padZero(date.getDate());
         return `${year}-${month}-${day}`;
-    }, [date]);
+    };
 
-    // 格式化：2021-01-01 10:01:01（日期+时间）
-    const dateTimeStr = useMemo(() => {
+    // 获取最新日期+时间字符串：2021-01-01 10:01:01
+    const getDateTimeStr = () => {
+        const date = getDate();
         const hours = padZero(date.getHours());
         const minutes = padZero(date.getMinutes());
         const seconds = padZero(date.getSeconds());
-        return `${dateStr} ${hours}:${minutes}:${seconds}`;
-    }, [date, dateStr]);
+        return `${getDateStr()} ${hours}:${minutes}:${seconds}`;
+    };
 
-    // 格式化：10:01:01（仅时间）
-    const timeStr = useMemo(() => {
+    // 获取最新时间字符串：10:01:01
+    const getTimeStr = () => {
+        const date = getDate();
         const hours = padZero(date.getHours());
         const minutes = padZero(date.getMinutes());
         const seconds = padZero(date.getSeconds());
         return `${hours}:${minutes}:${seconds}`;
-    }, [date]);
+    };
 
-    // 获取当前时间戳（秒级）
-    const timestampSec = useMemo(() => Math.floor(date.getTime() / 1000), [date]);
+    // 获取最新秒级时间戳：1609435261
+    const getTimestampSec = () => Math.floor(getDate().getTime() / 1000);
 
-    // 获取当前时间戳（毫秒级）
-    const timestampMs = useMemo(() => date.getTime(), [date]);
+    // 获取最新毫秒级时间戳：1609435261000
+    const getTimestampMs = () => getDate().getTime();
 
+    // 返回所有获取最新时间的函数
     return {
-        date, // 原始Date对象，可自定义操作
-        dateStr, // 2021-01-01
-        dateTimeStr, // 2021-01-01 10:01:01
-        timeStr, // 10:01:01
-        timestampSec, // 秒级时间戳（如 1609435261）
-        timestampMs, // 毫秒级时间戳（如 1609435261000）
+        getDate,        // 调用 → 获取最新Date对象
+        getDateStr,     // 调用 → 获取最新日期字符串
+        getDateTimeStr, // 调用 → 获取最新日期+时间字符串
+        getTimeStr,     // 调用 → 获取最新时间字符串
+        getTimestampSec,// 调用 → 获取最新秒级时间戳
+        getTimestampMs  // 调用 → 获取最新毫秒级时间戳
     };
 };
 

@@ -9,7 +9,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   border: 1px solid #e8ebf0;
   transition: box-shadow 0.3s ease;
-  position: relative;   /* 为按钮定位提供容器（移到这里统一管理） */
+  position: relative;   /* 为按钮定位提供容器 */
   box-sizing: border-box; /* 关键：padding不会撑大宽度 */
 }
 
@@ -42,21 +42,53 @@
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 1px solid #f0f2f5;
-  padding-right: 80px; /* 给右上角按钮留出空间，避免标题被遮挡 */
+  padding-right: 80px; /* 给右上角按钮留出空间 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis; /* 标题过长时省略 */
 }
 
-/* 信息项：自适应剩余空间 */
+/* 新增：内容容器（Avatar + Info 整体布局） */
+.card-content-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* 头像和信息之间的间距 */
+  flex-wrap: wrap; /* 小屏幕下自动换行 */
+  margin-top: 10px;
+}
+
+/* 新增：头像容器样式 */
+.card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0; /* 防止头像被挤压 */
+  border: 2px solid #f0f2f5;
+}
+
+/* 头像图片样式 */
+.card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block; /* 去除图片底部间隙 */
+}
+
+/* 新增：信息内容容器样式 */
+.card-info-content {
+  flex: 1; /* 占满剩余宽度 */
+  min-width: 0; /* 防止内容撑爆 */
+}
+
+/* 信息项通用样式（适配 apiData 渲染） */
 .info-item {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
-  width: 100%; /* 确保占满卡片宽度 */
+  margin-bottom: 12px;
+  width: 100%;
 }
 
-/* 标签固定宽度，内容自适应 */
 .info-label {
   width: 80px;          /* 固定宽度，保证对齐 */
   flex-shrink: 0;       /* 防挤压 */
@@ -65,16 +97,15 @@
   font-weight: 500;
 }
 
-/* 内容占满剩余宽度，溢出自动换行 */
 .info-value {
   flex: 1;              /* 占满剩余宽度 */
   font-size: 14px;
   color: #1f2937;
   word-break: break-all; /* 防止长ID/邮箱超出容器 */
-  padding-right: 10px;  /* 右侧留白，避免贴边 */
+  padding-right: 10px;  /* 右侧留白 */
 }
 
-/* 新增：添加好友按钮样式（位置不变，适配不同宽度卡片） */
+/* 添加好友按钮样式（位置不变） */
 .add-friend-btn {
   position: absolute;
   top: 20px;
@@ -88,8 +119,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
-  flex-shrink: 0; /* 防挤压 */
-  z-index: 10;    /* 确保在最上层 */
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .add-friend-btn:hover {
@@ -101,13 +132,11 @@
   background-color: #2677dd;
 }
 
-/* 加载状态按钮 */
 .add-friend-btn.loading {
   background-color: #8cb8ff;
   cursor: not-allowed;
 }
 
-/* 禁用状态按钮 */
 .add-friend-btn.disabled {
   background-color: #cccccc;
   color: #999999;
@@ -115,7 +144,7 @@
   box-shadow: none;
 }
 
-/* 响应式优化：小容器下调整按钮和内边距 */
+/* 响应式优化 */
 @media (max-width: 320px) {
   .info-card {
     padding: 20px 15px;
@@ -131,6 +160,15 @@
   .card-title {
     padding-right: 70px;
     font-size: 16px;
+  }
+  
+  .card-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .card-content-wrapper {
+    gap: 15px;
   }
   
   .info-label {

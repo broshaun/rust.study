@@ -1,0 +1,37 @@
+/* Col 核心样式：仅保留基础盒模型和交互优化 */
+.col {
+  /* 基础盒模型：防止padding/border撑大宽度 */
+  box-sizing: border-box;
+  /* 基础内边距：保证内容排版（可通过style覆盖） */
+  padding: 8px 12px;
+  /* 轻微圆角：提升视觉体验（可通过props覆盖） */
+  border-radius: 2px;
+  /* 防止内容溢出 */
+  overflow: hidden;
+}
+
+/* Col 内部按钮样式：和Row保持视觉统一 */
+.col button {
+  /* 浅灰底色，非透明 */
+  background: #f5f7fa;
+  /* 轻微边框区分边界 */
+  border: 1px solid #e0e0e0;
+  /* 小圆角提升质感 */
+  border-radius: 4px;
+  /* 基础内边距保证点击区域 */
+  padding: 6px 12px;
+  /* 鼠标悬浮样式 */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* 按钮悬浮效果 */
+.col button:hover {
+  background: #eef0f3;
+  border-color: #d0d0d0;
+}
+
+/* 按钮点击效果 */
+.col button:active {
+  background: #e5e7eb;
+}

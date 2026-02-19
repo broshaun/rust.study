@@ -1,111 +1,79 @@
-import React, { memo, useMemo, Children, isValidElement } from 'react'
+import React, { memo } from 'react'
 import styles from './Row.module.css'
 
 /**
- * Row.Item：负责自身内容对齐 + 边框等视觉样式
- * Row：只负责布局（span 等分 / gap / wrap / align）
+ * 最终版 Row 组件：纯布局容器，移除 span 属性
+ * 核心：仅负责 flex 布局、对齐、间距、边框等基础样式，无占比控制
  */
-const Item = memo(({
-  span = 1,
-  width,
-  flex,
-  align = 'center',
+const Row = memo(({
+  // 移除 span 属性，保留其他布局对齐属性
   justify = 'center',
+  align = 'center',
   border = 0,
   borderColor = '#e0e0e0',
   borderRadius = 0,
   borderStyle = 'solid',
+
+  // Row 核心布局属性
+  gap = 0,
+  wrap = false,
+  fullWidth = true,
+  width = 'auto',
+  height = 'auto',
+  flex, // 自定义 flex 属性（用户按需传入）
   style,
   children
 }) => {
+  // 处理边框样式
   const bw = border ? (typeof border === 'number' ? `${border}px` : border) : ''
 
-  const itemStyle = {
+  // 计算 flex 样式（仅保留自定义 flex，移除 span 相关逻辑）
+  const flexStyle = {}
+  if (flex) {
+    flexStyle.flex = flex
+    flexStyle.minWidth = 0 // 防止内容撑爆（仅自定义 flex 时生效）
+  }
+
+  // 处理尺寸（number 转 px）
+  const dim = (v, k) => (v === 'auto' ? {} : { [k]: typeof v === 'number' ? `${v}px` : v })
+
+  // 合并所有样式
+  const rowStyle = {
+    // 布局基础样式
+    gap: typeof gap === 'number' ? `${gap}px` : gap,
+    ...dim(width, 'width'),
+    ...dim(height, 'height'),
+    // 边框样式
     border: bw ? `${bw} ${borderStyle} ${borderColor}` : 'none',
     borderRadius: typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius,
+    // flex 对齐样式
     display: 'flex',
     alignItems: align,
     justifyContent: justify,
+    flexWrap: wrap ? 'wrap' : 'nowrap',
+    // 基础盒模型
     boxSizing: 'border-box',
-    ...style,
+    padding: 0,
+    margin: 0,
+    background: 'transparent',
+    // 自定义 flex（用户按需传入）
+    ...flexStyle,
+    // 用户自定义样式（最高优先级）
+    ...style
   }
 
+  // 合并类名
+  const rowClasses = [
+    styles.row,
+    fullWidth && styles.fullWidth
+  ].filter(Boolean).join(' ')
+
   return (
-    <div className={styles.rowItem} data-span={span} style={itemStyle}>
+    <div className={rowClasses} style={rowStyle}>
+      {/* 直接渲染子元素 */}
       {children}
     </div>
   )
 })
 
-const Row = memo(({
-  children,
-  gap = 0,
-  align = 'center',
-  wrap = false,
-  fullWidth = true,
-  width = 'auto',
-  height = 'auto',
-}) => {
-  const { itemList } = useMemo(() => {
-    const list = []
-    Children.forEach(children, (child) => {
-      if (isValidElement(child) && child.type === Item) {
-        list.push(child)
-      }
-    })
-    return { itemList: list }
-  }, [children])
-
-  const dim = (v, k) => (v === 'auto' ? {} : { [k]: typeof v === 'number' ? `${v}px` : v })
-
-  const rowStyle = {
-    gap: typeof gap === 'number' ? `${gap}px` : gap,
-    ...dim(width, 'width'),
-    ...dim(height, 'height'),
-    boxSizing: 'border-box',
-    padding: 0,
-    margin: 0,
-    background: 'transparent', // 显式声明Row透明背景
-  }
-
-  const rowClasses = [
-    styles.row,
-    fullWidth && styles.fullWidth,
-    styles[`align-${align}`],
-    wrap ? styles.wrap : styles.nowrap,
-  ].filter(Boolean).join(' ')
-
-  const renderItems = () => itemList.map((el, idx) => {
-    const p = el.props
-    const span = Number(p.span) || 1
-
-    const injectedStyle = {}
-    if (p.flex) {
-      injectedStyle.flex = p.flex
-    } else if (p.width != null) {
-      injectedStyle.width = typeof p.width === 'number' ? `${p.width}px` : p.width
-      injectedStyle.flex = '0 0 auto'
-    } else {
-      injectedStyle.flex = `${span} ${span} 0`
-      injectedStyle.minWidth = 0
-    }
-
-    return React.cloneElement(el, {
-      key: el.key ?? idx,
-      style: { 
-        ...injectedStyle, 
-        background: 'transparent', // 显式声明Item透明背景
-        ...p.style 
-      },
-    })
-  })
-
-  return (
-    <div className={rowClasses} style={rowStyle}>
-      {renderItems()}
-    </div>
-  )
-})
-
-Row.Item = Item
 export default Row

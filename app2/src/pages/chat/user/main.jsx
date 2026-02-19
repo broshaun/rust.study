@@ -1,49 +1,45 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense, useTransition } from 'react';
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { Row, Image, List, Container, ImageUpload } from 'components';
+import { Row, Image, List, Container, Modal } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient } from 'hooks';
-
+import { useRequest } from 'ahooks';
 
 
 export const Mian = () => {
     const navigate = useNavigate();
+    const location = useLocation()
     const [show, setShow] = useState(false);
+    const [isPending, startTransition] = useTransition()
+    const { http: apiLogin } = useHttpClient('/api/chat/login/');
+    const [apiData, setApiData] = useState();
 
-    const items = [
-        {
-            key: 'avatar',
-            display: true,
-            icon: { name: 'user-circle', label: '头像' },
-            onClick: (key) => { setShow(true); navigate('image/'); }
-        },
-                {
-            key: 'name',
-            display: true,
-            icon: { name: 'bookmark-square', label: '昵称' },
-            onClick: (key) => { setShow(true);navigate('name/') }
-        },
-        {
-            key: 'settings',
-            display: true,
-            icon: { name: 'cog-6-tooth', label: '设置' },
-            onClick: (key) => { console.log('点击了', key) }
-        },
-    ];
+    useRequest(() => {
+        apiLogin.requestParams('GET').then((results) => {
+            if (!results) return;
+            const { code, message, data } = results
+            code === 200 && startTransition(() => {
+                setApiData(data)
+            })
+        })
+    }, { refreshDeps: [location.pathname] })
 
+    // console.log('apiData', apiData)
 
-
-    return <List>
-        {!show && <List.Items>{items}</List.Items>}
-        {show &&
-            <List.Content>
-                <Container>
-                    <Outlet context={{ setShow }} />
-                </Container>
-            </List.Content>
+    return <Suspense>
+        {!show &&
+            < List >
+                <List.Items icon='user-circle' onClick={() => { setShow(true); navigate('image/', { state: apiData }); }}>头像</List.Items>
+                <List.Items icon='email' onClick={() => { }}>{apiData?.email}</List.Items>
+                <List.Items icon='bookmark-square' onClick={() => { setShow(true); navigate('name/', { state: apiData }); }}>昵称：{apiData?.nikename} </List.Items>
+                <List.Items icon='arrow-left' onClick={() => { setShow(true); navigate('lgout/', { state: apiData }); }}>退出登录</List.Items>
+            </List>
         }
-    </List>
-
-
+        {show &&
+            <Container>
+                <Outlet context={{ setShow }} />
+            </Container>
+        }
+    </Suspense >
 }
 

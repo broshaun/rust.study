@@ -1,177 +1,156 @@
-/* 对话列表容器 - 核心：自适应父容器 */
-.dialogListContainer { /* msgListContainer → dialogListContainer */
-    width: 100%;
-    height: 100%;
-    background: #f0f2f5;
-    border-right: 1px solid #e5e6eb;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
+/* 容器样式 */
+.dialogListContainer {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* QQ风格对话列表标题 */
-.dialogListHeader { /* msgListHeader → dialogListHeader */
-    height: 38px;
-    line-height: 38px;
-    padding: 0 15px;
-    background: #f7f9fa;
-    border-bottom: 1px solid #e5e6eb;
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    flex-shrink: 0;
+/* 列表头部 - 紧凑化 */
+.dialogListHeader {
+  padding: 8px 12px; /* 原12px 16px → 减少内边距 */
+  font-size: 15px; /* 原16px → 缩小字号 */
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #f0f2f5;
+  flex-shrink: 0;
 }
 
-/* 对话列表 */
-.dialogList { /* msgList → dialogList */
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    flex: 1;
-    overflow-y: auto;
-    box-sizing: border-box;
+/* 列表主体 */
+.dialogList {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  overflow-y: auto;
 }
 
-/* QQ风格滚动条 */
-.dialogList::-webkit-scrollbar {
-    width: 6px;
-}
-.dialogList::-webkit-scrollbar-track {
-    background: transparent;
-}
-.dialogList::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 50%;
-}
-
-/* 空对话项 */
-.emptyDialogItem { /* emptyMsgItem → emptyDialogItem */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #999;
-    padding: 20px 0;
-    box-sizing: border-box;
+/* 空列表样式 - 紧凑化 */
+.emptyDialogItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 160px; /* 原200px → 缩短高度 */
+  color: #999;
 }
 
 .emptyIcon {
-    font-size: 40px;
-    margin-bottom: 10px;
+  font-size: 40px; /* 原48px → 缩小图标 */
+  margin-bottom: 6px; /* 原8px → 减少间距 */
 }
 
 .emptyText {
-    font-size: 14px;
+  font-size: 13px; /* 原14px → 缩小字号 */
 }
 
-/* 对话项样式（QQ风格） */
-.dialogItem { /* msgItem → dialogItem */
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    margin: 0;
-    border-bottom: 1px solid #f0f2f5;
-    background-color: #fff;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    position: relative;
-    box-sizing: border-box;
+/* 对话项样式 - 核心紧凑化 */
+.dialogItem {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px; /* 原12px 16px → 大幅减少内边距 */
+  border-bottom: 1px solid #f0f2f5;
+  position: relative;
+  transition: background-color 0.2s;
+  min-height: 56px; /* 固定最小高度，避免内容挤压 */
 }
 
-/* 鼠标悬浮效果（QQ经典） */
 .dialogItem:hover {
-    background-color: #e5efff;
+  background-color: #f5f7fa;
 }
 
-/* 右上角删除按钮 */
+/* 删除按钮 - 紧凑化 */
 .deleteBtn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 14px;
-    height: 14px;
-    border: none;
-    background: transparent;
-    color: #999;
-    font-size: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    z-index: 10;
-    flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  right: 8px; /* 原12px → 减少右边距 */
+  transform: translateY(-50%);
+  width: 22px; /* 原24px → 缩小按钮 */
+  height: 22px; /* 原24px → 缩小按钮 */
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 13px; /* 原14px → 缩小字号 */
+  cursor: pointer;
+  border-radius: 50%;
+  display: none;
+}
+
+.dialogItem:hover .deleteBtn {
+  display: block;
 }
 
 .deleteBtn:hover {
-    background: transparent;
-    color: #666;
+  background-color: #f0f2f5;
+  color: #ff4d4f;
 }
 
-/* 联系人头像（QQ风格圆形） */
-.dialogAvatar { /* msgAvatar → dialogAvatar */
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #409eff;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 600;
-    margin-right: 12px;
-    flex-shrink: 0;
-    position: relative;
+/* 头像容器 - 紧凑化 */
+.dialogAvatar {
+  width: 40px; /* 原48px → 缩小头像 */
+  height: 40px; /* 原48px → 缩小头像 */
+  border-radius: 50%;
+  background: #409eff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px; /* 原20px → 缩小文字 */
+  margin-right: 8px; /* 原12px → 减少右边距 */
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
 }
 
-/* 头像图片 */
 .avatarImg {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
-/* 头像文字占位（无图片时显示） */
 .avatarText {
-    display: none;
-    width: 100%;
-    height: 100%;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
+  display: none;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
 }
 
-/* 联系人信息容器 */
-.dialogInfo { /* msgInfo → dialogInfo */
-    flex: 1;
-    overflow: hidden;
+/* 对话信息 - 核心优化：解决昵称挤不下问题 */
+.dialogInfo {
+  flex: 1;
+  min-width: 0;
+  padding-right: 24px; /* 给删除按钮留空间，避免文字重叠 */
 }
 
-/* 联系人备注名称 */
-.dialogSender { /* msgSender → dialogSender */
-    margin: 0;
-    font-size: 15px;
-    color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.dialogSender {
+  font-size: 14px; /* 原15px → 缩小字号 */
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 2px 0; /* 原0 0 4px 0 → 减少下边距 */
+  /* 关键：支持两行显示，避免挤不下 */
+  white-space: normal; /* 原nowrap → 取消单行限制 */
+  line-height: 1.2; /* 紧凑行高 */
+  max-height: 28px; /* 限制最多两行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
 }
 
-/* 联系人ID信息 */
-.dialogPreview { /* msgPreview → dialogPreview */
-    margin: 2px 0 0 0;
-    font-size: 12px;
-    color: #999;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
+.dialogPreview {
+  font-size: 11px; /* 原12px → 缩小字号 */
+  color: #999;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-/* 移除在线状态相关样式 */

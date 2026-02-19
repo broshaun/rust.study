@@ -1,14 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Children, isValidElement } from 'react';
 import styles from './Modal.module.css';
 
-// 移除 onClose props，仅保留 visible 和 children
 export default function Modal({ visible, children }) {
-  // 优化body滚动锁定（仅保留核心逻辑，移除ESC关闭）
   useEffect(() => {
     if (visible) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-
       return () => {
         document.body.style.overflow = originalOverflow;
       };
@@ -16,43 +13,59 @@ export default function Modal({ visible, children }) {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [visible]); // 移除 onClose 依赖
+  }, [visible]);
 
   if (!visible) return null;
 
+  // 自动拆分：内容 + 按钮
+  const { contentItems, actionItems } = Children.toArray(children).reduce(
+    (acc, child) => {
+      if (isValidElement(child)) {
+        if (child.type === Modal.Confirm || child.type === Modal.Cancel) {
+          acc.actionItems.push(child);
+        } else {
+          acc.contentItems.push(child);
+        }
+      }
+      return acc;
+    },
+    { contentItems: [], actionItems: [] }
+  );
+
   return (
-    <div className={styles.overlay} onClick={(e) => e.stopPropagation()}> {/* 移除点击遮罩关闭 */}
-      <div
-        className={styles.box}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 移除右上角关闭按钮 */}
-        <div className={styles.contentWrapper}>
-          {children}
-        </div>
+    <div className={styles.overlay}>
+      <div className={styles.box} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.contentWrapper}>{contentItems}</div>
+
+        {actionItems.length > 0 && (
+          <div className={styles.actions}>{actionItems}</div>
+        )}
       </div>
     </div>
   );
 }
 
-// 标题子组件（保持不变）
-Modal.Title = ({ children }) => (
-  <div className={styles.title}>{children}</div>
-);
+/* 子组件 */
+Modal.Title = ({ children }) => <div className={styles.title}>{children}</div>;
+Modal.Message = ({ children }) => <div className={styles.message}>{children}</div>;
+Modal.Actions = () => null; // 留着兼容，不影响
 
-// 消息子组件（保持不变）
-Modal.Message = ({ children }) => (
-  <div className={styles.message}>{children}</div>
-);
-
-// 确定按钮子组件（保持不变）
 Modal.Confirm = ({ children, onClick, className, ...rest }) => (
-  <button 
+  <button
     className={`${styles.confirmBtn} ${className || ''}`}
     onClick={onClick}
     {...rest}
-    aria-label="确定"
   >
     {children || '确定'}
+  </button>
+);
+
+Modal.Cancel = ({ children, onClick, className, ...rest }) => (
+  <button
+    className={`${styles.cancelBtn} ${className || ''}`}
+    onClick={onClick}
+    {...rest}
+  >
+    {children || '取消'}
   </button>
 );

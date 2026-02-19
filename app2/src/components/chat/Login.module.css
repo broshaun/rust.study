@@ -3,7 +3,7 @@
   max-width: 400px;
   margin: 0 auto;
   padding: 20px;
-  background: #fff;
+  /* 移除固定的 background: #fff; 改为通过JSX动态控制 */
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
@@ -12,6 +12,11 @@
   flex-direction: column;
   gap: 12px;
   min-height: 300px;
+}
+
+/* 优化：无背景色时隐藏阴影（可选，更贴合透明风格） */
+.container:not([style*="background: #fff"]) {
+  box-shadow: none;
 }
 
 /* 对齐：用 class 控制，避免 inline style */

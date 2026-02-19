@@ -1,8 +1,3 @@
-/* Modal.module.css 紧凑版完整样式 */
-
-/* ===============================
-   Overlay 遮罩层（保留模糊，仅调整透明度）
-================================ */
 .overlay {
   position: fixed;
   inset: 0;
@@ -15,54 +10,33 @@
   animation: fadeIn 0.35s ease forwards;
 }
 
-/* ===============================
-   Modal 主体（极致紧凑尺寸）
-================================ */
 .box {
   position: relative;
-  width: 320px; /* 从380px缩小到320px，核心紧凑点 */
+  width: 320px;
   max-width: 90%;
-  border-radius: 12px; /* 圆角从18px缩小到12px，更精致 */
+  border-radius: 12px;
   box-sizing: border-box;
-
-  /* 去掉透明，改为纯白实色 */
   background: #ffffff;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-
-  border: 1px solid #e5e7eb; /* 实色边框 */
-  box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.08), /* 阴影缩小，更轻盈 */
-    0 4px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
   animation: popIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   overflow: hidden;
 }
 
-/* ===============================
-   内容容器
-================================ */
 .contentWrapper {
   display: flex;
   flex-direction: column;
 }
 
-/* ===============================
-   标题：超紧凑内边距+小字体
-================================ */
 .title {
   text-align: center;
-  font-size: 16px; /* 从17px缩小到16px */
+  font-size: 16px;
   font-weight: 600;
   color: #444;
-  letter-spacing: -0.1px;
-
   background: #f8f8f8;
-  padding: 8px 6px; /* 从12px 8px缩小到8px 6px */
-
+  padding: 8px 6px;
   position: relative;
 }
-
-/* 标题底部分割线（实色） */
 .title::after {
   content: "";
   position: absolute;
@@ -73,136 +47,77 @@
   background: #e5e7eb;
 }
 
-/* ===============================
-   文本内容：极致紧凑内边距
-================================ */
 .message {
-  font-size: 13px; /* 从14px缩小到13px */
+  font-size: 13px;
   color: #6e6e73;
-  line-height: 1.4; /* 行高从1.5缩小到1.4 */
-  padding: 12px 16px; /* 从16px 20px缩小到12px 16px */
+  line-height: 1.4;
+  padding: 12px 16px;
+  text-align: center;
 }
 
-/* ===============================
-   确定按钮（紧凑版，和弹窗匹配）
-================================ */
-.confirmBtn {
-  width: 100px; /* 从120px缩小到100px */
-  height: 32px; /* 从34px缩小到32px */
-  margin: 0 auto 16px; /* 底部间距从20px缩小到16px */
+/* 按钮自动同行 */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+/* 确定/取消样式完全一样 */
+.confirmBtn,
+.cancelBtn {
+  flex: 1;
+  max-width: 100px;
+  height: 32px;
   border-radius: 6px;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
   color: #6b7280;
-  font-size: 13px; /* 从14px缩小到13px */
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-sizing: border-box;
 }
-
-.confirmBtn:hover {
+.confirmBtn:hover,
+.cancelBtn:hover {
   background: #f3f4f6;
   border-color: #d1d5db;
   color: #4b5563;
 }
-
-.confirmBtn:active {
+.confirmBtn:active,
+.cancelBtn:active {
   background: #e5e7eb;
   transform: scale(0.98);
 }
 
-/* ===============================
-   动画
-================================ */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes popIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.96); /* 位移从8px缩小到6px */
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ===============================
-   深色模式（紧凑版适配）
-================================ */
 @media (prefers-color-scheme: dark) {
-  .overlay {
-    background: rgba(0, 0, 0, 0.45);
-  }
-
-  .box {
-    background: #1c1c1e;
-    border: 1px solid #3a3a3c;
-    box-shadow:
-      0 12px 30px rgba(0, 0, 0, 0.5),
-      0 4px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  .title {
-    background: #2c2c2e;
-    color: #ddd;
-    font-size: 16px;
-  }
-
-  .title::after {
-    background: #3a3a3c;
-  }
-
-  .message {
-    color: #b0b0b5;
-    font-size: 13px;
-  }
-
-  .confirmBtn {
+  .overlay { background: rgba(0, 0, 0, 0.45); }
+  .box { background: #1c1c1e; border-color: #3a3a3c; }
+  .title { background: #2c2c2e; color: #ddd; }
+  .title::after { background: #3a3a3c; }
+  .message { color: #b0b0b5; }
+  .confirmBtn, .cancelBtn {
     border-color: #3a3a3c;
     background: #2c2c2e;
     color: #b0b0b5;
-    font-size: 13px;
   }
-
-  .confirmBtn:hover {
+  .confirmBtn:hover, .cancelBtn:hover {
     background: #3a3a3c;
     border-color: #4a4a4c;
     color: #d0d0d5;
   }
-
-  .confirmBtn:active {
-    background: #4a4a4c;
-  }
 }
 
-/* ===============================
-   响应式（超紧凑移动端适配）
-================================ */
 @media (max-width: 480px) {
-  .box {
-    width: 280px; /* 从320px缩小到280px */
-    border-radius: 10px; /* 圆角从16px缩小到10px */
-  }
-
-  .title {
-    font-size: 15px;
-    padding: 6px 4px; /* 进一步缩小内边距 */
-  }
-
-  .message {
-    font-size: 12px;
-    padding: 10px 12px; /* 进一步缩小内边距 */
-  }
-
-  .confirmBtn {
-    width: 90px; /* 从100px缩小到90px */
-    height: 30px; /* 从32px缩小到30px */
-    font-size: 12px;
-    margin: 0 auto 12px; /* 底部间距缩小到12px */
-  }
+  .box { width: 280px; border-radius: 10px; }
+  .title { font-size: 15px; padding: 6px 4px; }
+  .message { font-size: 12px; padding: 10px 12px; }
+  .confirmBtn, .cancelBtn { height: 30px; font-size: 12px; }
+  .actions { gap: 12px; padding: 0 12px 12px; }
 }

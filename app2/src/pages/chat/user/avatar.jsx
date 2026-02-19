@@ -1,32 +1,19 @@
 import { useState, useCallback, useTransition, Suspense } from 'react';
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { Row, Image, List, Container, ImageUpload } from 'components';
+import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient } from 'hooks';
 import { useRequest } from 'ahooks';
 
 
 
-export const ImageShow = () => {
+export const Avatar = () => {
     const navigate = useNavigate();
     const { http } = useHttpClient('/imgs');
+    const location = useLocation();
     const { http: httpFiles } = useHttpClient('/files/img/')
     const { http: apiLogin } = useHttpClient('/api/chat/login/');
     const { setShow } = useOutletContext();
-    const [apiData, setApiData] = useState();
-    const [isPending, startTransition] = useTransition()
-
-
-    useRequest(() => {
-        apiLogin.requestParams('GET').then((results) => {
-            if (!results) return;
-            const { code, message, data } = results
-            code === 200 && startTransition(() => {
-                console.log('data', data)
-                setApiData(data)
-            })
-        })
-    }, { refreshDeps: [] })
 
 
     const uploadFile = useCallback((file) => {
@@ -40,22 +27,23 @@ export const ImageShow = () => {
     }, [httpFiles, apiLogin]);
 
 
+
     return <Suspense fallback={<div>加载中...</div>}>
-        <Row >
-            <Row.Item span={1} justify='left' >
+        <Row justify='left'>
+            <Col span={1} >
                 <IconCustomColor name='chevron-left' onClick={() => { setShow(false); navigate('/chat/self/'); }} />
-            </Row.Item>
-            <Row.Item span={4} />
-            <Row.Item span={1} justify='right' >
+            </Col>
+            <Col span={5} />
+            <Col span={1} >
                 <ImageUpload
                     onConfirm={(file) => { uploadFile(file); }}
                     maxSize={2}
-                    btnText="上传图片"
+                    btnText="上传头像"
                     previewSize="120px"
                 />
-            </Row.Item>
+            </Col>
         </Row>
-        {apiData && <Image src={http.buildUrl('/imgs/')} />}
+        {location.state && <Image src={http.buildUrl(location.state?.avatar_url)} />}
     </Suspense>
 
 

@@ -20,11 +20,12 @@ const getAvatarUrl = (friend, buildAvatarUrl) => {
   return typeof buildAvatarUrl === 'function' ? buildAvatarUrl(rawAvatar) : rawAvatar;
 };
 
-// 优化：抽离ID处理逻辑，避免切片异常
-const getShortFriendId = (friend) => {
-  if (!friend) return '----';
-  const friendId = String(friend.friend_id || '');
-  return friendId.length >= 6 ? friendId.slice(-6) : friendId || '----';
+// 【核心修改】：替换ID处理为邮箱处理逻辑
+const getFriendEmail = (friend) => {
+  if (!friend) return '未绑定邮箱';
+  const email = friend.email;
+  // 空值兜底：无邮箱时显示"未绑定邮箱"
+  return email && typeof email === 'string' ? email : '未绑定邮箱';
 };
 
 const FriendList = ({ 
@@ -77,9 +78,8 @@ const FriendList = ({
 
             const name = getName(friend);
             const avatar = getAvatarUrl(friend, buildAvatarUrl);
-            const shortId = getShortFriendId(friend);
-            // BUG修复4：动态控制在线状态，默认隐藏离线状态
-            const isOnline = Boolean(friend[onlineStatusKey]);
+            // 【核心修改】：替换为获取邮箱
+            const email = getFriendEmail(friend);
             
             // BUG修复5：生成唯一key，避免重复（优先用ID，无则用索引）
             const itemKey = friend.id || friend.friend_id || `friend_${index}`;
@@ -87,7 +87,7 @@ const FriendList = ({
             return (
               <li
                 key={itemKey}
-                className={`${styles.friendItem} ${isOnline ? styles.online : styles.offline}`}
+                className={`${styles.friendItem} ${friend[onlineStatusKey] ? styles.online : styles.offline}`}
                 onClick={() => handleSelectFriend(friend)}
                 // 增加 cursor 样式，提升交互体验
                 style={{ cursor: 'pointer' }}
@@ -106,13 +106,14 @@ const FriendList = ({
 
                 <div className={styles.friendInfo}>
                   <h3 className={styles.friendName}>{name}</h3>
+                  {/* 【核心修改】：将ID改为Email展示 */}
                   <p className={styles.friendSubInfo}>
-                    ID: {shortId}
+                    邮箱: {email}
                   </p>
                 </div>
 
                 {/* BUG修复7：仅在线时显示状态圆点，离线隐藏 */}
-                {isOnline && (
+                {friend[onlineStatusKey] && (
                   <div className={styles.onlineStatus} title="在线">●</div>
                 )}
               </li>

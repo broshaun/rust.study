@@ -67,26 +67,24 @@ export function LogOn() {
             </Login.Head>
             <Login.Input>
                 <br />
-                <Row gap={60} align="center" justify="center">
+                <Row align="center" justify="center">
                     <InputText2 placeholder="请输入账号..." position="center" defaultValue={'77254@qq.com'} onChangeValue={(value) => { setAccount(value) }}>
                         <InputText2.Left icon="user-circle" />
                     </InputText2>
                 </Row>
                 <br />
-                <Row gap={60} align="center" justify="center">
+                <Row align="center" justify="center">
                     <InputText2 type="password" placeholder="请输入密码..." position="center" onChangeValue={(value) => { setPassword(value) }}>
                         <InputText2.Left icon="lock-closed" />
                     </InputText2>
                 </Row>
             </Login.Input>
             <Login.Submit>
-                <br />
-                <Row gap={60} align="center" justify="center">
+                <Row align="center" justify="center">
                     <Button position="center" size={{ width: '83%', height: '42px' }} onClick={() => { runLogin(account, password) }}>登录</Button>
                 </Row>
             </Login.Submit>
         </Login>
-
     </React.Fragment>
 }
 

@@ -6,12 +6,10 @@ import styles from './InputText2.module.css';
 const Left = ({ label, icon }) => null;
 const Right = ({ label, icon, onClick }) => null;
 
-// 核心 InputText2 组件（新增 value 支持受控模式）
 const InputText2 = ({
   type = "text",
   placeholder = '',
   defaultValue = '',
-  // 新增：受控模式 value（优先级高于 defaultValue）
   value,
   onChangeValue,
   maxLength,
@@ -21,7 +19,6 @@ const InputText2 = ({
   position = 'left',
   size = 'medium'
 }) => {
-  // 解析子组件 props
   const parseChildren = () => {
     const result = {
       left: { label: '', icon: '' },
@@ -30,34 +27,30 @@ const InputText2 = ({
 
     Children.forEach(children, (child) => {
       if (isValidElement(child)) {
-        if (child.type === Left) {
-          result.left = { ...child.props };
-        }
-        if (child.type === Right) {
-          result.right = { ...child.props };
-        }
+        if (child.type === Left) result.left = { ...child.props };
+        if (child.type === Right) result.right = { ...child.props };
       }
     });
     return result;
   };
 
   const { left: leftProps, right: rightProps } = parseChildren();
-  const isRightIconInteractive = !!rightProps.icon && typeof rightProps.onClick === 'function' && !disabled;
 
-  // 输入框变化处理
+  // ✅ 核心：Right 是否可点击，只看 onClick（不依赖 icon）
+  const isRightInteractive = typeof rightProps.onClick === 'function' && !disabled;
+
   const handleInputChange = (e) => {
     if (disabled || !onChangeValue) return;
     onChangeValue(e.target.value);
   };
 
-  // 右侧图标点击处理
-  const handleIconClick = (e) => {
+  // ✅ 点击整个 Right 区域
+  const handleRightClick = (e) => {
     e.stopPropagation();
-    if (disabled || !rightProps.onClick) return;
+    if (!isRightInteractive) return;
     rightProps.onClick(e);
   };
 
-  // 容器类名
   const containerClasses = [
     styles.inputContainer,
     styles[`size-${size}`],
@@ -66,7 +59,7 @@ const InputText2 = ({
     disabled && styles.disabled,
     (leftProps.label || leftProps.icon) && styles.hasLeft,
     (rightProps.label || rightProps.icon) && styles.hasRight,
-    isRightIconInteractive && styles.iconInteractive
+    isRightInteractive && styles.rightInteractive
   ].filter(Boolean).join(' ');
 
   return (
@@ -83,13 +76,11 @@ const InputText2 = ({
         </div>
       )}
 
-      {/* 输入框：新增 value 受控属性（优先级高于 defaultValue） */}
       <input
         className={styles.input}
         type={type}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        // 核心：受控模式用 value，非受控用 defaultValue
         value={value !== undefined ? value : undefined}
         maxLength={maxLength}
         onChange={handleInputChange}
@@ -98,20 +89,20 @@ const InputText2 = ({
         spellCheck="false"
       />
 
-      {/* 右侧内容 */}
+      {/* ✅ 右侧内容：整个容器可点击 */}
       {(rightProps.label || rightProps.icon) && (
-        <div className={`${styles.sideContainer} ${styles.rightContainer}`}>
+        <div
+          className={`${styles.sideContainer} ${styles.rightContainer}`}
+          onClick={isRightInteractive ? handleRightClick : undefined}
+          style={{ cursor: isRightInteractive ? 'pointer' : 'default' }}
+        >
           {rightProps.icon && (
-            <div 
-              className={styles.icon}
-              onClick={isRightIconInteractive ? handleIconClick : undefined}
-              style={{ cursor: isRightIconInteractive ? 'pointer' : 'default' }}
-            >
+            <div className={styles.icon} style={{ pointerEvents: 'none' }}>
               <IconItem name={rightProps.icon} size={24} />
             </div>
           )}
           {rightProps.label && (
-            <span className={styles.label} style={{ cursor: 'default' }}>
+            <span className={styles.label} style={{ pointerEvents: 'none' }}>
               {rightProps.label}
             </span>
           )}
@@ -121,7 +112,6 @@ const InputText2 = ({
   );
 };
 
-// 挂载子组件
 InputText2.Left = Left;
 InputText2.Right = Right;
 

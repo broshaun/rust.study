@@ -1,16 +1,15 @@
 import { Route } from "react-router-dom";
 import { Mian } from "./main";
-import { ImageShow } from "./imegs";
+import { Avatar } from "./avatar";
 import { Nikename } from "./nickname";
-
-
-
+import { Logout } from "./logout";
 
 
 // 导出 Super 相关的路由配置
 export const RsSelf = (
     <Route path="self" element={<Mian />}>
-        <Route path="image" element={<ImageShow />}/>
+        <Route path="image" element={<Avatar />}/>
         <Route path="name" element={<Nikename />}/>
+         <Route path="lgout" element={<Logout />}/>
     </Route>
 )

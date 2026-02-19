@@ -85,16 +85,6 @@
   left: 0;
 }
 
-/* 头像文字占位 */
-.avatarText {
-  display: none;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-
 /* 好友信息区域：居中显示，适配不同宽度 */
 .friendInfo {
   text-align: center;
@@ -119,10 +109,17 @@
 .friendId {
   font-size: 14px;
   color: #999;
+  margin: 0 0 4px 0; /* 调整间距，给邮箱留出位置 */
+}
+
+/* 新增：好友邮箱样式 */
+.friendEmail {
+  font-size: 14px;
+  color: #666; /* 比ID深一点，区分层级 */
   margin: 0;
 }
 
-/* 操作按钮区域 - 固定在底部，自适应宽度 */
+/* 操作按钮区域 - 固定在底部，自适应宽度（调整为三按钮布局） */
 .btnGroup {
   display: flex;
   width: 100%;
@@ -132,9 +129,9 @@
   flex-shrink: 0; /* 按钮区域不被挤压 */
 }
 
-/* 操作按钮通用样式：平分宽度 */
+/* 操作按钮通用样式：三按钮平分宽度 */
 .operBtn {
-  flex: 1; /* 核心：两个按钮各占一半 */
+  flex: 1; /* 核心：三个按钮各占1/3宽度 */
   height: 40px;
   border: none;
   border-radius: 20px;
@@ -171,6 +168,24 @@
   box-shadow: 0 2px 8px rgba(0, 181, 0, 0.3);
 }
 
+/* 新增：删除好友按钮（红色系，警示色） */
+.deleteBtn {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+.deleteBtn:hover {
+  background: #ff3335;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+}
+
+/* 新增：按钮加载状态样式 */
+.operBtn.loading {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 /* 响应式优化：小容器下调整样式 */
 @media (max-width: 320px) {
   .transitionContainer {
@@ -188,7 +203,7 @@
   }
   
   .operBtn {
-    font-size: 14px;
+    font-size: 12px; /* 缩小字体，适配三按钮布局 */
     height: 36px;
   }
 }

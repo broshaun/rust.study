@@ -1,21 +1,23 @@
-/* List.module.css - 最终版：浅灰色主题 + 图标无固定色 + 悬浮无背景变化 */
-/* 核心容器：超浅灰主底色（接近白色，最浅层级） */
+/* 核心容器：移除固定min-height，改为自适应 + 溢出滚动 */
 .listContainer {
   position: relative;
   width: 100%;
-  min-height: 200px;
+  /* 移除固定min-height，避免高度限制导致内容截断 */
+  min-height: auto;
+  max-height: 400px; /* 可选：设置最大高度，避免过长 */
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-y: auto; /* 内容超出时显示滚动条 */
   background-color: #f9f9f9; /* 超浅灰（始终生效） */
+  /* 新增：去掉overflow:hidden，允许内容溢出时滚动 */
+  overflow: visible;
 }
 
-/* Items 层：与容器同色，底层统一 */
+/* Items 层：改为相对定位，自适应内容高度 */
 .itemsLayer {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative; /* 从absolute改为relative，避免高度继承截断 */
   width: 100%;
-  height: 100%;
+  /* 移除固定height:100%，改为自适应 */
+  height: auto;
   padding: 8px 12px;
   box-sizing: border-box;
   z-index: 1; /* 底层 */
@@ -31,6 +33,9 @@
   background: #fafafa !important; /* 固定浅灰底色，不再变化 */
   -webkit-tap-highlight-color: transparent;
   border-radius: 4px; /* 轻微圆角，弱化浅灰的生硬感 */
+  /* 新增：确保每个项完整显示 */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 取消 focus/active/hover 时的背景色变化 */
@@ -52,15 +57,20 @@
   align-items: center;
   justify-content: center;
   margin-right: var(--icon-label-gap);
+  /* 新增：防止图标挤压 */
+  flex-shrink: 0;
 }
 
-/* 文本标签：浅灰背景下文字更清晰 */
+/* 文本标签：浅灰背景下文字更清晰，支持换行 */
 .label {
   font-size: var(--label-font-size);
   color: #757575; /* 中灰文字 */
   font-weight: 500;
   user-select: none;
   transition: color 0.1s ease;
+  /* 新增：支持长文本换行，避免截断 */
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 /* 保留文字点击变色（如需取消可删除这行） */
@@ -68,7 +78,7 @@
   color: #333333; /* 点击后文字稍深 */
 }
 
-/* Content 层：透明背景，让 Container 主题生效 */
+/* Content 层：透明背景，保留（兼容原有逻辑） */
 .contentLayer {
   position: relative;
   z-index: 10; /* 上层，覆盖 Items */
