@@ -19,7 +19,6 @@ function useChatMsg() {
   return ctx;
 }
 
-/** Root：自适应父容器（移除固定尺寸+全屏居中） */
 function ChatMsgRoot({ children, className, width, height }) {
   const messageRef = useRef(null);
   const stickToBottomRef = useRef(true);
@@ -37,17 +36,15 @@ function ChatMsgRoot({ children, className, width, height }) {
     []
   );
 
-  // 样式处理：width/height 优先用父容器，传入值仅作为兜底
   const wrapperStyle = useMemo(() => {
     const style = {};
-    if (width) style.width = typeof width === 'number' ? `${width}px` : width;
-    if (height) style.height = typeof height === 'number' ? `${height}px` : height;
+    if (width) style.width = typeof width === "number" ? `${width}px` : width;
+    if (height) style.height = typeof height === "number" ? `${height}px` : height;
     return style;
   }, [width, height]);
 
   return (
     <ChatMsgContext.Provider value={api}>
-      {/* 移除全屏居中的center容器，直接渲染wrapper */}
       <div
         className={`${styles.wrapper} ${className || ""}`.trim()}
         style={wrapperStyle}
@@ -58,10 +55,6 @@ function ChatMsgRoot({ children, className, width, height }) {
   );
 }
 
-/**
- * Head：title + leftIcon（IconCustomColor）
- * <ChatMsg.Head title="标题" leftIcon="left-chevron" onClick={()=>{}} />
- */
 function Head({ title = "", leftIcon = "", onClick, className }) {
   const headH = 56;
   const iconSize = Math.round(headH * HEAD_RATIO.leftIcon);
@@ -93,11 +86,6 @@ function Head({ title = "", leftIcon = "", onClick, className }) {
   );
 }
 
-/**
- * Message：
- * - children 若是消息对象数组，会自动渲染为聊天记录
- * - 规则：from=对方（左），to=自己（右）
- */
 function Message({
   children,
   className,
@@ -124,17 +112,16 @@ function Message({
     x &&
     typeof x === "object" &&
     !Array.isArray(x) &&
-    ("msg" in x || "from" in x || "to" in x);
+    ("msg" in x || "signal" in x);
 
   const isMsgArray = (x) =>
     Array.isArray(x) && (x.length === 0 || isMsgObject(x[0]));
 
   const normalize = (m, index) => {
-    // ✅ 规则：to=自己发（右），from=对方发（左）
-    const isSelf = !!m?.to;
+    const isSelf = m?.signal === "send";
 
     return {
-      id: `${index}_${m?.timestamp || ""}`, // 足够稳定
+      id: String(m?.id ?? `${index}_${m?.timestamp ?? ""}`),
       isSelf,
       msg: String(m?.msg ?? ""),
       timestamp: String(m?.timestamp ?? ""),
@@ -164,7 +151,9 @@ function Message({
             {m.msg}
           </div>
 
-          {m.timestamp ? <div className={styles.time}>{m.timestamp}</div> : null}
+          {m.timestamp ? (
+            <div className={styles.time}>{m.timestamp}</div>
+          ) : null}
         </div>
       </div>
     ));
@@ -184,7 +173,6 @@ function Message({
   );
 }
 
-/** Send：可换行，不可拖拽；Enter发送，Shift+Enter换行 */
 function Send({
   onSend,
   className,

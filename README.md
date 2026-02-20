@@ -7,7 +7,13 @@
 - cnpm create rsbuild@latest
 - cnpm install react-router-dom@7.6.x
 - cnpm install zustand ahooks@3.9.x
+
 - cnpm install
+
+
+## 聊天记录存储
+- cnpm install dexie 
+
 
 ## 核心库
 - cnpm install @tauri-apps/api@2.10.2
