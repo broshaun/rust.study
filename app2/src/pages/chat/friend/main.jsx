@@ -4,7 +4,7 @@ import { useHttpClient } from 'hooks';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
 import { Chat, Container } from 'components';
-
+import { db, useIndexedDB } from 'hooks/db';
 
 
 export const Mian = () => {
@@ -14,13 +14,21 @@ export const Mian = () => {
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/')
     const { http: httpImgs } = useHttpClient('/imgs');
+    const { table } = useIndexedDB(db);
+    const tbdialog = table('chat_dialog');
 
     useRequest(() => {
         http.requestParams('GET').then((results) => {
             if (!results) return;
             const { code, message, data } = results
+
             code === 200 && startTransition(() => {
                 setApiData(data)
+                data?.detail.map((select) => {
+                    tbdialog.replace({
+                        id: select?.friend_id, avatar_url: select?.avatar_url, email: select?.email, remark: select?.remark, nikename: select?.nikename
+                    })
+                })
             })
         })
     }, { refreshDeps: [location.pathname] })

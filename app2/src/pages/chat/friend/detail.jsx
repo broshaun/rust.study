@@ -1,10 +1,10 @@
 import React, { useState, useEffect, Suspense, useTransition } from 'react'
 import { useNavigate, useLocation } from "react-router-dom";
 import { useHttpClient } from 'hooks';
-import { ChatTransitionPage, UserChat } from 'components/chat';
+import { UserChat } from 'components/chat';
 import { Container } from 'components';
 import { useRequest, useLocalStorageState } from 'ahooks';
-
+import { db, useIndexedDB } from 'hooks/db';
 
 
 
@@ -13,16 +13,17 @@ export function Detail() {
     const location = useLocation();
     const [apiData, setApiData] = useState();
     const [isPending, startTransition] = useTransition()
-    const [dialog, setDialog] = useLocalStorageState('chat-dialog', { defaultValue: {} });
+    // const [dialog, setDialog] = useLocalStorageState('chat-dialog', { defaultValue: {} });
     const { http: httpImgs } = useHttpClient('/imgs');
     const { http: http2 } = useHttpClient('/api/chat/friend/')
+    const { table } = useIndexedDB(db);
+    const tbdialog = table('chat_dialog');
 
 
 
     useEffect(() => {
         if (!location.state?.select) return;
         setApiData(location.state.select)
-
     }, [location.state])
 
 
@@ -44,8 +45,10 @@ export function Detail() {
     }, { manual: true })
 
     function openMsgWindow(select) {
-        setDialog(p => ({ ...p, [select.friend_id]: select }))
-        navigate('/chat/dialog/msg/', { state: { select } })
+        console.log('select---', select)
+        // setDialog(p => ({ ...p, [select.friend_id]: select }))
+        tbdialog.replace({ id: select?.friend_id, signal: 'old', dialog: 1 })
+        navigate('/chat/dialog/msg/', { state: { uid: select?.friend_id } })
     }
 
 

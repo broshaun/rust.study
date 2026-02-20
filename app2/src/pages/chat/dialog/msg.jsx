@@ -9,7 +9,7 @@ import { db, useIndexedDB } from 'hooks/db';
 
 export function Msg() {
     const location = useLocation();
-    const uid = location.state?.select?.friend_id;
+    const uid = location.state.select?.uid;
     const { table } = useIndexedDB(db);
 
     const tbmsg = table('messages');
