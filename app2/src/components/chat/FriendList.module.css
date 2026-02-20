@@ -48,14 +48,14 @@
   color: #cccccc; /* 离线灰色（实际会隐藏） */
 }
 
-/* 头像容器 - 紧凑化 */
+/* 头像容器 - 紧凑化 + 方向圆角（核心修改） */
 .friendAvatar {
-  width: 36px; /* 原40px → 缩小头像 */
-  height: 36px; /* 原40px → 缩小头像 */
-  border-radius: 50%;
+  width: 36px;
+  height: 36px; 
+  border-radius: 6px;
   overflow: hidden;
   margin-right: 8px; /* 原12px → 减少右侧间距 */
-  flex-shrink: 0; /* 防止头像被挤压 */
+  flex-shrink: 0; 
 }
 
 .avatarImg {

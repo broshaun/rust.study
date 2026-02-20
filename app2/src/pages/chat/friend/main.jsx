@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useRef, useTransition, useReducer, Suspense } from 'react';
-import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks';
-import { useRequest, useLocalStorageState } from 'ahooks';
+import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { isTauri } from "@tauri-apps/api/core";
 import { Chat, Container } from 'components';
 
 
@@ -25,7 +23,7 @@ export const Mian = () => {
                 setApiData(data)
             })
         })
-    }, { refreshDeps: [location.pathname]})
+    }, { refreshDeps: [location.pathname] })
 
 
 

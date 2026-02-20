@@ -33,8 +33,8 @@ export const Avatar = () => {
             <Col span={1} >
                 <IconCustomColor name='chevron-left' onClick={() => { setShow(false); navigate('/chat/self/'); }} />
             </Col>
-            <Col span={5} />
-            <Col span={1} >
+            <Col span={4} />
+            <Col width={200} >
                 <ImageUpload
                     onConfirm={(file) => { uploadFile(file); }}
                     maxSize={2}

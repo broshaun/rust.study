@@ -30,26 +30,56 @@ export function Detail() {
     const { runAsync: delFid } = useRequest((id) => {
         http2.requestBodyJson('DELETE', { id }).then((results) => {
             if (!results) return;
-            const { code, message, data } = results
             console.log('results', results)
         })
     }, { manual: true })
 
+
+
+    const { runAsync: updRemark } = useRequest((id, remark) => {
+        http2.requestBodyJson('PATCH', { id, remark }).then((results) => {
+            if (!results) return;
+            console.log('results', results)
+        })
+    }, { manual: true })
 
     function openMsgWindow(select) {
         setDialog(p => ({ ...p, [select.friend_id]: select }))
         navigate('/chat/dialog/msg/', { state: { select } })
     }
 
+
     return <Suspense fallback={<div>加载中...</div>}>
         <Container alignItems='center'>
-            <br/>
+            <br />
             {apiData &&
 
-                <UserChat friendData={apiData} buildAvatarUrl={(name) => httpImgs.buildUrl(name)}>
-                    <UserChat.Msg lable='发起聊天' onClick={(p) => { openMsgWindow(p) }} />
-                    {/* <UserChat.Video lable='发起视频' onClick={(value) => { console.log('点击选中了', value) }} /> */}
-                    <UserChat.Delete lable='删除好友' onClick={(v) => { delFid(v?.id); navigate('/chat/friend/') }} />
+                <UserChat friendData={apiData}>
+                    <UserChat.Avatar avatarUrl={httpImgs.buildUrl(apiData?.avatar_url)} />
+                    <UserChat.Text lable='名称' >{apiData?.nikename}</UserChat.Text>
+                    <UserChat.Text lable='邮箱' >{apiData?.email}</UserChat.Text>
+                    <UserChat.Text lable='备注' onConfirm={(remark) => { setApiData(p => ({ ...p, remark })); updRemark(apiData?.id, remark); }}>{apiData?.remark}
+                    </UserChat.Text>
+                    <UserChat.Button
+                        lable="发起聊天"
+                        color="#409eff"
+                        onClick={(p) => openMsgWindow(p)}
+                    />
+
+                    <UserChat.Button
+                        lable="删除好友"
+                        color="#ff4d4f"
+                        onClick={(v) => {
+                            delFid(v?.id);
+                            navigate('/chat/friend/');
+                        }}
+                    />
+
+                    <UserChat.Button
+                        lable="发起视频"
+                        color="#67c23a"
+                        onClick={(v) => startVideo(v)}
+                    />
                 </UserChat>
             }
         </Container>

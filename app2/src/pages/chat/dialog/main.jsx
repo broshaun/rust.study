@@ -47,6 +47,8 @@ export const Mian = () => {
     };
 
 
+    
+
     return <Chat>
         <Chat.Left size={"20%"}>
             <Container verticalScroll={true} >
