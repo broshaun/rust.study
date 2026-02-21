@@ -36,7 +36,7 @@ export const Mian = () => {
             const { code, data } = results
             if (data && code === 200) {
                 tbmsg.put({ ...data, signal: 'receive' })
-                tbdialog.replace({ id: data?.uid, signal: 'news', dialog: 1 })
+                tbdialog.replace({ 'uid': data?.uid, 'signal': 'news', 'dialog': 1 })
                 loadDialog()
 
             }

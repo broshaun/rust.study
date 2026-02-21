@@ -19,23 +19,22 @@ export const Find = () => {
 
     // 查找好友
     const { runAsync: run } = useRequest((email) => {
-        console.log('email', email)
         if (!email) return;
         http.requestBodyJson('POST', { 'email': email })
             .then((results) => {
                 if (!results) return;
                 const { code, message, data } = results
                 code === 200 && startTransition(() => {
-                    setApiData(data)
+                    setApiData(data) // 用户信息
                 })
             })
         return 'ok'
     }, { manual: true })
 
     // 添加好友
-    const { runAsync: run2 } = useRequest((id) => {
-        if (!id) return;
-        http.requestBodyJson('PUT', { 'id': id })
+    const { runAsync: run2 } = useRequest((user_id) => {
+        if (!user_id) return;
+        http.requestBodyJson('PUT', { 'user_id': user_id })
             .then((results) => {
                 if (!results) return;
                 const { code, message, data } = results

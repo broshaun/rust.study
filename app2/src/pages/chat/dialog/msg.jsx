@@ -1,4 +1,4 @@
-import React, { useTransition, useState, useEffect } from 'react'
+import React, { useTransition, useState, useEffect, useMemo } from 'react'
 import { useLocation } from "react-router-dom";
 import { useHttpClient, useDateTime } from 'hooks';
 import { ChatMsg } from 'components/chat';
@@ -9,10 +9,11 @@ import { db, useIndexedDB } from 'hooks/db';
 
 export function Msg() {
     const location = useLocation();
-    const uid = location.state.select?.uid;
-    const { table } = useIndexedDB(db);
+    const uid = useMemo(() => location.state?.user_id, [location.state])
 
+    const { table } = useIndexedDB(db);
     const tbmsg = table('messages');
+
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/msg/private/')
     const { getDateTimeStr } = useDateTime()
@@ -25,7 +26,7 @@ export function Msg() {
                 const { code, message, data } = results
                 if (code === 200) {
                     startTransition(() => {
-                        tbmsg.put({ uid, msg: msgText, timestamp: getDateTimeStr(), signal: 'send' })
+                        tbmsg.put({ "uid": uid, 'msg': msgText, 'timestamp': getDateTimeStr(), 'signal': 'send' })
                     })
 
                 }

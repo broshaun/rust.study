@@ -11,23 +11,15 @@ import { db, useIndexedDB } from 'hooks/db';
 export function Detail() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [apiData, setApiData] = useState();
+    const [friend, setFriend] = useState(location.state?.select);
     const [isPending, startTransition] = useTransition()
-    // const [dialog, setDialog] = useLocalStorageState('chat-dialog', { defaultValue: {} });
     const { http: httpImgs } = useHttpClient('/imgs');
     const { http: http2 } = useHttpClient('/api/chat/friend/')
+
     const { table } = useIndexedDB(db);
     const tbdialog = table('chat_dialog');
 
-
-
-    useEffect(() => {
-        if (!location.state?.select) return;
-        setApiData(location.state.select)
-    }, [location.state])
-
-
-
+    // 删除好友
     const { runAsync: delFid } = useRequest((id) => {
         http2.requestBodyJson('DELETE', { id }).then((results) => {
             if (!results) return;
@@ -36,7 +28,7 @@ export function Detail() {
     }, { manual: true })
 
 
-
+    // 好友备注
     const { runAsync: updRemark } = useRequest((id, remark) => {
         http2.requestBodyJson('PATCH', { id, remark }).then((results) => {
             if (!results) return;
@@ -44,24 +36,23 @@ export function Detail() {
         })
     }, { manual: true })
 
+    // 打开聊天
     function openMsgWindow(select) {
-        console.log('select---', select)
-        // setDialog(p => ({ ...p, [select.friend_id]: select }))
-        tbdialog.replace({ id: select?.friend_id, signal: 'old', dialog: 1 })
-        navigate('/chat/dialog/msg/', { state: { uid: select?.friend_id } })
+        tbdialog.replace({ 'uid': select?.user_id, 'signal': 'old', 'dialog': 1 })
+        navigate('/chat/dialog/msg/', { state: { uid: select?.user_id } })
     }
 
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Container alignItems='center'>
             <br />
-            {apiData &&
+            {friend &&
 
-                <UserChat friendData={apiData}>
-                    <UserChat.Avatar avatarUrl={httpImgs.buildUrl(apiData?.avatar_url)} />
-                    <UserChat.Text lable='名称' >{apiData?.nikename}</UserChat.Text>
-                    <UserChat.Text lable='邮箱' >{apiData?.email}</UserChat.Text>
-                    <UserChat.Text lable='备注' onConfirm={(remark) => { setApiData(p => ({ ...p, remark })); updRemark(apiData?.id, remark); }}>{apiData?.remark}
+                <UserChat friendData={friend}>
+                    <UserChat.Avatar avatarUrl={httpImgs.buildUrl(friend?.avatar_url)} />
+                    <UserChat.Text lable='名称' >{friend?.nikename}</UserChat.Text>
+                    <UserChat.Text lable='邮箱' >{friend?.email}</UserChat.Text>
+                    <UserChat.Text lable='备注' onConfirm={(remark) => { setFriend(p => ({ ...p, remark })); updRemark(friend?.id, remark); }}>{friend?.remark}
                     </UserChat.Text>
                     <UserChat.Button
                         lable="发起聊天"

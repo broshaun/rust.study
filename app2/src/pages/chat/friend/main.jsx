@@ -26,7 +26,7 @@ export const Mian = () => {
                 setApiData(data)
                 data?.detail.map((select) => {
                     tbdialog.replace({
-                        id: select?.friend_id, avatar_url: select?.avatar_url, email: select?.email, remark: select?.remark, nikename: select?.nikename
+                        'uid': select?.user_id, 'avatar_url': select?.avatar_url, 'email': select?.email, 'remark': select?.remark, 'nikename': select?.nikename
                     })
                 })
             })
