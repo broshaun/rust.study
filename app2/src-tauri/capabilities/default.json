@@ -10,6 +10,22 @@
     "http:allow-fetch",
     "core:webview:allow-create-webview-window",
     {
+      "identifier": "fs:allow-mkdir",
+      "allow": [
+        {
+          "path": "$APPDATA/downloads/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [
+        {
+          "path": "$APPDATA/downloads/**"
+        }
+      ]
+    },
+    {
       "identifier": "http:default",
       "allow": [
         {
@@ -20,6 +36,7 @@
         }
       ]
     },
-    "log:default"
+    "log:default",
+    "fs:default"
   ]
 }

@@ -4,6 +4,7 @@ import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient } from 'hooks';
 import { useRequest } from 'ahooks';
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 
 
@@ -14,7 +15,7 @@ export const Avatar = () => {
     const { http } = useHttpClient('/imgs');
     const { http: httpFiles } = useHttpClient('/files/img/')
     const { http: apiLogin } = useHttpClient('/api/chat/login/');
-    
+
 
     const uploadFile = useCallback((file) => {
         if (!file) return;
@@ -26,6 +27,21 @@ export const Avatar = () => {
     }, [httpFiles, apiLogin]);
 
 
+
+    const [localSrc, setLocalSrc] = useState("");
+    useEffect(() => {
+        if (!avatar) return;
+
+        httpFiles
+            .downFiles(avatar)
+            .then((path) => {
+                console.log("下载的文件路径:", path);
+                setLocalSrc(convertFileSrc(path)); // ✅ 直接用本地文件展示
+            })
+            .catch((e) => {
+                console.error("downFiles failed:", e);
+            });
+    }, [avatar, httpFiles]);
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Row justify='left'>
@@ -42,9 +58,16 @@ export const Avatar = () => {
                 />
             </Col>
         </Row>
-        {avatar && <Image src={http.buildUrl(avatar)} />}
+        {avatar && <Image src={localSrc || http.buildUrl(avatar)} />}
+
     </Suspense>
 
 
 }
 
+
+
+// const { http } = useHttpClient('/files/img/')
+// http.downFiles(file).then((path)=>{
+//     console.log('下载的文件地址')
+// })

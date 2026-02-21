@@ -20,6 +20,7 @@
 
 - cnpm install @tauri-apps/plugin-http
 - cnpm install @tauri-apps/plugin-log
+- cnpm install @tauri-apps/plugin-fs
 
 # 进入app现有项目路径
 ## 安装 Tauri 的 CLI 工具
@@ -32,6 +33,7 @@
 
 - cargo add tauri-plugin-http
 - cargo add tauri-plugin-log
+- cargo add tauri-plugin-fs
 
 ## 运行调试
 - cargo tauri dev
