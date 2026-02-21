@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useTransition, useReducer, Suspense } from 'react';
+import React, { useEffect, useState, useMemo, useTransition, useCallback, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks';
 import { useRequest } from 'ahooks';
@@ -10,51 +10,62 @@ import { db, useIndexedDB } from 'hooks/db';
 export const Mian = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [apiData, setApiData] = useState([]);
+    const [friends, setFriends] = useState([]);
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/')
     const { http: httpImgs } = useHttpClient('/imgs');
     const { table } = useIndexedDB(db);
-    const tbdialog = table('chat_dialog');
+    const tbdialog = useMemo(() => table('chat_dialog'), [table]);
 
-    useRequest(() => {
+    const buildAvatarUrl = useCallback((name) => httpImgs.buildUrl(name), [httpImgs]);
+    const openMsgWindow = useCallback((select) => {
+        
+        navigate('/chat/friend/detail/', { state: { select } });
+    }, [navigate, location.pathname]);
+
+    const { runAsync: runGetFriend, loading } = useRequest(() => {
         http.requestParams('GET').then((results) => {
             if (!results) return;
             const { code, message, data } = results
-
             code === 200 && startTransition(() => {
-                setApiData(data)
-                data?.detail.map((select) => {
-                    tbdialog.replace({
-                        'uid': select?.user_id, 'avatar_url': select?.avatar_url, 'email': select?.email, 'remark': select?.remark, 'nikename': select?.nikename
-                    })
-                })
+                setFriends(data)
             })
+            tbdialog.bulkReplace(
+                data?.detail.map(select => ({
+                    id: select?.id,
+                    uid: select?.user_id,
+                    avatar_url: select?.avatar_url,
+                    email: select?.email,
+                    remark: select?.remark,
+                    nikename: select?.nikename,
+                }))
+            ).catch(console.error);
         })
-    }, { refreshDeps: [location.pathname] })
+    }, { manual: true })
 
+    useEffect(() => {
+        if (location.pathname.startsWith('/chat/friend')) runGetFriend();
+    }, [location.pathname, runGetFriend]);
 
-
-    function openMsgWindow(select) {
-        navigate('/chat/friend/detail/', { state: { select, from: location.pathname } })
-    }
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Chat>
-            <Chat.Left size={"20%"}>
-                <Container verticalScroll={true} >
-                    <FriendList
-                        data={apiData}
-                        onSelectFriend={(select) => { openMsgWindow(select) }}
-                        buildAvatarUrl={(name) => httpImgs.buildUrl(name)}
-                    />
-                </Container>
-            </Chat.Left>
-            <Chat.Right size={"70%"}>
-                <Outlet />
-            </Chat.Right>
-        </Chat>
+        {friends &&
+            <Chat>
+                <Chat.Left size={"20%"}>
+                    <Container verticalScroll={true} >
+                        <FriendList
+                            data={friends}
+                            onSelectFriend={openMsgWindow}
+                            buildAvatarUrl={buildAvatarUrl}
+                        />
+                    </Container>
+                </Chat.Left>
+                <Chat.Right size={"80%"}>
+                    <Outlet />
+                </Chat.Right>
+            </Chat>
+        }
     </Suspense>
 
 }

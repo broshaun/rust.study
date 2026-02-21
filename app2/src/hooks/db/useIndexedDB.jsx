@@ -1,14 +1,6 @@
 import { useMemo, useCallback } from 'react';
+import { liveQuery } from 'dexie';
 
-/**
- * useIndexedDB(db) - 精简版（适配 dialog: 0/1）
- * - table(name).put(data)
- * - table(name).replace(data)  // upsert：存在则更新字段，不存在则插入（data 必须带主键）
- * - table(name).update(id, patch)
- * - table(name).find(filter)   // 单字段过滤 or 全表
- * - table(name).delete(id|filter)
- * - table(name).clear()
- */
 export function useIndexedDB(db) {
   const dbname = db.name;
 
@@ -36,7 +28,6 @@ export function useIndexedDB(db) {
 
     const normalize = (obj) => {
       if (!obj || typeof obj !== 'object') return obj;
-      // ✅ 统一把 dialog true/false 转成 1/0
       if ('dialog' in obj && typeof obj.dialog === 'boolean') {
         return { ...obj, dialog: obj.dialog ? 1 : 0 };
       }
@@ -45,36 +36,41 @@ export function useIndexedDB(db) {
 
     const addTS = (obj) => ({ ...normalize(obj), timestamp: Date.now() });
 
-    const parseFilter = (filter = {}) => {
-      const keys = Object.keys(filter || {});
-      if (keys.length === 0) return null;
-      const field = keys[0];
-      const value = normalize({ [field]: filter[field] })[field];
-      return { field, value };
+    // ✅ 内部：构建“可监听”的查询函数（支持索引/非索引）
+    const buildQueryFn = (field, value) => {
+      const v = normalize({ [field]: value })[field];
+      if (!isKey(v)) return () => Promise.resolve([]);
+
+      if (indexed(field)) return () => t.where(field).equals(v).toArray();
+
+      return () => t.toArray().then(rows => rows.filter(r => r?.[field] === v));
+    };
+
+    // ✅ 新增：批量 normalize + 自动 timestamp（可关闭）
+    const normalizeMany = (list = [], withTimestamp = true) => {
+      const now = Date.now();
+      return (Array.isArray(list) ? list : [])
+        .filter(Boolean)
+        .map((x) => {
+          const row = normalize(x);
+          return withTimestamp ? { ...row, timestamp: now } : row;
+        });
     };
 
     return {
       put: (data) => t.put(normalize(data)),
 
+      // ✅ 单条 replace：合并旧字段（你的原逻辑）
       replace: (data = {}) => {
         const pk = t.schema.primKey?.keyPath;
-        if (!pk || data[pk] == null) {
-          return Promise.reject(new Error('replace: 缺少主键字段'));
-        }
+        if (!pk || data[pk] == null) return Promise.reject(new Error('replace: 缺少主键字段'));
 
         const id = data[pk];
-        const patch = { ...data, timestamp: Date.now() };
+        const patch = { ...normalize(data), timestamp: Date.now() };
 
-        return t.get(id).then(old => {
-          // 不存在就直接插入
-          if (!old) return t.put(patch);
-
-          // 存在：合并（保留旧字段，新增/覆盖新字段）
-          return t.put({ ...old, ...patch });
-        });
+        return t.get(id).then(old => (!old ? t.put(patch) : t.put({ ...old, ...patch })));
       },
 
-      // ✅ 部分更新（自动 timestamp + dialog 规范化）
       update: (id, patch = {}) => {
         if (!isKey(id)) return Promise.resolve(0);
         return t.update(id, addTS(patch));
@@ -82,41 +78,85 @@ export function useIndexedDB(db) {
 
       clear: () => t.clear(),
 
-      // ✅ 单字段查询：有索引走 where；无索引降级全表过滤
       find: (filter = {}) => {
-        const f = parseFilter(filter);
-        if (!f) return t.toArray();
-        if (!isKey(f.value)) return Promise.resolve([]);
+        const keys = Object.keys(filter || {});
+        if (keys.length === 0) return t.toArray();
 
-        if (indexed(f.field)) {
-          return t.where(f.field).equals(f.value).toArray();
-        }
-        return t.toArray().then(rows => rows.filter(r => r?.[f.field] === f.value));
+        const field = keys[0];
+        return buildQueryFn(field, filter[field])();
       },
 
-      // ✅ 删除：主键 or 单字段过滤
       delete: (param) => {
         if (typeof param !== 'object' || param === null) {
           if (!isKey(param)) return Promise.resolve(0);
           return t.delete(param);
         }
 
-        const f = parseFilter(param);
-        if (!f || !isKey(f.value)) return Promise.resolve(0);
+        const keys = Object.keys(param || {});
+        if (keys.length === 0) return Promise.resolve(0);
 
-        if (indexed(f.field)) {
-          return t.where(f.field).equals(f.value).delete();
-        }
+        const field = keys[0];
+        const value = normalize({ [field]: param[field] })[field];
+        if (!isKey(value)) return Promise.resolve(0);
 
-        // 无索引：全表扫描删（慢但稳定）
+        if (indexed(field)) return t.where(field).equals(value).delete();
+
         return t.toArray().then(rows => {
           const ids = rows
-            .filter(r => r?.[f.field] === f.value)
+            .filter(r => r?.[field] === value)
             .map(r => r?.[pk])
             .filter(isKey);
           return ids.length ? t.bulkDelete(ids) : 0;
         });
       },
+
+      // ✅ ✅ 新增：最优性能批量 upsert（单事务）
+      // 语义：按主键 upsert；字段以本次数据为准（不会自动合并旧字段）
+      bulkPut: (list = [], options = { withTimestamp: true }) => {
+        const rows = normalizeMany(list, options?.withTimestamp !== false);
+        if (!rows.length) return Promise.resolve(0);
+        return t.bulkPut(rows); // ✅ Dexie 单事务批量写入
+      },
+
+      // ✅ 批量“replace语义”（合并旧字段）——更重，但和 replace 完全一致
+      // 注意：需要读旧数据，所以性能不如 bulkPut
+      bulkReplace: async (list = [], options = { withTimestamp: true }) => {
+        if (!pk) throw new Error('bulkReplace: 缺少主键字段');
+
+        const rows = normalizeMany(list, options?.withTimestamp !== false);
+        const ids = rows.map(r => r?.[pk]).filter(isKey);
+        if (!ids.length) return 0;
+
+        const olds = await t.bulkGet(ids);
+        const merged = rows.map((row, i) => {
+          const old = olds[i];
+          return old ? { ...old, ...row } : row;
+        });
+
+        await t.bulkPut(merged);
+        return merged.length;
+      },
+
+      // ✅ 业务友好别名：默认就走 bulkPut
+      upsertMany: (list = [], options) => t.bulkPut(normalizeMany(list, options?.withTimestamp !== false)),
+
+      // ✅ 链式查询 + 监听
+      where: (field) => ({
+        equals: (value) => {
+          const queryFn = buildQueryFn(field, value);
+
+          return {
+            toArray: () => queryFn(),
+            onChange: (cb, onError) => {
+              const sub = liveQuery(queryFn).subscribe({
+                next: (rows) => cb?.(rows || []),
+                error: (err) => (onError ? onError(err) : console.error('onChange error:', err))
+              });
+              return () => sub.unsubscribe();
+            }
+          };
+        }
+      }),
     };
   }, [db]);
 

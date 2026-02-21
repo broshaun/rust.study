@@ -1,126 +1,133 @@
 import React from 'react';
 import styles from './DialogList.module.css';
 
-// 默认头像
 const DEFAULT_AVATAR = '/favicon.png';
 
-const DialogList = ({ 
-  dialogsData = {}, 
-  onSelectDialog, 
+// 时间格式化函数（保持原有规则）
+const formatDialogTime = (timestamp) => {
+  if (!timestamp) return '';
+  const t = new Date(Number(timestamp));
+  const now = new Date();
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetDay = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  const diffDays = (today - targetDay) / (1000 * 60 * 60 * 24);
+  const isThisYear = t.getFullYear() === now.getFullYear();
+
+  if (diffDays === 0) {
+    return t.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  }
+
+  if (diffDays === 1) {
+    return '昨天';
+  }
+
+  if (diffDays > 1 && diffDays <= 6) {
+    const week = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    return week[t.getDay()];
+  }
+
+  if (isThisYear) {
+    return `${t.getMonth() + 1}月${t.getDate()}日`;
+  }
+
+  return `${t.getFullYear()}年${t.getMonth() + 1}月`;
+};
+
+const DialogList = ({
+  dialogData = [],
+  onSelectDialog,
   onClear,
-  buildAvatarUrl 
+  buildAvatarUrl
 }) => {
-    // 【核心修改】按last_send_time降序排序（最新时间在前）
-    const dialogList = React.useMemo(() => {
-        return Object.entries(dialogsData)
-            .map(([key, info]) => ({
-                dataKey: key, // 保留原始对象key，用于状态更新
-                ...info 
-            }))
-            .filter(item => item && item.id) // 过滤无效项
-            .sort((a, b) => { 
-                // last_send_time降序：b - a → 数值越大（时间越新）越靠前
-                // 空值兜底：默认0，避免NaN
-                const timeA = Number(a.last_send_time) || 0;
-                const timeB = Number(b.last_send_time) || 0;
-                return timeB - timeA;
-            });
-    }, [dialogsData]);
+  const dialogList = React.useMemo(() => {
+    return (Array.isArray(dialogData) ? dialogData : [])
+      .filter(item => item && item.uid)
+      .sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
+  }, [dialogData]);
 
-    // 处理删除逻辑
-    const handleDelete = (item, e) => {
-        e.stopPropagation();
-        if (typeof onClear === 'function') {
-            onClear(item);
-        }
-    };
+  const handleDelete = (item, e) => {
+    e.stopPropagation();
+    onClear?.(item);
+  };
 
-    // 头像URL拼接
-    const getAvatarUrl = (avatarPath) => {
-        if (!avatarPath || avatarPath.trim() === '') {
-            return DEFAULT_AVATAR;
-        }
-        if (typeof buildAvatarUrl === 'function') {
-            try {
-                const customUrl = buildAvatarUrl(avatarPath);
-                return customUrl || DEFAULT_AVATAR;
-            } catch (err) {
-                console.warn('头像URL拼接失败：', err);
-                return DEFAULT_AVATAR;
-            }
-        }
-        return avatarPath;
-    };
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return DEFAULT_AVATAR;
+    if (typeof buildAvatarUrl === 'function') {
+      try { return buildAvatarUrl(avatarPath) || DEFAULT_AVATAR } catch (e) {}
+    }
+    return avatarPath;
+  };
 
-    // 获取显示名称（兼容nikename为null的场景）
-    const getDisplayName = (item) => {
-        if (!item) return '未知联系人';
-        // 优先级：remark → nikename → email → 兜底
-        return item.remark || item.nikename || item.email || '未知联系人';
-    };
+  const getDisplayName = (item) => {
+    const remark = item.remark?.trim() || '';
+    const nikename = item.nikename?.trim() || '';
+    const email = item.email?.trim() || '';
+    return remark || nikename || email || '未知联系人';
+  };
 
-    return (
-        <div className={styles.dialogListContainer}>
-            <div className={styles.dialogListHeader}>
-                对话列表 ({dialogList.length})
-            </div>
+  return (
+    <div className={styles.dialogListContainer}>
+      <div className={styles.dialogListHeader}>对话列表 ({dialogList.length})</div>
+      <ul className={styles.dialogList}>
+        {dialogList.length === 0 ? (
+          <li className={styles.emptyDialogItem}>
+            <div>💬</div><div>暂无对话</div>
+          </li>
+        ) : (
+          dialogList.map(item => {
+            const displayName = getDisplayName(item);
+            const avatarUrl = getAvatarUrl(item.avatar_url);
+            const dialogTime = formatDialogTime(item.timestamp);
 
-            <ul className={styles.dialogList}>
-                {dialogList.length === 0 ? (
-                    <li className={styles.emptyDialogItem}>
-                        <div className={styles.emptyIcon}>💬</div>
-                        <div className={styles.emptyText}>暂无对话</div>
-                    </li>
-                ) : (
-                    dialogList.map((item, index) => {
-                        const displayName = getDisplayName(item);
-                        const email = item.email || '未绑定邮箱';
-                        const avatarUrl = getAvatarUrl(item.avatar_url);
-                        const avatarText = displayName.charAt(0);
-                        // 唯一key：dataKey + 索引，避免重复
-                        const uniqueKey = `${item.dataKey}_${index}`;
+            return (
+              <li
+                key={item.uid}
+                className={styles.dialogItem}
+                onClick={() => onSelectDialog?.(item)}
+              >
+                {/* 头像区域 */}
+                <div className={styles.dialogAvatar}>
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className={styles.avatarImg}
+                    onError={(e) => e.currentTarget.src = DEFAULT_AVATAR}
+                  />
+                </div>
 
-                        return (
-                            <li
-                                key={uniqueKey}
-                                className={styles.dialogItem}
-                                onClick={() => {
-                                    onSelectDialog?.(item);
-                                }}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <button 
-                                    className={styles.deleteBtn}
-                                    onClick={(e) => handleDelete(item, e)}
-                                    title="删除该对话"
-                                >
-                                    ✕
-                                </button>
+                {/* 核心信息区域 */}
+                <div className={styles.dialogInfo}>
+                  <h3 className={styles.dialogSender}>{displayName}</h3>
+                </div>
 
-                                <div className={styles.dialogAvatar}>
-                                    <img
-                                        src={avatarUrl}
-                                        alt={displayName}
-                                        className={styles.avatarImg}
-                                        onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.nextElementSibling.style.display = 'flex';
-                                        }}
-                                    />
-                                    <span className={styles.avatarText}>{avatarText}</span>
-                                </div>
+                {/* 右上角：时间 + 指示灯（删除按钮左侧） */}
+                <div className={styles.rightInfoWrapper}>
+                  <span className={styles.dialogTimeText}>{dialogTime}</span>
+                  {item.signal && (
+                    <span className={`${styles.signalIndicator} ${styles[`signal_${item.signal}`]}`} />
+                  )}
+                </div>
 
-                                <div className={styles.dialogInfo}>
-                                    <h3 className={styles.dialogSender}>{displayName}</h3>
-                                    <p className={styles.dialogPreview}>邮箱: {email}</p>
-                                </div>
-                            </li>
-                        );
-                    })
-                )}
-            </ul>
-        </div>
-    );
+                {/* 删除按钮（最右侧） */}
+                <button
+                  className={styles.deleteBtn}
+                  onClick={(e) => handleDelete(item, e)}
+                  title="删除对话"
+                >
+                  ✕
+                </button>
+              </li>
+            );
+          })
+        )}
+      </ul>
+    </div>
+  );
 };
 
 export { DialogList };

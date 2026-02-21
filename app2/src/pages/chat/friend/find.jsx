@@ -46,7 +46,6 @@ export const Find = () => {
 
     const handleEmailChange = (value) => {
         setKeyword(value);
-
     };
 
 

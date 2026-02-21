@@ -1,160 +1,152 @@
-/* 容器样式 */
+/* 整体容器 - 极致紧凑 */
 .dialogListContainer {
   width: 100%;
   height: 100%;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  font-size: 13px; /* 基础字体进一步缩小 */
 }
 
-/* 列表头部 - 紧凑化 */
+/* 列表头部 - 极致紧凑 */
 .dialogListHeader {
-  padding: 8px 12px; /* 原12px 16px → 减少内边距 */
-  font-size: 15px; /* 原16px → 缩小字号 */
-  font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #f0f2f5;
-  flex-shrink: 0;
+  padding: 6px 10px; /* 大幅压缩内边距 */
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid #f0f0f0;
+  background: #f9f9f9;
 }
 
-/* 列表主体 */
+/* 列表容器 */
 .dialogList {
   flex: 1;
+  list-style: none;
   padding: 0;
   margin: 0;
-  list-style: none;
   overflow-y: auto;
 }
 
-/* 空列表样式 - 紧凑化 */
-.emptyDialogItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 160px; /* 原200px → 缩短高度 */
-  color: #999;
-}
-
-.emptyIcon {
-  font-size: 40px; /* 原48px → 缩小图标 */
-  margin-bottom: 6px; /* 原8px → 减少间距 */
-}
-
-.emptyText {
-  font-size: 13px; /* 原14px → 缩小字号 */
-}
-
-/* 对话项样式 - 核心紧凑化 */
+/* 单个对话项 - 极致紧凑布局 */
 .dialogItem {
+  position: relative;
   display: flex;
   align-items: center;
-  padding: 8px 12px; /* 原12px 16px → 大幅减少内边距 */
-  border-bottom: 1px solid #f0f2f5;
-  position: relative;
-  transition: background-color 0.2s;
-  min-height: 56px; /* 固定最小高度，避免内容挤压 */
+  padding: 6px 10px; /* 极致压缩内边距 */
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  gap: 8px; /* 元素间距进一步缩小 */
 }
 
 .dialogItem:hover {
-  background-color: #f5f7fa;
+  background: #f7f8fa;
 }
 
-/* 删除按钮 - 紧凑化 */
-.deleteBtn {
-  position: absolute;
-  top: 50%;
-  right: 8px; /* 原12px → 减少右边距 */
-  transform: translateY(-50%);
-  width: 22px; /* 原24px → 缩小按钮 */
-  height: 22px; /* 原24px → 缩小按钮 */
-  border: none;
-  background: transparent;
-  color: #999;
-  font-size: 13px; /* 原14px → 缩小字号 */
-  cursor: pointer;
-  border-radius: 50%;
-  display: none;
-}
-
-.dialogItem:hover .deleteBtn {
-  display: block;
-}
-
-.deleteBtn:hover {
-  background-color: #f0f2f5;
-  color: #ff4d4f;
-}
-
-/* 头像容器 - 紧凑化 + 小尺寸方向圆角（核心修改） */
+/* 方形圆角头像 - 更小更紧凑 */
 .dialogAvatar {
-  width: 40px; /* 原48px → 缩小头像 */
-  height: 40px; /* 原48px → 缩小头像 */
-  /* 替换圆形为方向圆角：左上4px、右上1px、左下1px、右下4px（小尺寸不夸张） */
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px; /* 原20px → 缩小文字 */
-  margin-right: 8px; /* 原12px → 减少右边距 */
+  width: 36px; /* 从40px缩小到36px */
+  height: 36px;
+  border-radius: 5px; /* 圆角更小 */
   overflow: hidden;
-  position: relative;
-  flex-shrink: 0; /* 防止被挤压 */
-  aspect-ratio: 1/1; /* 强制1:1比例，不拉伸 */
+  flex-shrink: 0;
 }
-
-/* 头像图片 - 强化防压缩/拉伸（核心修改） */
 .avatarImg {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* 按比例填充，裁剪超出部分，不拉伸 */
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block; /* 消除inline间隙，保证尺寸精准 */
+  object-fit: cover;
 }
 
-.avatarText {
-  display: none;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  /* 文字头像同步方向圆角 */
-  border-radius: 4px 1px 1px 4px;
-}
-
-/* 对话信息 - 核心优化：解决昵称挤不下问题 */
+/* 核心信息区域 - 占主要宽度 */
 .dialogInfo {
   flex: 1;
   min-width: 0;
-  padding-right: 24px; /* 给删除按钮留空间，避免文字重叠 */
 }
-
 .dialogSender {
-  font-size: 14px; /* 原15px → 缩小字号 */
+  font-size: 14px; /* 字体进一步缩小 */
   font-weight: 500;
-  color: #333;
-  margin: 0 0 2px 0; /* 原0 0 4px 0 → 减少下边距 */
-  /* 关键：支持两行显示，避免挤不下 */
-  white-space: normal; /* 原nowrap → 取消单行限制 */
-  line-height: 1.2; /* 紧凑行高 */
-  max-height: 28px; /* 限制最多两行 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-}
-
-.dialogPreview {
-  font-size: 11px; /* 原12px → 缩小字号 */
-  color: #999;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 右上角信息包裹层（时间+指示灯）- 关键调整：指示灯下移 */
+.rightInfoWrapper {
+  display: flex;
+  flex-direction: column; /* 时间在上，指示灯在下 */
+  align-items: flex-end; /* 右对齐 */
+  justify-content: center;
+  margin-right: 6px; /* 与删除按钮间距进一步缩小 */
+  gap: 4px; /* 增大间距让指示灯下移 */
+  position: relative;
+  top: 2px; /* 整体轻微下移，配合指示灯位置 */
+}
+
+/* 时间文本 - 更小字体、灰色、右对齐 */
+.dialogTimeText {
+  font-size: 10px; /* 字体极致缩小 */
+  color: #999;
+  white-space: nowrap;
+}
+
+/* 指示灯 - 下移、更小、带阴影 */
+.signalIndicator {
+  width: 4px; /* 从5px缩小到4px */
+  height: 4px;
+  border-radius: 50%;
+  /* 增强阴影效果 */
+  box-shadow: 
+    0 0 3px 1px rgba(0, 0, 0, 0.1),
+    inset 0 0 1px rgba(255, 255, 255, 0.8);
+  /* 关键：指示灯额外下移 */
+  position: relative;
+  top: 2px;
+}
+/* 新消息指示灯 */
+.signal_news {
+  background: #00d166;
+  box-shadow: 
+    0 0 3px 1px rgba(0, 209, 102, 0.3),
+    inset 0 0 1px rgba(255, 255, 255, 0.8);
+}
+/* 历史消息指示灯 */
+.signal_old {
+  background: #ccc;
+  box-shadow: 
+    0 0 3px 1px rgba(180, 180, 180, 0.2),
+    inset 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+/* 删除按钮 - 右上角挪位、极致紧凑 */
+.deleteBtn {
+  width: 18px; /* 进一步缩小 */
+  height: 18px;
+  background: transparent;
+  border: none;
+  color: #ccc;
+  font-size: 11px; /* 字体更小 */
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 关键：往右上角挪位 */
+  position: relative;
+  top: -4px; /* 向上偏移 */
+  right: -2px; /* 向右偏移 */
+}
+.deleteBtn:hover {
+  color: red;
+  background: transparent !important;
+}
+
+/* 空列表样式 - 极致紧凑 */
+.emptyDialogItem {
+  text-align: center;
+  padding: 20px 0; /* 大幅压缩内边距 */
+  color: #999;
+  font-size: 13px;
+}
+.emptyDialogItem div:first-child {
+  font-size: 30px; /* 图标更小 */
+  margin-bottom: 4px;
 }
