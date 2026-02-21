@@ -1,4 +1,4 @@
-import { useState, useCallback, useTransition, Suspense } from 'react';
+import { useState, useCallback, useTransition, Suspense, useEffect } from 'react';
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
@@ -9,20 +9,19 @@ import { useRequest } from 'ahooks';
 
 export const Avatar = () => {
     const navigate = useNavigate();
-    const { http } = useHttpClient('/imgs');
     const location = useLocation();
+    const [avatar, setAvatar] = useState(location.state?.avatar_url)
+    const { http } = useHttpClient('/imgs');
     const { http: httpFiles } = useHttpClient('/files/img/')
     const { http: apiLogin } = useHttpClient('/api/chat/login/');
-    const { setShow } = useOutletContext();
-
+    
 
     const uploadFile = useCallback((file) => {
         if (!file) return;
         httpFiles.uploadFiles(file).then((results) => {
-            console.log('results', results)
-            setShow(p => !p)
             if (!results?.data) return;
             apiLogin.requestBodyJson('PATCH', { avatar_url: results.data })
+            setAvatar(results.data)
         });
     }, [httpFiles, apiLogin]);
 
@@ -31,7 +30,7 @@ export const Avatar = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         <Row justify='left'>
             <Col span={1} >
-                <IconCustomColor name='chevron-left' onClick={() => { setShow(false); navigate('/chat/self/'); }} />
+                <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
             </Col>
             <Col span={4} />
             <Col width={200} >
@@ -43,7 +42,7 @@ export const Avatar = () => {
                 />
             </Col>
         </Row>
-        {location.state && <Image src={http.buildUrl(location.state?.avatar_url)} />}
+        {avatar && <Image src={http.buildUrl(avatar)} />}
     </Suspense>
 
 

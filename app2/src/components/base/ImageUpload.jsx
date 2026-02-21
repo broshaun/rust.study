@@ -36,9 +36,20 @@ const ImageUpload = memo(({
     return true
   }, [acceptTypes, maxSize, onError])
 
+  const clear = useCallback(() => {
+    if (inputRef.current) inputRef.current.value = ''
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setFile(null)
+    setPreviewUrl('')
+    setError(false)
+  }, [previewUrl])
+
+  // ✅ 点击“上传”后也回到上传按钮（你要求点上传也要回到上传按钮）
+  // 实际上：上传按钮本来就在初始态，所以这里的意思是：每次点上传前先清空旧状态
   const pick = useCallback(() => {
+    clear()
     inputRef.current?.click()
-  }, [])
+  }, [clear])
 
   const onChange = useCallback((e) => {
     const f = e.target.files?.[0]
@@ -53,16 +64,20 @@ const ImageUpload = memo(({
     setPreviewUrl(URL.createObjectURL(f))
   }, [validate, previewUrl])
 
-  const clear = useCallback(() => {
-    if (inputRef.current) inputRef.current.value = ''
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setFile(null)
-    setPreviewUrl('')
-  }, [previewUrl])
+  // ✅ 确定后回到上传按钮
+  const confirm = useCallback(async () => {
+    if (!file) return
+    try {
+      await onConfirm?.(file) // 支持 onConfirm 返回 Promise
+    } finally {
+      clear()
+    }
+  }, [file, onConfirm, clear])
 
-  const confirm = useCallback(() => {
-    if (file) onConfirm?.(file)
-  }, [file, onConfirm])
+  // ✅ 取消后回到上传按钮
+  const cancel = useCallback(() => {
+    clear()
+  }, [clear])
 
   return (
     <div className={styles.uploadContainer} style={{ height: size }}>
@@ -93,7 +108,6 @@ const ImageUpload = memo(({
             </div>
 
             <div className={styles.btnGroup}>
-              {/* 确定在前 */}
               <button
                 className={styles.confirmBtn}
                 onClick={confirm}
@@ -104,7 +118,7 @@ const ImageUpload = memo(({
               </button>
               <button
                 className={styles.clearBtn}
-                onClick={clear}
+                onClick={cancel}
                 style={{ height: size }}
                 title="取消"
               >

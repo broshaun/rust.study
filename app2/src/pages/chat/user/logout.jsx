@@ -5,7 +5,6 @@ import { Modal } from 'components';
 
 
 export const Logout = () => {
-  const { setShow } = useOutletContext();
   const navigate = useNavigate();
   const location = useLocation()
   const { fnLogout } = useLogin();
@@ -27,8 +26,8 @@ export const Logout = () => {
     <Modal visible={open}>
       <Modal.Title>登出</Modal.Title>
       <Modal.Message>退出当前账户？</Modal.Message>
-      <Modal.Confirm onClick={() => { setOpen(false); setShow(p => !p); logout(); }}>确定</Modal.Confirm>
-      <Modal.Cancel onClick={() => { setOpen(false); setShow(p => !p); }}>取消</Modal.Cancel>
+      <Modal.Confirm onClick={() => { setOpen(false); logout(); }}>确定</Modal.Confirm>
+      <Modal.Cancel onClick={() => { setOpen(false);navigate('/chat/self/mylist/') }}>取消</Modal.Cancel>
     </Modal>
   </Suspense>
 }

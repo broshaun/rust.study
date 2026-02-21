@@ -8,7 +8,7 @@ function replacer(key, value) {
   return value
 }
 
-import { fetch } from '@tauri-apps/plugin-http';
+// import { fetch } from '@tauri-apps/plugin-http';
 
 
 export function useHttpClient(baseUrl) {
