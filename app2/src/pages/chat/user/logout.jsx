@@ -16,13 +16,10 @@ export const Logout = () => {
 
   // 操作按钮YES触发执行：
   const logout = () => {
-    http.requestParams('DELETE')
-      .then((results) => {
-        console.log('results',results)
-        navigate('/user/login/')
-      })
+    http.requestParams('DELETE').catch(console.error);
     fnLogout()
     delUser()
+    navigate('/user/login/', { replace: true });
   }
 
 

@@ -80,11 +80,11 @@ export function Detail() {
                         }}
                     />
 
-                    <UserChat.Button
+                    {/* <UserChat.Button
                         lable="发起视频"
                         color="#67c23a"
                         onClick={(v) => startVideo(v)}
-                    />
+                    /> */}
                 </UserChat>
             }
         </Container>

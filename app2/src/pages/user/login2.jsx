@@ -18,6 +18,7 @@ export function LogOn() {
     const { user, setUser } = useUser()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
+    
     const { data, runAsync: runLogin } = useRequest((account, password) => {
         if (!account || !password) {
             setMsg('请输入账号密码 ...')
