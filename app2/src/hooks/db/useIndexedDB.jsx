@@ -15,11 +15,14 @@ export function useIndexedDB(db) {
     return out;
   }, [db]);
 
+  // ✅ 只支持 Dexie 常见 key：string/number/Date/一层数组复合键
   const isKey = (v) =>
     typeof v === 'string' ||
-    (typeof v === 'number' && !Number.isNaN(v)) ||
+    (typeof v === 'number' && Number.isFinite(v)) ||
     v instanceof Date ||
-    (Array.isArray(v) && v.length > 0 && v.every(isKey));
+    (Array.isArray(v) && v.length > 0 && v.every(x =>
+      typeof x === 'string' || (typeof x === 'number' && Number.isFinite(x)) || x instanceof Date
+    ));
 
   const table = useCallback((tableName) => {
     const t = db.table(tableName);
@@ -36,7 +39,6 @@ export function useIndexedDB(db) {
 
     const addTS = (obj) => ({ ...normalize(obj), timestamp: Date.now() });
 
-    // ✅ 内部：构建“可监听”的查询函数（支持索引/非索引）
     const buildQueryFn = (field, value) => {
       const v = normalize({ [field]: value })[field];
       if (!isKey(v)) return () => Promise.resolve([]);
@@ -46,10 +48,12 @@ export function useIndexedDB(db) {
       return () => t.toArray().then(rows => rows.filter(r => r?.[field] === v));
     };
 
-    // ✅ 新增：批量 normalize + 自动 timestamp（可关闭）
     const normalizeMany = (list = [], withTimestamp = true) => {
+      const arr = Array.isArray(list) ? list : [];
+      if (!arr.length) return [];
       const now = Date.now();
-      return (Array.isArray(list) ? list : [])
+
+      return arr
         .filter(Boolean)
         .map((x) => {
           const row = normalize(x);
@@ -57,17 +61,43 @@ export function useIndexedDB(db) {
         });
     };
 
+    const bulkPut = (list = [], options = { withTimestamp: true }) => {
+      const rows = normalizeMany(list, options?.withTimestamp !== false);
+      if (!rows.length) return Promise.resolve(0);
+      return t.bulkPut(rows);
+    };
+
+    const bulkReplace = async (list = [], options = { withTimestamp: true }) => {
+      if (!pk) throw new Error('bulkReplace: 缺少主键字段');
+
+      const withTS = options?.withTimestamp !== false;
+      const rows = normalizeMany(list, withTS);
+      if (!rows.length) return 0;
+
+      const ids = rows.map(r => r?.[pk]).filter(isKey);
+      if (!ids.length) return 0;
+
+      const olds = await t.bulkGet(ids);
+
+      // ✅ 合并旧字段 +（可选）统一 timestamp
+      const now = Date.now();
+      const merged = rows.map((row, i) => {
+        const old = olds[i];
+        const out = old ? { ...old, ...row } : row;
+        return withTS ? { ...out, timestamp: now } : out;
+      });
+
+      await t.bulkPut(merged);
+      return merged.length;
+    };
+
     return {
       put: (data) => t.put(normalize(data)),
 
-      // ✅ 单条 replace：合并旧字段（你的原逻辑）
       replace: (data = {}) => {
-        const pk = t.schema.primKey?.keyPath;
         if (!pk || data[pk] == null) return Promise.reject(new Error('replace: 缺少主键字段'));
-
         const id = data[pk];
         const patch = { ...normalize(data), timestamp: Date.now() };
-
         return t.get(id).then(old => (!old ? t.put(patch) : t.put({ ...old, ...patch })));
       },
 
@@ -81,7 +111,6 @@ export function useIndexedDB(db) {
       find: (filter = {}) => {
         const keys = Object.keys(filter || {});
         if (keys.length === 0) return t.toArray();
-
         const field = keys[0];
         return buildQueryFn(field, filter[field])();
       },
@@ -110,47 +139,21 @@ export function useIndexedDB(db) {
         });
       },
 
-      // ✅ ✅ 新增：最优性能批量 upsert（单事务）
-      // 语义：按主键 upsert；字段以本次数据为准（不会自动合并旧字段）
-      bulkPut: (list = [], options = { withTimestamp: true }) => {
-        const rows = normalizeMany(list, options?.withTimestamp !== false);
-        if (!rows.length) return Promise.resolve(0);
-        return t.bulkPut(rows); // ✅ Dexie 单事务批量写入
-      },
+      bulkPut,
+      bulkReplace,
 
-      // ✅ 批量“replace语义”（合并旧字段）——更重，但和 replace 完全一致
-      // 注意：需要读旧数据，所以性能不如 bulkPut
-      bulkReplace: async (list = [], options = { withTimestamp: true }) => {
-        if (!pk) throw new Error('bulkReplace: 缺少主键字段');
+      // ✅ 别名：复用 bulkPut，避免逻辑分叉
+      upsertMany: (list = [], options) => bulkPut(list, options),
 
-        const rows = normalizeMany(list, options?.withTimestamp !== false);
-        const ids = rows.map(r => r?.[pk]).filter(isKey);
-        if (!ids.length) return 0;
-
-        const olds = await t.bulkGet(ids);
-        const merged = rows.map((row, i) => {
-          const old = olds[i];
-          return old ? { ...old, ...row } : row;
-        });
-
-        await t.bulkPut(merged);
-        return merged.length;
-      },
-
-      // ✅ 业务友好别名：默认就走 bulkPut
-      upsertMany: (list = [], options) => t.bulkPut(normalizeMany(list, options?.withTimestamp !== false)),
-
-      // ✅ 链式查询 + 监听
       where: (field) => ({
         equals: (value) => {
           const queryFn = buildQueryFn(field, value);
-
           return {
             toArray: () => queryFn(),
             onChange: (cb, onError) => {
               const sub = liveQuery(queryFn).subscribe({
                 next: (rows) => cb?.(rows || []),
-                error: (err) => (onError ? onError(err) : console.error('onChange error:', err))
+                error: (err) => (onError ? onError(err) : console.error('onChange error:', err)),
               });
               return () => sub.unsubscribe();
             }
