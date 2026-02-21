@@ -52,7 +52,7 @@ export const Mian = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         {friends &&
             <Chat>
-                <Chat.Left size={"20%"}>
+                <Chat.Left size={"30%"}>
                     <Container verticalScroll={true} >
                         <FriendList
                             data={friends}
@@ -61,7 +61,7 @@ export const Mian = () => {
                         />
                     </Container>
                 </Chat.Left>
-                <Chat.Right size={"80%"}>
+                <Chat.Right size={"70%"}>
                     <Outlet />
                 </Chat.Right>
             </Chat>

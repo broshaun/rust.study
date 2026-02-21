@@ -8,12 +8,12 @@ function replacer(key, value) {
   return value
 }
 
-// import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '@tauri-apps/plugin-http';
 
 
 export function useHttpClient(baseUrl) {
-  const apiBase = ''
-  // const [apiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
+  // const apiBase = ''
+  const [apiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
   const [loginToken] = useLocalStorageState('zustand:login_token');
   const tokenRef = useLatest(loginToken);
 
@@ -63,45 +63,45 @@ export function useHttpClient(baseUrl) {
     [baseUrl, getAuthHeaders]
   )
 
-const buildUrl = useCallback(
-  (params) => {
-    // 1️⃣ 计算完整 base（带域名）
-    const origin =
-      apiBase ||
-      (typeof window !== 'undefined' ? window.location.origin : '')
+  const buildUrl = useCallback(
+    (params) => {
+      // 1️⃣ 计算完整 base（带域名）
+      const origin =
+        apiBase ||
+        (typeof window !== 'undefined' ? window.location.origin : '')
 
-    const base = `${origin}${baseUrl}`.replace(/\/+$/, '')
+      const base = `${origin}${baseUrl}`.replace(/\/+$/, '')
 
-    if (params == null) return base
+      if (params == null) return base
 
-    // 2️⃣ 如果传入的是完整 URL，直接返回
-    if (typeof params === 'string' && /^https?:\/\//i.test(params)) {
-      return params
-    }
+      // 2️⃣ 如果传入的是完整 URL，直接返回
+      if (typeof params === 'string' && /^https?:\/\//i.test(params)) {
+        return params
+      }
 
-    // 3️⃣ 单个 path
-    if (typeof params === 'number' || typeof params === 'string') {
-      return `${base}/${encodeURIComponent(params)}`
-    }
+      // 3️⃣ 单个 path
+      if (typeof params === 'number' || typeof params === 'string') {
+        return `${base}/${encodeURIComponent(params)}`
+      }
 
-    // 4️⃣ 多级 path
-    if (Array.isArray(params)) {
-      return `${base}/${params.map(v => encodeURIComponent(String(v))).join('/')}`
-    }
+      // 4️⃣ 多级 path
+      if (Array.isArray(params)) {
+        return `${base}/${params.map(v => encodeURIComponent(String(v))).join('/')}`
+      }
 
-    // 5️⃣ query 参数
-    if (typeof params === 'object') {
-      const qs = new URLSearchParams(
-        Object.entries(params).filter(([, v]) => v != null)
-      ).toString()
+      // 5️⃣ query 参数
+      if (typeof params === 'object') {
+        const qs = new URLSearchParams(
+          Object.entries(params).filter(([, v]) => v != null)
+        ).toString()
 
-      return qs ? `${base}?${qs}` : base
-    }
+        return qs ? `${base}?${qs}` : base
+      }
 
-    return base
-  },
-  [baseUrl]
-)
+      return base
+    },
+    [baseUrl]
+  )
 
 
 

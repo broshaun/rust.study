@@ -37,7 +37,7 @@ export const Mian = () => {
 
 
     return <Chat>
-        <Chat.Left size={"20%"}>
+        <Chat.Left size={"30%"}>
             <Container verticalScroll={true} >
                 <DialogList
                     dialogData={dialog}
