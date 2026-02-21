@@ -9,9 +9,10 @@ function replacer(key, value) {
 }
 
 import { fetch } from '@tauri-apps/plugin-http';
-const [apiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
+
 
 export function useHttpClient(baseUrl) {
+  const [apiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
   const [loginToken] = useLocalStorageState('zustand:login_token');
   const tokenRef = useLatest(loginToken);
 
