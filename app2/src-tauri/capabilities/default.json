@@ -9,22 +9,7 @@
     "core:default",
     "http:allow-fetch",
     "core:webview:allow-create-webview-window",
-    {
-      "identifier": "fs:allow-mkdir",
-      "allow": [
-        {
-          "path": "$APPDATA/downloads/**"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:allow-write-file",
-      "allow": [
-        {
-          "path": "$APPDATA/downloads/**"
-        }
-      ]
-    },
+    "log:default",
     {
       "identifier": "http:default",
       "allow": [
@@ -35,8 +20,6 @@
           "url": "http://103.186.108.161:5015/*"
         }
       ]
-    },
-    "log:default",
-    "fs:default"
+    }
   ]
 }

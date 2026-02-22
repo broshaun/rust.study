@@ -2,9 +2,7 @@ import { useState, useCallback, useTransition, Suspense, useEffect } from 'react
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
-import { useHttpClient } from 'hooks';
-import { useRequest } from 'ahooks';
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { useHttpClient, useImage } from 'hooks/http';
 
 
 
@@ -28,20 +26,10 @@ export const Avatar = () => {
 
 
 
-    const [localSrc, setLocalSrc] = useState("");
-    useEffect(() => {
-        if (!avatar) return;
+    const { src, loading, error } = useImage("/imgs", avatar);
 
-        httpFiles
-            .downFiles(avatar)
-            .then((path) => {
-                console.log("下载的文件路径:", path);
-                setLocalSrc(convertFileSrc(path)); // ✅ 直接用本地文件展示
-            })
-            .catch((e) => {
-                console.error("downFiles failed:", e);
-            });
-    }, [avatar, httpFiles]);
+
+
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Row justify='left'>
@@ -58,16 +46,13 @@ export const Avatar = () => {
                 />
             </Col>
         </Row>
-        {avatar && <Image src={localSrc || http.buildUrl(avatar)} />}
-
+        {avatar &&
+            <Container>
+                <Image src={src} />
+            </Container>
+        }
     </Suspense>
 
 
 }
 
-
-
-// const { http } = useHttpClient('/files/img/')
-// http.downFiles(file).then((path)=>{
-//     console.log('下载的文件地址')
-// })
