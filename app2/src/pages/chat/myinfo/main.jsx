@@ -1,19 +1,10 @@
-import { useState, Suspense, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { List, Container } from 'components';
-import { useHttpClient } from 'hooks';
-import { useRequest } from 'ahooks';
+import { Outlet } from 'react-router-dom';
+import { Container } from 'components';
 
 
 export const Mian = () => {
-    const navigate = useNavigate();
-    const location = useLocation()
-
-
-    return <Suspense>
-        <Container>
-            <Outlet />
-        </Container>
-    </Suspense >
+    return <Container>
+        <Outlet />
+    </Container>
 }
 
