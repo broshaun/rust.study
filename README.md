@@ -51,5 +51,4 @@
 - rustup target add aarch64-apple-darwin
 - cargo tauri build --target aarch64-apple-darwin
 
-
-- cargo tauri build --target universal-apple-darwin
+- cargo tauri build --target universal-apple-darwin 
