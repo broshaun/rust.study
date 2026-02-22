@@ -69,7 +69,7 @@ export function LogOn() {
             <Login.Input>
                 <br />
                 <Row align="center" justify="center">
-                    <InputText2 placeholder="请输入账号..." position="center" defaultValue={'77254@qq.com'} onChangeValue={(value) => { setAccount(value) }}>
+                    <InputText2 placeholder="请输入账号..." position="center" defaultValue={account} onChangeValue={(value) => { setAccount(value) }}>
                         <InputText2.Left icon="user-circle" />
                     </InputText2>
                 </Row>

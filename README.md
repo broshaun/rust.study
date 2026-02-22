@@ -40,17 +40,16 @@
 - cargo tauri build
 
 
-## 指定系统架构
-### 安装 Intel 目标
+
+## 指定系统架构打包
+
+### 打包 Intel 目标
 - rustup target add x86_64-apple-darwin 
-### 指定 target 构建
 - cargo tauri build --target x86_64-apple-darwin
 
-
-
-### 打 Universal 包（同时支持 M1 + Intel）
+### 打包 App M 系列目标
 - rustup target add aarch64-apple-darwin
-- rustup target add x86_64-apple-darwin
+- cargo tauri build --target aarch64-apple-darwin
 
-### 打包
+
 - cargo tauri build --target universal-apple-darwin
