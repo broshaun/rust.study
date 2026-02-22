@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { useLocalStorageState, useLatest } from 'ahooks'; // ✅ 只加 useLatest
-import { isTauri } from '@tauri-apps/api/core';
+
 
 function replacer(key, value) {
   if (value instanceof Map) return Object.fromEntries(value)

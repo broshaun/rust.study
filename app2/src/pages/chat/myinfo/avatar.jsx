@@ -1,18 +1,19 @@
-import { useState, useCallback, useTransition, Suspense, useEffect } from 'react';
-import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useCallback, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient, useImage } from 'hooks/http';
 
 
 
+
 export const Avatar = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
+    const navigate = useNavigate()
+    const location = useLocation()
     const [avatar, setAvatar] = useState(location.state?.avatar_url)
-    const { http } = useHttpClient('/imgs');
     const { http: httpFiles } = useHttpClient('/files/img/')
-    const { http: apiLogin } = useHttpClient('/api/chat/login/');
+    const { http: apiLogin } = useHttpClient('/api/chat/login/')
+    const { src, loading } = useImage("/imgs", avatar)
 
 
     const uploadFile = useCallback((file) => {
@@ -24,29 +25,22 @@ export const Avatar = () => {
         });
     }, [httpFiles, apiLogin]);
 
-
-
-    const { src, loading, error } = useImage("/imgs", avatar);
-
-
-
-
     return <Suspense fallback={<div>加载中...</div>}>
         <Row justify='left'>
             <Col span={1} >
-                <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
+                <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/') }} />
             </Col>
             <Col span={4} />
             <Col width={200} >
                 <ImageUpload
-                    onConfirm={(file) => { uploadFile(file); }}
+                    onConfirm={(file) => { uploadFile(file) }}
                     maxSize={2}
                     btnText="上传头像"
                     previewSize="120px"
                 />
             </Col>
         </Row>
-        {avatar &&
+        {!loading &&
             <Container>
                 <Image src={src} />
             </Container>

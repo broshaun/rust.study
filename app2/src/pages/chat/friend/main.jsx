@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo, useTransition, useCallback, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useHttpClient } from 'hooks';
+import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
-import { Chat, Container } from 'components';
+import { Chat, Container, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
+
 
 
 export const Mian = () => {
@@ -13,17 +14,13 @@ export const Mian = () => {
     const [friends, setFriends] = useState([]);
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/')
-    const { http: httpImgs } = useHttpClient('/imgs');
     const { table } = useIndexedDB(db);
     const tbdialog = useMemo(() => table('chat_dialog'), [table]);
-
-    const buildAvatarUrl = useCallback((name) => httpImgs.buildUrl(name), [httpImgs]);
     const openMsgWindow = useCallback((select) => {
-        
         navigate('/chat/friend/detail/', { state: { select } });
     }, [navigate, location.pathname]);
 
-    const { runAsync: runGetFriend, loading } = useRequest(() => {
+    const { runAsync: runGetFriend } = useRequest(() => {
         http.requestParams('GET').then((results) => {
             if (!results) return;
             const { code, message, data } = results
@@ -57,7 +54,7 @@ export const Mian = () => {
                         <FriendList
                             data={friends}
                             onSelectFriend={openMsgWindow}
-                            buildAvatarUrl={buildAvatarUrl}
+                            renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
                         />
                     </Container>
                 </Chat.Left>
@@ -69,4 +66,5 @@ export const Mian = () => {
     </Suspense>
 
 }
+
 

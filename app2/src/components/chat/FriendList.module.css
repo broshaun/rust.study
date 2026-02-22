@@ -9,8 +9,8 @@
 
 /* 列表头部 - 紧凑化 */
 .friendListHeader {
-  padding: 8px 12px; /* 原12px 16px → 减少内边距 */
-  font-size: 15px; /* 原16px → 缩小字号 */
+  padding: 8px 12px;
+  font-size: 15px;
   font-weight: 500;
   border-bottom: 1px solid #f0f0f0;
 }
@@ -20,7 +20,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 400px; /* 高度保留，按需可调整 */
+  max-height: 400px;
   overflow-y: auto;
 }
 
@@ -28,62 +28,63 @@
 .friendItem {
   display: flex;
   align-items: center;
-  padding: 8px 12px; /* 原12px 16px → 大幅减少内边距 */
+  padding: 8px 12px;
   border-bottom: 1px solid #f5f5f5;
   transition: background-color 0.2s ease;
-  min-height: 50px; /* 保证最小高度，避免过度挤压 */
+  min-height: 50px;
 }
 
-/* hover 效果保留，视觉反馈 */
 .friendItem:hover {
   background-color: #f9f9f9;
 }
 
 /* 在线/离线样式区分 - 保留 */
 .friendItem.online .onlineStatus {
-  color: #52c41a; /* 在线绿色 */
+  color: #52c41a;
 }
-
 .friendItem.offline .onlineStatus {
-  color: #cccccc; /* 离线灰色（实际会隐藏） */
+  color: #cccccc;
 }
 
-/* 头像容器 - 紧凑化 + 方向圆角（核心修改） */
 .friendAvatar {
   width: 36px;
-  height: 36px; 
+  height: 36px;
   border-radius: 6px;
   overflow: hidden;
-  margin-right: 8px; /* 原12px → 减少右侧间距 */
-  flex-shrink: 0; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* ✅ 图片：完整展示不裁切 */
 .avatarImg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  display: block;                 /* ✅ 去掉底部空白 */
+  object-fit: contain;            /* ✅ 核心：完整展示，不裁切 */
+  object-position: center;
 }
 
 /* 好友信息区域 - 紧凑化+文字适配 */
 .friendInfo {
   flex: 1;
   overflow: hidden;
-  padding-right: 16px; /* 给在线状态留空间，避免文字重叠 */
+  padding-right: 16px;
 }
 
 .friendName {
   margin: 0;
-  font-size: 14px; /* 字号保留，保证可读性 */
+  font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2; /* 紧凑行高 */
+  line-height: 1.2;
 }
 
 .friendSubInfo {
-  margin: 2px 0 0; /* 原4px → 减少上边距 */
-  font-size: 11px; /* 原12px → 缩小字号 */
+  margin: 2px 0 0;
+  font-size: 11px;
   color: #999;
   white-space: nowrap;
   overflow: hidden;
@@ -92,9 +93,9 @@
 
 /* 在线状态 - 紧凑化 */
 .onlineStatus {
-  font-size: 14px; /* 原16px → 缩小圆点 */
-  margin-left: 4px; /* 原8px → 减少左侧间距 */
-  flex-shrink: 0; /* 防止状态圆点被挤压 */
+  font-size: 14px;
+  margin-left: 4px;
+  flex-shrink: 0;
 }
 
 /* 空列表 - 紧凑化 */
@@ -103,15 +104,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 0; /* 原48px → 减少上下内边距 */
+  padding: 32px 0;
   color: #999;
 }
 
 .emptyIcon {
-  font-size: 28px; /* 原32px → 缩小图标 */
-  margin-bottom: 6px; /* 原8px → 减少下边距 */
+  font-size: 28px;
+  margin-bottom: 6px;
 }
 
 .emptyText {
-  font-size: 13px; /* 原14px → 缩小字号 */
+  font-size: 13px;
 }

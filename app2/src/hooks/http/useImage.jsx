@@ -5,59 +5,39 @@ import { useHttpFetch } from "./useHttpFetch";
 const DEFAULT_CACHE_NAME = "image-cache";
 const DEFAULT_EXPIRE_MS = 3600_000;
 
-function buildUrl(apiBase, baseUrl, input) {
-  const origin = apiBase || (typeof window !== "undefined" ? window.location.origin : "");
-  const base = `${origin}${baseUrl}`.replace(/\/+$/, "");
-
-  if (input == null || input === "") return "";
-  if (typeof input === "string" && /^https?:\/\//i.test(input)) return input;
-
-  if (typeof input === "string" || typeof input === "number") {
-    return `${base}/${encodeURIComponent(String(input))}`;
-  }
-  if (Array.isArray(input)) {
-    return `${base}/${input.map((v) => encodeURIComponent(String(v))).join("/")}`;
-  }
-  if (typeof input === "object") {
-    const qs = new URLSearchParams(
-      Object.entries(input)
-        .filter(([, v]) => v != null)
-        .map(([k, v]) => [k, String(v)])
-    ).toString();
-    return qs ? `${base}?${qs}` : base;
-  }
-  return base;
-}
-
-function isExpired(ts, ttl) {
+const isHttpUrl = (s) => /^https?:\/\//i.test(s);
+const expired = (ts, ttl) => {
   const t = Number(ts);
   return !t || Date.now() - t > ttl;
-}
+};
 
 /**
- * useImage
- * @param {string} baseUrl 例如 "/imgs"
- * @param {any} srcOrParams 绝对URL / id / params对象 / path数组
- * @param {object} opt
- * @param {boolean} opt.enabled 默认 true
- * @param {"none"|"http"|"cacheStorage"} opt.cache 默认 "cacheStorage"
- * @param {string} opt.cacheName 默认 "image-cache"
- * @param {number} opt.expireMs 默认 1h
- * @param {string} opt.cacheKey 缓存key（签名URL会变时很有用）
+ * useImage（极简约束版）
+ * 约束：
+ * - srcOrName 永远是 string（例如 "a.jpg" 或 "user/1.png"）
+ * - 不传绝对 URL / object / array
+ * - query 手动拼接（例如 "a.jpg?v=1"）
  */
-export function useImage(baseUrl, srcOrParams, opt = {}) {
+export function useImage(baseUrl, srcOrName, opt = {}) {
   const { apiBase } = useApiBase();
   const { fetcher } = useHttpFetch();
 
   const {
     enabled = true,
-    cache = "cacheStorage",
+    cache = "cacheStorage", // "none" | "http" | "cacheStorage"
     cacheName = DEFAULT_CACHE_NAME,
     expireMs = DEFAULT_EXPIRE_MS,
-    cacheKey,
+    cacheKey, // 可选：自定义缓存 key（一般不需要）
   } = opt;
 
-  const url = useMemo(() => buildUrl(apiBase, baseUrl, srcOrParams), [apiBase, baseUrl, srcOrParams]);
+  // 只拼接 string：最终形态 `${apiBase}${baseUrl}/{name}`
+  const url = useMemo(() => {
+    if (!srcOrName) return "";
+    // 保险：若误传绝对 URL，直接报错（按你的约束本不该发生）
+    if (isHttpUrl(srcOrName)) return "";
+    const base = `${apiBase || ""}${baseUrl}`.replace(/\/+$/, "");
+    return `${base}/${encodeURIComponent(srcOrName)}`; // 文件名编码，避免空格等问题
+  }, [apiBase, baseUrl, srcOrName]);
 
   const [src, setSrc] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,9 +46,7 @@ export function useImage(baseUrl, srcOrParams, opt = {}) {
   const curRef = useRef("");
   const reqIdRef = useRef(0);
 
-  const revoke = useCallback((u) => {
-    if (u) URL.revokeObjectURL(u);
-  }, []);
+  const revoke = useCallback((u) => u && URL.revokeObjectURL(u), []);
 
   const clear = useCallback(() => {
     if (curRef.current) revoke(curRef.current);
@@ -78,40 +56,24 @@ export function useImage(baseUrl, srcOrParams, opt = {}) {
     setLoading(false);
   }, [revoke]);
 
-  const fetchBlob = useCallback(async (u) => {
-    const res = await fetcher(u, { method: "GET" }); // ✅ 不带 token
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`Image fetch failed: ${res.status} ${res.statusText} | ${text.slice(0, 160)}`);
-    }
-    return res.blob();
-  }, [fetcher]);
-
-  const fetchBlobCacheStorage = useCallback(async (u) => {
-    if (typeof caches === "undefined") return fetchBlob(u);
-
-    const key = cacheKey || u;
-    const c = await caches.open(cacheName);
-
-    const cached = await c.match(key);
-    if (cached) {
-      const ts = cached.headers.get("X-Cache-Time");
-      if (!isExpired(ts, expireMs)) return cached.blob();
-      await c.delete(key);
-    }
-
-    const blob = await fetchBlob(u);
-    await c.put(key, new Response(blob, { headers: { "X-Cache-Time": String(Date.now()) } }));
-    return blob;
-  }, [cacheKey, cacheName, expireMs, fetchBlob]);
+  const fetchBlob = useCallback(
+    async (u) => {
+      const res = await fetcher(u, { method: "GET" }); // 不带 token
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Image fetch failed: ${res.status} ${res.statusText} | ${text.slice(0, 160)}`);
+      }
+      return res.blob();
+    },
+    [fetcher]
+  );
 
   const load = useCallback(async () => {
     if (!enabled) return;
-    if (!url) return clear();
-
-    if (!/^https?:\/\//i.test(url)) {
+    if (!srcOrName) return clear();
+    if (!url) {
       setSrc("");
-      setError(new Error(`useImage invalid url: "${url}"`));
+      setError(new Error(`useImage invalid name: "${srcOrName}" (absolute URL is not allowed)`));
       return;
     }
 
@@ -120,14 +82,37 @@ export function useImage(baseUrl, srcOrParams, opt = {}) {
     setError(null);
 
     try {
-      const blob =
-        cache === "cacheStorage" ? await fetchBlobCacheStorage(url)
-          : await fetchBlob(url); // "http"/"none"：不额外做缓存
+      let blob;
+
+      if (cache === "cacheStorage" && typeof caches !== "undefined") {
+        const key = cacheKey || url;
+        const c = await caches.open(cacheName);
+
+        const hit = await c.match(key);
+        if (hit) {
+          const ts = hit.headers.get("X-Cache-Time");
+          if (!expired(ts, expireMs)) {
+            blob = await hit.blob();
+          } else {
+            await c.delete(key);
+          }
+        }
+
+        if (!blob) {
+          blob = await fetchBlob(url);
+          await c.put(key, new Response(blob, { headers: { "X-Cache-Time": String(Date.now()) } }));
+        }
+      } else {
+        // "http" / "none"：不额外缓存（是否命中 HTTP 缓存由环境决定）
+        blob = await fetchBlob(url);
+      }
 
       const objUrl = URL.createObjectURL(blob);
 
+      // 竞态：非最新请求则释放
       if (reqId !== reqIdRef.current) return revoke(objUrl);
 
+      // 替换：释放旧 objectURL
       if (curRef.current) revoke(curRef.current);
       curRef.current = objUrl;
 
@@ -138,7 +123,7 @@ export function useImage(baseUrl, srcOrParams, opt = {}) {
       setError(e);
       setLoading(false);
     }
-  }, [enabled, url, cache, fetchBlob, fetchBlobCacheStorage, clear, revoke]);
+  }, [enabled, srcOrName, url, cache, cacheName, cacheKey, expireMs, fetchBlob, clear, revoke]);
 
   useEffect(() => {
     load();

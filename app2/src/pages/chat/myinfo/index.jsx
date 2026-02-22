@@ -7,7 +7,7 @@ import { Logout } from "./logout";
 
 
 // 导出 Super 相关的路由配置
-export const RsSelf = (
+export const RsMyInfo = (
     <Route path="self" element={<Mian />}>
         <Route path="mylist" element={<MyList />}/>
         <Route path="image" element={<Avatar />}/>

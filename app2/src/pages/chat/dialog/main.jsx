@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useHttpClient } from 'hooks';
-import { Chat, Container, DialogList } from 'components';
+import { Chat, Container, DialogList, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
 
 
@@ -43,7 +43,7 @@ export const Mian = () => {
                     dialogData={dialog}
                     onSelectDialog={(select) => { openMsgWindow(select) }}
                     onClear={(p) => handleClear(p)}
-                    buildAvatarUrl={(name) => httpImgs.buildUrl(name)}
+                    renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
                 />
             </Container>
         </Chat.Left>
