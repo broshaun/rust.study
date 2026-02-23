@@ -4,6 +4,7 @@ import { MyList } from "./mylist";
 import { Avatar } from "./avatar";
 import { Nikename } from "./nickname";
 import { Logout } from "./logout";
+import { PushDeer } from "./pushdeer";
 
 
 // 导出 Super 相关的路由配置
@@ -12,6 +13,7 @@ export const RsMyInfo = (
         <Route path="mylist" element={<MyList />}/>
         <Route path="image" element={<Avatar />}/>
         <Route path="name" element={<Nikename />}/>
+        <Route path="pushdeer" element={<PushDeer />}/>
          <Route path="lgout" element={<Logout />}/>
     </Route>
 )

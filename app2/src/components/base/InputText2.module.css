@@ -1,12 +1,11 @@
-/* InputText2.module.css */
-/* 核心容器样式 */
+/* 核心容器样式 - 移除硬编码的 width/min-width */
 .inputContainer {
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: 300px;
-  max-width: 100%;
-  min-width: 200px;
+  /* 移除：width: 300px; */
+  /* 移除：min-width: 200px; */
+  max-width: 100%; /* 保留最大宽度为100%，防止溢出 */
   height: 40px;
   font-size: 16px;
   box-sizing: border-box;
@@ -18,11 +17,11 @@
   transition: all 0.2s ease;
 }
 
-/* ========== 新增：尺寸配置样式 ========== */
+/* ========== 尺寸配置样式 ========== */
 /* 小尺寸 */
 .size-small {
   height: 32px;
-  width: 240px;
+  /* 移除：width: 240px; */
   font-size: 14px;
 }
 .size-small .input {
@@ -43,14 +42,14 @@
 /* 中尺寸（默认） */
 .size-medium {
   height: 40px;
-  width: 300px;
+  /* 移除：width: 300px; */
   font-size: 16px;
 }
 
 /* 大尺寸 */
 .size-large {
   height: 48px;
-  width: 360px;
+  /* 移除：width: 360px; */
   font-size: 18px;
 }
 .size-large .input {
@@ -68,7 +67,7 @@
   height: 28px !important;
 }
 
-/* ========== 新增：位置配置样式 ========== */
+/* ========== 位置配置样式 ========== */
 /* 左对齐（默认） */
 .position-left {
   display: inline-flex;
@@ -174,7 +173,7 @@
   padding: 0;
   flex-shrink: 0;
   position: relative;
-  transition: all 0.2s ease; /* 仅图标有过渡动画 */
+  transition: all 0.2s ease;
 }
 
 /* 强制保留图标尺寸（随组件尺寸自适应） */
@@ -196,12 +195,12 @@
 .iconInteractive .rightContainer .icon:hover {
   opacity: 1;
   background-color: #e8e8e8;
-  color: #4F46E5; /* 图标变色 */
+  color: #4F46E5;
 }
 
 .iconInteractive .rightContainer .label:hover {
-  background-color: inherit; /* 保持原背景色 */
-  color: #666666; /* 固定文字色 */
+  background-color: inherit;
+  color: #666666;
 }
 
 /* 输入框内边距适配 */
@@ -235,4 +234,20 @@
 .iconInteractive:focus-within .rightContainer .label {
   background-color: inherit;
   color: #666666;
+}
+
+/* ========== 新增：自动适应内容宽度 ========== */
+.mirror {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+/* 启用 autoFit 时，让 input 不再强制 100% 撑满 */
+.autoFitInput {
+  width: auto !important;
+  flex: 0 0 auto;
 }
