@@ -38,7 +38,7 @@ export const Settings = () => {
         </Modal>
         <br />
         <InputText2 defaultValue={apiBase} onChangeValue={(value) => { setApiBase(value);setIsUpdate(true); }}>
-            <InputText2.Left label='地址'></InputText2.Left>
+            <InputText2.Left label='地址'/>
         </InputText2>
         <Row gap={60} align="center" justify="center">
             {isUpdate

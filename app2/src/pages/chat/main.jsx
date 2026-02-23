@@ -9,11 +9,11 @@ import { db, useIndexedDB } from 'hooks/db';
 export function Chat() {
   const navigate = useNavigate();
   const { getTimestampMs } = useDateTime()
-  const { http: httpMsg } = useHttpClient('/api/chat/msg/private/')
+  const { http: httpMsg } = useHttpClient('/api/chat/msg/single/')
   const { table } = useIndexedDB(db)
   const tbmsg = useMemo(() => table('messages'), [table])
   useRequest(() => {
-    httpMsg.requestParams('GET').then((results) => {
+    httpMsg.requestParams('POST').then((results) => {
       if (!results) return;
       const { code, data } = results
       if (data && code === 200) {

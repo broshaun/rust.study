@@ -11,7 +11,7 @@ export function Msg() {
     const location = useLocation();
     const uid = location.state?.uid
     const [msgs, setMsgs] = useState([]);
-    const { http } = useHttpClient('/api/chat/msg/private/')
+    const { http } = useHttpClient('/api/chat/msg/single/')
     const { getDateTimeStr } = useDateTime()
     const { table } = useIndexedDB(db);
     const tbmsg = useMemo(() => table('messages'), [table])

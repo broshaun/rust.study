@@ -35,7 +35,6 @@ export const Mian = () => {
         navigate('/chat/dialog/')
     }, [tbmsg, tbdialog])
 
-
     return <Chat>
         <Chat.Left size={"30%"}>
             <Container verticalScroll={true} >
