@@ -39,6 +39,7 @@ export const PushDeer = () => {
         <Row>
             {location.state &&
                 <InputText2 minWidth='600' defaultValue={location.state?.pushKey} onChangeValue={(value) => { setPushKey(value) }} >
+                    <InputText2.Left icon='key' />
                     <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/chat/self/mylist/'); }} />
                 </InputText2>
             }

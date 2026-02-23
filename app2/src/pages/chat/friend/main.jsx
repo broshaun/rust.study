@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
-import { Chat, Container, Avatar } from 'components';
+import { Chat, Container, Avatar, InputText2 } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
 
 
@@ -51,11 +51,15 @@ export const Mian = () => {
             <Chat>
                 <Chat.Left size={"30%"}>
                     <Container verticalScroll={true} >
+                        
                         <FriendList
                             data={friends}
                             onSelectFriend={openMsgWindow}
                             renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
+                            findIconName="magnifying-glass-circle"
+                            onFind={()=>{navigate('/chat/friend/find/')}}
                         />
+       
                     </Container>
                 </Chat.Left>
                 <Chat.Right size={"70%"}>

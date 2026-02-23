@@ -50,6 +50,7 @@ const FriendList = ({
   onSelectFriend,
   renderAvatar,
   onlineStatusKey = "is_online",
+  onFind, // 新增：查找按钮回调
 }) => {
   const list = useMemo(() => {
     if (!data || typeof data !== "object") return [];
@@ -66,9 +67,28 @@ const FriendList = ({
     if (typeof onSelectFriend === "function") onSelectFriend(friend);
   };
 
+  // 处理查找图标点击
+  const handleFindClick = (e) => {
+    e.stopPropagation(); // 防止触发列表项点击
+    if (typeof onFind === "function") onFind();
+  };
+
   return (
     <div className={styles.friendListContainer}>
-      <div className={styles.friendListHeader}>我的好友 ({total})</div>
+      {/* 头部：标题 + 总数 + 查找图标 */}
+      <div className={styles.friendListHeader}>
+        <span className={styles.headerTitle}>我的好友 ({total})</span>
+        {/* 查找/编码图标（替换为🔍符号） */}
+        {typeof onFind === "function" && (
+          <div 
+            className={styles.findIconWrapper}
+            onClick={handleFindClick}
+            title="查找/编码"
+          >
+            <span className={styles.findIcon}>🔍</span>
+          </div>
+        )}
+      </div>
 
       <ul className={styles.friendList}>
         {list.length === 0 ? (

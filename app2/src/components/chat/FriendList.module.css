@@ -7,12 +7,55 @@
   overflow: hidden;
 }
 
-/* 列表头部 - 紧凑化 */
+/* 列表头部 - 新增 flex 布局，容纳标题+图标 */
 .friendListHeader {
   padding: 8px 12px;
   font-size: 15px;
   font-weight: 500;
   border-bottom: 1px solid #f0f0f0;
+  /* 核心修改：flex 布局，标题左对齐，图标右对齐 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 头部标题（我的好友 + 总数） */
+.headerTitle {
+  flex: 1;
+}
+
+/* 查找图标容器 - 核心样式（移除 hover 背景色） */
+.findIconWrapper {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* 移除背景色过渡 */
+  /* transition: background-color 0.2s ease; */
+  flex-shrink: 0; /* 不压缩 */
+  margin-left: 8px;
+}
+
+/* 移除 hover 背景色效果 */
+/* .findIconWrapper:hover {
+  background-color: #f0f0f0;
+} */
+
+/* 查找图标样式（核心：默认灰色，hover 变原色） */
+.findIcon {
+  color: #999; /* 默认灰色 */
+  font-size: 18px; /* 🔍符号尺寸 */
+  /* 图标居中 */
+  display: block;
+  transition: color 0.2s ease; /* 颜色过渡更丝滑 */
+}
+
+/* 悬浮时图标变原色（深灰色/黑色） */
+.findIconWrapper:hover .findIcon {
+  color: #333; /* 原色（可根据需求调整为 #666/#000） */
 }
 
 /* 列表主体 - 紧凑化滚动区域 */

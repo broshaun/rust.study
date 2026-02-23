@@ -26,7 +26,7 @@ export const MyList = () => {
                 <List.Items icon='user-circle' onClick={() => { navigate('/chat/self/image/', { 'state': apiInfo }); }}>头像</List.Items>
                 <List.Items icon='email' onClick={() => { }}>{apiInfo?.email}</List.Items>
                 <List.Items icon='bookmark-square' onClick={() => { navigate('/chat/self/name/', { 'state': apiInfo }); }}>昵称：{apiInfo?.nikename} </List.Items>
-                <List.Items icon='bookmark-square' onClick={() => { navigate('/chat/self/pushdeer/', { 'state': apiInfo }); }}>设置手机提醒</List.Items>
+                <List.Items icon='rss' onClick={() => { navigate('/chat/self/pushdeer/', { 'state': apiInfo }); }}>设置手机提醒</List.Items>
                 <List.Items icon='arrow-left' onClick={() => { navigate('/chat/self/lgout/', { 'state': apiInfo }); }}>退出登录</List.Items>
             </List>
         }

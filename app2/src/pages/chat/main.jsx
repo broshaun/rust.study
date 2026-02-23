@@ -26,12 +26,11 @@ export function Chat() {
   const { winSize } = useWinWidth()
   const [title, setTitle] = useState('主页')
   const items2 = [
-    { key: 'home', display: true, icon: { name: 'home', label: '主页' }, onClick: () => navigate('/apps/') },
-    { key: 'self', display: true, icon: { name: 'user-oouline', label: '我的' }, onClick: () => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息') } },
+    // { key: 'home', display: true, icon: { name: 'home', label: '主页' }, onClick: () => navigate('/apps/') },
     { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { navigate('/chat/dialog/'); setTitle('消息列表') } },
     { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { navigate('/chat/friend/'); setTitle('好友列表') } },
     // { key: 'users', display: true, icon: { name: 'user-group-oline', label: '群聊' }, },
-    { key: 'find', display: true, icon: { name: 'magnifying-glass-circle', label: '查找' }, onClick: () => { navigate('/chat/friend/find/'); setTitle('查找好友') } },
+    { key: 'self', display: true, icon: { name: 'user-oouline', label: '我的' }, onClick: () => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息') } },
   ];
 
   return <React.Fragment>

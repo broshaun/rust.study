@@ -22,7 +22,7 @@ export function User() {
   return <React.Fragment>
     <MenuMobile size={46}>
       <MenuMobile.Head title={title} />
-      <MenuMobile.Items position={'left'}>{items}</MenuMobile.Items>
+       <MenuMobile.Items position={winSize > 415 ? 'left' : 'bottom'}>{items}</MenuMobile.Items>
       <MenuMobile.Content>
         <Outlet />
       </MenuMobile.Content>
