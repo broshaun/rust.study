@@ -1,15 +1,13 @@
 
-import React, { useEffect, useReducer, useRef, useState, useTransition } from 'react'
-import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { useLogin, useUser, useHttpClient } from 'hooks';
+import React, { useState, useTransition } from 'react'
+import { useNavigate } from 'react-router-dom';
+import { useLogin, useUser, useHttpClient, useWinWidth } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { Button, Login, Row, InputText2, Container, Avatar, Modal } from "components";
 
 
 export function LogOn() {
     const navigate = useNavigate();
-    // const location = useLocation();
-    const [isPending, startTransition] = useTransition()
     const [account, setAccount] = useLocalStorageState('savedAccount')
     const [password, setPassword] = useState("")
 
@@ -18,7 +16,8 @@ export function LogOn() {
     const { user, setUser } = useUser()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
-    
+    const { isMobile } = useWinWidth()
+
     const { data, runAsync: runLogin } = useRequest((account, password) => {
         if (!account || !password) {
             setMsg('请输入账号密码 ...')
@@ -33,7 +32,7 @@ export function LogOn() {
                 if (code === 200) {
                     setToken(results.data?.login_token)
                     setTime(results.data?.login_expired)
-                    navigate('/chat/dialog/')
+                    isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
                 } else {
                     setMsg(message)
                     setOpen(true)
