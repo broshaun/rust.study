@@ -11,6 +11,7 @@ export const RsChat = (
     {RsFriend}
     {RsDialog}
     {RsMyInfo}
+
     
   </Route>
 );

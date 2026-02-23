@@ -5,7 +5,7 @@ import { UserChat } from 'components/chat';
 import { Container } from 'components';
 import { useRequest } from 'ahooks';
 import { db, useIndexedDB } from 'hooks/db';
-
+import { useWinWidth } from 'hooks';
 
 
 export function Detail() {
@@ -18,6 +18,7 @@ export function Detail() {
     const { table } = useIndexedDB(db);
     const tbdialog = useMemo(() => table('chat_dialog'), [table])
     const tbmsg = useMemo(() => table('messages'), [table])
+    const { winSize } = useWinWidth()
 
 
     useEffect(() => {
@@ -49,8 +50,14 @@ export function Detail() {
 
     // 打开聊天
     function openMsgWindow(select) {
+        console.log('select', select)
         tbdialog.replace({ 'id': select?.id, 'uid': select?.user_id, 'signal': 'old', 'dialog': 1 })
-        navigate('/chat/dialog/msg/', { state: { 'uid': select?.user_id } })
+        if (winSize > 415) {
+            navigate('/chat/dialog/msg/', { state: { 'uid': select?.user_id, 'avatar_url': select?.avatar_url } })
+        } else {
+            navigate('/chat/mobile/msg/', { state: { 'uid': select?.user_id, 'avatar_url': select?.avatar_url } })
+        }
+
     }
 
 

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useLocation } from "react-router-dom";
 import { useHttpClient, useDateTime } from 'hooks';
 import { ChatMsg } from 'components/chat';
-import { useRequest } from 'ahooks';
+import { Avatar } from 'components';
+import { useRequest, useLocalStorageState } from 'ahooks';
 import { db, useIndexedDB } from 'hooks/db';
 
 
@@ -10,6 +11,8 @@ import { db, useIndexedDB } from 'hooks/db';
 export function Msg() {
     const location = useLocation();
     const uid = location.state?.uid
+    const avatar_url = location.state?.avatar_url
+    const [selfAvatar] = useLocalStorageState('saveOneself')
     const [msgs, setMsgs] = useState([]);
     const { http } = useHttpClient('/api/chat/msg/single/')
     const { getDateTimeStr } = useDateTime()
@@ -35,7 +38,10 @@ export function Msg() {
     }, { manual: true })
 
     return <React.Fragment>
-        <ChatMsg>
+        <ChatMsg
+            friendAvatar={() => <Avatar src={avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
+            oneselfAvatar={() => <Avatar src={selfAvatar} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
+        >
             <ChatMsg.Message>{msgs}</ChatMsg.Message>
             <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
         </ChatMsg>

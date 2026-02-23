@@ -19,7 +19,15 @@ function useChatMsg() {
   return ctx;
 }
 
-function ChatMsgRoot({ children, className, width, height }) {
+function ChatMsgRoot({ 
+  children, 
+  className, 
+  width, 
+  height,
+  // 新增：自定义头像配置
+  friendAvatar, // 对方头像（函数/React元素）
+  oneselfAvatar, // 自己头像（函数/React元素）
+}) {
   const messageRef = useRef(null);
   const stickToBottomRef = useRef(true);
 
@@ -32,8 +40,11 @@ function ChatMsgRoot({ children, className, width, height }) {
         if (!el) return;
         el.scrollTop = el.scrollHeight;
       },
+      // 把头像配置传入上下文，让 Message 子组件可访问
+      friendAvatar,
+      oneselfAvatar,
     }),
-    []
+    [friendAvatar, oneselfAvatar] // 依赖项添加头像配置
   );
 
   const wrapperStyle = useMemo(() => {
@@ -90,10 +101,18 @@ function Message({
   children,
   className,
   autoScroll = true,
+  // 兼容：保留原有的默认头像配置，优先级低于上下文的配置
   selfAvatar = "我",
   otherAvatar = "客",
 }) {
-  const { messageRef, stickToBottomRef, scrollToBottom } = useChatMsg();
+  const { 
+    messageRef, 
+    stickToBottomRef, 
+    scrollToBottom,
+    // 从上下文获取自定义头像配置
+    friendAvatar: ctxFriendAvatar,
+    oneselfAvatar: ctxOneselfAvatar
+  } = useChatMsg();
 
   const onScroll = () => {
     const el = messageRef.current;
@@ -128,6 +147,25 @@ function Message({
     };
   };
 
+  // 新增：渲染头像的核心函数
+  const renderAvatar = (isSelf) => {
+    // 优先级：上下文自定义头像 > 组件props头像 > 默认文本
+    if (isSelf) {
+      // 自己的头像：上下文oneselfAvatar > selfAvatar
+      if (ctxOneselfAvatar) {
+        // 支持函数式（如 () => <Avatar />）或直接传React元素
+        return typeof ctxOneselfAvatar === 'function' ? ctxOneselfAvatar() : ctxOneselfAvatar;
+      }
+      return selfAvatar;
+    } else {
+      // 对方的头像：上下文friendAvatar > otherAvatar
+      if (ctxFriendAvatar) {
+        return typeof ctxFriendAvatar === 'function' ? ctxFriendAvatar() : ctxFriendAvatar;
+      }
+      return otherAvatar;
+    }
+  };
+
   const renderList = (arr) => {
     const list = arr.map(normalize);
 
@@ -138,8 +176,9 @@ function Message({
           m.isSelf ? styles.selfRow : styles.otherRow
         }`}
       >
+        {/* 替换原有文本头像为自定义头像渲染 */}
         <div className={styles.avatar}>
-          {m.isSelf ? selfAvatar : otherAvatar}
+          {renderAvatar(m.isSelf)}
         </div>
 
         <div className={styles.bubbleWrap}>

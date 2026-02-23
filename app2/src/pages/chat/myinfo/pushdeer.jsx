@@ -29,16 +29,14 @@ export const PushDeer = () => {
     const [ok, setOk] = useState(false)
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <br />
         <Row justify='flex-start'>
             <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
         </Row>
-         <br />
         <Row justify='center' ><h3>请输入PushKey：</h3></Row>
-        <br/>
+  
         <Row>
             {location.state &&
-                <InputText2 minWidth='600' defaultValue={location.state?.pushKey} onChangeValue={(value) => { setPushKey(value) }} >
+                <InputText2 showMask minWidth='300' defaultValue={location.state?.pushKey} onChangeValue={(value) => { console.log(value);setPushKey(value) }} >
                     <InputText2.Left icon='key' />
                     <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/chat/self/mylist/'); }} />
                 </InputText2>

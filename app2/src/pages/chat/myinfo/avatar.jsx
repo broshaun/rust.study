@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient, useImage } from 'hooks/http';
+import { useLocalStorageState } from 'ahooks';
 
 
 
@@ -10,10 +11,11 @@ import { useHttpClient, useImage } from 'hooks/http';
 export const Avatar = () => {
     const navigate = useNavigate()
     const location = useLocation()
-    const [avatar, setAvatar] = useState(location.state?.avatar_url)
+    const [avatar, setAvatar] = useLocalStorageState('saveOneself', { defaultValue: location.state?.avatar_url } )
     const { http: httpFiles } = useHttpClient('/files/img/')
     const { http: apiLogin } = useHttpClient('/api/chat/login/')
     const { src, loading } = useImage("/imgs", avatar)
+
 
 
     const uploadFile = useCallback((file) => {

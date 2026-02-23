@@ -5,9 +5,11 @@ import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
 import { Chat, Container, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
+import { useWinWidth } from 'hooks';
 
 
-export const Mian = () => {
+
+export const Item = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [friends, setFriends] = useState([]);
@@ -16,11 +18,12 @@ export const Mian = () => {
     const { table } = useIndexedDB(db);
     const tbdialog = useMemo(() => table('chat_dialog'), [table]);
     const openMsgWindow = useCallback((select) => {
-        navigate('/detail/', { state: { select } });
+        navigate('/chat/mobile/detail/', { state: { select } });
     }, [navigate, location.pathname]);
 
     const { runAsync: runGetFriend } = useRequest(() => {
         http.requestParams('GET').then((results) => {
+            console.log('results',results )
             if (!results) return;
             const { code, message, data } = results
             code === 200 && startTransition(() => {
@@ -40,13 +43,12 @@ export const Mian = () => {
     }, { manual: true })
 
     useEffect(() => {
-        if (location.pathname.startsWith('/chat/friend')) runGetFriend();
+        if (location.pathname.startsWith('/chat/mobile/friend')) runGetFriend();
     }, [location.pathname, runGetFriend]);
 
-    
 
     return <Suspense fallback={<div>加载中...</div>}>
-        {friends && 
+        {friends &&
             <Chat>
                 <Chat.Left size={"30%"}>
                     <Container verticalScroll={true} >
@@ -55,16 +57,12 @@ export const Mian = () => {
                             onSelectFriend={openMsgWindow}
                             renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
                             findIconName="magnifying-glass-circle"
-                            onFind={() => { navigate('/find/') }}
+                            onFind={() => { navigate('/chat/mobile/find/') }}
                         />
                     </Container>
                 </Chat.Left>
-                <Chat.Right size={"70%"}>
-                    <Outlet />
-                </Chat.Right>
             </Chat>
         }
-        
     </Suspense>
 
 }

@@ -30,20 +30,23 @@ export const Nikename = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         <br />
-        <Row justify='center' ><h3>请输入要修改的昵称：</h3></Row>
         <Row>
-            <Col span='1'>
-                <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
+            <Col span={1} >
+                <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/') }} />
             </Col>
-            <Col span='3'>
+            <Col span={15} ><h3>修改的昵称：</h3></Col>
+        </Row>
+
+        <Row>
+          
                 {location.state &&
                     <InputText2 defaultValue={location.state?.nikename} onChangeValue={(value) => { setName(value) }}>
-                        <InputText2.Left label='昵称' />
+                        <InputText2.Left icon='bookmark-square' />
                         <InputText2.Right label={ok ? '' : '确定'} icon={ok ? 'check-online' : ''} onClick={() => { update(name); navigate('/chat/self/mylist/'); }} />
                     </InputText2>
                 }
-            </Col>
-            <Col span='1' />
+     
+    
         </Row>
     </Suspense>
 

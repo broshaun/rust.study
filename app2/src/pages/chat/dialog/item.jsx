@@ -5,7 +5,7 @@ import { Chat, Container, DialogList, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
 
 
-export const Mian = () => {
+export const Item = () => {
     const navigate = useNavigate()
     const [dialog, setDialog] = useState([])
     const { http: httpImgs } = useHttpClient('/imgs');
@@ -21,7 +21,7 @@ export const Mian = () => {
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
-        tbdialog.replace({ 'id': select.id, 'uid': select.uid, 'signal': 'old', 'dialog': 1 }).then(() => navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid } }))
+        tbdialog.replace({ 'id': select.id, 'uid': select.uid, 'signal': 'old', 'dialog': 1 }).then(() => navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid } }))
     }, [tbdialog])
 
     // 关闭聊天
@@ -46,9 +46,6 @@ export const Mian = () => {
                 />
             </Container>
         </Chat.Left>
-        <Chat.Right size={"70%"}>
-            <Outlet />
-        </Chat.Right>
     </Chat>
 
 

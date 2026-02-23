@@ -15,7 +15,7 @@ export function User() {
     // { key: 'home', display: true, icon: { name: 'home', label: '主页' }, onClick: () => navigate('/apps/') },
     { key: 'login', display: true, icon: { name: 'user-circle', label: '登陆' }, onClick: () => { navigate('/user/login/'); setTitle('用户登陆'); } },
     { key: 'register', display: true, icon: { name: 'user-plus', label: '注册' }, onClick: () => { navigate('/user/register/'); setTitle('注册账号'); } },
-    { key: 'settings', display: true, icon: { name: 'cog-6-tooth', label: '设置' }, onClick: () => { navigate('/user/settings/setlist/'); setTitle('设置代理'); } },
+    // { key: 'settings', display: true, icon: { name: 'cog-6-tooth', label: '设置' }, onClick: () => { navigate('/user/settings/setlist/'); setTitle('设置代理'); } },
   ]
 
   const { winSize } = useWinWidth()
