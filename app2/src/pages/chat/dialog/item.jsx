@@ -21,7 +21,7 @@ export const Item = () => {
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
-        tbdialog.replace({ 'id': select.id, 'uid': select.uid, 'signal': 'old', 'dialog': 1 }).then(() => navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid } }))
+        tbdialog.replace({ 'id': select.id, 'uid': select.uid, 'signal': 'old', 'dialog': 1 }).then(() => navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid , 'avatar_url': select?.avatar_url} }))
     }, [tbdialog])
 
     // 关闭聊天

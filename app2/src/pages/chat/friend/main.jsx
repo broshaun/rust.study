@@ -16,7 +16,7 @@ export const Mian = () => {
     const { table } = useIndexedDB(db);
     const tbdialog = useMemo(() => table('chat_dialog'), [table]);
     const openMsgWindow = useCallback((select) => {
-        navigate('/detail/', { state: { select } });
+        navigate('/chat/friend/detail/', { state: { select } });
     }, [navigate, location.pathname]);
 
     const { runAsync: runGetFriend } = useRequest(() => {
@@ -55,7 +55,7 @@ export const Mian = () => {
                             onSelectFriend={openMsgWindow}
                             renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
                             findIconName="magnifying-glass-circle"
-                            onFind={() => { navigate('/find/') }}
+                            onFind={() => { navigate('/chat/friend/find/') }}
                         />
                     </Container>
                 </Chat.Left>

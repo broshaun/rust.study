@@ -9,6 +9,7 @@ import { Button, Login, Row, InputText2, Container, Avatar, Modal } from "compon
 export function LogOn() {
     const navigate = useNavigate();
     const [account, setAccount] = useLocalStorageState('savedAccount')
+    const [avatar, setAvatar] = useLocalStorageState('saveOneself')
     const [password, setPassword] = useState("")
 
     const { http } = useHttpClient('/api/chat/login/')
@@ -33,6 +34,7 @@ export function LogOn() {
                     setToken(results.data?.login_token)
                     setTime(results.data?.login_expired)
                     isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
+                    setAvatar(data?.user?.avatar_url)
                 } else {
                     setMsg(message)
                     setOpen(true)
