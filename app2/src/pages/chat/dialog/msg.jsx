@@ -43,7 +43,7 @@ export function Msg() {
             oneselfAvatar={() => <Avatar src={selfAvatar} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
         >
             <ChatMsg.Message>{msgs}</ChatMsg.Message>
-            <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
+            <ChatMsg.Send onSend={(newMsg) => {   fnSend(uid, newMsg) }} />
         </ChatMsg>
     </React.Fragment>
 }

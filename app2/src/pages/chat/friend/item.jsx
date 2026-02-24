@@ -29,18 +29,16 @@ export const Item = () => {
             const { code, message, data } = results;
             if (code !== 200) return;
             return await tbdialog.bulkReplace(
-                startTransition(() => {
-                    (data?.detail || []).map(select => (
-                        {
-                            id: select?.id,
-                            uid: select?.user_id,
-                            avatar_url: select?.avatar_url,
-                            email: select?.email,
-                            remark: select?.remark,
-                            nikename: select?.nikename,
-                        }
-                    ))
-                })
+                (data?.detail || []).map(select => (
+                    {
+                        id: select?.id,
+                        uid: select?.user_id,
+                        avatar_url: select?.avatar_url,
+                        email: select?.email,
+                        remark: select?.remark,
+                        nikename: select?.nikename,
+                    }
+                ))
             );
         }, { manual: true })
 
