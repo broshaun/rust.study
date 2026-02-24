@@ -5,3 +5,4 @@ export * from './http/useHttpClient';
 export * from './useHtml';
 export * from './useClick';
 export * from './useDateTime';
+export * from './useSwipe';

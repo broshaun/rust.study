@@ -12,7 +12,7 @@ const App = () => {
       <Route index
         element={
           isLogged
-            ? <Navigate to="/chat/dialog/" replace />
+            ? <Navigate to="/chat/" replace />
             : <Navigate to="/user/login/" replace />
         }/>
       <Route path="apps" element={<Home2 />} />

@@ -1,17 +1,24 @@
-import React, { useEffect, useState, useMemo, useTransition, useCallback, Suspense } from 'react';
+import React, { useEffect, useState, useMemo, useTransition, useCallback, useRef, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
 import { Chat, Container, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
-import { useWinWidth } from 'hooks';
+import { useSwipe } from 'hooks';
 
 
 
 export const Item = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const ref = useRef(null)
+    useSwipe(ref, {
+        onLeft: () => navigate('/chat/mobile/dialog/'),
+        onRight: () => navigate('/chat/self/mylist/'),
+    })
+
+
     const [friends, setFriends] = useState([]);
     const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/')
@@ -23,7 +30,7 @@ export const Item = () => {
 
     const { runAsync: runGetFriend } = useRequest(() => {
         http.requestParams('GET').then((results) => {
-            console.log('results',results )
+            console.log('results', results)
             if (!results) return;
             const { code, message, data } = results
             code === 200 && startTransition(() => {

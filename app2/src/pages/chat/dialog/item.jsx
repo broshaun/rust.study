@@ -1,14 +1,19 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useHttpClient } from 'hooks';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSwipe } from 'hooks';
 import { Chat, Container, DialogList, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
 
 
 export const Item = () => {
     const navigate = useNavigate()
+
+    const ref = useRef(null)
+    useSwipe(ref, {
+        onRight: () => navigate('/chat/mobile/friend/'),
+    })
+
     const [dialog, setDialog] = useState([])
-    const { http: httpImgs } = useHttpClient('/imgs');
     const { table } = useIndexedDB(db)
     const tbdialog = useMemo(() => table('chat_dialog'), [table])
     const tbmsg = useMemo(() => table('messages'), [table])
@@ -21,7 +26,7 @@ export const Item = () => {
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
-        tbdialog.replace({ 'id': select.id, 'uid': select.uid, 'signal': 'old', 'dialog': 1 }).then(() => navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid , 'avatar_url': select?.avatar_url} }))
+        tbdialog.replace({ 'id': select.id, 'uid': select.uid, 'signal': 'old', 'dialog': 1 }).then(() => navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } }))
     }, [tbdialog])
 
     // 关闭聊天
