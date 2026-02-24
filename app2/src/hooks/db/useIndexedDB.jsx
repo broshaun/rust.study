@@ -25,6 +25,7 @@ export function useIndexedDB(db) {
     ));
 
   const table = useCallback((tableName) => {
+    const warnedFields = new Set()
     const t = db.table(tableName);
     const pk = t.schema.primKey?.keyPath;
     const indexed = (field) => t.schema.indexes?.some(i => i.name === field);
@@ -137,6 +138,38 @@ export function useIndexedDB(db) {
             .filter(isKey);
           return ids.length ? t.bulkDelete(ids) : 0;
         });
+      },
+      updateBy: (filter = {}, patch = {}) => {
+        const keys = Object.keys(filter || {})
+        if (!keys.length) return Promise.resolve(0)
+
+        const field = keys[0]
+        const value = normalize({ [field]: filter[field] })[field]
+        if (!isKey(value)) return Promise.resolve(0)
+
+        const p = addTS(patch)
+
+        // ✅ 有索引
+        if (indexed(field)) {
+          return t.where(field).equals(value).modify(p)
+        }
+
+        // ❗ 无索引 → 只警告一次
+        if (!warnedFields.has(field)) {
+          console.warn(
+            `[Dexie:updateBy] 表 "${tableName}" 字段 "${field}" 未建立索引，正在执行全表扫描。`
+          )
+          warnedFields.add(field)
+        }
+
+        if (!pk) return Promise.resolve(0)
+
+        return t.toArray().then(rows => {
+          const hit = rows.filter(r => r?.[field] === value)
+          if (!hit.length) return 0
+          const merged = hit.map(r => ({ ...r, ...p }))
+          return t.bulkPut(merged).then(() => merged.length)
+        })
       },
 
       bulkPut,

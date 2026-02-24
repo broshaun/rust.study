@@ -2,7 +2,10 @@ import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Chat, Container, DialogList, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
+import { useGlobal } from 'hooks/global';
 
+
+const useDialog = useGlobal('Dialog')
 
 export const Item = () => {
     const navigate = useNavigate()
@@ -11,12 +14,17 @@ export const Item = () => {
     const { table } = useIndexedDB(db)
     const tbdialog = useMemo(() => table('chat_dialog'), [table])
     const tbmsg = useMemo(() => table('messages'), [table])
-    
+
     const loadDialog = useCallback(() => {
         tbdialog.find({ 'dialog': 1 }).then((rows) => setDialog(rows || []))
     }, [tbdialog])
 
-    useEffect(() => loadDialog(), [loadDialog]);
+
+    const dialog2 = useDialog((s) => s.getStore())
+
+    useEffect(() => {
+        loadDialog()
+    }, [loadDialog, dialog2]);
 
 
     // 打开聊天

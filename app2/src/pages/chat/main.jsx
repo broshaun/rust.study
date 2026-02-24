@@ -4,20 +4,33 @@ import { useWinWidth, useHttpClient, useDateTime } from 'hooks';
 import { MenuMobile } from 'components';
 import { useRequest } from 'ahooks';
 import { db, useIndexedDB } from 'hooks/db';
+import { useGlobal } from 'hooks/global';
 
+
+
+const useDdialog = useGlobal('Dialog')
 
 export function Chat() {
   const navigate = useNavigate();
   const { getTimestampMs } = useDateTime()
   const { http: httpMsg } = useHttpClient('/api/chat/msg/single/')
+
+  const setDdialog = useDdialog((s) => s.setStore)
+
+
+
   const { table } = useIndexedDB(db)
   const tbmsg = useMemo(() => table('messages'), [table])
+  const tbdialog = useMemo(() => table('chat_dialog'), [table])
+
   useRequest(() => {
     httpMsg.requestParams('POST').then((results) => {
       if (!results) return;
       const { code, data } = results
       if (data && code === 200) {
         tbmsg.put({ ...data, signal: 'receive' })
+        tbdialog.updateBy({ 'uid': data?.uid }, { 'signal': 'news', 'dialog': 1 })
+        setDdialog(p => p + 1)
       }
     })
     return 'ok'
