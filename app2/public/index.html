@@ -2,36 +2,36 @@
 <html lang="zh-CN">
 
 <head>
+  <title>Chatly</title>
 
-    <link rel="icon" href="favicon.png">
-    <title>Chatly</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <style>
-      html,
-      body,
-      #root {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <style>
+    html,
+    body,
+    #root {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
 
-      body {
-        overflow: hidden;               /* 禁止页面滚动 */
-        overscroll-behavior: none;      /* 禁止弹性回弹 */
-        -webkit-touch-callout: none;    /* 禁止长按菜单 */
-        -webkit-tap-highlight-color: transparent;
-      }
+    body {
+      overflow: hidden;               /* 禁止页面滚动 */
+      overscroll-behavior: none;      /* 禁止弹性回弹 */
+      -webkit-touch-callout: none;    /* 禁止长按菜单 */
+      -webkit-tap-highlight-color: transparent;
+    }
 
-      #root {
-        height: 100%;
-        overflow: hidden;
-      }
-    </style>
+    #root {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+  </style>
 </head>
 
 <body>
-    <div id="root"></div>
+  <div id="root"></div>
 </body>
 
 </html>
