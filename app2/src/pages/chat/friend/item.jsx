@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo, useTransition, useCallback, useRef, Suspense } from 'react';
-import {  useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState, useMemo, useTransition, useCallback, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
@@ -22,30 +22,40 @@ export const Item = () => {
         navigate('/chat/mobile/detail/', { state: { select } });
     }, [navigate, location.pathname]);
 
-    const { runAsync: runGetFriend } = useRequest(() => {
-        http.requestParams('GET').then((results) => {
-            console.log('results', results)
+    const { runAsync: runGetFriend } = useRequest(
+        async () => {
+            const results = await http.requestParams('GET');
             if (!results) return;
-            const { code, message, data } = results
-            code === 200 && startTransition(() => {
-                setFriends(data)
-            })
-            tbdialog.bulkReplace(
-                data?.detail.map(select => ({
-                    id: select?.id,
-                    uid: select?.user_id,
-                    avatar_url: select?.avatar_url,
-                    email: select?.email,
-                    remark: select?.remark,
-                    nikename: select?.nikename,
-                }))
-            ).catch(console.error);
-        })
-    }, { manual: true })
+            const { code, message, data } = results;
+            if (code !== 200) return;
+            return await tbdialog.bulkReplace(
+                startTransition(() => {
+                    (data?.detail || []).map(select => (
+                        {
+                            id: select?.id,
+                            uid: select?.user_id,
+                            avatar_url: select?.avatar_url,
+                            email: select?.email,
+                            remark: select?.remark,
+                            nikename: select?.nikename,
+                        }
+                    ))
+                })
+            );
+        }, { manual: true })
 
     useEffect(() => {
-        if (location.pathname.startsWith('/chat/mobile/friend')) runGetFriend();
-    }, [location.pathname, runGetFriend]);
+        if (location.pathname.startsWith('/chat/mobile/friend')) {
+            tbdialog.find()
+                .then((rows) => {
+                    setFriends(rows)
+                    return
+                }).then(() => {
+                    runGetFriend()
+                    return
+                })
+        }
+    }, [location.pathname, runGetFriend, tbdialog]);
 
 
     return <Suspense fallback={<div>加载中...</div>}>
@@ -57,8 +67,7 @@ export const Item = () => {
                             data={friends}
                             onSelectFriend={openMsgWindow}
                             renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-                            findIconName="magnifying-glass-circle"
-                            onFind={() => { navigate('/chat/mobile/find/') }}
+                            onFind={() => { navigate('/chat/mobile/find/'); }}
                         />
                     </Container>
                 </Chat.Left>

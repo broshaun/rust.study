@@ -5,7 +5,7 @@ const DEFAULT_AVATAR = "/favicon.png";
 
 const getName = (friend) => {
   if (!friend) return "未知好友";
-  return friend.remark || friend.nikename || friend.email || friend.friend_id || "未知好友";
+  return friend.remark || friend.nikename || friend.email || friend.friend_id || friend.id || "未知好友";
 };
 
 const getFriendEmail = (friend) => {
@@ -32,11 +32,13 @@ const renderFriendAvatar = (friend, renderAvatar) => {
   }
 
   const avatarUrl = friend.avatar_url || DEFAULT_AVATAR;
+  // 补充：如果 avatar_url 是相对路径，可根据实际需求拼接域名
+  // const fullAvatarUrl = avatarUrl.startsWith('http') ? avatarUrl : `/${avatarUrl}`;
 
   return (
     <img
       className={styles.avatarImg}
-      src={avatarUrl}
+      src={avatarUrl} // 如需拼接域名，替换为 fullAvatarUrl
       alt={getName(friend)}
       onError={(e) => {
         e.currentTarget.src = DEFAULT_AVATAR;
@@ -46,21 +48,34 @@ const renderFriendAvatar = (friend, renderAvatar) => {
 };
 
 const FriendList = ({
-  data,
+  data, // 支持两种格式：1. {detail: [], total: number}  2. 扁平数组 []
   onSelectFriend,
   renderAvatar,
   onlineStatusKey = "is_online",
   onFind, // 新增：查找按钮回调
+  findIconName, // 新增：查找图标名称（兼容你的传参）
 }) => {
+  // 核心修改：兼容扁平数组和原有嵌套格式
   const list = useMemo(() => {
-    if (!data || typeof data !== "object") return [];
-    const detail = data.detail;
-    return Array.isArray(detail) ? detail.filter(Boolean) : [];
+    if (!data) return [];
+    // 如果是数组，直接使用；如果是对象，取 detail
+    if (Array.isArray(data)) {
+      return data.filter(Boolean);
+    } else if (typeof data === "object" && Array.isArray(data.detail)) {
+      return data.detail.filter(Boolean);
+    }
+    return [];
   }, [data]);
 
   const total = useMemo(() => {
-    const dataTotal = data?.total;
-    return typeof dataTotal === "number" && dataTotal >= 0 ? dataTotal : list.length;
+    // 兼容两种格式的总数计算
+    if (Array.isArray(data)) {
+      return data.length;
+    } else if (typeof data === "object") {
+      const dataTotal = data.total;
+      return typeof dataTotal === "number" && dataTotal >= 0 ? dataTotal : list.length;
+    }
+    return list.length;
   }, [data, list]);
 
   const handleSelectFriend = (friend) => {
@@ -78,14 +93,19 @@ const FriendList = ({
       {/* 头部：标题 + 总数 + 查找图标 */}
       <div className={styles.friendListHeader}>
         <span className={styles.headerTitle}>我的好友 ({total})</span>
-        {/* 查找/编码图标（替换为🔍符号） */}
+        {/* 查找/编码图标（支持自定义图标名称或默认🔍） */}
         {typeof onFind === "function" && (
           <div 
             className={styles.findIconWrapper}
             onClick={handleFindClick}
             title="查找/编码"
           >
-            <span className={styles.findIcon}>🔍</span>
+            {findIconName ? (
+              // 如果你有 Icon 组件，可替换为：<Icon name={findIconName} size={20} />
+              <span className={styles.customFindIcon}>{findIconName}</span>
+            ) : (
+              <span className={styles.findIcon}>🔍</span>
+            )}
           </div>
         )}
       </div>

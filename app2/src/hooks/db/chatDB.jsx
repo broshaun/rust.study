@@ -5,6 +5,7 @@ export const db = new Dexie('chatDB');
 // 定义表结构
 db.version(6).stores({
   messages: '++id, uid, timestamp',
-  chat_dialog: 'id, uid, timestamp, dialog, signal'
+  chat_dialog: 'id, uid, timestamp, dialog, signal',
+  friends: 'id, uid, timestamp, dialog, signal'
 });
 
