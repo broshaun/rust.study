@@ -50,7 +50,6 @@ export function Detail() {
 
     // 打开聊天
     function openMsgWindow(select) {
-        console.log('select', select)
         tbdialog.replace({ 'id': select?.id, 'uid': select?.uid, 'signal': 'old', 'dialog': 1 })
         if (isMobile) {
             navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })

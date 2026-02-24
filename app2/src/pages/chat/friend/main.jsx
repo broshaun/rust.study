@@ -19,34 +19,42 @@ export const Mian = () => {
         navigate('/chat/friend/detail/', { state: { select } });
     }, [navigate, location.pathname]);
 
-    const { runAsync: runGetFriend } = useRequest(() => {
-        http.requestParams('GET').then((results) => {
+    const { runAsync: runGetFriend } = useRequest(
+        async () => {
+            const results = await http.requestParams('GET');
             if (!results) return;
-            const { code, message, data } = results
-            code === 200 && startTransition(() => {
-                setFriends(data)
-            })
-            tbdialog.bulkReplace(
-                data?.detail.map(select => ({
-                    id: select?.id,
-                    uid: select?.user_id,
-                    avatar_url: select?.avatar_url,
-                    email: select?.email,
-                    remark: select?.remark,
-                    nikename: select?.nikename,
-                }))
-            ).catch(console.error);
-        })
-    }, { manual: true })
+            const { code, message, data } = results;
+            if (code !== 200) return;
+            return await tbdialog.bulkReplace(
+                (data?.detail || []).map(select => (
+                    {
+                        id: select?.id,
+                        uid: select?.user_id,
+                        avatar_url: select?.avatar_url,
+                        email: select?.email,
+                        remark: select?.remark,
+                        nikename: select?.nikename,
+                    }
+                ))
+            );
+        }, { manual: true }
+    )
 
     useEffect(() => {
-        if (location.pathname.startsWith('/chat/friend')) runGetFriend();
-    }, [location.pathname, runGetFriend]);
-
-    
+        if (location.pathname.startsWith('/chat/friend')) {
+            tbdialog.find()
+                .then((rows) => {
+                    setFriends(rows)
+                    return
+                }).then(() => {
+                    runGetFriend()
+                    return
+                })
+        }
+    }, [location.pathname, runGetFriend, tbdialog]);
 
     return <Suspense fallback={<div>加载中...</div>}>
-        {friends && 
+        {friends &&
             <Chat>
                 <Chat.Left size={"30%"}>
                     <Container verticalScroll={true} >
@@ -54,7 +62,6 @@ export const Mian = () => {
                             data={friends}
                             onSelectFriend={openMsgWindow}
                             renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-                            findIconName="magnifying-glass-circle"
                             onFind={() => { navigate('/chat/friend/find/') }}
                         />
                     </Container>
@@ -64,7 +71,7 @@ export const Mian = () => {
                 </Chat.Right>
             </Chat>
         }
-        
+
     </Suspense>
 
 }
