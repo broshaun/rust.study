@@ -22,6 +22,7 @@ export const Find = () => {
         if (!email) return;
         http.requestBodyJson('POST', { 'email': email })
             .then((results) => {
+                // console.log('results',results)
                 if (!results) return;
                 const { code, message, data } = results
                 code === 200 && startTransition(() => {

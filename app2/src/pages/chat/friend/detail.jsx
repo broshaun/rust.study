@@ -4,7 +4,7 @@ import { useHttpClient } from 'hooks';
 import { UserChat } from 'components/chat';
 import { Container } from 'components';
 import { useRequest } from 'ahooks';
-import { db, useIndexedDB } from 'hooks/db';
+import { db } from 'hooks/db';
 import { useWinWidth } from 'hooks';
 
 
@@ -15,9 +15,6 @@ export function Detail() {
     const [friend, setFriend] = useState();
     const { http: httpImgs } = useHttpClient('/imgs');
     const { http: http2 } = useHttpClient('/api/chat/friend/')
-    const { table } = useIndexedDB(db);
-    const tbdialog = useMemo(() => table('chat_dialog'), [table])
-    const tbmsg = useMemo(() => table('messages'), [table])
     const { isMobile } = useWinWidth()
 
 
@@ -29,13 +26,10 @@ export function Detail() {
     const { runAsync: delFid } = useRequest((id) => {
         http2.requestBodyJson('DELETE', { id }).then((results) => {
             if (!results) return;
-            console.log('results', results)
-            tbdialog.find({ id }).then((rows) => {
-                const row = rows?.[0];
-                return tbmsg.delete({ 'uid': row?.uid })
-            }).then(() => {
-                return tbdialog.delete({ id })
-            }).catch(console.error);
+            db.table('friends').get(id).then((row) => {
+                db.table('message').where('uid').equals(row?.uid).delete()
+                db.table('friends').delete(id)
+            })
         })
     }, { manual: true })
 
@@ -50,14 +44,13 @@ export function Detail() {
 
     // 打开聊天
     function openMsgWindow(select) {
-        tbdialog.replace({ 'id': select?.id, 'uid': select?.uid, 'signal': 'old', 'dialog': 1 })
+        db.table('friends').update(select?.id, { 'signal': 'old', 'dialog': 1 })
         if (isMobile) {
             navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
         } else {
             navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
         }
     }
-
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Container alignItems='center'>

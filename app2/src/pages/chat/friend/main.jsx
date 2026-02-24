@@ -4,54 +4,59 @@ import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
 import { Chat, Container, Avatar } from 'components';
-import { db, useIndexedDB } from 'hooks/db';
+import { db } from 'hooks/db';
+import { liveQuery } from 'dexie'
 
 
 export const Mian = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [friends, setFriends] = useState([]);
-    const [isPending, startTransition] = useTransition()
     const { http } = useHttpClient('/api/chat/friend/')
-    const { table } = useIndexedDB(db);
-    const tbdialog = useMemo(() => table('chat_dialog'), [table]);
+
+
     const openMsgWindow = useCallback((select) => {
         navigate('/chat/friend/detail/', { state: { select } });
-    }, [navigate, location.pathname]);
+    }, [location.pathname]);
 
     const { runAsync: runGetFriend } = useRequest(
         async () => {
-            const results = await http.requestParams('GET');
-            if (!results) return;
-            const { code, message, data } = results;
-            if (code !== 200) return;
-            return await tbdialog.bulkReplace(
-                (data?.detail || []).map(select => (
-                    {
-                        id: select?.id,
-                        uid: select?.user_id,
-                        avatar_url: select?.avatar_url,
-                        email: select?.email,
-                        remark: select?.remark,
-                        nikename: select?.nikename,
-                    }
-                ))
-            );
+            http.requestParams('GET').then((results) => {
+                if (!results) return false;
+                const { code, message, data } = results;
+                if (code !== 200) return false;
+                db.table('friends').bulkPut(
+                    (data?.detail || []).map(select => (
+                        {
+                            id: select?.id,
+                            uid: select?.user_id,
+                            avatar_url: select?.avatar_url,
+                            email: select?.email,
+                            remark: select?.remark,
+                            nikename: select?.nikename,
+                        }
+                    ))
+                )
+                return true;
+            })
         }, { manual: true }
     )
 
     useEffect(() => {
+        const sub = liveQuery(
+            () => db.table('friends').toArray()
+        ).subscribe({
+            next: rows => setFriends(rows),
+            error: console.error
+        })
+        return () => sub.unsubscribe()
+    }, [])
+
+    useEffect(() => {
         if (location.pathname.startsWith('/chat/friend')) {
-            tbdialog.find()
-                .then((rows) => {
-                    setFriends(rows)
-                    return
-                }).then(() => {
-                    runGetFriend()
-                    return
-                })
+            runGetFriend()
         }
-    }, [location.pathname, runGetFriend, tbdialog]);
+    }, [location.pathname]);
 
     return <Suspense fallback={<div>加载中...</div>}>
         {friends &&

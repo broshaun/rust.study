@@ -82,8 +82,9 @@ export function LogOn() {
                 </Row>
             </Login.Input>
             <Login.Submit>
+                <br/>
                 <Row align="center" justify="center">
-                    <Button position="center" size={{ width: '83%', height: '42px' }} onClick={() => { runLogin(account, password) }}>登录</Button>
+                    <Button position="center" size={{ width: '240px', height: '42px' }} onClick={() => { runLogin(account, password) }}>登录</Button>
                 </Row>
             </Login.Submit>
         </Login>

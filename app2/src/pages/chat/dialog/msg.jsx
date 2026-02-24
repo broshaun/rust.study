@@ -4,8 +4,8 @@ import { useHttpClient, useDateTime } from 'hooks';
 import { ChatMsg } from 'components/chat';
 import { Avatar } from 'components';
 import { useRequest, useLocalStorageState } from 'ahooks';
-import { db, useIndexedDB } from 'hooks/db';
-
+import { db } from 'hooks/db';
+import { liveQuery } from 'dexie';
 
 
 export function Msg() {
@@ -16,22 +16,25 @@ export function Msg() {
     const [msgs, setMsgs] = useState([]);
     const { http } = useHttpClient('/api/chat/msg/single/')
     const { getDateTimeStr } = useDateTime()
-    const { table } = useIndexedDB(db);
-    const tbmsg = useMemo(() => table('messages'), [table])
 
     useEffect(() => {
-        if (!uid) return;
-        const off = tbmsg.where('uid').equals(uid).onChange((rows) => { setMsgs(rows) });
-        return off;
-    }, [tbmsg, uid])
+        const sub = liveQuery(
+            () => db.table('message').where('uid').equals(uid).toArray()
+        ).subscribe({
+            next: rows => setMsgs(rows),
+            error: console.error
+        })
+        return () => sub.unsubscribe()
+    }, [uid])
+
 
     const { runAsync: fnSend } = useRequest((uid, msgText) => {
         http.requestBodyJson('PUT', { 'user_id': uid, 'msg': msgText })
             .then((results) => {
                 if (!results) return;
-                const { code, message, data } = results
+                const { code } = results
                 if (code === 200) {
-                    tbmsg.put({ "uid": uid, 'msg': msgText, 'timestamp': getDateTimeStr(), 'signal': 'send' })
+                    db.table('message').put({ "uid": uid, 'msg': msgText, 'timestamp': getDateTimeStr(), 'signal': 'send' })
                 }
             })
         return 'ok'
@@ -43,7 +46,7 @@ export function Msg() {
             oneselfAvatar={() => <Avatar src={selfAvatar} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
         >
             <ChatMsg.Message>{msgs}</ChatMsg.Message>
-            <ChatMsg.Send onSend={(newMsg) => {   fnSend(uid, newMsg) }} />
+            <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
         </ChatMsg>
     </React.Fragment>
 }

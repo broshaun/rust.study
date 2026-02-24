@@ -78,8 +78,9 @@ export function Register() {
                 </Row>
             </Login.Input>
             <Login.Submit>
+                <br/>
                 <Row gap={60} align="center" justify="center">
-                    <Button position="center" size={{ width: '83%', height: '42px' }} onClick={() => { runLogin(account, password) }}>注册</Button>
+                    <Button position="center" size={{ width: '240px', height: '42px' }} onClick={() => { runLogin(account, password) }}>注册</Button>
                     {/* <Button position="center" size={{ width: '33%', height: '42px' }} onClick={() => { navigate('/user/login/') }}>返回</Button> */}
                 </Row>
             </Login.Submit>

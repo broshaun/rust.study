@@ -1,37 +1,42 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Chat, Container, DialogList, Avatar } from 'components';
-import { db, useIndexedDB } from 'hooks/db';
+import { db } from 'hooks/db';
+import { liveQuery } from 'dexie';
 
 
 export const Mian = () => {
     const navigate = useNavigate()
     const [dialog, setDialog] = useState([])
-    const { table } = useIndexedDB(db)
-    const tbdialog = useMemo(() => table('chat_dialog'), [table])
-    const tbmsg = useMemo(() => table('messages'), [table])
-    const loadDialog = useCallback(() => {
-        tbdialog.find({ 'dialog': 1 }).then((rows) => setDialog(rows || []))
-    }, [tbdialog])
 
-    useEffect(() => loadDialog(), [loadDialog]);
+    useEffect(() => {
+        const sub = liveQuery(
+            () => db.table('friends').where('dialog').equals(1).toArray()
+        ).subscribe({
+            next: rows => setDialog(rows),
+            error: console.error
+        })
+        return () => sub.unsubscribe()
+    }, [])
 
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
-        tbdialog.replace({ 'id': select.id, 'uid': select.uid, 'signal': 'old', 'dialog': 1 }).then(() => navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } }))
-    }, [tbdialog])
+        db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
+            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
+        })
+    }, [])
 
     // 关闭聊天
     const handleClear = useCallback((item) => {
-        if (item?.uid) {
-            tbmsg.delete({ 'uid': item.uid })
-        }
         if (item?.id) {
-            tbdialog.replace({ 'id': item.id, 'signal': 'old', 'dialog': 0 }).then(loadDialog)
+            db.table('friends').get(item.id).then((row) => {
+                db.table('message').where('uid').equals(row?.uid).delete()
+                db.table('friends').update(item.id, { 'signal': 'old', 'dialog': 0 })
+            })
+            navigate('/chat/dialog/')
         }
-        navigate('/chat/dialog/')
-    }, [tbmsg, tbdialog])
+    }, [])
 
     return <Chat>
         <Chat.Left size={"30%"}>

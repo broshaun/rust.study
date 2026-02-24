@@ -12,7 +12,7 @@ export const RsChat = (
     {RsDialog}
     {RsMyInfo}
 
-    
+
   </Route>
 );
 
