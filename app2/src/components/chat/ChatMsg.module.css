@@ -13,8 +13,10 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 
   min-height: 0;
-  width: 100%;  /* 宽度默认100%适配父容器 */
-  height: 100%; /* 高度默认100%适配父容器 */
+  width: 100%;
+  /* 宽度默认100%适配父容器 */
+  height: 100%;
+  /* 高度默认100%适配父容器 */
 }
 
 /* Head：左图标 + 居中标题 + 右占位（保留原有样式） */
@@ -75,7 +77,8 @@
 /* 中部：唯一滚动容器（保留滚动隐藏，适配父容器高度） */
 .message {
   flex: 1 1 auto;
-  min-height: 0; /* 关键：让flex子元素能收缩到父容器高度内 */
+  min-height: 0;
+  /* 关键：让flex子元素能收缩到父容器高度内 */
 
   padding: 16px;
 
@@ -90,8 +93,10 @@
   overscroll-behavior: contain;
 
   /* 隐藏滚动条（最稳） */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/old Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/old Edge */
 
   position: relative;
 }
@@ -100,9 +105,11 @@
   width: 0 !important;
   height: 0 !important;
 }
+
 .message::-webkit-scrollbar-track {
   background: transparent !important;
 }
+
 .message::-webkit-scrollbar-thumb {
   background: transparent !important;
   border: none !important;
@@ -116,7 +123,6 @@
   right: 0;
   width: 14px;
   height: 100%;
-  background: #fff;
   pointer-events: none;
 }
 
@@ -193,7 +199,6 @@
   padding: 0 2px;
 }
 
-/* 底部冻结（保留原有样式） */
 .send {
   flex: 0 0 auto;
   padding: 12px 16px;
@@ -202,20 +207,21 @@
   background: #fff;
 
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  /* 改这里 */
   gap: 8px;
 
   overflow: hidden;
 }
 
-/* 输入框：可换行，不能拖拽（保留原有样式） */
 .input {
   flex: 1;
 
   height: 40px;
   min-height: 40px;
 
-  padding: 8px 12px;
+  padding: 0 12px;
+  /* 改成 0 让高度纯粹由 height 控制 */
 
   border: 1px solid #e5e7eb;
   border-radius: 20px;
@@ -223,10 +229,11 @@
   outline: none;
 
   font-size: 14px;
-  line-height: 20px;
+  line-height: 40px;
+  /* 让文字垂直居中 */
 
   resize: none;
-  overflow-y: hidden; /* JS 会按需改成 auto */
+  overflow-y: hidden;
   overflow-x: hidden;
 
   box-sizing: border-box;
@@ -236,10 +243,10 @@
   border-color: #3b82f6;
 }
 
-/* 发送按钮：无 hover 视觉变化（保留原有样式） */
 .btn {
-  padding: 8px 16px;
-
+  height: 36px;         /* 固定高度 */
+  padding: 0 16px;      /* 水平 padding */
+  
   background: #3b82f6;
   color: #fff;
 
@@ -248,8 +255,11 @@
 
   cursor: pointer;
   transition: none;
-}
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .btn:hover {
   background: #3b82f6;
   color: #fff;

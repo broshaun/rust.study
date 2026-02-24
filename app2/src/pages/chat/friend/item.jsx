@@ -1,23 +1,17 @@
 import React, { useEffect, useState, useMemo, useTransition, useCallback, useRef, Suspense } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import {  useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
 import { Chat, Container, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
-import { useSwipe } from 'hooks';
+
 
 
 
 export const Item = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const ref = useRef(null)
-    useSwipe(ref, {
-        onLeft: () => navigate('/chat/mobile/dialog/'),
-        onRight: () => navigate('/chat/self/mylist/'),
-    })
-
 
     const [friends, setFriends] = useState([]);
     const [isPending, startTransition] = useTransition()

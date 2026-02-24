@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSwipe } from 'hooks';
 import { Chat, Container, DialogList, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
 
@@ -8,20 +7,17 @@ import { db, useIndexedDB } from 'hooks/db';
 export const Item = () => {
     const navigate = useNavigate()
 
-    const ref = useRef(null)
-    useSwipe(ref, {
-        onRight: () => navigate('/chat/mobile/friend/'),
-    })
-
     const [dialog, setDialog] = useState([])
     const { table } = useIndexedDB(db)
     const tbdialog = useMemo(() => table('chat_dialog'), [table])
     const tbmsg = useMemo(() => table('messages'), [table])
+    
     const loadDialog = useCallback(() => {
         tbdialog.find({ 'dialog': 1 }).then((rows) => setDialog(rows || []))
     }, [tbdialog])
 
     useEffect(() => loadDialog(), [loadDialog]);
+
 
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
@@ -37,7 +33,7 @@ export const Item = () => {
         if (item?.id) {
             tbdialog.replace({ 'id': item.id, 'signal': 'old', 'dialog': 0 }).then(loadDialog)
         }
-        navigate('/chat/dialog/')
+        navigate('/chat/mobile/dialog/')
     }, [tbmsg, tbdialog])
 
     return <Chat>
@@ -52,9 +48,6 @@ export const Item = () => {
             </Container>
         </Chat.Left>
     </Chat>
-
-
-
 }
 
 

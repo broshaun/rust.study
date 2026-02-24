@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef, useTransition, useReducer, Suspense } from 'react';
-import { SimpleTable, SingleRadio, InputText2, Divider, Container } from 'components';
-import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { useHttpClient, useNewWindow } from 'hooks';
+import React, { useState, useTransition, Suspense } from 'react';
+import { InputText2, Divider, Container } from 'components';
+import { useNavigate } from 'react-router-dom';
+import { useHttpClient, useWinWidth } from 'hooks';
 import { useRequest, useDebounce } from 'ahooks';
 import { UserInfoCard } from 'components/chat';
-import { IconCustomColor } from 'components/icon';
 
 
 
@@ -16,6 +15,7 @@ export const Find = () => {
     const { http: httpImgs } = useHttpClient('/imgs');
     const [keyword, setKeyword] = useState();
     const debouncedKeyword = useDebounce(keyword, { wait: 500 });
+    const { isMobile } = useWinWidth()
 
     // 查找好友
     const { runAsync: run } = useRequest((email) => {
@@ -51,13 +51,13 @@ export const Find = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Container alignItems='center'>
-            <be/>
+            <be />
             <InputText2 placeholder="搜索好友" onChangeValue={handleEmailChange}>
                 <InputText2.Right icon='magnifying-glass-circle' onClick={() => run(debouncedKeyword)} />
             </InputText2>
             <Divider />
             {apiData && Object.keys(apiData).length !== 0 &&
-                <UserInfoCard title='用户信息' onAddFriend={(v) => { run2(v?.id); navigate('/chat/friend/'); }}>
+                <UserInfoCard title='用户信息' onAddFriend={(v) => { run2(v?.id); isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); }}>
                     <UserInfoCard.Avatar>
                         <img src={httpImgs.buildUrl(apiData.avatar_url)} />
                     </UserInfoCard.Avatar>

@@ -13,7 +13,7 @@ export const Logout = () => {
   const [open, setOpen] = useState(true);
 
 
-  // 操作按钮YES触发执行：
+
   const logout = () => {
     http.requestParams('DELETE').catch(console.error);
     fnLogout()

@@ -18,7 +18,7 @@ export function Detail() {
     const { table } = useIndexedDB(db);
     const tbdialog = useMemo(() => table('chat_dialog'), [table])
     const tbmsg = useMemo(() => table('messages'), [table])
-    const { winSize } = useWinWidth()
+    const { isMobile } = useWinWidth()
 
 
     useEffect(() => {
@@ -52,12 +52,11 @@ export function Detail() {
     function openMsgWindow(select) {
         console.log('select', select)
         tbdialog.replace({ 'id': select?.id, 'uid': select?.user_id, 'signal': 'old', 'dialog': 1 })
-        if (winSize > 415) {
-            navigate('/chat/dialog/msg/', { state: { 'uid': select?.user_id, 'avatar_url': select?.avatar_url } })
-        } else {
+        if (isMobile) {
             navigate('/chat/mobile/msg/', { state: { 'uid': select?.user_id, 'avatar_url': select?.avatar_url } })
+        } else {
+            navigate('/chat/dialog/msg/', { state: { 'uid': select?.user_id, 'avatar_url': select?.avatar_url } })
         }
-
     }
 
 
@@ -83,7 +82,7 @@ export function Detail() {
                         color="#ff4d4f"
                         onClick={(v) => {
                             delFid(v?.id);
-                            navigate('/chat/friend/');
+                            isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/');
                         }}
                     />
 

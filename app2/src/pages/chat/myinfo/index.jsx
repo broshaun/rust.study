@@ -7,7 +7,7 @@ import { Logout } from "./logout";
 import { PushDeer } from "./pushdeer";
 
 
-// 导出 Super 相关的路由配置
+
 export const RsMyInfo = (
     <Route path="self" element={<Mian />}>
         <Route path="mylist" element={<MyList />}/>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useHttpClient } from 'hooks';
 import { Chat, Container, DialogList, Avatar } from 'components';
 import { db, useIndexedDB } from 'hooks/db';
 
@@ -8,7 +7,6 @@ import { db, useIndexedDB } from 'hooks/db';
 export const Mian = () => {
     const navigate = useNavigate()
     const [dialog, setDialog] = useState([])
-    const { http: httpImgs } = useHttpClient('/imgs');
     const { table } = useIndexedDB(db)
     const tbdialog = useMemo(() => table('chat_dialog'), [table])
     const tbmsg = useMemo(() => table('messages'), [table])

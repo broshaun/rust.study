@@ -1,19 +1,15 @@
-import { useState, Suspense, useRef } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { List, Container } from 'components';
+import { useState, Suspense } from 'react';
+import {  useNavigate, useLocation } from 'react-router-dom';
+import { List } from 'components';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
-import { useSwipe } from 'hooks';
 
 
 export const MyList = () => {
     const navigate = useNavigate();
     const location = useLocation()
 
-    const ref = useRef(null)
-    useSwipe(ref, {
-        onLeft: () => navigate('/chat/mobile/friend/'),
-    })
+
 
     const { http: apiLogin } = useHttpClient('/api/chat/login/');
     const [apiInfo, setApiInfo] = useState();
