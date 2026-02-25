@@ -43,6 +43,7 @@ export const Item = () => {
     )
 
     useEffect(() => {
+        console.log('执行更新')
         runGetFriend()
         const sub = liveQuery(
             () => db.table('friends').toArray()
