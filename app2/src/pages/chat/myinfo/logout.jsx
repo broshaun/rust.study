@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useReducer, Suspense } from 'react';
-import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
+import React, { useState, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLogin, useUser, useHttpClient } from 'hooks';
 import { Modal } from 'components';
-
+import { db } from 'hooks/db';
 
 export const Logout = () => {
   const navigate = useNavigate();
@@ -18,6 +18,8 @@ export const Logout = () => {
     http.requestParams('DELETE').catch(console.error);
     fnLogout()
     delUser()
+    db.close()
+    db.delete().then(console.log('chatDB数据清空'))
     navigate('/user/login/', { replace: true });
   }
 
