@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate,MemoryRouter } from "react-router-dom";
 import Home2 from "pages/home";
 import { RsUser } from "pages/user";
 import { RsChat } from "pages/chat";
@@ -7,7 +7,7 @@ import { useLogin } from "hooks";
 const App = () => {
   const { isLogged } = useLogin();
   
-  return <HashRouter>
+  return <MemoryRouter>
     <Routes>
       <Route index
         element={
@@ -20,7 +20,7 @@ const App = () => {
       {RsChat}
 
     </Routes>
-  </HashRouter>
+  </MemoryRouter>
 }
 
 export default App;
