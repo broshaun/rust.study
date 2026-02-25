@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useTransition, useCallback, Suspense } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
@@ -43,6 +43,7 @@ export const Mian = () => {
     )
 
     useEffect(() => {
+        runGetFriend()
         const sub = liveQuery(
             () => db.table('friends').toArray()
         ).subscribe({
@@ -52,11 +53,6 @@ export const Mian = () => {
         return () => sub.unsubscribe()
     }, [])
 
-    useEffect(() => {
-        if (location.pathname.startsWith('/chat/friend')) {
-            runGetFriend()
-        }
-    }, [location.pathname]);
 
     return <Suspense fallback={<div>加载中...</div>}>
         {friends &&

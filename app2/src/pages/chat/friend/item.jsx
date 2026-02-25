@@ -43,20 +43,14 @@ export const Item = () => {
     )
 
     useEffect(() => {
+        runGetFriend()
         const sub = liveQuery(
             () => db.table('friends').toArray()
         ).subscribe({
             next: rows => setFriends(rows),
-            error: console.error
         })
         return () => sub.unsubscribe()
     }, [])
-
-    useEffect(() => {
-        if (location.pathname.startsWith('/chat/friend')) {
-            runGetFriend()
-        }
-    }, [location.pathname]);
 
 
     return <Suspense fallback={<div>加载中...</div>}>
