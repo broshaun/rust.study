@@ -12,21 +12,19 @@ export const Nikename = () => {
     const location = useLocation();
     const { http: apiLogin } = useHttpClient('/api/chat/login/');
     const [name, setName] = useState()
+    const { runAsync: update } = useRequest(
+        async (nikename) => {
+            try {
+                if (!nikename) return '请输入昵称'
+                const { code, message, data } = await apiLogin.requestBodyJson('PATCH', { nikename: nikename })
+                console.log('message', message)
+                return 'ok'
+            } catch {
+                console.error
+            }
+        }, { manual: true })
 
 
-
-    const { runAsync: update } = useRequest((nikename) => {
-        setOk(p => !p)
-        if (!nikename) return '请输入昵称'
-        apiLogin.requestBodyJson('PATCH', { nikename: nikename }).then((results) => {
-            if (!results) return;
-            const { code, message, data } = results
-            console.log('message', message)
-        })
-        return 'ok'
-    }, { manual: true })
-
-    const [ok, setOk] = useState(false)
 
     return <Suspense fallback={<div>加载中...</div>}>
         <br />
@@ -38,15 +36,15 @@ export const Nikename = () => {
         </Row>
 
         <Row>
-          
-                {location.state &&
-                    <InputText2 defaultValue={location.state?.nikename} onChangeValue={(value) => { setName(value) }}>
-                        <InputText2.Left icon='bookmark-square' />
-                        <InputText2.Right label={ok ? '' : '确定'} icon={ok ? 'check-online' : ''} onClick={() => { update(name); navigate('/chat/self/mylist/'); }} />
-                    </InputText2>
-                }
-     
-    
+
+            {location.state &&
+                <InputText2 defaultValue={location.state?.nikename} onChangeValue={(value) => { setName(value) }}>
+                    <InputText2.Left icon='bookmark-square' />
+                    <InputText2.Right label='确定' onClick={() => { update(name); navigate('/chat/self/mylist/'); }} />
+                </InputText2>
+            }
+
+
         </Row>
     </Suspense>
 

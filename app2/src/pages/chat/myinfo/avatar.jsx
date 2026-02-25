@@ -16,8 +16,6 @@ export const Avatar = () => {
     const { http: apiLogin } = useHttpClient('/api/chat/login/')
     const { src, loading } = useImage("/imgs", avatar)
 
-
-
     const uploadFile = useCallback((file) => {
         if (!file) return;
         httpFiles.uploadFiles(file).then((results) => {

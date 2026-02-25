@@ -11,12 +11,10 @@ export const PushDeer = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { http: apiLogin } = useHttpClient('/api/chat/login/');
-    const [pushKey, setPushKey] = useState()
-
+    const [pushKey, setPushKey] = useState(location.state?.pushKey)
 
 
     const { runAsync: update } = useRequest((push_key) => {
-        setOk(p => !p)
         if (!push_key) return '请输入推送码'
         apiLogin.requestBodyJson('PATCH', { push_key: push_key }).then((results) => {
             if (!results) return;
@@ -26,17 +24,16 @@ export const PushDeer = () => {
         return 'ok'
     }, { manual: true })
 
-    const [ok, setOk] = useState(false)
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Row justify='flex-start'>
             <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
         </Row>
         <Row justify='center' ><h3>请输入PushKey：</h3></Row>
-  
+
         <Row>
             {location.state &&
-                <InputText2 showMask minWidth='300' defaultValue={location.state?.pushKey} onChangeValue={(value) => { console.log(value);setPushKey(value) }} >
+                <InputText2 showMask minWidth='300' defaultValue={pushKey} onChangeValue={(value) => { setPushKey(value) }} >
                     <InputText2.Left icon='key' />
                     <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/chat/self/mylist/'); }} />
                 </InputText2>

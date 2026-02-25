@@ -10,7 +10,7 @@ import { UserInfoCard } from 'components/chat';
 export const Find = () => {
     const navigate = useNavigate();
     const [apiData, setApiData] = useState([]);
-    const [isPending, startTransition] = useTransition()
+
     const { http } = useHttpClient('/api/chat/friend/')
     const { http: httpImgs } = useHttpClient('/imgs');
     const [keyword, setKeyword] = useState();
@@ -18,32 +18,22 @@ export const Find = () => {
     const { isMobile } = useWinWidth()
 
     // 查找好友
-    const { runAsync: run } = useRequest((email) => {
-        if (!email) return;
-        http.requestBodyJson('POST', { 'email': email })
-            .then((results) => {
-                // console.log('results',results)
-                if (!results) return;
-                const { code, message, data } = results
-                code === 200 && startTransition(() => {
-                    setApiData(data) // 用户信息
-                })
-            })
-        return 'ok'
-    }, { manual: true })
+    const { data: user, loading, runAsync: run } = useRequest(
+        async (email) => {
+            if (!email) return;
+            const results = await http.requestBodyJson('POST', { 'email': email });
+            if (!results) return;
+            const { code, message, data } = results
+            if (code === 200) return data;
+        }, { manual: true })
 
     // 添加好友
-    const { runAsync: run2 } = useRequest((user_id) => {
-        if (!user_id) return;
-        http.requestBodyJson('PUT', { 'user_id': user_id })
-            .then((results) => {
-                if (!results) return;
-                const { code, message, data } = results
-                code === 200 && console.log(message)
-            })
-        return 'ok'
-    }, { manual: true })
-
+    const { runAsync: run2 } = useRequest(
+        async (user_id) => {
+            if (!user_id) return;
+            await http.requestBodyJson('PUT', { 'user_id': user_id })
+            return 'ok'
+        }, { manual: true })
 
     const handleEmailChange = (value) => {
         setKeyword(value);
@@ -57,12 +47,12 @@ export const Find = () => {
                 <InputText2.Right icon='magnifying-glass-circle' onClick={() => run(debouncedKeyword)} />
             </InputText2>
             <Divider />
-            {apiData && Object.keys(apiData).length !== 0 &&
+            {!loading && Object.keys(user || {}).length !== 0 &&
                 <UserInfoCard title='用户信息' onAddFriend={(v) => { run2(v?.id); isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); }}>
                     <UserInfoCard.Avatar>
-                        <img src={httpImgs.buildUrl(apiData.avatar_url)} />
+                        <img src={httpImgs.buildUrl(user?.avatar_url)} />
                     </UserInfoCard.Avatar>
-                    <UserInfoCard.Info>{apiData}</UserInfoCard.Info>
+                    <UserInfoCard.Info>{user}</UserInfoCard.Info>
                 </UserInfoCard>
             }
         </Container>

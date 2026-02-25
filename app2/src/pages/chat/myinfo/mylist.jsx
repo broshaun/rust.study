@@ -7,16 +7,18 @@ import { useRequest } from 'ahooks';
 
 export const MyList = () => {
     const navigate = useNavigate();
-
     const { http: apiLogin } = useHttpClient('/api/chat/login/');
-    const [apiInfo, setApiInfo] = useState({});
-
-    useRequest(() => {
-        apiLogin.requestParams('GET').then((results) => {
-            if (!results) return;
-            const { code, message, data } = results
-            code === 200 && setApiInfo(data)
-        })
+    const { data: apiInfo } = useRequest(async () => {
+        try {
+            const { code, message, data } = await apiLogin.requestParams('GET')
+            if (code === 200) {
+                return data;
+            } else {
+                return;
+            }
+        } catch {
+            console.error
+        }
     }, { refreshDeps: [] })
 
 
