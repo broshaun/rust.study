@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "app2",
+  "productName": "Chatly",
   "version": "0.1.0",
   "identifier": "com.tauri.dev2",
   "build": {
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "app2",
+        "title": "Chatly",
         "width": 800,
         "height": 600,
         "resizable": true,

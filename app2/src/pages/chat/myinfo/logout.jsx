@@ -1,12 +1,11 @@
 import React, { useState, Suspense } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLogin, useUser, useHttpClient } from 'hooks';
 import { Modal } from 'components';
-import { db,clearAllTables } from 'hooks/db';
+import { clearAllTables } from 'hooks/db';
 
 export const Logout = () => {
   const navigate = useNavigate();
-  const location = useLocation()
   const { fnLogout } = useLogin();
   const { delUser } = useUser();
   const { http } = useHttpClient('/api/chat/login/')
