@@ -1,4 +1,4 @@
 
-export { db } from './chatDB';
+export { db,clearAllTables } from './chatDB';
 
 

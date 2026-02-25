@@ -22,22 +22,37 @@ export const Mian = () => {
     const { runAsync: runGetFriend } = useRequest(
         async () => {
             http.requestParams('GET').then((results) => {
-                if (!results) return false;
+                if (!results) return 0;
                 const { code, message, data } = results;
-                if (code !== 200) return false;
-                db.table('friends').bulkPut(
-                    (data?.detail || []).map(select => (
-                        {
-                            id: select?.id,
-                            uid: select?.user_id,
-                            avatar_url: select?.avatar_url,
-                            email: select?.email,
-                            remark: select?.remark,
-                            nikename: select?.nikename,
+                if (code !== 200) return 0;
+                const list = data?.detail || []
+                list.forEach(element => {
+                    db.table('friends').get(element?.id).then((row) => {
+                        // console.log('row', row)
+                        // console.log('element', element)
+                        if (row) {
+                            db.table('friends').update(row?.id, {
+                                'uid': element?.user_id,
+                                'avatar_url': element?.avatar_url,
+                                'email': element?.email,
+                                'remark': element?.remark,
+                                'nikename': element?.nikename
+                            })
+                        } else {
+                            db.table('friends').put({
+                                'id': element?.id,
+                                'uid': element?.user_id,
+                                'avatar_url': element?.avatar_url,
+                                'email': element?.email,
+                                'remark': element?.remark,
+                                'nikename': element?.nikename,
+                                'signal': 'old',
+                                'dialog': 0
+                            })
                         }
-                    ))
-                )
-                return true;
+                    })
+                });
+                return 1;
             })
         }, { manual: true }
     )

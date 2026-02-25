@@ -14,7 +14,6 @@ export const Item = () => {
             () => db.table('friends').where('dialog').equals(1).toArray()
         ).subscribe({
             next: rows => setDialog(rows),
-            error: console.error
         })
         return () => sub.unsubscribe()
     }, [])

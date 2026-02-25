@@ -8,3 +8,12 @@ db.version(8).stores({
   friends: 'id, uid, timestamp, dialog, signal',
 });
 
+
+
+export const clearAllTables = async () => {
+  await db.transaction('rw', db.tables, async () => {
+    await Promise.all(
+      db.tables.map(table => table.clear())
+    );
+  });
+};
