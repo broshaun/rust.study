@@ -1,8 +1,0 @@
-{
-	"status": "valid",
-	"contact": [
-		"mailto:772542545@qq.com"
-	],
-	"termsOfServiceAgreed": true,
-	"location": "https://acme-v02.api.letsencrypt.org/acme/acct/3100802412"
-}

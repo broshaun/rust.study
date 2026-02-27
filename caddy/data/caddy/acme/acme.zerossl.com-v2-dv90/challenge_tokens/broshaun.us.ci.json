@@ -1,1 +1,0 @@
-{"type":"http-01","url":"https://acme.zerossl.com/v2/DV90/chall/iGkIsLAcdXfx3-R43sEPVA","status":"pending","token":"PD5SPAxuxHeTgKMSNCTAvRDysLeS4tIr6Uv5x32fIsQ","keyAuthorization":"PD5SPAxuxHeTgKMSNCTAvRDysLeS4tIr6Uv5x32fIsQ.UbJIX626IikEKBKf4HAj82xvuVaXe0wnO4JbuRzd_zY","identifier":{"type":"dns","value":"broshaun.us.ci"}}
