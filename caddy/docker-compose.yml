@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./config:/config
+      - ./data:/data
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro

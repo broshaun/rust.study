@@ -1,0 +1,12 @@
+
+{
+	email 772542545@qq.com
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+broshaun.us.ci {
+	reverse_proxy 103.186.108.161:5015
+	encode zstd gzip
+}
