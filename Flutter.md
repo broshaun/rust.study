@@ -19,5 +19,4 @@ flutter doctor -v
 
 
 
-
 flutter create --platforms=ios,android fapp1
