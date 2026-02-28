@@ -1,0 +1,71 @@
+name: Tauri Build
+
+# 触发条件：推送到 main 分支 / 手动触发
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # 手动触发
+
+jobs:
+  build:
+    # 多平台构建矩阵
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Node.js 环境（匹配你的项目 Node 版本）
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm' # 缓存依赖，加速构建
+
+      # 3. 安装依赖（npm/yarn/pnpm 任选）
+      - name: Install dependencies
+        run: npm install
+
+      # 4. 设置 Rust 环境（Tauri 依赖 Rust）
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      # 5. 缓存 Rust 依赖
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # 6. 安装 Tauri 构建依赖（不同平台适配）
+      - name: Install Tauri build dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      # 7. 构建 Tauri 应用
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub 内置令牌，无需手动配置
+        with:
+          # Tauri 2.x 构建命令（默认即可）
+          command: build
+          # 输出目录（Tauri 2.x 默认路径）
+          projectPath: ./src-tauri
+
+      # 8. 上传构建产物（方便下载）
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-build-${{ matrix.os }}
+          path: |
+            src-tauri/target/release/bundle/**/*
+            src-tauri/target/release/*.exe # Windows 额外匹配 exe 文件
