@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import './UserInfoCard.css';
 
 // 默认头像（兜底使用）
@@ -16,28 +16,29 @@ const Avatar = ({ children, className, style }) => {
 };
 
 /**
- * 信息展示子组件：自动解析传入的对象并渲染为信息项
+ * 信息展示子组件
  */
 const Info = ({ children, className, style }) => {
-  // 核心：如果children是对象，自动解析为信息项；否则直接渲染
   const renderContent = () => {
-    // 判断是否是纯对象（排除数组、React元素等）
-    if (typeof children === 'object' && children !== null && !Array.isArray(children) && !React.isValidElement(children)) {
-      // 定义字段映射：{ 展示标签: 对象key, 默认值 }
+    // 如果 children 是一个普通对象（apiData），则按字段映射渲染
+    if (
+      typeof children === 'object' &&
+      children !== null &&
+      !Array.isArray(children) &&
+      !React.isValidElement(children)
+    ) {
       const fieldMap = {
-        '昵称': { key: 'nikename', default: '未设置' },
-        '邮箱': { key: 'email', default: '未绑定' },
+        昵称: { key: 'nikename', default: '未设置' },
+        邮箱: { key: 'email', default: '未绑定' },
       };
 
-      // 遍历字段映射生成信息项
-      return Object.entries(fieldMap).map(([label, { key, default: defVal }], index) => (
-        <div className="info-item" key={index}>
+      return Object.entries(fieldMap).map(([label, { key, default: defVal }]) => (
+        <div className="info-item" key={label}>
           <span className="info-label">{label}：</span>
           <span className="info-value">{children[key] || defVal}</span>
         </div>
       ));
     }
-    // 非对象则直接渲染（兼容字符串/React元素等）
     return children;
   };
 
@@ -49,69 +50,133 @@ const Info = ({ children, className, style }) => {
 };
 
 /**
- * 用户信息展示卡片组件（支持直接传入对象到Info子组件）
+ * 用户信息卡片（按钮点击成功后变灰不可点，不隐藏组件）
  */
 const UserInfoCard = ({
   title = '用户核心信息',
   onClick,
   clickable = true,
   onAddFriend,
+  refuseAdd,
+  refuseLoading = false,
+  refuseDisabled = false,
+  refuseText = '拒绝',
   addFriendLoading = false,
   addFriendDisabled = false,
-  children
+  children,
+  background = '',
+  butText = '添加好友',
 }) => {
-  // 处理卡片点击事件
+  // ✅ 成功后“已处理”状态：按钮变灰且不可点（不隐藏）
+  const [handled, setHandled] = useState(false);
+
+  // 处理卡片点击（不影响按钮逻辑）
   const handleCardClick = (e) => {
     if (clickable && typeof onClick === 'function') {
       onClick(e);
     }
   };
 
-  // 处理添加好友按钮点击（传递用户ID）
-  const handleAddFriend = (e) => {
-    e.stopPropagation();
-    if (!addFriendDisabled && !addFriendLoading && typeof onAddFriend === 'function') {
-      // 从Info子组件的children中提取用户ID（兼容你的apiData结构）
-      let userId = '';
-      // 遍历子组件找到Info，提取其中的对象
-      React.Children.forEach(children, (child) => {
-        if (child?.type === Info) {
-          const infoData = child?.props?.children;
-          if (infoData?.id) userId = infoData.id;
-        }
-      });
-      // 调用回调并传递ID
-      onAddFriend({ id: userId });
-    }
+  // 获取用户ID
+  const getUserId = () => {
+    let userId = '';
+    React.Children.forEach(children, (child) => {
+      if (child?.type === Info) {
+        const infoData = child?.props?.children;
+        if (infoData?.id) userId = infoData.id;
+      }
+    });
+    return userId;
   };
 
+  // 通过请求：成功后按钮变灰不可点
+  const handleAddFriend = useCallback(
+    async (e) => {
+      e.stopPropagation();
+      if (addFriendLoading || handled || addFriendDisabled) return;
+
+      try {
+        const userId = getUserId();
+        await onAddFriend?.({ id: userId });
+        setHandled(true);
+      } catch (err) {
+        console.error('通过请求失败：', err);
+      }
+    },
+    [onAddFriend, addFriendLoading, handled, addFriendDisabled]
+  );
+
+  // 拒绝请求：成功后按钮变灰不可点
+  const handleRefuseAdd = useCallback(
+    async (e) => {
+      e.stopPropagation();
+      if (refuseLoading || handled || refuseDisabled) return;
+
+      try {
+        const userId = getUserId();
+        await refuseAdd?.({ id: userId });
+        setHandled(true);
+      } catch (err) {
+        console.error('拒绝请求失败：', err);
+      }
+    },
+    [refuseAdd, refuseLoading, handled, refuseDisabled]
+  );
+
+  // 背景样式处理（保留原有逻辑）
+  const cardStyle = {};
+  const bgStr = String(background).trim();
+  if (bgStr) {
+    const isImageUrl = bgStr.includes('http') || bgStr.includes('url(');
+    if (isImageUrl) {
+      cardStyle.backgroundImage = bgStr.startsWith('url(') ? bgStr : `url(${bgStr})`;
+      cardStyle.backgroundSize = 'cover';
+      cardStyle.backgroundPosition = 'center';
+      cardStyle.backgroundRepeat = 'no-repeat';
+      cardStyle.color = '#ffffff';
+    } else {
+      cardStyle.backgroundColor = bgStr;
+    }
+  }
+
   return (
-    <div 
+    <div
       className={`info-card ${clickable ? 'clickable' : ''}`}
       onClick={handleCardClick}
-      style={{ cursor: clickable ? 'pointer' : 'default' }}
+      style={{
+        cursor: clickable ? 'pointer' : 'default',
+        ...cardStyle,
+      }}
     >
-      {/* 卡片标题 */}
       <div className="card-title">{title}</div>
 
-      {/* 添加好友按钮 */}
-      <button
-        className={`add-friend-btn ${addFriendLoading ? 'loading' : ''} ${addFriendDisabled ? 'disabled' : ''}`}
-        onClick={handleAddFriend}
-        disabled={addFriendDisabled || addFriendLoading}
-      >
-        {addFriendLoading ? '添加中...' : '添加好友'}
-      </button>
+      {/* ✅ 按钮始终显示：成功后变灰且不可点 */}
+      <div className="card-btn-group">
+        <button
+          className={`add-friend-btn ${addFriendLoading ? 'loading' : ''} ${handled ? 'disabled' : ''}`}
+          onClick={handleAddFriend}
+          disabled={addFriendLoading || addFriendDisabled || handled}
+        >
+          {handled ? '已处理' : addFriendLoading ? '处理中...' : butText}
+        </button>
 
-      {/* 核心：渲染自定义子组件（Avatar + Info） */}
-      <div className="card-content-wrapper">
-        {children}
+        {typeof refuseAdd === 'function' && (
+          <button
+            className={`refuse-friend-btn ${refuseLoading ? 'loading' : ''} ${handled ? 'disabled' : ''}`}
+            onClick={handleRefuseAdd}
+            disabled={refuseLoading || refuseDisabled || handled}
+          >
+            {handled ? '已处理' : refuseLoading ? '拒绝中...' : refuseText}
+          </button>
+        )}
       </div>
+
+      {/* 内容区域始终显示 */}
+      <div className="card-content-wrapper">{children}</div>
     </div>
   );
 };
 
-// 挂载子组件到主组件上
 UserInfoCard.Avatar = Avatar;
 UserInfoCard.Info = Info;
 

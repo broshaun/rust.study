@@ -21,7 +21,7 @@ export const Mian = () => {
 
     const { runAsync: runGetFriend } = useRequest(
         async () => {
-            http.requestParams('GET').then((results) => {
+            http.requestParams('GET',{ ask_state: 'agree' }).then((results) => {
                 if (!results) return 0;
                 const { code, message, data } = results;
                 if (code !== 200) return 0;

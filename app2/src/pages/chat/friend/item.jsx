@@ -21,15 +21,14 @@ export const Item = () => {
 
     const { runAsync: runGetFriend } = useRequest(
         async () => {
-            http.requestParams('GET').then((results) => {
+            http.requestParams('GET', { ask_state: 'agree' }).then((results) => {
                 if (!results) return 0;
                 const { code, message, data } = results;
                 if (code !== 200) return 0;
                 const list = data?.detail || []
                 list.forEach(element => {
                     db.table('friends').get(element?.id).then((row) => {
-                        // console.log('row', row)
-                        // console.log('element', element)
+
                         if (row) {
                             db.table('friends').update(row?.id, {
                                 'uid': element?.user_id,
