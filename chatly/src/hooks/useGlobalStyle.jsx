@@ -1,4 +1,4 @@
-import { useCallback } from '.store/react@18.3.1/node_modules/react';
+import { useCallback } from 'react';
 
 
 export const useGlobalStyle = () => {

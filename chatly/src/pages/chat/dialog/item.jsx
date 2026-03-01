@@ -1,4 +1,4 @@
-import React, { useEffect, useState,  useCallback } from '.store/react@18.3.1/node_modules/react';
+import React, { useEffect, useState,  useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chat, Container, DialogList, Avatar } from 'components';
 import { db } from 'hooks/db';

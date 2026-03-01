@@ -1,4 +1,4 @@
-import { useEffect, useState } from '.store/react@18.3.1/node_modules/react'
+import { useEffect, useState } from 'react'
 
 export function useWinWidth() {
     const [winSize, setWinSize] = useState(() => window.innerWidth)

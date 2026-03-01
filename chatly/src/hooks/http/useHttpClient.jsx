@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from ".store/react@18.3.1/node_modules/react";
+import { useMemo, useCallback } from "react";
 import { useLatest, useLocalStorageState } from "ahooks";
 import { useApiBase } from "./useApiBase";
 import { useHttpFetch } from "./useHttpFetch";

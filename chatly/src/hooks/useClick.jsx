@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from ".store/react@18.3.1/node_modules/react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 /**
  * useClick
