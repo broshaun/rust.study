@@ -1,7 +1,6 @@
-import React, { useState, useTransition, Suspense } from '.store/react@18.3.1/node_modules/react';
+import React, { useState, Suspense } from 'react';
 import { InputText2, Divider, Container } from 'components';
-import { useNavigate } from 'react-router-dom';
-import { useHttpClient, useWinWidth } from 'hooks';
+import { useHttpClient } from 'hooks';
 import { useRequest, useDebounce } from 'ahooks';
 import { UserInfoCard } from 'components/chat';
 
@@ -57,6 +56,7 @@ export const Find = () => {
             return 'ok'
         }, { manual: true }
     )
+
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Container alignItems='center' verticalScroll={true}>

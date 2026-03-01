@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, useMemo } from '.store/react@18.3.1/node_modules/react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useNavigate, useLocation } from "react-router-dom";
 import { useHttpClient } from 'hooks';
 import { UserChat } from 'components/chat';
