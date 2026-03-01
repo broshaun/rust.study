@@ -1,0 +1,23 @@
+// @ts-check
+import { defineConfig } from '@rsbuild/core';
+import { pluginReact } from '@rsbuild/plugin-react';
+
+// Docs: https://rsbuild.rs/config/
+export default defineConfig({
+  plugins: [pluginReact()],
+  html: { template: './public/index.html' },
+  output: {
+    assetPrefix: './',
+  },
+  source: {
+    tsconfigPath: './jsconfig.json',
+  },
+  server: {
+    proxy: {
+      '/api': { target: 'http://192.168.2.2:5015', },
+      '/imgs': { target: 'http://192.168.2.2:5015', },
+      '/files': { target: 'http://192.168.2.2:5015', },
+    },
+  }
+});
+
