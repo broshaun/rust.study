@@ -38,7 +38,7 @@ export const Find = () => {
     const { loading: loading2, data: askFriends } = useRequest(
         async () => {
             try {
-                const { code, data } = await http.requestParams('GET', { ask_state: 'launch' })
+                const { code, data } = await http.requestParams('GET', { ask_state: 'await' })
                 if (code === 200) {
                     return data?.detail || [];
                 }
