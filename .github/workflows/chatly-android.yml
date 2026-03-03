@@ -20,7 +20,7 @@ jobs:
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
       PNPM_VERSION: "9"
-      ANDROID_NDK_VERSION: "26.1.10909125" # Tauri 2.0 推荐的稳定版本
+      ANDROID_NDK_VERSION: "26.1.10909125" # Tauri 2.0 推荐的稳定版本 
       BUILD_TOOLS_VERSION: "34.0.0"
       WORKING_DIR: "chatly"
 
