@@ -1,4 +1,4 @@
-import React, { useMemo } from ".store/react@18.3.1/node_modules/react";
+import React, { useMemo } from "react";
 import styles from "./FriendList.module.css";
 
 const DEFAULT_AVATAR = "/favicon.png";

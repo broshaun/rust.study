@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from '.store/react@18.3.1/node_modules/react';
+import React, { useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLogin, useUser, useHttpClient } from 'hooks';
 import { Modal } from 'components';

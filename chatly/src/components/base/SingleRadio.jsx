@@ -1,4 +1,4 @@
-import { useState, useCallback, useId } from '.store/react@18.3.1/node_modules/react'; // 引入 useId
+import { useState, useCallback, useId } from 'react'; // 引入 useId
 import './SingleRadio.css';
 
 /**

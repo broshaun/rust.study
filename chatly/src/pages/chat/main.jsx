@@ -1,4 +1,4 @@
-import React, { useState } from '.store/react@18.3.1/node_modules/react'
+import React, { useState } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
 import { useWinWidth, useHttpClient, useDateTime } from 'hooks';
 import { MenuMobile } from 'components';

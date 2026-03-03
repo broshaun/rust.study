@@ -1,4 +1,4 @@
-import React, { useCallback } from '.store/react@18.3.1/node_modules/react';
+import React, { useCallback } from 'react';
 
 /**
  * 自定义SVG图标基础组件（仅数字控制大小）

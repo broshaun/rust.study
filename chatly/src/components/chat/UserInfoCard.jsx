@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from '.store/react@18.3.1/node_modules/react';
+import React, { useState, useCallback } from 'react';
 import './UserInfoCard.css';
 
 // 默认头像（兜底使用）

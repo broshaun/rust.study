@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, Children, isValidElement } from '.store/react@18.3.1/node_modules/react';
+import React, { useState, useMemo, useCallback, Children, isValidElement } from 'react';
 import styles from './SimpleTable.module.css';
 
 // ---------------------- 静态子组件：Heads ----------------------

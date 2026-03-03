@@ -1,4 +1,4 @@
-import { useState, Suspense, useEffect } from '.store/react@18.3.1/node_modules/react';
+import { useState, Suspense, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { List, Container } from 'components';
 import { useHttpClient } from 'hooks/http';

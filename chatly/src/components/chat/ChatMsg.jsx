@@ -5,7 +5,7 @@ import React, {
   useRef,
   useEffect,
   useState,
-} from ".store/react@18.3.1/node_modules/react";
+} from "react";
 import styles from "./ChatMsg.module.css";
 import { IconCustomColor } from "components/icon";
 

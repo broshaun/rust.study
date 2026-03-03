@@ -1,5 +1,5 @@
 // Container.jsx - 支持主题配置的通用容器组件
-import React from '.store/react@18.3.1/node_modules/react';
+import React from 'react';
 import styles from './Container.module.css';
 
 /**

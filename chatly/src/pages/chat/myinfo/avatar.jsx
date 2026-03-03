@@ -1,4 +1,4 @@
-import { useState, useCallback, Suspense } from '.store/react@18.3.1/node_modules/react';
+import { useState, useCallback, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';

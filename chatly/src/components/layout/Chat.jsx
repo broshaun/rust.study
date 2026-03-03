@@ -1,4 +1,4 @@
-import React from '.store/react@18.3.1/node_modules/react';
+import React from 'react';
 import styles from './Chat.module.css';
 
 // 左面板组件

@@ -1,4 +1,4 @@
-import React from '.store/react@18.3.1/node_modules/react';
+import React from 'react';
 import styles from './ChatTransitionPage.module.css';
 
 // 默认头像（avatar为null/加载失败时使用）

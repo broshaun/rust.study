@@ -1,5 +1,5 @@
 
-import React, { useState, useTransition } from '.store/react@18.3.1/node_modules/react'
+import React, { useState, useTransition } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useLogin, useUser, useHttpClient, useWinWidth } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';

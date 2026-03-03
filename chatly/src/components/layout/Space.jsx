@@ -1,5 +1,5 @@
 // Space.jsx - 空格组件
-import React from '.store/react@18.3.1/node_modules/react';
+import React from 'react';
 
 // 预设间距类型：small(thinsp)、medium(nbsp)、large(emsp)
 const Space = ({ type = 'medium', count = 1 }) => {

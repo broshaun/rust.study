@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from '.store/react@18.3.1/node_modules/react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import styles from './SimpleSelect.module.css';
 
 const DEFAULT_OPTIONS = [

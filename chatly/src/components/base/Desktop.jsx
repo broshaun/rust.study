@@ -1,4 +1,4 @@
-import React from '.store/react@18.3.1/node_modules/react';
+import React from 'react';
 import { IconItem } from '../icon';
 // 引入 CSS Modules 样式文件，命名为 styles
 import styles from './Desktop.module.css';

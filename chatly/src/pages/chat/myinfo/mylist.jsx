@@ -1,4 +1,4 @@
-import {  Suspense } from '.store/react@18.3.1/node_modules/react';
+import {  Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { List } from 'components';
 import { useHttpClient } from 'hooks/http';

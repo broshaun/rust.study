@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from ".store/react@18.3.1/node_modules/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useGlobalStore } from "./useGlobalStore";
 
 const LOGIN_TOKEN_KEY = "login_token";

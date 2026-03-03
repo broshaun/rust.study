@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from '.store/react@18.3.1/node_modules/react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { useGlobalStore as customUseStore } from './useGlobalStore';
 
 // 用户模块唯一标识key

@@ -1,4 +1,4 @@
-import React, { useState } from '.store/react@18.3.1/node_modules/react';
+import React, { useState } from 'react';
 import './QueryRecordList.css';
 
 // ✅ 新增 onDown 回调参数，调用方式：records / onSelect / onDelete / onDown

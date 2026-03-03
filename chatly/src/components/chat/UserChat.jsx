@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from ".store/react@18.3.1/node_modules/react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import styles from "./UserChat.module.css";
 
 const DEFAULT_AVATAR = "/favicon.png";

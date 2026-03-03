@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from '.store/react@18.3.1/node_modules/react';
+import React, { useState, useEffect } from 'react';
 import { SimpleSelect } from 'components';
 import { useHttpClient } from 'hooks';
 

@@ -1,4 +1,4 @@
-import { useSyncExternalStore, useCallback } from '.store/react@18.3.1/node_modules/react';
+import { useSyncExternalStore, useCallback } from 'react';
 import { useGlobal as customUseStore } from './useGlobal';
 
 // 全局消息模块唯一标识

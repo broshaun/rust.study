@@ -1,4 +1,4 @@
-import { useState, useCallback, useTransition, Suspense } from '.store/react@18.3.1/node_modules/react';
+import { useState, useCallback, useTransition, Suspense } from 'react';
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { Row, Col, InputText2 } from 'components';
 import { IconCustomColor } from 'components/icon';

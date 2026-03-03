@@ -1,4 +1,4 @@
-import React, { Children, isValidElement, useMemo, useRef, useLayoutEffect, useState, useEffect } from '.store/react@18.3.1/node_modules/react';
+import React, { Children, isValidElement, useMemo, useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { IconItem } from '../icon';
 import styles from './InputText2.module.css';
 

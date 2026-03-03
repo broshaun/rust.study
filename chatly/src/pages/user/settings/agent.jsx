@@ -1,4 +1,4 @@
-import { useMemo, useState } from '.store/react@18.3.1/node_modules/react';
+import { useMemo, useState } from 'react';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { InputText2, Container, Modal, Button, Row, IconCustomColor, Col } from 'components';
 import { useHttpClient } from 'hooks/http';

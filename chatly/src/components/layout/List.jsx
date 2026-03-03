@@ -1,4 +1,4 @@
-import React, { useMemo, Children, isValidElement } from '.store/react@18.3.1/node_modules/react';
+import React, { useMemo, Children, isValidElement } from 'react';
 import { IconCustomColor } from 'components/icon';
 import styles from './List.module.css';
 

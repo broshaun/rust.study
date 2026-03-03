@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from '.store/react@18.3.1/node_modules/react';
+import { useState, useMemo, useCallback } from 'react';
 import './MultiCheckbox.css';
 
 /**

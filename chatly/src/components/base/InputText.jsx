@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from '.store/react@18.3.1/node_modules/react';
+import React, { useRef, useEffect } from 'react';
 import { IconItem } from '../icon';
 import styles from './InputText.module.css';
 

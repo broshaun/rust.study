@@ -1,4 +1,4 @@
-import React, { Children } from '.store/react@18.3.1/node_modules/react';
+import React, { Children } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconItem } from 'components/icon';
 import './Report.css';

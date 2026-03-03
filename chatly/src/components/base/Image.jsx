@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from '.store/react@18.3.1/node_modules/react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import styles from './Image.module.css'
 
 const Image = ({

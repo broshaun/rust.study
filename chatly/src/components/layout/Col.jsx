@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from '.store/react@18.3.1/node_modules/react'
+import React, { memo, useMemo } from 'react'
 import styles from './Col.module.css'
 
 /**

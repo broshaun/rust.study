@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from '.store/react@18.3.1/node_modules/react';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './TrueWaterfall.module.css';
 
 // 组件默认兜底数据

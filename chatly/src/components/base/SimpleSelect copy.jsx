@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from '.store/react@18.3.1/node_modules/react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { IconItem } from 'components/icon/IconItem';
 import './SimpleSelect.css';
 

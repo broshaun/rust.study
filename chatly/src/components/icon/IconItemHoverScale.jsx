@@ -1,4 +1,4 @@
-import React from '.store/react@18.3.1/node_modules/react';
+import React from 'react';
 import { IconSvg } from './IconSvg';
 import './IconItemHoverScale.css';
 

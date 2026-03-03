@@ -1,4 +1,4 @@
-import React, { useState, useRef } from '.store/react@18.3.1/node_modules/react'
+import React, { useState, useRef } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
 import { useUser, useWinWidth, useLogin } from 'hooks';
 import { MenuMobile } from 'components';

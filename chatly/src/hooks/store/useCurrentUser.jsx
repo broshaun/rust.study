@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from ".store/react@18.3.1/node_modules/react";
+import { useCallback, useSyncExternalStore } from "react";
 import { useGlobalStore as customUseStore } from "./useGlobalStore";
 
 const CURRENT_USER_KEY = "current_user";

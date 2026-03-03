@@ -1,4 +1,4 @@
-import React, { useEffect, Children, isValidElement } from '.store/react@18.3.1/node_modules/react';
+import React, { useEffect, Children, isValidElement } from 'react';
 import styles from './Modal.module.css';
 
 export default function Modal({ visible, children }) {

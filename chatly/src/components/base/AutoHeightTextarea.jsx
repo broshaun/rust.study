@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo } from '.store/react@18.3.1/node_modules/react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import './AutoHeightTextarea.css';
 
 /**

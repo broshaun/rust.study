@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from '.store/react@18.3.1/node_modules/react';
+import React, { memo, useCallback } from 'react';
 import styles from './Button.module.css';
 
 const cx = (...xs) => xs.filter(Boolean).join(' ');
