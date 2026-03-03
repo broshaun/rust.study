@@ -33,13 +33,20 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # ✅ 确保检出完整仓库（避免子目录文件缺失）
+          path: .
 
+      # ✅ 修复 Gradle 缓存路径问题
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
+          # 指定 Gradle 文件的实际路径（Tauri 生成的 Android 工程）
+          cache-dependency-path: |
+            chatly/src-tauri/gen/android/**/*.gradle*
+            chatly/src-tauri/gen/android/gradle-wrapper.properties
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -117,6 +124,10 @@ jobs:
           set -euo pipefail
           if [ ! -d "src-tauri/gen/android" ]; then
             cargo tauri android init
+            # 初始化后打印 Gradle 文件路径，验证是否存在
+            echo "=== Gradle files in generated Android project ==="
+            find src-tauri/gen/android -name "*.gradle*" -ls
+            echo "================================================"
           fi
 
       - name: Build Android (APK - universal)
@@ -151,23 +162,18 @@ jobs:
           echo "unsigned_apk=${APK_DST}" >> $GITHUB_OUTPUT
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
-      # ===== 签名步骤（核心修复 KEYSTORE_PATH 警告）=====
-
       - name: Decode keystore (self-check)
         id: keystore
         run: |
           set -euo pipefail
-          # 1. 定义密钥库路径（固定路径，避免动态环境变量）
           KEYSTORE_PATH="./release.jks"
-          rm -f "${KEYSTORE_PATH}" # 清空旧文件
+          rm -f "${KEYSTORE_PATH}"
           
-          # 2. 解码密钥库（严格校验）
           if ! echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "${KEYSTORE_PATH}"; then
             echo "❌ Failed to decode keystore (invalid base64)"
             exit 1
           fi
           
-          # 3. 多重验证文件有效性
           if [ ! -f "${KEYSTORE_PATH}" ]; then
             echo "❌ Keystore file not created: ${KEYSTORE_PATH}"
             exit 1
@@ -177,13 +183,11 @@ jobs:
             exit 1
           fi
           
-          # 4. 验证密钥库密码/别名（仅校验，不泄露）
           if ! keytool -list -keystore "${KEYSTORE_PATH}" -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > /dev/null 2>&1; then
             echo "❌ Invalid keystore password or corrupted keystore"
             exit 1
           fi
           
-          # 5. 输出到 step outputs（而非 env），上下文更稳定
           echo "keystore_path=${KEYSTORE_PATH}" >> $GITHUB_OUTPUT
           echo "✅ Keystore decoded and verified: ${KEYSTORE_PATH}"
 
@@ -208,32 +212,26 @@ jobs:
 
       - name: Sign APK (apksigner)
         id: sign
-        # 关键：仅在 keystore step 成功且输出有效时运行
         if: steps.keystore.outputs.keystore_path != '' && steps.keystore.outcome == 'success'
         run: |
           set -euo pipefail
           BUILD_TOOLS="${ANDROID_SDK_ROOT}/build-tools/${BUILD_TOOLS_VERSION}"
           
-          # 1. 验证 apksigner 工具
           if [ ! -x "${BUILD_TOOLS}/apksigner" ]; then
             echo "❌ apksigner not found: ${BUILD_TOOLS}/apksigner"
             exit 1
           fi
           
-          # 2. 从 step outputs 获取密钥库路径（稳定上下文）
           KEYSTORE_PATH="${{ steps.keystore.outputs.keystore_path }}"
-          # 二次验证文件存在
           if [ ! -f "${KEYSTORE_PATH}" ]; then
             echo "❌ Keystore file missing: ${KEYSTORE_PATH}"
             exit 1
           fi
           
-          # 3. 准备签名参数
           ALIGNED_APK="${{ steps.align.outputs.aligned_apk }}"
           TAG="${{ steps.apk.outputs.tag }}"
           SIGNED_APK="${UNIVERSAL_APK_DIR}/chatly-${TAG}-universal-signed.apk"
 
-          # 4. 执行签名
           if ! "${BUILD_TOOLS}/apksigner" sign \
             --ks "${KEYSTORE_PATH}" \
             --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
@@ -246,7 +244,6 @@ jobs:
             exit 1
           fi
 
-          # 5. 验证签名有效性
           if ! "${BUILD_TOOLS}/apksigner" verify --verbose --print-certs "${SIGNED_APK}"; then
             echo "❌ APK signature verification failed"
             exit 1
@@ -254,8 +251,6 @@ jobs:
 
           echo "signed_apk=${SIGNED_APK}" >> $GITHUB_OUTPUT
           echo "✅ Successfully signed APK: ${SIGNED_APK}"
-
-      # ===== 上传步骤 =====
 
       - name: Upload signed APK to GitHub Release
         if: steps.sign.outputs.signed_apk != '' && steps.sign.outcome == 'success'
