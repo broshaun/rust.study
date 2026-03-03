@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (Final Sync)
+name: Tauri2 Android Build (NDK Forced)
 
 on:
   workflow_dispatch:
@@ -19,6 +19,7 @@ jobs:
     env:
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
+      # Tauri 2.0 目前最稳的版本
       NDK_VER: "26.1.10909125"
       BUILD_TOOLS_VER: "34.0.0"
       WORKING_DIR: "chatly"
@@ -41,12 +42,18 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK
+      - name: Install & Force NDK Path
         run: |
+          # 安装我们需要的版本
           sdkmanager "ndk;${{ env.NDK_VER }}" "build-tools;${{ env.BUILD_TOOLS_VER }}"
+          
+          # 💡 强制覆盖环境变量
           NDK_PATH="$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VER }}"
           echo "NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
+          
+          # 验证
+          echo "Using NDK at: $NDK_PATH"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -65,29 +72,23 @@ jobs:
       - name: Init & Build Android (APK)
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          # 💡 因为本地没环境，显式指定版本并运行非交互式初始化
+          # 确保 Android 目录存在
           if [ ! -d "src-tauri/gen/android" ]; then
-            echo "🚀 云端生成 Android 工程文件..."
             npx tauri android init --ci
           fi
           
-          # 💡 同步 tauri.conf.json 里的 version 到 Android 清单
-          # 虽然你配置了 0.1.0，但建议通过 Tag 自动同步
-          TAG_VERSION=${GITHUB_REF_NAME#android-v}
-          sed -i "s/\"version\": \".*\"/\"version\": \"$TAG_VERSION\"/" src-tauri/tauri.conf.json
-          
-          # 执行编译 (Tauri 2.0 自动调用 Rsbuild build)
+          # 💡 再次通过命令行参数显式传递，防止 Tauri 漂移到系统 NDK 29
           npx tauri android build --apk
         env:
+          # 双重锁死 NDK 路径
           NDK_HOME: ${{ env.NDK_HOME }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
       - name: Sign APK
         id: sign
         run: |
-          # 动态匹配 APK 路径
           APK_SRC=$(find ${{ env.WORKING_DIR }}/src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
-          if [ -z "$APK_SRC" ]; then echo "❌ APK 找不到"; exit 1; fi
+          if [ -z "$APK_SRC" ]; then echo "❌ APK NOT FOUND"; exit 1; fi
           
           mkdir -p dist
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
@@ -95,10 +96,7 @@ jobs:
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VER }}"
           SIGNED_APK="dist/chatly-${{ github.ref_name }}.apk"
 
-          # 对齐处理
           "$BUILD_TOOLS/zipalign" -v -p 4 "$APK_SRC" /tmp/aligned.apk
-          
-          # 签名处理
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
             --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
