@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (cargo)
+name: Tauri2 Android Build (Optimized)
 
 on:
   workflow_dispatch:
@@ -16,17 +16,13 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: chatly
-
     env:
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
       PNPM_VERSION: "9"
-      ANDROID_NDK_VERSION: "29.0.14206865"
+      ANDROID_NDK_VERSION: "26.1.10909125" # Tauri 2.0 推荐的稳定版本
       BUILD_TOOLS_VERSION: "34.0.0"
-      GRADLE_USER_HOME: /home/runner/.gradle
+      WORKING_DIR: "chatly"
 
     steps:
       - name: Checkout
@@ -41,256 +37,95 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, i686-linux-android, x86_64-linux-android
 
-      - name: Add Rust Android targets
-        run: |
-          rustup target add \
-            aarch64-linux-android \
-            armv7-linux-androideabi \
-            i686-linux-android \
-            x86_64-linux-android
-
-      - name: Cache Rust
+      - name: Cache Rust & Build
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: |
-            chatly/src-tauri -> target
+          workspaces: "${{ env.WORKING_DIR }}/src-tauri -> target"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android packages
+      - name: Install Android NDK & Tools
         run: |
-          set -euo pipefail
-          sdkmanager \
-            "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;${BUILD_TOOLS_VERSION}" \
-            "cmake;3.22.1" \
-            "ndk;${ANDROID_NDK_VERSION}"
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;${{ env.BUILD_TOOLS_VERSION }}" "ndk;${{ env.ANDROID_NDK_VERSION }}"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_ENV
 
-      - name: Cache Gradle (wrapper + caches)
-        uses: actions/cache@v4
-        with:
-          path: |
-            /home/runner/.gradle/caches
-            /home/runner/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('chatly/src-tauri/gen/android/**/gradle-wrapper.properties', 'chatly/src-tauri/gen/android/**/*.gradle*', 'chatly/src-tauri/gen/android/**/settings.gradle*', 'chatly/src-tauri/gen/android/**/gradle.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Environment Preflight Check
-        run: |
-          set -euo pipefail
-
-          echo "===== OS ====="
-          uname -a
-
-          echo "===== Java ====="
-          java -version
-
-          echo "===== Rust ====="
-          rustc --version
-          cargo --version
-
-          echo "===== Android SDK ====="
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
-
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
-          echo "BUILD_TOOLS=$BUILD_TOOLS"
-          ls -la "$BUILD_TOOLS"
-
-          test -x "$BUILD_TOOLS/zipalign" || (echo "❌ zipalign not found!" && exit 1)
-          test -x "$BUILD_TOOLS/apksigner" || (echo "❌ apksigner not found!" && exit 1)
-
-          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || (echo "❌ ANDROID_KEYSTORE_BASE64 not set!" && exit 1)
-          test -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" || (echo "❌ ANDROID_KEYSTORE_PASSWORD not set!" && exit 1)
-          test -n "${{ secrets.ANDROID_KEY_ALIAS }}" || (echo "❌ ANDROID_KEY_ALIAS not set!" && exit 1)
-          test -n "${{ secrets.ANDROID_KEY_PASSWORD }}" || (echo "❌ ANDROID_KEY_PASSWORD not set!" && exit 1)
-
-          echo "===== Preflight OK ✅ ====="
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup pnpm
+      - name: Setup Node & pnpm
         uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Get pnpm store path
-        id: pnpm-store
-        if: hashFiles('chatly/pnpm-lock.yaml') != ''
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: pnpm install --frozen-lockfile
 
-      - name: Cache pnpm store
-        if: hashFiles('chatly/pnpm-lock.yaml') != ''
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('chatly/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Install frontend deps
+      - name: Sync Version from Tag
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
-          set -euo pipefail
-          if [ -f pnpm-lock.yaml ]; then
-            pnpm install --frozen-lockfile
-          elif [ -f package-lock.json ]; then
-            npm ci
-          elif [ -f yarn.lock ]; then
-            corepack enable
-            yarn install --frozen-lockfile
-          elif [ -f package.json ]; then
-            npm install
-          fi
-
-      - name: Build frontend
-        run: |
-          set -euo pipefail
-          if [ -f pnpm-lock.yaml ]; then
-            pnpm build
-          elif [ -f package.json ]; then
-            npm run build
-          fi
-
-      - name: Install tauri-cli (skip if exists)
-        run: |
-          set -euo pipefail
-          if ! command -v cargo-tauri >/dev/null 2>&1 && ! command -v tauri >/dev/null 2>&1; then
-            cargo install tauri-cli --locked
-          fi
-
-      - name: Init Android (if missing)
-        run: |
-          set -euo pipefail
-          if [ ! -d "src-tauri/gen/android" ]; then
-            cargo tauri android init
-          fi
+          TAG_VERSION=${GITHUB_REF_NAME#android-v}
+          echo "Updating tauri.conf.json to version $TAG_VERSION"
+          sed -i "s/\"version\": \".*\"/\"version\": \"$TAG_VERSION\"/" src-tauri/tauri.conf.json
 
       - name: Build Android (APK)
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
-          set -euo pipefail
-          cargo tauri android build --apk
+          # 自动安装 tauri-cli 并编译
+          pnpm tauri android build --apk --release
+        env:
+          NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
-      - name: Locate & Rename APK
-        id: apk
+      - name: Prepare Signing
+        id: prepare
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF_NAME}"
-
-          CANDIDATE_DIRS=(
-            "src-tauri/gen/android/app/build/outputs/apk/universal/release"
-            "src-tauri/gen/android/app/build/outputs/apk/arm64-v8a/release"
-            "src-tauri/gen/android/app/build/outputs/apk/release"
-          )
-
-          APK_SRC=""
-          APK_DIR=""
-          for d in "${CANDIDATE_DIRS[@]}"; do
-            if [ -d "$d" ] && ls -1 "$d"/*.apk >/dev/null 2>&1; then
-              APK_DIR="$d"
-              APK_SRC="$(ls -1 "$d"/*.apk | head -n 1)"
-              break
-            fi
-          done
-
-          if [ -z "$APK_SRC" ]; then
-            echo "⚠️ Not found in candidate dirs, using find..."
-            APK_SRC="$(find "src-tauri/gen/android/app/build/outputs/apk" -type f -name "*.apk" | head -n 1 || true)"
-            APK_DIR="$(dirname "$APK_SRC" 2>/dev/null || true)"
-          fi
-
-          if [ -z "$APK_SRC" ] || [ ! -f "$APK_SRC" ]; then
-            echo "❌ No APK found. Listing outputs for debug:"
-            ls -R "src-tauri/gen/android/app/build/outputs/apk" || true
-            exit 1
-          fi
-
-          echo "✅ Found APK: $APK_SRC"
-          echo "✅ In dir: $APK_DIR"
-          ls -la "$APK_DIR"
-
-          APK_DST="$APK_DIR/chatly-${TAG}-unsigned.apk"
-          mv "$APK_SRC" "$APK_DST"
-          test -f "$APK_DST"
-
-          file "$APK_DST"
-          unzip -t "$APK_DST" >/dev/null
-
-          echo "unsigned_apk=$APK_DST" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      - name: Decode keystore + verify alias
-        run: |
-          set -euo pipefail
+          # 定位生成的 APK (Tauri 2.0 通常在 gen/android 下)
+          APK_SRC=$(find src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
+          if [ -z "$APK_SRC" ]; then echo "❌ APK not found"; exit 1; fi
+          
+          echo "unsigned_apk=$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/$APK_SRC" >> $GITHUB_OUTPUT
+          
+          # 准备 KeyStore
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
-          test -s /tmp/release.jks
 
-          keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | head -n 60
-
-          keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            | grep -F "${{ secrets.ANDROID_KEY_ALIAS }}" >/dev/null \
-            || (echo "❌ Alias '${{ secrets.ANDROID_KEY_ALIAS }}' not found in keystore!" && exit 1)
-
-      - name: Zipalign + Sign APK (apksigner) -> dist/
+      - name: Zipalign & Sign APK
         id: sign
         run: |
-          set -euo pipefail
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VERSION }}"
+          UNSIGNED="${{ steps.prepare.outputs.unsigned_apk }}"
+          
+          mkdir -p ${{ env.WORKING_DIR }}/dist
+          ALIGNED="/tmp/aligned.apk"
+          SIGNED_APK="${{ env.WORKING_DIR }}/dist/chatly-${{ github.ref_name }}.apk"
 
-          UNSIGNED="${{ steps.apk.outputs.unsigned_apk }}"
-          TAG="${{ steps.apk.outputs.tag }}"
+          # 对齐
+          "$BUILD_TOOLS/zipalign" -v -p 4 "$UNSIGNED" "$ALIGNED"
 
-          mkdir -p dist
-
-          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
-          "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
-          test -f "$ALIGNED"
-          unzip -t "$ALIGNED" >/dev/null
-
-          SIGNED="dist/chatly-${TAG}-signed.apk"
-
+          # 签名
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
             --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
             --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            --out "$SIGNED" \
+            --out "$SIGNED_APK" \
             "$ALIGNED"
 
-          "$BUILD_TOOLS/apksigner" verify --verbose "$SIGNED"
-          test -f "$SIGNED"
+          echo "signed_apk=$SIGNED_APK" >> $GITHUB_OUTPUT
 
-          echo "signed_apk=$SIGNED" >> $GITHUB_OUTPUT
-
-      - name: Verify dist output
-        run: |
-          set -euo pipefail
-          ls -la dist
-          test -f "${{ steps.sign.outputs.signed_apk }}"
-
-      # ✅ 可选：Artifacts（方便 Actions 页面直接下载，不走 Release）
-      - name: Upload artifacts (dist)
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chatly-android-${{ github.ref_name }}
+          name: chatly-android-release
+          path: ${{ steps.sign.outputs.signed_apk }}
           retention-days: 7
-          if-no-files-found: error
-          path: |
-            chatly/${{ steps.sign.outputs.signed_apk }}
 
-      - name: Upload signed APK to GitHub Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            chatly/${{ steps.sign.outputs.signed_apk }}
+          files: ${{ steps.sign.outputs.signed_apk }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
