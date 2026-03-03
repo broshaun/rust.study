@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: chatly
+        working-directory: chatly # 所有步骤默认工作目录为 chatly
 
     env:
       NODE_VERSION: "20"
@@ -26,16 +26,20 @@ jobs:
       PNPM_VERSION: "9"
       ANDROID_NDK_VERSION: "29.0.14206865"
       BUILD_TOOLS_VERSION: "34.0.0"
+      UNIVERSAL_APK_DIR: src-tauri/gen/android/app/build/outputs/apk/universal/release
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -59,7 +63,7 @@ jobs:
 
       - name: Install Android packages
         run: |
-          sdkmanager \
+          sdkmanager --sdk_root=${ANDROID_SDK_ROOT} \
             "platform-tools" \
             "platforms;android-34" \
             "build-tools;${BUILD_TOOLS_VERSION}" \
@@ -72,41 +76,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: chatly/pnpm-lock.yaml
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-
-      - name: Get pnpm store path
-        id: pnpm-store
-        if: hashFiles('chatly/pnpm-lock.yaml') != ''
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Cache pnpm store
-        if: hashFiles('chatly/pnpm-lock.yaml') != ''
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('chatly/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          run_install: false
 
       - name: Install frontend deps
         run: |
+          set -euo pipefail
           if [ -f pnpm-lock.yaml ]; then
-            pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile --no-optional
           elif [ -f package-lock.json ]; then
-            npm ci
+            npm ci --no-optional
           elif [ -f yarn.lock ]; then
-            corepack enable
-            yarn install --frozen-lockfile
+            corepack enable yarn && yarn install --frozen-lockfile --no-optional
           elif [ -f package.json ]; then
-            npm install
+            npm install --no-optional
+          else
+            echo "⚠️ No package manager lock file found, skipping deps install"
           fi
 
       - name: Build frontend
         run: |
+          set -euo pipefail
           if [ -f pnpm-lock.yaml ]; then
             pnpm build
           elif [ -f package.json ]; then
@@ -118,82 +114,167 @@ jobs:
 
       - name: Init Android (if missing)
         run: |
+          set -euo pipefail
           if [ ! -d "src-tauri/gen/android" ]; then
             cargo tauri android init
           fi
 
       - name: Build Android (APK - universal)
-        run: cargo tauri android build --apk --target universal
+        run: cargo tauri android build --apk --universal
+        env:
+          RUST_LOG: info
 
       - name: Locate & Rename APK
         id: apk
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
-          APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
-          ls -la "$APK_DIR"
+          APK_DIR="${UNIVERSAL_APK_DIR}"
+          
+          if [ ! -d "${APK_DIR}" ]; then
+            echo "❌ Universal APK dir not found: ${APK_DIR}"
+            exit 1
+          fi
+          
+          ls -la "${APK_DIR}"
+          APK_SRC="$(find "${APK_DIR}" -name "*.apk" ! -name "*.unaligned.apk" | head -n 1)"
+          
+          if [ -z "${APK_SRC}" ]; then
+            echo "❌ No valid APK found in ${APK_DIR}"
+            exit 1
+          fi
+          
+          APK_DST="${APK_DIR}/chatly-${TAG}-universal-unsigned.apk"
+          mv "${APK_SRC}" "${APK_DST}"
+          test -f "${APK_DST}"
 
-          APK_SRC="$(ls -1 "$APK_DIR"/*.apk | head -n 1)"
-          APK_DST="$APK_DIR/chatly-${TAG}-universal-unsigned.apk"
+          echo "unsigned_apk=${APK_DST}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
-          mv "$APK_SRC" "$APK_DST"
-          test -f "$APK_DST"
-
-          echo "unsigned_apk=$APK_DST" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      # ===== 签名开始 =====
+      # ===== 签名步骤（核心修复 KEYSTORE_PATH 警告）=====
 
       - name: Decode keystore (self-check)
+        id: keystore
         run: |
           set -euo pipefail
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
-          test -s /tmp/release.jks
+          # 1. 定义密钥库路径（固定路径，避免动态环境变量）
+          KEYSTORE_PATH="./release.jks"
+          rm -f "${KEYSTORE_PATH}" # 清空旧文件
+          
+          # 2. 解码密钥库（严格校验）
+          if ! echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "${KEYSTORE_PATH}"; then
+            echo "❌ Failed to decode keystore (invalid base64)"
+            exit 1
+          fi
+          
+          # 3. 多重验证文件有效性
+          if [ ! -f "${KEYSTORE_PATH}" ]; then
+            echo "❌ Keystore file not created: ${KEYSTORE_PATH}"
+            exit 1
+          fi
+          if [ ! -s "${KEYSTORE_PATH}" ]; then
+            echo "❌ Keystore file is empty: ${KEYSTORE_PATH}"
+            exit 1
+          fi
+          
+          # 4. 验证密钥库密码/别名（仅校验，不泄露）
+          if ! keytool -list -keystore "${KEYSTORE_PATH}" -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > /dev/null 2>&1; then
+            echo "❌ Invalid keystore password or corrupted keystore"
+            exit 1
+          fi
+          
+          # 5. 输出到 step outputs（而非 env），上下文更稳定
+          echo "keystore_path=${KEYSTORE_PATH}" >> $GITHUB_OUTPUT
+          echo "✅ Keystore decoded and verified: ${KEYSTORE_PATH}"
 
-          # 列出 alias（不会泄露私钥）
-          keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | head -n 30
-
-      - name: Zipalign
+      - name: Zipalign (APK 对齐)
         id: align
         run: |
           set -euo pipefail
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
-          test -x "$BUILD_TOOLS/zipalign"
-          test -x "$BUILD_TOOLS/apksigner"
+          BUILD_TOOLS="${ANDROID_SDK_ROOT}/build-tools/${BUILD_TOOLS_VERSION}"
+          
+          if [ ! -x "${BUILD_TOOLS}/zipalign" ]; then
+            echo "❌ zipalign not found: ${BUILD_TOOLS}/zipalign"
+            exit 1
+          fi
+          
+          UNSIGNED_APK="${{ steps.apk.outputs.unsigned_apk }}"
+          ALIGNED_APK="${UNSIGNED_APK%.apk}-aligned.apk"
 
-          UNSIGNED="chatly/${{ steps.apk.outputs.unsigned_apk }}"
-          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
+          "${BUILD_TOOLS}/zipalign" -v -f -p 4 "${UNSIGNED_APK}" "${ALIGNED_APK}"
+          test -f "${ALIGNED_APK}"
 
-          "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
-          test -f "$ALIGNED"
-
-          echo "aligned_apk=$ALIGNED" >> $GITHUB_OUTPUT
+          echo "aligned_apk=${ALIGNED_APK}" >> $GITHUB_OUTPUT
 
       - name: Sign APK (apksigner)
         id: sign
+        # 关键：仅在 keystore step 成功且输出有效时运行
+        if: steps.keystore.outputs.keystore_path != '' && steps.keystore.outcome == 'success'
         run: |
           set -euo pipefail
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
-          ALIGNED="${{ steps.align.outputs.aligned_apk }}"
-
+          BUILD_TOOLS="${ANDROID_SDK_ROOT}/build-tools/${BUILD_TOOLS_VERSION}"
+          
+          # 1. 验证 apksigner 工具
+          if [ ! -x "${BUILD_TOOLS}/apksigner" ]; then
+            echo "❌ apksigner not found: ${BUILD_TOOLS}/apksigner"
+            exit 1
+          fi
+          
+          # 2. 从 step outputs 获取密钥库路径（稳定上下文）
+          KEYSTORE_PATH="${{ steps.keystore.outputs.keystore_path }}"
+          # 二次验证文件存在
+          if [ ! -f "${KEYSTORE_PATH}" ]; then
+            echo "❌ Keystore file missing: ${KEYSTORE_PATH}"
+            exit 1
+          fi
+          
+          # 3. 准备签名参数
+          ALIGNED_APK="${{ steps.align.outputs.aligned_apk }}"
           TAG="${{ steps.apk.outputs.tag }}"
-          SIGNED="chatly/src-tauri/gen/android/app/build/outputs/apk/universal/release/chatly-${TAG}-universal-signed.apk"
+          SIGNED_APK="${UNIVERSAL_APK_DIR}/chatly-${TAG}-universal-signed.apk"
 
-          "$BUILD_TOOLS/apksigner" sign \
-            --ks /tmp/release.jks \
+          # 4. 执行签名
+          if ! "${BUILD_TOOLS}/apksigner" sign \
+            --ks "${KEYSTORE_PATH}" \
             --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
             --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            --out "$SIGNED" \
-            "$ALIGNED"
+            --out "${SIGNED_APK}" \
+            --verbose \
+            "${ALIGNED_APK}"; then
+            echo "❌ Failed to sign APK"
+            exit 1
+          fi
 
-          "$BUILD_TOOLS/apksigner" verify --verbose "$SIGNED"
-          echo "signed_apk=$SIGNED" >> $GITHUB_OUTPUT
+          # 5. 验证签名有效性
+          if ! "${BUILD_TOOLS}/apksigner" verify --verbose --print-certs "${SIGNED_APK}"; then
+            echo "❌ APK signature verification failed"
+            exit 1
+          fi
+
+          echo "signed_apk=${SIGNED_APK}" >> $GITHUB_OUTPUT
+          echo "✅ Successfully signed APK: ${SIGNED_APK}"
+
+      # ===== 上传步骤 =====
 
       - name: Upload signed APK to GitHub Release
+        if: steps.sign.outputs.signed_apk != '' && steps.sign.outcome == 'success'
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            ${{ steps.sign.outputs.signed_apk }}
+          files: ${{ steps.sign.outputs.signed_apk }}
+          name: Android Release ${{ steps.apk.outputs.tag }}
+          body: |
+            📱 Android Universal Signed APK
+            - Version: ${{ steps.apk.outputs.tag }}
+            - Architecture: Universal (all architectures)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload signed APK to Artifacts
+        if: steps.sign.outputs.signed_apk != '' && steps.sign.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatly-android-signed-${{ steps.apk.outputs.tag }}
+          retention-days: 7
+          if-no-files-found: error
+          path: ${{ steps.sign.outputs.signed_apk }}
