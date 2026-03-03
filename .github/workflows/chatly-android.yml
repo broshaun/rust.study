@@ -68,10 +68,13 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
 
-      # ✅ 环境预检：提前发现 SDK/Build-tools/Secrets 问题（省时间、省额度）
+      # ✅ 环境预检：5~10秒内发现 SDK/Build-tools/Secrets 问题（省时间、省额度）
       - name: Environment Preflight Check
         run: |
           set -euo pipefail
+
+          echo "===== OS ====="
+          uname -a
 
           echo "===== Java ====="
           java -version
@@ -80,11 +83,9 @@ jobs:
           rustc --version
           cargo --version
 
-          echo "===== Node / pnpm ====="
-          node --version || true
-
           echo "===== Android SDK ====="
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_HOME=$ANDROID_HOME"
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
 
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
@@ -95,23 +96,14 @@ jobs:
           test -x "$BUILD_TOOLS/zipalign" || (echo "❌ zipalign not found!" && exit 1)
           test -x "$BUILD_TOOLS/apksigner" || (echo "❌ apksigner not found!" && exit 1)
 
-          echo "===== Check keystore secrets present (length only) ====="
-          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            echo "❌ ANDROID_KEYSTORE_BASE64 not set!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ]; then
-            echo "❌ ANDROID_KEYSTORE_PASSWORD not set!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ]; then
-            echo "❌ ANDROID_KEY_ALIAS not set!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ]; then
-            echo "❌ ANDROID_KEY_PASSWORD not set!"
-            exit 1
-          fi
+          echo "===== Check Android packages ====="
+          sdkmanager --list | head -n 20 || true
+
+          echo "===== Check Secrets presence (non-empty) ====="
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || (echo "❌ ANDROID_KEYSTORE_BASE64 not set!" && exit 1)
+          test -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" || (echo "❌ ANDROID_KEYSTORE_PASSWORD not set!" && exit 1)
+          test -n "${{ secrets.ANDROID_KEY_ALIAS }}" || (echo "❌ ANDROID_KEY_ALIAS not set!" && exit 1)
+          test -n "${{ secrets.ANDROID_KEY_PASSWORD }}" || (echo "❌ ANDROID_KEY_PASSWORD not set!" && exit 1)
 
           echo "===== Preflight OK ✅ ====="
 
@@ -170,18 +162,19 @@ jobs:
           fi
 
       # ✅ 注意：tauri android 的 --target 不支持 universal
-      # ✅ 默认构建会由 Gradle 产出 universal APK（你之前日志已验证）
+      # ✅ 默认构建通常会在 outputs/apk/universal/release 产出 universal apk（你日志已验证）
       - name: Build Android (APK)
         run: cargo tauri android build --apk
 
+      # ✅ 找到构建产物并重命名，同时自检（必须是 zip/apk）
       - name: Locate & Rename APK
         id: apk
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
 
-          # ✅ 兼容未来路径变化：universal / arm64-v8a（至少能找到一个）
-          CANDIDATES=(
+          # 优先 universal，其次 arm64-v8a，再兜底 find（防止未来路径变动）
+          CANDIDATE_DIRS=(
             "src-tauri/gen/android/app/build/outputs/apk/universal/release"
             "src-tauri/gen/android/app/build/outputs/apk/arm64-v8a/release"
             "src-tauri/gen/android/app/build/outputs/apk/release"
@@ -189,7 +182,7 @@ jobs:
 
           APK_SRC=""
           APK_DIR=""
-          for d in "${CANDIDATES[@]}"; do
+          for d in "${CANDIDATE_DIRS[@]}"; do
             if [ -d "$d" ] && ls -1 "$d"/*.apk >/dev/null 2>&1; then
               APK_DIR="$d"
               APK_SRC="$(ls -1 "$d"/*.apk | head -n 1)"
@@ -198,6 +191,12 @@ jobs:
           done
 
           if [ -z "$APK_SRC" ]; then
+            echo "⚠️ Not found in candidate dirs, using find..."
+            APK_SRC="$(find "src-tauri/gen/android/app/build/outputs/apk" -type f -name "*.apk" | head -n 1 || true)"
+            APK_DIR="$(dirname "$APK_SRC" 2>/dev/null || true)"
+          fi
+
+          if [ -z "$APK_SRC" ] || [ ! -f "$APK_SRC" ]; then
             echo "❌ No APK found. Listing outputs for debug:"
             ls -R "src-tauri/gen/android/app/build/outputs/apk" || true
             exit 1
@@ -210,6 +209,10 @@ jobs:
           APK_DST="$APK_DIR/chatly-${TAG}-unsigned.apk"
           mv "$APK_SRC" "$APK_DST"
           test -f "$APK_DST"
+
+          echo "===== APK file sanity check ====="
+          file "$APK_DST"
+          unzip -t "$APK_DST" >/dev/null
 
           echo "unsigned_apk=$APK_DST" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
@@ -225,7 +228,6 @@ jobs:
           echo "===== Keystore aliases (top) ====="
           keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | head -n 60
 
-          # ✅ 校验 alias 存在（避免签名到一半才报错）
           keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             | grep -F "${{ secrets.ANDROID_KEY_ALIAS }}" >/dev/null \
             || (echo "❌ Alias '${{ secrets.ANDROID_KEY_ALIAS }}' not found in keystore!" && exit 1)
@@ -237,11 +239,19 @@ jobs:
         run: |
           set -euo pipefail
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
-          UNSIGNED="chatly/${{ steps.apk.outputs.unsigned_apk }}"
-          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
 
+          UNSIGNED="${{ steps.apk.outputs.unsigned_apk }}"
+          test -f "$UNSIGNED"
+
+          echo "===== unzip test (unsigned) ====="
+          unzip -t "$UNSIGNED" >/dev/null
+
+          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
           "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
           test -f "$ALIGNED"
+
+          echo "===== unzip test (aligned) ====="
+          unzip -t "$ALIGNED" >/dev/null
 
           echo "aligned_apk=$ALIGNED" >> $GITHUB_OUTPUT
 
@@ -250,11 +260,11 @@ jobs:
         run: |
           set -euo pipefail
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
-          ALIGNED="${{ steps.align.outputs.aligned_apk }}"
 
-          TAG="${{ steps.apk.outputs.tag }}"
-          SIGNED_DIR="$(dirname "$ALIGNED")"
-          SIGNED="$SIGNED_DIR/chatly-${TAG}-signed.apk"
+          ALIGNED="${{ steps.align.outputs.aligned_apk }}"
+          test -f "$ALIGNED"
+
+          SIGNED="${ALIGNED%-aligned.apk}-signed.apk"
 
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
