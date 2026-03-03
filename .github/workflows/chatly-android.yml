@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (cnpm/npm Optimized)
+name: Tauri2 Android Build (Rsbuild Edition)
 
 on:
   workflow_dispatch:
@@ -32,7 +32,6 @@ jobs:
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
-          # 💡 不在这里开启缓存，避免扫描子目录失败
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -52,20 +51,18 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIR }}/package-lock.json'
+          cache-dependency-path: '${{ env.WORKING_DIR }}/package*.json'
 
-      - name: Install Dependencies (cnpm style)
+      - name: Install Dependencies
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          # 在 CI 环境中，使用 npm install 是最稳妥的，它会读取你的 package.json
-          # 如果你有 package-lock.json，它会自动按 lock 安装
-          npm install
+          # 针对 Rsbuild 项目，确保使用正确的 Registry
+          npm install --registry=https://registry.npmmirror.com
 
       - name: Sync Version
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           TAG_VERSION=${GITHUB_REF_NAME#android-v}
-          # 鲁棒性：如果不存在文件则跳过
           if [ -f "src-tauri/tauri.conf.json" ]; then
             sed -i "s/\"version\": \".*\"/\"version\": \"$TAG_VERSION\"/" src-tauri/tauri.conf.json
           fi
@@ -73,7 +70,8 @@ jobs:
       - name: Build Android (APK)
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          # 使用 npx 直接运行 tauri，无需全局安装
+          # Rsbuild 构建前端 + Tauri 打包 Android
+          # 确保你的 package.json 中 build 脚本使用的是 rsbuild build
           npx tauri android build --apk --release
         env:
           NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
@@ -81,7 +79,7 @@ jobs:
       - name: Sign APK
         id: sign
         run: |
-          # 自动寻找生成的 APK
+          # 鲁棒性：自动寻找子目录下的 APK
           APK_SRC=$(find ${{ env.WORKING_DIR }}/src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
           if [ -z "$APK_SRC" ]; then echo "❌ APK not found"; exit 1; fi
           
@@ -91,10 +89,10 @@ jobs:
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VERSION }}"
           SIGNED_APK="dist/chatly-${{ github.ref_name }}.apk"
 
-          # 对齐
+          # 对齐处理
           "$BUILD_TOOLS/zipalign" -v -p 4 "$APK_SRC" /tmp/aligned.apk
           
-          # 签名
+          # 签名处理
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
             --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
