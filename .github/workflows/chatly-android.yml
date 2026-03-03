@@ -25,6 +25,7 @@ jobs:
       JAVA_VERSION: "17"
       PNPM_VERSION: "9"
       ANDROID_NDK_VERSION: "29.0.14206865"
+      BUILD_TOOLS_VERSION: "34.0.0"
 
     steps:
       - name: Checkout
@@ -61,7 +62,7 @@ jobs:
           sdkmanager \
             "platform-tools" \
             "platforms;android-34" \
-            "build-tools;34.0.0" \
+            "build-tools;${BUILD_TOOLS_VERSION}" \
             "cmake;3.22.1" \
             "ndk;${ANDROID_NDK_VERSION}"
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
@@ -79,9 +80,11 @@ jobs:
 
       - name: Get pnpm store path
         id: pnpm-store
+        if: hashFiles('chatly/pnpm-lock.yaml') != ''
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
+        if: hashFiles('chatly/pnpm-lock.yaml') != ''
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
@@ -119,44 +122,78 @@ jobs:
             cargo tauri android init
           fi
 
-      - name: Build Android (APK)
-        run: cargo tauri android build --apk
+      - name: Build Android (APK - universal)
+        run: cargo tauri android build --apk --target universal
 
-      # ✅ 关键修复：强制失败即停 + 列目录 + 写出最终产物路径
       - name: Locate & Rename APK
+        id: apk
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
           APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
-
-          echo "Listing APK dir: $APK_DIR"
           ls -la "$APK_DIR"
 
           APK_SRC="$(ls -1 "$APK_DIR"/*.apk | head -n 1)"
-          APK_DST="$APK_DIR/chatly-${TAG}.apk"
-
-          echo "APK_SRC=$APK_SRC"
-          echo "APK_DST=$APK_DST"
+          APK_DST="$APK_DIR/chatly-${TAG}-universal-unsigned.apk"
 
           mv "$APK_SRC" "$APK_DST"
           test -f "$APK_DST"
 
-          echo "APK_REL=$APK_DST" >> $GITHUB_ENV
+          echo "unsigned_apk=$APK_DST" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      # ✅ 关键修复：uses 步骤按仓库根路径，所以要加 chatly/ 前缀
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: chatly-android-${{ github.ref_name }}
-          retention-days: 7
-          if-no-files-found: error
-          path: |
-            chatly/${{ env.APK_REL }}
+      # ===== 签名开始 =====
 
-      - name: Upload APK to GitHub Release
+      - name: Decode keystore (self-check)
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
+          test -s /tmp/release.jks
+
+          # 列出 alias（不会泄露私钥）
+          keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | head -n 30
+
+      - name: Zipalign
+        id: align
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
+          test -x "$BUILD_TOOLS/zipalign"
+          test -x "$BUILD_TOOLS/apksigner"
+
+          UNSIGNED="chatly/${{ steps.apk.outputs.unsigned_apk }}"
+          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
+
+          "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
+          test -f "$ALIGNED"
+
+          echo "aligned_apk=$ALIGNED" >> $GITHUB_OUTPUT
+
+      - name: Sign APK (apksigner)
+        id: sign
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
+          ALIGNED="${{ steps.align.outputs.aligned_apk }}"
+
+          TAG="${{ steps.apk.outputs.tag }}"
+          SIGNED="chatly/src-tauri/gen/android/app/build/outputs/apk/universal/release/chatly-${TAG}-universal-signed.apk"
+
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks /tmp/release.jks \
+            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            --out "$SIGNED" \
+            "$ALIGNED"
+
+          "$BUILD_TOOLS/apksigner" verify --verbose "$SIGNED"
+          echo "signed_apk=$SIGNED" >> $GITHUB_OUTPUT
+
+      - name: Upload signed APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            chatly/${{ env.APK_REL }}
+            ${{ steps.sign.outputs.signed_apk }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
