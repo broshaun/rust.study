@@ -67,6 +67,12 @@ jobs:
       - name: Install tauri-cli
         run: cargo install tauri-cli --locked
 
+      - name: Init Android (if missing)
+        run: |
+          if [ ! -d "src-tauri/gen/android" ]; then
+            cargo tauri android init
+          fi
+
       - name: Build Android (APK)
         run: cargo tauri android build --apk
 
@@ -75,5 +81,5 @@ jobs:
         with:
           name: tauri-android-artifacts
           path: |
-            chatly/src-tauri/gen/android/app/build/outputs/**/*.apk
-            chatly/src-tauri/gen/android/app/build/outputs/**/*.aab
+            src-tauri/gen/android/app/build/outputs/**/*.apk
+            src-tauri/gen/android/app/build/outputs/**/*.aab
