@@ -20,6 +20,8 @@
 - cnpm install @tauri-apps/plugin-http
 - cnpm install @tauri-apps/plugin-log
 
+- cnpm install -D @tauri-apps/cli #安卓打包
+
 
 # 进入app现有项目路径
 ## 安装 Tauri 的 CLI 工具
