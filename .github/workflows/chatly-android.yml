@@ -26,6 +26,7 @@ jobs:
       PNPM_VERSION: "9"
       ANDROID_NDK_VERSION: "29.0.14206865"
       BUILD_TOOLS_VERSION: "34.0.0"
+      GRADLE_USER_HOME: /home/runner/.gradle
 
     steps:
       - name: Checkout
@@ -36,6 +37,7 @@ jobs:
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -59,6 +61,7 @@ jobs:
 
       - name: Install Android packages
         run: |
+          set -euo pipefail
           sdkmanager \
             "platform-tools" \
             "platforms;android-34" \
@@ -68,7 +71,16 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
 
-      # ✅ 环境预检：5~10秒内发现 SDK/Build-tools/Secrets 问题（省时间、省额度）
+      - name: Cache Gradle (wrapper + caches)
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/runner/.gradle/caches
+            /home/runner/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('chatly/src-tauri/gen/android/**/gradle-wrapper.properties', 'chatly/src-tauri/gen/android/**/*.gradle*', 'chatly/src-tauri/gen/android/**/settings.gradle*', 'chatly/src-tauri/gen/android/**/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Environment Preflight Check
         run: |
           set -euo pipefail
@@ -92,14 +104,9 @@ jobs:
           echo "BUILD_TOOLS=$BUILD_TOOLS"
           ls -la "$BUILD_TOOLS"
 
-          echo "===== Check zipalign / apksigner ====="
           test -x "$BUILD_TOOLS/zipalign" || (echo "❌ zipalign not found!" && exit 1)
           test -x "$BUILD_TOOLS/apksigner" || (echo "❌ apksigner not found!" && exit 1)
 
-          echo "===== Check Android packages ====="
-          sdkmanager --list | head -n 20 || true
-
-          echo "===== Check Secrets presence (non-empty) ====="
           test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || (echo "❌ ANDROID_KEYSTORE_BASE64 not set!" && exit 1)
           test -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" || (echo "❌ ANDROID_KEYSTORE_PASSWORD not set!" && exit 1)
           test -n "${{ secrets.ANDROID_KEY_ALIAS }}" || (echo "❌ ANDROID_KEY_ALIAS not set!" && exit 1)
@@ -133,6 +140,7 @@ jobs:
 
       - name: Install frontend deps
         run: |
+          set -euo pipefail
           if [ -f pnpm-lock.yaml ]; then
             pnpm install --frozen-lockfile
           elif [ -f package-lock.json ]; then
@@ -146,34 +154,38 @@ jobs:
 
       - name: Build frontend
         run: |
+          set -euo pipefail
           if [ -f pnpm-lock.yaml ]; then
             pnpm build
           elif [ -f package.json ]; then
             npm run build
           fi
 
-      - name: Install tauri-cli
-        run: cargo install tauri-cli --locked
+      - name: Install tauri-cli (skip if exists)
+        run: |
+          set -euo pipefail
+          if ! command -v cargo-tauri >/dev/null 2>&1 && ! command -v tauri >/dev/null 2>&1; then
+            cargo install tauri-cli --locked
+          fi
 
       - name: Init Android (if missing)
         run: |
+          set -euo pipefail
           if [ ! -d "src-tauri/gen/android" ]; then
             cargo tauri android init
           fi
 
-      # ✅ 注意：tauri android 的 --target 不支持 universal
-      # ✅ 默认构建通常会在 outputs/apk/universal/release 产出 universal apk（你日志已验证）
       - name: Build Android (APK)
-        run: cargo tauri android build --apk
+        run: |
+          set -euo pipefail
+          cargo tauri android build --apk
 
-      # ✅ 找到构建产物并重命名，同时自检（必须是 zip/apk）
       - name: Locate & Rename APK
         id: apk
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
 
-          # 优先 universal，其次 arm64-v8a，再兜底 find（防止未来路径变动）
           CANDIDATE_DIRS=(
             "src-tauri/gen/android/app/build/outputs/apk/universal/release"
             "src-tauri/gen/android/app/build/outputs/apk/arm64-v8a/release"
@@ -210,14 +222,11 @@ jobs:
           mv "$APK_SRC" "$APK_DST"
           test -f "$APK_DST"
 
-          echo "===== APK file sanity check ====="
           file "$APK_DST"
           unzip -t "$APK_DST" >/dev/null
 
           echo "unsigned_apk=$APK_DST" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      # ===== 签名开始 =====
 
       - name: Decode keystore + verify alias
         run: |
@@ -225,46 +234,29 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
           test -s /tmp/release.jks
 
-          echo "===== Keystore aliases (top) ====="
           keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | head -n 60
 
           keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             | grep -F "${{ secrets.ANDROID_KEY_ALIAS }}" >/dev/null \
             || (echo "❌ Alias '${{ secrets.ANDROID_KEY_ALIAS }}' not found in keystore!" && exit 1)
 
-          echo "Alias verified ✅"
-
-      - name: Zipalign
-        id: align
-        run: |
-          set -euo pipefail
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
-
-          UNSIGNED="${{ steps.apk.outputs.unsigned_apk }}"
-          test -f "$UNSIGNED"
-
-          echo "===== unzip test (unsigned) ====="
-          unzip -t "$UNSIGNED" >/dev/null
-
-          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
-          "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
-          test -f "$ALIGNED"
-
-          echo "===== unzip test (aligned) ====="
-          unzip -t "$ALIGNED" >/dev/null
-
-          echo "aligned_apk=$ALIGNED" >> $GITHUB_OUTPUT
-
-      - name: Sign APK (apksigner)
+      - name: Zipalign + Sign APK (apksigner) -> dist/
         id: sign
         run: |
           set -euo pipefail
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
 
-          ALIGNED="${{ steps.align.outputs.aligned_apk }}"
-          test -f "$ALIGNED"
+          UNSIGNED="${{ steps.apk.outputs.unsigned_apk }}"
+          TAG="${{ steps.apk.outputs.tag }}"
 
-          SIGNED="${ALIGNED%-aligned.apk}-signed.apk"
+          mkdir -p dist
+
+          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
+          "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
+          test -f "$ALIGNED"
+          unzip -t "$ALIGNED" >/dev/null
+
+          SIGNED="dist/chatly-${TAG}-signed.apk"
 
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
@@ -275,12 +267,30 @@ jobs:
             "$ALIGNED"
 
           "$BUILD_TOOLS/apksigner" verify --verbose "$SIGNED"
+          test -f "$SIGNED"
+
           echo "signed_apk=$SIGNED" >> $GITHUB_OUTPUT
+
+      - name: Verify dist output
+        run: |
+          set -euo pipefail
+          ls -la dist
+          test -f "${{ steps.sign.outputs.signed_apk }}"
+
+      # ✅ 可选：Artifacts（方便 Actions 页面直接下载，不走 Release）
+      - name: Upload artifacts (dist)
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatly-android-${{ github.ref_name }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            chatly/${{ steps.sign.outputs.signed_apk }}
 
       - name: Upload signed APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ steps.sign.outputs.signed_apk }}
+            chatly/${{ steps.sign.outputs.signed_apk }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
