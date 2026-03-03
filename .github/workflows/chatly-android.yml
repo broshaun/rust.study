@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (Optimized)
+name: Tauri2 Android Build (cnpm/npm Optimized)
 
 on:
   workflow_dispatch:
@@ -19,8 +19,7 @@ jobs:
     env:
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
-      PNPM_VERSION: "9"
-      ANDROID_NDK_VERSION: "26.1.10909125" # Tauri 2.0 推荐的稳定版本 
+      ANDROID_NDK_VERSION: "26.1.10909125"
       BUILD_TOOLS_VERSION: "34.0.0"
       WORKING_DIR: "chatly"
 
@@ -33,75 +32,68 @@ jobs:
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
+          # 💡 不在这里开启缓存，避免扫描子目录失败
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android, armv7-linux-androideabi, i686-linux-android, x86_64-linux-android
 
-      - name: Cache Rust & Build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "${{ env.WORKING_DIR }}/src-tauri -> target"
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android NDK & Tools
+      - name: Install Android NDK
         run: |
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;${{ env.BUILD_TOOLS_VERSION }}" "ndk;${{ env.ANDROID_NDK_VERSION }}"
+          sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}" "build-tools;${{ env.BUILD_TOOLS_VERSION }}"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_ENV
 
-      - name: Setup Node & pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIR }}/package-lock.json'
 
-      - name: Install dependencies
+      - name: Install Dependencies (cnpm style)
         working-directory: ${{ env.WORKING_DIR }}
-        run: pnpm install --frozen-lockfile
+        run: |
+          # 在 CI 环境中，使用 npm install 是最稳妥的，它会读取你的 package.json
+          # 如果你有 package-lock.json，它会自动按 lock 安装
+          npm install
 
-      - name: Sync Version from Tag
+      - name: Sync Version
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           TAG_VERSION=${GITHUB_REF_NAME#android-v}
-          echo "Updating tauri.conf.json to version $TAG_VERSION"
-          sed -i "s/\"version\": \".*\"/\"version\": \"$TAG_VERSION\"/" src-tauri/tauri.conf.json
+          # 鲁棒性：如果不存在文件则跳过
+          if [ -f "src-tauri/tauri.conf.json" ]; then
+            sed -i "s/\"version\": \".*\"/\"version\": \"$TAG_VERSION\"/" src-tauri/tauri.conf.json
+          fi
 
       - name: Build Android (APK)
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          # 自动安装 tauri-cli 并编译
-          pnpm tauri android build --apk --release
+          # 使用 npx 直接运行 tauri，无需全局安装
+          npx tauri android build --apk --release
         env:
           NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
-      - name: Prepare Signing
-        id: prepare
-        working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          # 定位生成的 APK (Tauri 2.0 通常在 gen/android 下)
-          APK_SRC=$(find src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
-          if [ -z "$APK_SRC" ]; then echo "❌ APK not found"; exit 1; fi
-          
-          echo "unsigned_apk=$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/$APK_SRC" >> $GITHUB_OUTPUT
-          
-          # 准备 KeyStore
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
-
-      - name: Zipalign & Sign APK
+      - name: Sign APK
         id: sign
         run: |
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VERSION }}"
-          UNSIGNED="${{ steps.prepare.outputs.unsigned_apk }}"
+          # 自动寻找生成的 APK
+          APK_SRC=$(find ${{ env.WORKING_DIR }}/src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
+          if [ -z "$APK_SRC" ]; then echo "❌ APK not found"; exit 1; fi
           
-          mkdir -p ${{ env.WORKING_DIR }}/dist
-          ALIGNED="/tmp/aligned.apk"
-          SIGNED_APK="${{ env.WORKING_DIR }}/dist/chatly-${{ github.ref_name }}.apk"
+          mkdir -p dist
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
+          
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VERSION }}"
+          SIGNED_APK="dist/chatly-${{ github.ref_name }}.apk"
 
           # 对齐
-          "$BUILD_TOOLS/zipalign" -v -p 4 "$UNSIGNED" "$ALIGNED"
-
+          "$BUILD_TOOLS/zipalign" -v -p 4 "$APK_SRC" /tmp/aligned.apk
+          
           # 签名
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
@@ -109,20 +101,12 @@ jobs:
             --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
             --out "$SIGNED_APK" \
-            "$ALIGNED"
+            /tmp/aligned.apk
 
           echo "signed_apk=$SIGNED_APK" >> $GITHUB_OUTPUT
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chatly-android-release
-          path: ${{ steps.sign.outputs.signed_apk }}
-          retention-days: 7
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: ${{ steps.sign.outputs.signed_apk }}
           generate_release_notes: true
