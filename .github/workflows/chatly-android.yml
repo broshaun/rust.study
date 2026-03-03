@@ -68,6 +68,53 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
 
+      # ✅ 环境预检：提前发现 SDK/Build-tools/Secrets 问题（省时间、省额度）
+      - name: Environment Preflight Check
+        run: |
+          set -euo pipefail
+
+          echo "===== Java ====="
+          java -version
+
+          echo "===== Rust ====="
+          rustc --version
+          cargo --version
+
+          echo "===== Node / pnpm ====="
+          node --version || true
+
+          echo "===== Android SDK ====="
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
+          echo "BUILD_TOOLS=$BUILD_TOOLS"
+          ls -la "$BUILD_TOOLS"
+
+          echo "===== Check zipalign / apksigner ====="
+          test -x "$BUILD_TOOLS/zipalign" || (echo "❌ zipalign not found!" && exit 1)
+          test -x "$BUILD_TOOLS/apksigner" || (echo "❌ apksigner not found!" && exit 1)
+
+          echo "===== Check keystore secrets present (length only) ====="
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "❌ ANDROID_KEYSTORE_BASE64 not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ]; then
+            echo "❌ ANDROID_KEYSTORE_PASSWORD not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ]; then
+            echo "❌ ANDROID_KEY_ALIAS not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ]; then
+            echo "❌ ANDROID_KEY_PASSWORD not set!"
+            exit 1
+          fi
+
+          echo "===== Preflight OK ✅ ====="
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -123,7 +170,7 @@ jobs:
           fi
 
       # ✅ 注意：tauri android 的 --target 不支持 universal
-      # ✅ 默认构建就会由 Gradle 产出 universal APK（你日志里已经验证）
+      # ✅ 默认构建会由 Gradle 产出 universal APK（你之前日志已验证）
       - name: Build Android (APK)
         run: cargo tauri android build --apk
 
@@ -133,10 +180,11 @@ jobs:
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
 
-          # ✅ 兼容两种路径：universal / arm64-v8a（防止未来产物路径变动）
+          # ✅ 兼容未来路径变化：universal / arm64-v8a（至少能找到一个）
           CANDIDATES=(
             "src-tauri/gen/android/app/build/outputs/apk/universal/release"
             "src-tauri/gen/android/app/build/outputs/apk/arm64-v8a/release"
+            "src-tauri/gen/android/app/build/outputs/apk/release"
           )
 
           APK_SRC=""
@@ -168,23 +216,27 @@ jobs:
 
       # ===== 签名开始 =====
 
-      - name: Decode keystore (self-check)
+      - name: Decode keystore + verify alias
         run: |
           set -euo pipefail
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
           test -s /tmp/release.jks
 
-          # ✅ 列出 alias（不会泄露私钥）
-          keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | head -n 30
+          echo "===== Keystore aliases (top) ====="
+          keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | head -n 60
+
+          # ✅ 校验 alias 存在（避免签名到一半才报错）
+          keytool -list -keystore /tmp/release.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            | grep -F "${{ secrets.ANDROID_KEY_ALIAS }}" >/dev/null \
+            || (echo "❌ Alias '${{ secrets.ANDROID_KEY_ALIAS }}' not found in keystore!" && exit 1)
+
+          echo "Alias verified ✅"
 
       - name: Zipalign
         id: align
         run: |
           set -euo pipefail
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
-          test -x "$BUILD_TOOLS/zipalign"
-          test -x "$BUILD_TOOLS/apksigner"
-
           UNSIGNED="chatly/${{ steps.apk.outputs.unsigned_apk }}"
           ALIGNED="${UNSIGNED%.apk}-aligned.apk"
 
@@ -199,10 +251,10 @@ jobs:
           set -euo pipefail
           BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VERSION}"
           ALIGNED="${{ steps.align.outputs.aligned_apk }}"
-          TAG="${{ steps.apk.outputs.tag }}"
 
-          # ✅ 输出到同一目录，命名为 signed
-          SIGNED="${ALIGNED%-aligned.apk}-signed.apk"
+          TAG="${{ steps.apk.outputs.tag }}"
+          SIGNED_DIR="$(dirname "$ALIGNED")"
+          SIGNED="$SIGNED_DIR/chatly-${TAG}-signed.apk"
 
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
