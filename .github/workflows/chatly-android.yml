@@ -33,7 +33,6 @@ jobs:
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
