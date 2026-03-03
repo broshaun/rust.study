@@ -6,12 +6,10 @@ on:
     tags:
       - "android-v*"
 
-# ✅ 防止同一个 tag 重复跑，省额度
 concurrency:
   group: android-${{ github.ref }}
   cancel-in-progress: true
 
-# ✅ 最小权限（Release 上传必须）
 permissions:
   contents: write
 
@@ -23,25 +21,21 @@ jobs:
         working-directory: chatly
 
     env:
-      # ✅ 固定工具版本（可按需改）
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
       PNPM_VERSION: "9"
-      # ✅ 你日志里实际用的是 runner 自带 NDK 29.x；固定它更稳、也更省下载
       ANDROID_NDK_VERSION: "29.0.14206865"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ✅ Java 17（先不启用 setup-java 的 gradle cache，避免早期“找不到gradle文件”坑）
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
 
-      # ✅ Rust toolchain
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -53,18 +47,15 @@ jobs:
             i686-linux-android \
             x86_64-linux-android
 
-      # ✅ Rust/Cargo 缓存（提速最明显）
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
             chatly/src-tauri -> target
 
-      # ✅ Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # ✅ 仅安装必须组件 + 固定 NDK 版本（避免每次漂移/重复下载）
       - name: Install Android packages
         run: |
           sdkmanager \
@@ -76,7 +67,6 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
 
-      # ✅ Node + pnpm（并缓存 pnpm store）
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -112,7 +102,6 @@ jobs:
             npm install
           fi
 
-      # ✅ 构建前端（把 beforeBuildCommand 的失败提前暴露，日志更清晰）
       - name: Build frontend
         run: |
           if [ -f pnpm-lock.yaml ]; then
@@ -121,32 +110,40 @@ jobs:
             npm run build
           fi
 
-      # ✅ 安装 tauri-cli（可选优化：用 cargo-binstall 会更快；这里保持通用）
       - name: Install tauri-cli
         run: cargo install tauri-cli --locked
 
-      # ✅ 若没有生成 android 工程则初始化（纯云端）
       - name: Init Android (if missing)
         run: |
           if [ ! -d "src-tauri/gen/android" ]; then
             cargo tauri android init
           fi
 
-      # ✅ 构建 APK
       - name: Build Android (APK)
         run: cargo tauri android build --apk
 
-      # ✅ 重命名产物：chatly-<tag>.apk（更好找）
-      - name: Rename APK
+      # ✅ 关键修复：强制失败即停 + 列目录 + 写出最终产物路径
+      - name: Locate & Rename APK
         run: |
+          set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
           APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
-          APK_SRC="$(ls -1 ${APK_DIR}/*.apk | head -n 1)"
-          APK_DST="${APK_DIR}/chatly-${TAG}.apk"
-          mv "$APK_SRC" "$APK_DST"
-          echo "APK_PATH=$APK_DST" >> $GITHUB_ENV
 
-      # ✅ Artifacts（临时下载）
+          echo "Listing APK dir: $APK_DIR"
+          ls -la "$APK_DIR"
+
+          APK_SRC="$(ls -1 "$APK_DIR"/*.apk | head -n 1)"
+          APK_DST="$APK_DIR/chatly-${TAG}.apk"
+
+          echo "APK_SRC=$APK_SRC"
+          echo "APK_DST=$APK_DST"
+
+          mv "$APK_SRC" "$APK_DST"
+          test -f "$APK_DST"
+
+          echo "APK_REL=$APK_DST" >> $GITHUB_ENV
+
+      # ✅ 关键修复：uses 步骤按仓库根路径，所以要加 chatly/ 前缀
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -154,13 +151,12 @@ jobs:
           retention-days: 7
           if-no-files-found: error
           path: |
-            ${{ env.APK_PATH }}
+            chatly/${{ env.APK_REL }}
 
-      # ✅ Release（长期保存）
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            chatly/${{ env.APK_PATH }}
+            chatly/${{ env.APK_REL }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
