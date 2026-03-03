@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (NDK Fix)
+name: Tauri2 Android Build (Command Fix)
 
 on:
   workflow_dispatch:
@@ -19,9 +19,8 @@ jobs:
     env:
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
-      # Tauri 2.0 强烈建议使用的 NDK 版本
-      ANDROID_NDK_VERSION: "26.1.10909125"
-      BUILD_TOOLS_VERSION: "34.0.0"
+      NDK_VER: "26.1.10909125"
+      BUILD_TOOLS_VER: "34.0.0"
       WORKING_DIR: "chatly"
 
     steps:
@@ -42,21 +41,12 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install & Export NDK
+      - name: Install NDK
         run: |
-          # 安装特定版本的 NDK
-          sdkmanager "ndk;${{ env.ANDROID_NDK_VERSION }}" "build-tools;${{ env.BUILD_TOOLS_VERSION }}"
-          
-          # 💡 核心修复：精确定位 NDK 路径并写入全局环境
-          NDK_PATH="$ANDROID_SDK_ROOT/ndk/${{ env.ANDROID_NDK_VERSION }}"
+          sdkmanager "ndk;${{ env.NDK_VER }}" "build-tools;${{ env.BUILD_TOOLS_VER }}"
+          NDK_PATH="$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VER }}"
           echo "NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
-          
-          # 验证路径是否存在
-          if [ ! -d "$NDK_PATH" ]; then
-            echo "❌ NDK path not found at $NDK_PATH"
-            exit 1
-          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -70,37 +60,30 @@ jobs:
         run: |
           npm config set registry https://registry.npmmirror.com
           npm install
-          # 补全 package.json 缺失的 CLI
           npm install -D @tauri-apps/cli@2
 
       - name: Build Android (APK)
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          # 编译前自检
-          echo "Using NDK_HOME: $NDK_HOME"
-          echo "Using ANDROID_HOME: $ANDROID_HOME"
-          
-          # 执行构建
-          npx tauri android build --apk --release
+          # 💡 修复：移除 --release 参数，Tauri 2.0 默认即为 Release 模式
+          npx tauri android build --apk
         env:
-          # 💡 双重保障：再次显式传入环境变量
           NDK_HOME: ${{ env.NDK_HOME }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
       - name: Sign APK
         id: sign
         run: |
-          # 寻找生成的 APK
+          # 定位生成的 APK
           APK_SRC=$(find ${{ env.WORKING_DIR }}/src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
           if [ -z "$APK_SRC" ]; then echo "❌ APK not found"; exit 1; fi
           
           mkdir -p dist
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
           
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VERSION }}"
+          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VER }}"
           SIGNED_APK="dist/chatly-${{ github.ref_name }}.apk"
 
-          # 对齐与签名
           "$BUILD_TOOLS/zipalign" -v -p 4 "$APK_SRC" /tmp/aligned.apk
           "$BUILD_TOOLS/apksigner" sign \
             --ks /tmp/release.jks \
@@ -116,6 +99,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.sign.outputs.signed_apk }}
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
