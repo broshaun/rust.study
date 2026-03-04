@@ -1,3 +1,4 @@
+// src/components/MenuMobile/MenuMobile.jsx
 import React, { useMemo } from "react";
 import styles from "./MenuMobile.module.css";
 import { IconCustomColor } from "components/icon";
@@ -12,25 +13,12 @@ const RATIO = {
   menuItemHeight: 1.4,
 };
 
-// ✅ 只在 iOS（含 iPadOS）启用 safe-area，PC 强制 0
-function isIOS() {
-  const ua = navigator.userAgent || "";
-  const platform = navigator.platform || "";
-  const maxTouchPoints = navigator.maxTouchPoints || 0;
-  const iOSDevice = /iPhone|iPad|iPod/i.test(ua);
-  const iPadOS = platform === "MacIntel" && maxTouchPoints > 1;
-  return iOSDevice || iPadOS;
-}
+const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
 
-/**
- * Head
- * - ✅ show: 可显式控制是否显示
- * - ✅ 默认：title 有值才显示；title 为空不占位
- */
 const Head = ({ title, leftIcon, onClick, size = 46, show }) => {
-  const shouldShow = typeof show === "boolean" ? show : Boolean(title);
+  // ✅ 优化：默认按 title 自动显示；title 为空 => 不渲染不占位
+  const shouldShow = typeof show === "boolean" ? show : isNonEmptyString(title);
 
-  // ✅ 不显示就直接 return null：完全不占高度
   if (!shouldShow) return null;
 
   const iconSize = Math.round(size * RATIO.leftIcon);
@@ -43,14 +31,14 @@ const Head = ({ title, leftIcon, onClick, size = 46, show }) => {
           <IconCustomColor name={leftIcon} size={iconSize} />
         </button>
       ) : (
-        <div className={styles.headSide} />
+        <div className={styles.headSide} aria-hidden="true" />
       )}
 
       <div className={styles.headTitle} style={{ fontSize }} title={title}>
         {title}
       </div>
 
-      <div className={styles.headSide} />
+      <div className={styles.headSide} aria-hidden="true" />
     </div>
   );
 };
@@ -63,9 +51,15 @@ const Items = ({ children, position = "left" }) => (
   </div>
 );
 
-const MenuMobile = ({ children, size = 46 }) => {
-  const ios = typeof window !== "undefined" ? isIOS() : false;
-
+/**
+ * ✅ 优化点总览
+ * 1) 去掉 menuContent state + useEffect：少一次 state 更新、少一次 render
+ * 2) Head：title 为空时不占位（return null），解决“无标题仍占高”
+ * 3) renderMenuList：只渲染一次，避免重复调用
+ * 4) 更稳的过滤：display === false 才禁用；缺 key 直接忽略
+ * 5) 给底部栏增加全局 class（便于未来键盘场景隐藏）
+ */
+const MenuMobile = ({ children, size = 46, title = "" }) => {
   const slots = useMemo(() => {
     return React.Children.toArray(children).reduce(
       (acc, child) => {
@@ -75,7 +69,9 @@ const MenuMobile = ({ children, size = 46 }) => {
         else if (child.type === MenuMobile.Content) acc.content = child;
         else if (child.type === MenuMobile.Items) {
           const pos = child.props.position || "left";
-          acc.items[pos] = child.props.children;
+          // 仅允许 left/bottom/right
+          const safePos = ["left", "bottom", "right"].includes(pos) ? pos : "left";
+          acc.items[safePos] = child.props.children;
         }
         return acc;
       },
@@ -83,42 +79,51 @@ const MenuMobile = ({ children, size = 46 }) => {
     );
   }, [children]);
 
-  const renderMenuList = (content, isBottom = false) => {
-    if (!Array.isArray(content) || content.length === 0) return null;
-    const valid = content.filter((it) => it && it.key && it.display !== false);
-    if (valid.length === 0) return null;
+  const normalizeItems = (content) => {
+    if (!Array.isArray(content) || content.length === 0) return [];
+    return content.filter((it) => it && it.key && it.display !== false);
+  };
+
+  const leftItems = useMemo(() => normalizeItems(slots.items.left), [slots.items.left]);
+  const bottomItems = useMemo(() => normalizeItems(slots.items.bottom), [slots.items.bottom]);
+
+  const renderMenu = (items, isBottom) => {
+    if (!items || items.length === 0) return null;
 
     return (
       <div className={styles.menuWrapper} data-bottom={isBottom ? "1" : "0"}>
-        {valid.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            className={styles.item}
-            onClick={item.onClick}
-            disabled={item.display === false}
-          >
-            {item.icon?.name ? (
-              <div className={styles.iconWrapper}>
-                <IconCustomColor
-                  name={item.icon.name}
-                  color={item.icon.color}
-                  size={Math.round(size * RATIO.menuIcon)}
-                />
-              </div>
-            ) : null}
+        {items.map((item) => {
+          const disabled = item.display === false; // ✅ 严格：只有 false 才禁用
+          const iconName = item.icon?.name;
+          const iconLabel = item.icon?.label || "";
 
-            <span className={styles.label} style={{ fontSize: `${Math.round(size * RATIO.menuLabel)}px` }}>
-              {item.icon?.label || ""}
-            </span>
-          </button>
-        ))}
+          return (
+            <button
+              key={item.key}
+              type="button"
+              className={styles.item}
+              onClick={disabled ? undefined : item.onClick}
+              disabled={disabled}
+            >
+              {iconName ? (
+                <div className={styles.iconWrapper}>
+                  <IconCustomColor
+                    name={iconName}
+                    color={item.icon?.color}
+                    size={Math.round(size * RATIO.menuIcon)}
+                  />
+                </div>
+              ) : null}
+
+              <span className={styles.label} style={{ fontSize: `${Math.round(size * RATIO.menuLabel)}px` }}>
+                {iconLabel}
+              </span>
+            </button>
+          );
+        })}
       </div>
     );
   };
-
-  const leftList = renderMenuList(slots.items.left, false);
-  const bottomList = renderMenuList(slots.items.bottom, true);
 
   return (
     <div
@@ -129,21 +134,23 @@ const MenuMobile = ({ children, size = 46 }) => {
         "--menu-width": `${size * RATIO.menuWidth}px`,
         "--menu-item-height": `${size * RATIO.menuItemHeight}px`,
         "--menu-label-gap": `${size * RATIO.menuItemGap}px`,
-
-        // ✅ 关键：PC 强制 0；只有 iOS 才用 env()
-        "--safe-top": ios ? "env(safe-area-inset-top, 0px)" : "0px",
-        "--safe-bottom": ios ? "env(safe-area-inset-bottom, 0px)" : "0px",
       }}
     >
-      {/* ✅ 只渲染你传入的 Head；Head 自己决定是否 return null */}
-      {slots.head ? React.cloneElement(slots.head, { size }) : null}
+      {/* ✅ 优化：没有显式 Head 时，用 title 自动生成；title 为空则不占位 */}
+      {slots.head
+        ? React.cloneElement(slots.head, { size })
+        : (isNonEmptyString(title) ? <MenuMobile.Head title={title} size={size} /> : null)}
 
       <div className={styles.mainLayout}>
-        {leftList ? <aside className={styles.leftMenu}>{leftList}</aside> : null}
-        <div className={styles.contentWrap}>{slots.content}</div>
+        {leftItems.length > 0 ? <aside className={styles.leftMenu}>{renderMenu(leftItems, false)}</aside> : null}
+        <div className={styles.contentWrap}>
+          {slots.content || <MenuMobile.Content />}
+        </div>
       </div>
 
-      <div className={`${styles.bottom} app-bottom-nav`}>{bottomList}</div>
+      <div className={`${styles.bottom} app-bottom-nav`}>
+        {renderMenu(bottomItems, true)}
+      </div>
     </div>
   );
 };

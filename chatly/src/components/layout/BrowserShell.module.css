@@ -1,15 +1,12 @@
+/* 核心：100%高度 + 安全区内边距（JS计算的变量） */
 .root {
   width: 100%;
-  height: 100dvh;
-  height: calc(var(--vh, 1vh) * 100);
+  height: 100%;
   overflow: hidden;
-
-  /* ✅ safe-area 只用这四个变量（PC 永远 0） */
-  padding-top: var(--sat);
-  padding-bottom: var(--sab);
-  padding-left: var(--sal);
-  padding-right: var(--sar);
-
   box-sizing: border-box;
-  background: #fff;
+  /* 使用JS计算的安全区变量，非iOS全为0，布局无异常 */
+  padding-top: var(--safe-area-top, 0px);
+  padding-bottom: var(--safe-area-bottom, 0px);
+  padding-left: var(--safe-area-left, 0px);
+  padding-right: var(--safe-area-right, 0px);
 }
