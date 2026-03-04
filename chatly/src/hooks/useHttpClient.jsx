@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { useLocalStorageState, useLatest } from 'ahooks'; // ✅ 只加 useLatest
+import { fetch } from '@tauri-apps/plugin-http';
 
 
 function replacer(key, value) {
@@ -9,12 +10,8 @@ function replacer(key, value) {
   return value
 }
 
-// import { fetch } from '@tauri-apps/plugin-http';
-
 
 export function useHttpClient(baseUrl) {
-
-
   const [apiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
   const [loginToken] = useLocalStorageState('zustand:login_token');
   const tokenRef = useLatest(loginToken);
