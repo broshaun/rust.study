@@ -41,4 +41,4 @@ xcrun simctl list devices | grep Booted
 open -a Simulator
 
 ## 运行并绑定虚拟机
-cargo tauri ios dev B28DA3C3-AE4F-48A1-A409-77C57AC4B2C0
+cargo tauri ios dev 

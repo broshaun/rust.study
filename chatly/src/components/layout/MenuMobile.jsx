@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import styles from './MenuMobile.module.css';
-import { IconCustomColor } from 'components/icon';
+import React, { useMemo } from "react";
+import styles from "./MenuMobile.module.css";
+import { IconCustomColor } from "components/icon";
 
-// 精简全局比例配置（仅保留菜单必要配置，与 Content 无关）
 const RATIO = {
   leftIcon: 0.39,
   titleFont: 0.37,
@@ -10,124 +9,145 @@ const RATIO = {
   menuLabel: 0.26,
   menuItemGap: 0.08,
   menuWidth: 1.78,
-  menuItemHeight: 1.4
+  menuItemHeight: 1.4,
 };
 
-// Head 组件
-const Head = ({ title, leftIcon, onClick }) => {
-  const getSize = () => {
-    const container = document.querySelector(`.${styles.container}`);
-    if (!container) return 44;
-    return parseFloat(getComputedStyle(container).getPropertyValue('--head-height')) || 44;
-  };
+// ✅ 只在 iOS（含 iPadOS）启用 safe-area，PC 强制 0
+function isIOS() {
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const maxTouchPoints = navigator.maxTouchPoints || 0;
+  const iOSDevice = /iPhone|iPad|iPod/i.test(ua);
+  const iPadOS = platform === "MacIntel" && maxTouchPoints > 1;
+  return iOSDevice || iPadOS;
+}
 
-  const size = getSize();
+/**
+ * Head
+ * - ✅ show: 可显式控制是否显示
+ * - ✅ 默认：title 有值才显示；title 为空不占位
+ */
+const Head = ({ title, leftIcon, onClick, size = 46, show }) => {
+  const shouldShow = typeof show === "boolean" ? show : Boolean(title);
+
+  // ✅ 不显示就直接 return null：完全不占高度
+  if (!shouldShow) return null;
+
+  const iconSize = Math.round(size * RATIO.leftIcon);
+  const fontSize = Math.round(size * RATIO.titleFont);
+
   return (
     <div className={styles.head}>
-      {leftIcon && (
-        <div className={styles.headLeft} onClick={onClick}>
-          <IconCustomColor name={leftIcon} size={Math.round(size * RATIO.leftIcon)} />
-        </div>
+      {leftIcon ? (
+        <button type="button" className={styles.headLeft} onClick={onClick} aria-label="Back">
+          <IconCustomColor name={leftIcon} size={iconSize} />
+        </button>
+      ) : (
+        <div className={styles.headSide} />
       )}
-      <div className={styles.headTitle} style={{ fontSize: `${Math.round(size * RATIO.titleFont)}px` }}>
+
+      <div className={styles.headTitle} style={{ fontSize }} title={title}>
         {title}
       </div>
+
+      <div className={styles.headSide} />
     </div>
   );
 };
 
-// Content 组件：极致精简！仅作为承载 Outlet 的极简容器，无多余配置
-const Content = ({ children }) => (
-  <div className={styles.content}>{children}</div>
-);
+const Content = ({ children }) => <div className={styles.content}>{children}</div>;
 
-// Items 组件
-const Items = ({ children, position = 'left' }) => (
-  <div data-position={['left', 'bottom', 'right'].includes(position) ? position : 'left'} className={styles.itemsSlot}>
+const Items = ({ children, position = "left" }) => (
+  <div data-position={position} className={styles.itemsSlot}>
     {children}
   </div>
 );
 
-// 核心 MenuMobile 组件
-const MenuMobile = ({ children, size = 46, title = '' }) => {
-  const [menuContent, setMenuContent] = useState({ left: null, bottom: null, right: null });
+const MenuMobile = ({ children, size = 46 }) => {
+  const ios = typeof window !== "undefined" ? isIOS() : false;
 
-  // 渲染菜单项
-  const renderMenuItem = (item) => (
-    <button key={item.key} className={styles.item} onClick={item.onClick} disabled={!item.display}>
-      {item.icon?.name && (
-        <div className={styles.iconWrapper}>
-          <IconCustomColor
-            name={item.icon.name}
-            color={item.icon.color}
-            size={Math.round(size * RATIO.menuIcon)}
-          />
-        </div>
-      )}
-      <span className={styles.label} style={{ fontSize: `${Math.round(size * RATIO.menuLabel)}px` }}>
-        {item.icon?.label || ''}
-      </span>
-    </button>
-  );
-
-  // 渲染菜单列表
-  const renderMenuList = (content) => {
-    if (!Array.isArray(content) || content.length === 0) return null;
-    const validItems = content.filter(item => item && item.key && item.display !== false);
-    return validItems.length > 0 ? (
-      <div className={styles.menuWrapper}>{validItems.map(renderMenuItem)}</div>
-    ) : null;
-  };
-
-  // 解析插槽
-  const slotMap = useMemo(() => {
+  const slots = useMemo(() => {
     return React.Children.toArray(children).reduce(
       (acc, child) => {
-        if (React.isValidElement(child)) {
-          switch (child.type) {
-            case MenuMobile.Head:
-              acc.head = child;
-              break;
-            case MenuMobile.Items:
-              acc.items[child.props.position || 'left'] = child.props.children;
-              break;
-            case MenuMobile.Content:
-              acc.content = child;
-              break;
-          }
+        if (!React.isValidElement(child)) return acc;
+
+        if (child.type === MenuMobile.Head) acc.head = child;
+        else if (child.type === MenuMobile.Content) acc.content = child;
+        else if (child.type === MenuMobile.Items) {
+          const pos = child.props.position || "left";
+          acc.items[pos] = child.props.children;
         }
         return acc;
       },
-      { head: null, items: { left: null, bottom: null, right: null }, content: null }
+      { head: null, content: null, items: { left: null, bottom: null, right: null } }
     );
   }, [children]);
 
-  const { head, items, content } = slotMap;
+  const renderMenuList = (content, isBottom = false) => {
+    if (!Array.isArray(content) || content.length === 0) return null;
+    const valid = content.filter((it) => it && it.key && it.display !== false);
+    if (valid.length === 0) return null;
 
-  // 更新菜单内容
-  useEffect(() => {
-    setMenuContent({ left: items.left, bottom: items.bottom, right: items.right });
-  }, [items]);
+    return (
+      <div className={styles.menuWrapper} data-bottom={isBottom ? "1" : "0"}>
+        {valid.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={styles.item}
+            onClick={item.onClick}
+            disabled={item.display === false}
+          >
+            {item.icon?.name ? (
+              <div className={styles.iconWrapper}>
+                <IconCustomColor
+                  name={item.icon.name}
+                  color={item.icon.color}
+                  size={Math.round(size * RATIO.menuIcon)}
+                />
+              </div>
+            ) : null}
+
+            <span className={styles.label} style={{ fontSize: `${Math.round(size * RATIO.menuLabel)}px` }}>
+              {item.icon?.label || ""}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const leftList = renderMenuList(slots.items.left, false);
+  const bottomList = renderMenuList(slots.items.bottom, true);
 
   return (
-    <div className={styles.container} style={{
-      '--head-height': `${size}px`,
-      '--bottom-height': `${size}px`,
-      '--menu-width': `${size * RATIO.menuWidth}px`,
-      '--menu-item-height': `${size * RATIO.menuItemHeight}px`,
-      '--menu-label-gap': `${size * RATIO.menuItemGap}px`
-    }}>
-      {head || (title && <MenuMobile.Head title={title} leftIcon={null} />)}
+    <div
+      className={styles.container}
+      style={{
+        "--head-height": `${size}px`,
+        "--bottom-height": `${size}px`,
+        "--menu-width": `${size * RATIO.menuWidth}px`,
+        "--menu-item-height": `${size * RATIO.menuItemHeight}px`,
+        "--menu-label-gap": `${size * RATIO.menuItemGap}px`,
+
+        // ✅ 关键：PC 强制 0；只有 iOS 才用 env()
+        "--safe-top": ios ? "env(safe-area-inset-top, 0px)" : "0px",
+        "--safe-bottom": ios ? "env(safe-area-inset-bottom, 0px)" : "0px",
+      }}
+    >
+      {/* ✅ 只渲染你传入的 Head；Head 自己决定是否 return null */}
+      {slots.head ? React.cloneElement(slots.head, { size }) : null}
+
       <div className={styles.mainLayout}>
-        {renderMenuList(menuContent.left) && <aside className={styles.leftMenu}>{renderMenuList(menuContent.left)}</aside>}
-        {content}
+        {leftList ? <aside className={styles.leftMenu}>{leftList}</aside> : null}
+        <div className={styles.contentWrap}>{slots.content}</div>
       </div>
-      <div className={styles.bottom}>{renderMenuList(menuContent.bottom)}</div>
+
+      <div className={`${styles.bottom} app-bottom-nav`}>{bottomList}</div>
     </div>
   );
 };
 
-// 挂载插槽
 MenuMobile.Head = Head;
 MenuMobile.Items = Items;
 MenuMobile.Content = Content;

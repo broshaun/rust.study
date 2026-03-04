@@ -1,17 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
+
+const MOBILE_WIDTH = 480;
 
 export function useWinWidth() {
-    const [winSize, setWinSize] = useState(() => window.innerWidth)
-    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 415)
+  const getWidth = () =>
+    typeof window !== "undefined" ? window.innerWidth : MOBILE_WIDTH;
 
-    useEffect(() => {
-        const onResize = () => {
-            const currentWidth = window.innerWidth
-            setWinSize(currentWidth)
-            setIsMobile(currentWidth <= 415)
-        }
-        window.addEventListener('resize', onResize)
-        return () => window.removeEventListener('resize', onResize)
-    }, [])
-    return { winSize, isMobile }
+  const [winWidth, setWinWidth] = useState(getWidth);
+  const [isMobile, setIsMobile] = useState(getWidth() <= MOBILE_WIDTH);
+
+  useEffect(() => {
+    const update = () => {
+      const width = window.innerWidth;
+      setWinWidth(width);
+      setIsMobile(width <= MOBILE_WIDTH);
+    };
+
+    update();
+
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+    };
+  }, []);
+
+  return { winWidth, isMobile };
 }

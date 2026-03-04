@@ -38,13 +38,23 @@ export function Chat() {
 
   return <React.Fragment>
     <MenuMobile size={46}>
-      {/* <MenuMobile.Head title={title} /> */}
+      {/* <MenuMobile.Head title='标题'/> */}
       <MenuMobile.Items position={isMobile ? 'bottom' : 'left'}>{items2}</MenuMobile.Items>
       <MenuMobile.Content>
         <Outlet />
       </MenuMobile.Content>
     </MenuMobile>
+
   </React.Fragment>
+
+
+
+
+
+
+
+
+
 }
 
 
