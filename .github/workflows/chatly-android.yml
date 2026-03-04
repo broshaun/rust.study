@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (NDK Forced)
+name: Tauri2 Android Build (Script & NDK Fix)
 
 on:
   workflow_dispatch:
@@ -19,7 +19,6 @@ jobs:
     env:
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
-      # Tauri 2.0 目前最稳的版本
       NDK_VER: "26.1.10909125"
       BUILD_TOOLS_VER: "34.0.0"
       WORKING_DIR: "chatly"
@@ -34,70 +33,137 @@ jobs:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Setup Rust
+      - name: Setup Rust (Android targets)
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android, armv7-linux-androideabi, i686-linux-android, x86_64-linux-android
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install & Force NDK Path
+      - name: Install Android packages (NDK + build-tools + platform)
         run: |
-          # 安装我们需要的版本
-          sdkmanager "ndk;${{ env.NDK_VER }}" "build-tools;${{ env.BUILD_TOOLS_VER }}"
-          
-          # 💡 强制覆盖环境变量
-          NDK_PATH="$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VER }}"
+          set -euo pipefail
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;${BUILD_TOOLS_VER}" \
+            "ndk;${NDK_VER}"
+
+          NDK_PATH="$ANDROID_SDK_ROOT/ndk/${NDK_VER}"
+
           echo "NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
-          
-          # 验证
-          echo "Using NDK at: $NDK_PATH"
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+
+          # PATH 优先级：强制使用 NDK 26 的 clang/ld
+          echo "$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+
+      - name: Preflight (verify tools)
+        run: |
+          set -euo pipefail
+          echo "JAVA:"
+          java -version
+          echo "RUST:"
+          rustc --version
+          cargo --version
+
+          echo "ANDROID:"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          test -d "$ANDROID_NDK_HOME" || (echo "❌ ANDROID_NDK_HOME missing" && exit 1)
+
+          BT="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VER}"
+          test -x "$BT/zipalign" || (echo "❌ zipalign missing" && exit 1)
+          test -x "$BT/apksigner" || (echo "❌ apksigner missing" && exit 1)
+
+          echo "Secrets presence:"
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || (echo "❌ ANDROID_KEYSTORE_BASE64 missing" && exit 1)
+          test -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" || (echo "❌ ANDROID_KEYSTORE_PASSWORD missing" && exit 1)
+          test -n "${{ secrets.ANDROID_KEY_ALIAS }}" || (echo "❌ ANDROID_KEY_ALIAS missing" && exit 1)
+          test -n "${{ secrets.ANDROID_KEY_PASSWORD }}" || (echo "❌ ANDROID_KEY_PASSWORD missing" && exit 1)
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIR }}/package*.json'
 
-      - name: Install Dependencies
+      - name: Install frontend deps
         working-directory: ${{ env.WORKING_DIR }}
         run: |
+          set -euo pipefail
+
+          # 你的镜像源（可留可删）
           npm config set registry https://registry.npmmirror.com
-          npm install
-          npm install -D @tauri-apps/cli@2
 
-      - name: Init & Build Android (APK)
+          # 自动识别包管理器
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            corepack prepare pnpm@9 --activate
+            pnpm install --frozen-lockfile
+          elif [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f yarn.lock ]; then
+            corepack enable
+            yarn install --frozen-lockfile
+          else
+            npm install
+          fi
+
+      - name: Build frontend (optional, but clearer logs)
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          # 确保 Android 目录存在
-          if [ ! -d "src-tauri/gen/android" ]; then
-            npx tauri android init --ci
+          set -euo pipefail
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm build
+          else
+            npm run build
           fi
-          
-          # 💡 再次通过命令行参数显式传递，防止 Tauri 漂移到系统 NDK 29
-          npx tauri android build --apk
-        env:
-          # 双重锁死 NDK 路径
-          NDK_HOME: ${{ env.NDK_HOME }}
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+
+      - name: Init Android (if missing)
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          set -euo pipefail
+          if [ ! -d "src-tauri/gen/android" ]; then
+            npx -y @tauri-apps/cli@2 android init --ci
+          fi
+
+      - name: Build Android (APK)
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          set -euo pipefail
+          # 用固定版本 CLI，避免 npx 漂移
+          npx -y @tauri-apps/cli@2 android build --apk
 
       - name: Sign APK
         id: sign
         run: |
-          APK_SRC=$(find ${{ env.WORKING_DIR }}/src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
-          if [ -z "$APK_SRC" ]; then echo "❌ APK NOT FOUND"; exit 1; fi
-          
-          mkdir -p dist
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
-          
-          BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VER }}"
-          SIGNED_APK="dist/chatly-${{ github.ref_name }}.apk"
+          set -euo pipefail
 
-          "$BUILD_TOOLS/zipalign" -v -p 4 "$APK_SRC" /tmp/aligned.apk
-          "$BUILD_TOOLS/apksigner" sign \
+          # 找 release APK（universal/abi 都能兜底）
+          APK_SRC="$(find "${WORKING_DIR}/src-tauri/gen/android/app/build/outputs/apk" -type f -name "*.apk" | grep -E "/release/" | head -n 1 || true)"
+          if [ -z "$APK_SRC" ]; then
+            echo "❌ APK NOT FOUND"
+            find "${WORKING_DIR}/src-tauri/gen/android" -type f -name "*.apk" || true
+            exit 1
+          fi
+
+          echo "✅ APK_SRC=$APK_SRC"
+          file "$APK_SRC"
+          unzip -t "$APK_SRC" >/dev/null
+
+          mkdir -p dist
+
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
+          test -s /tmp/release.jks
+
+          BT="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS_VER}"
+
+          # zipalign + sign
+          "$BT/zipalign" -f -p 4 "$APK_SRC" /tmp/aligned.apk
+
+          SIGNED_APK="dist/chatly-${{ github.ref_name }}-signed.apk"
+          "$BT/apksigner" sign \
             --ks /tmp/release.jks \
             --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
             --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
@@ -105,9 +171,10 @@ jobs:
             --out "$SIGNED_APK" \
             /tmp/aligned.apk
 
+          "$BT/apksigner" verify --verbose "$SIGNED_APK"
           echo "signed_apk=$SIGNED_APK" >> $GITHUB_OUTPUT
 
-      - name: Create Release
+      - name: Upload signed APK to Release
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.sign.outputs.signed_apk }}
