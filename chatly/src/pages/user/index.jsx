@@ -5,6 +5,9 @@ import { Register } from "./register2";
 import { Settings } from "./settings";
 import { Agent } from "./settings/agent";
 import { MyList } from "./settings/setist";
+
+
+
 // 导出 User 相关的路由配置
 export const RsUser = (
   <Route path="user" element={<User />}>

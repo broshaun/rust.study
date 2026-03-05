@@ -5,7 +5,6 @@ import { useLogin, useUser, useHttpClient, useWinWidth } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { Button, Login, Row, InputText2, Container, Avatar, Modal } from "components";
 
-
 export function LogOn() {
     const navigate = useNavigate();
     const [account, setAccount] = useLocalStorageState('savedAccount')
@@ -46,7 +45,6 @@ export function LogOn() {
 
     return <React.Fragment>
 
-
         <Modal visible={open}>
             <Modal.Title>登录提示</Modal.Title>
             <Modal.Message>{msg}</Modal.Message>
@@ -82,7 +80,7 @@ export function LogOn() {
                 </Row>
             </Login.Input>
             <Login.Submit>
-                <br/>
+                <br />
                 <Row align="center" justify="center">
                     <Button position="center" size={{ width: '240px', height: '42px' }} onClick={() => { runLogin(account, password) }}>登录</Button>
                 </Row>

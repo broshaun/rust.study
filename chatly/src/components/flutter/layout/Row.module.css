@@ -1,0 +1,14 @@
+/* src/components/flutter/Row/Row.module.css */
+.row {
+  /* Flutter Row 基础重置 */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+}
+
+.spacing {
+  /* 间距元素不参与布局对齐 */
+  flex-shrink: 0;
+  height: 100%;
+}

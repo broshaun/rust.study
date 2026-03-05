@@ -1,0 +1,107 @@
+.textField {
+  /* Flutter TextField 基础重置 */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+/* 标签样式 */
+.label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 输入框容器 */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+/* 输入框基础样式 */
+.input {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #333;
+  background-color: transparent;
+}
+
+/* 装饰样式 - 无装饰 */
+.decoration-none .inputWrapper {
+  border-bottom: 1px solid #e5e5e5;
+}
+.decoration-none.focused .inputWrapper {
+  border-bottom-color: #007aff;
+}
+.decoration-none.hasError .inputWrapper {
+  border-bottom-color: #ff3b30;
+}
+
+/* 装饰样式 - 填充背景 */
+.decoration-filled .inputWrapper {
+  background-color: #f5f5f5;
+  border-radius: inherit;
+}
+.decoration-filled.focused .inputWrapper {
+  background-color: #f0f0f0;
+}
+.decoration-filled.hasError .inputWrapper {
+  background-color: #fff5f5;
+}
+
+/* 装饰样式 - 边框（Flutter 默认） */
+.decoration-outlined .inputWrapper {
+  border: 1px solid #e5e5e5;
+  border-radius: inherit;
+}
+.decoration-outlined.focused .inputWrapper {
+  border-color: #007aff;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+}
+.decoration-outlined.hasError .inputWrapper {
+  border-color: #ff3b30;
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.1);
+}
+
+/* 禁用状态 */
+.disabled .input {
+  color: #999;
+  cursor: not-allowed;
+}
+.disabled .inputWrapper {
+  opacity: 0.7;
+}
+
+/* 图标样式 */
+.prefixIcon, .suffixIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  color: #8e8e93;
+  cursor: pointer;
+}
+
+.suffixWrapper {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* 错误提示 */
+.errorText {
+  font-size: 12px;
+  color: #ff3b30;
+  margin-top: 2px;
+}
