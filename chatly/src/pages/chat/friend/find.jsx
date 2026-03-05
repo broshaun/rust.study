@@ -1,8 +1,9 @@
 import React, { useState, Suspense } from 'react';
-import { InputText2, Divider, Container } from 'components';
+import { InputText2, Container } from 'components';
 import { useHttpClient } from 'hooks';
 import { useRequest, useDebounce } from 'ahooks';
 import { UserInfoCard } from 'components/chat';
+import { Divider } from 'components/flutter';
 
 
 export const Find = () => {

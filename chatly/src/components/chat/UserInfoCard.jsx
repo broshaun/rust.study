@@ -1,183 +1,88 @@
-import React, { useState, useCallback } from 'react';
-import './UserInfoCard.css';
-
-// 默认头像（兜底使用）
-const DEFAULT_AVATAR = 'https://q1.qlogo.cn/g?b=qq&nk=0&s=640';
+import React, { useState } from 'react';
+import styles from './UserInfoCard.module.css';
 
 /**
- * 头像子组件
+ * 用户信息卡片
+ * @param {Object} data - 用户原始数据对象
  */
-const Avatar = ({ children, className, style }) => {
-  return (
-    <div className={`card-avatar ${className || ''}`} style={style}>
-      {children}
-    </div>
-  );
-};
-
-/**
- * 信息展示子组件
- */
-const Info = ({ children, className, style }) => {
-  const renderContent = () => {
-    // 如果 children 是一个普通对象（apiData），则按字段映射渲染
-    if (
-      typeof children === 'object' &&
-      children !== null &&
-      !Array.isArray(children) &&
-      !React.isValidElement(children)
-    ) {
-      const fieldMap = {
-        昵称: { key: 'nikename', default: '未设置' },
-        邮箱: { key: 'email', default: '未绑定' },
-      };
-
-      return Object.entries(fieldMap).map(([label, { key, default: defVal }]) => (
-        <div className="info-item" key={label}>
-          <span className="info-label">{label}：</span>
-          <span className="info-value">{children[key] || defVal}</span>
-        </div>
-      ));
-    }
-    return children;
-  };
-
-  return (
-    <div className={`card-info-content ${className || ''}`} style={style}>
-      {renderContent()}
-    </div>
-  );
-};
-
-/**
- * 用户信息卡片（按钮点击成功后变灰不可点，不隐藏组件）
- */
-const UserInfoCard = ({
+export const UserInfoCard = ({
   title = '用户核心信息',
-  onClick,
-  clickable = true,
-  onAddFriend,
-  refuseAdd,
-  refuseLoading = false,
-  refuseDisabled = false,
+  data = {}, // 建议直接传对象，避免遍历 children
+  onAction,  // 统一的操作回调 (type, id) => void
+  actionText = '添加好友',
   refuseText = '拒绝',
-  addFriendLoading = false,
-  addFriendDisabled = false,
-  children,
+  loading = false,
   background = '',
-  butText = '添加好友',
+  clickable = true,
+  children
 }) => {
-  // ✅ 成功后“已处理”状态：按钮变灰且不可点（不隐藏）
   const [handled, setHandled] = useState(false);
 
-  // 处理卡片点击（不影响按钮逻辑）
-  const handleCardClick = (e) => {
-    if (clickable && typeof onClick === 'function') {
-      onClick(e);
+  // 统一处理点击事件
+  const handleExecute = async (type) => {
+    if (loading || handled) return;
+    try {
+      if (onAction) await onAction(type, data.id);
+      setHandled(true);
+    } catch (err) {
+      console.error(`${type}操作失败:`, err);
     }
   };
 
-  // 获取用户ID
-  const getUserId = () => {
-    let userId = '';
-    React.Children.forEach(children, (child) => {
-      if (child?.type === Info) {
-        const infoData = child?.props?.children;
-        if (infoData?.id) userId = infoData.id;
-      }
-    });
-    return userId;
+  // 背景样式处理
+  const getCardStyle = () => {
+    if (!background) return {};
+    return background.includes('http') || background.includes('url(')
+      ? { backgroundImage: `url(${background})`, color: '#fff' }
+      : { backgroundColor: background };
   };
-
-  // 通过请求：成功后按钮变灰不可点
-  const handleAddFriend = useCallback(
-    async (e) => {
-      e.stopPropagation();
-      if (addFriendLoading || handled || addFriendDisabled) return;
-
-      try {
-        const userId = getUserId();
-        await onAddFriend?.({ id: userId });
-        setHandled(true);
-      } catch (err) {
-        console.error('通过请求失败：', err);
-      }
-    },
-    [onAddFriend, addFriendLoading, handled, addFriendDisabled]
-  );
-
-  // 拒绝请求：成功后按钮变灰不可点
-  const handleRefuseAdd = useCallback(
-    async (e) => {
-      e.stopPropagation();
-      if (refuseLoading || handled || refuseDisabled) return;
-
-      try {
-        const userId = getUserId();
-        await refuseAdd?.({ id: userId });
-        setHandled(true);
-      } catch (err) {
-        console.error('拒绝请求失败：', err);
-      }
-    },
-    [refuseAdd, refuseLoading, handled, refuseDisabled]
-  );
-
-  // 背景样式处理（保留原有逻辑）
-  const cardStyle = {};
-  const bgStr = String(background).trim();
-  if (bgStr) {
-    const isImageUrl = bgStr.includes('http') || bgStr.includes('url(');
-    if (isImageUrl) {
-      cardStyle.backgroundImage = bgStr.startsWith('url(') ? bgStr : `url(${bgStr})`;
-      cardStyle.backgroundSize = 'cover';
-      cardStyle.backgroundPosition = 'center';
-      cardStyle.backgroundRepeat = 'no-repeat';
-      cardStyle.color = '#ffffff';
-    } else {
-      cardStyle.backgroundColor = bgStr;
-    }
-  }
 
   return (
-    <div
-      className={`info-card ${clickable ? 'clickable' : ''}`}
-      onClick={handleCardClick}
-      style={{
-        cursor: clickable ? 'pointer' : 'default',
-        ...cardStyle,
-      }}
+    <div 
+      className={`${styles.card} ${clickable ? styles.clickable : ''}`}
+      style={getCardStyle()}
     >
-      <div className="card-title">{title}</div>
-
-      {/* ✅ 按钮始终显示：成功后变灰且不可点 */}
-      <div className="card-btn-group">
-        <button
-          className={`add-friend-btn ${addFriendLoading ? 'loading' : ''} ${handled ? 'disabled' : ''}`}
-          onClick={handleAddFriend}
-          disabled={addFriendLoading || addFriendDisabled || handled}
-        >
-          {handled ? '已处理' : addFriendLoading ? '处理中...' : butText}
-        </button>
-
-        {typeof refuseAdd === 'function' && (
+      <div className={styles.header}>
+        <span className={styles.title}>{title}</span>
+        <div className={styles.btnGroup}>
           <button
-            className={`refuse-friend-btn ${refuseLoading ? 'loading' : ''} ${handled ? 'disabled' : ''}`}
-            onClick={handleRefuseAdd}
-            disabled={refuseLoading || refuseDisabled || handled}
+            className={`${styles.btn} ${styles.primary} ${handled ? styles.disabled : ''}`}
+            onClick={(e) => { e.stopPropagation(); handleExecute('accept'); }}
+            disabled={loading || handled}
           >
-            {handled ? '已处理' : refuseLoading ? '拒绝中...' : refuseText}
+            {handled ? '已处理' : loading ? '...' : actionText}
           </button>
-        )}
+          
+          <button
+            className={`${styles.btn} ${styles.danger} ${handled ? styles.disabled : ''}`}
+            onClick={(e) => { e.stopPropagation(); handleExecute('refuse'); }}
+            disabled={loading || handled}
+          >
+            {handled ? '已处理' : refuseText}
+          </button>
+        </div>
       </div>
 
-      {/* 内容区域始终显示 */}
-      <div className="card-content-wrapper">{children}</div>
+      <div className={styles.content}>
+        {/* 如果没有传 children，则默认渲染 data 中的信息 */}
+        {children || (
+          <>
+            <div className={styles.avatarWrapper}>
+              <img src={data.avatar || '/favicon.png'} alt="avatar" />
+            </div>
+            <div className={styles.infoBody}>
+              <div className={styles.infoRow}>
+                <span className={styles.label}>昵称：</span>
+                <span className={styles.value}>{data.nickname || '未设置'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.label}>邮箱：</span>
+                <span className={styles.value}>{data.email || '未绑定'}</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
-
-UserInfoCard.Avatar = Avatar;
-UserInfoCard.Info = Info;
-
-export { UserInfoCard };
