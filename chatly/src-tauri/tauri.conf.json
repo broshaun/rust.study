@@ -5,7 +5,7 @@
   "identifier": "com.chatly.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://192.168.0.104:3000",
+    "devUrl": "http://192.168.2.1:3000",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
