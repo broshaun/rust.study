@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useLocalStorageState, useRequest } from 'ahooks';
-import { InputText2, Container, Modal, Button, Row, IconCustomColor, Col } from 'components';
+
 import { useHttpClient } from 'hooks/http';
 import { useNavigate } from 'react-router-dom';
+import { Modal, } from 'components';
+import { Button, TextField, Row, SizedBox, Center, Divider } from 'components/flutter';
 
 
 export const Agent = () => {
@@ -32,27 +34,31 @@ export const Agent = () => {
 
 
 
-    return <Container alignItems='center'>
+    return <Center>
         <Modal visible={open}>
             <Modal.Title>测试连接</Modal.Title>
             <Modal.Message>{msg}</Modal.Message>
             <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
         </Modal>
-        <br />
+        <h3>测试连接</h3>
+        <SizedBox height={10} />
+        <Divider indent={40} endIndent={40} color="#eeeeee" />
+        <SizedBox height={20} />
         <Row>
-            <Col span={1} >
-                <IconCustomColor name='chevron-left' onClick={() => { navigate('/user/settings/setlist/') }} />
-            </Col>
-            <Col span={5} />
+            <TextField
+                label='代理'
+                hintText='输入代理地址'
+                value={apiBase}
+                onChanged={(value) => { setApiBase(value); }}
+            />
         </Row>
-        <Row gap={20} align="center" justify="center">
-            <InputText2 defaultValue={apiBase} onChangeValue={(value) => { setApiBase(value); setIsUpdate(true); }}>
-                <InputText2.Left label='地址' />
-            </InputText2>
-            {isUpdate
-                ? <Button position="center" size={{ width: '25%', height: '42px' }} onClick={() => { navigate('/user/settings/setlist/') }}>确定</Button>
-                : <Button position="center" size={{ width: '25%', height: '42px' }} onClick={() => { ping(); setOpen(true); }}>ping</Button>
-            }
+        <SizedBox height={20} />
+        <Row mainAxisAlignment="center">
+            <Button
+                label='测试'
+                onPressed={() => { ping(); setOpen(true); }}
+            />
         </Row>
-    </Container>
+        <SizedBox height={150} />
+    </Center>
 }
