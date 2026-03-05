@@ -24,8 +24,16 @@ export const AppBar = ({ title, iconDrawer = 'menu', onDrawerClick, showDrawerBt
 
 /**
  * Flutter 风格 Scaffold
+ * 整合了 AppBar, Drawer, Body, bottomNavigationBar 和 backgroundColor
  */
-export const Scaffold = ({ appBar, drawerMenu = [], drawerTitle = "控制台", body }) => {
+export const Scaffold = ({ 
+  appBar, 
+  drawerMenu = [], 
+  drawerTitle = "控制台", 
+  body, 
+  bottomNavigationBar, 
+  backgroundColor 
+}) => {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const hasDrawer = drawerMenu.length > 0;
 
@@ -33,15 +41,20 @@ export const Scaffold = ({ appBar, drawerMenu = [], drawerTitle = "控制台", b
     if (hasDrawer) setDrawerOpen(prev => !prev);
   }, [hasDrawer]);
 
+  // 动态背景样式处理
+  const scaffoldStyle = {
+    backgroundColor: backgroundColor || '#fafafa'
+  };
+
   return (
-    <div className={styles.scaffold}>
+    <div className={styles.scaffold} style={scaffoldStyle}>
       {/* 1. AppBar 区域 */}
       {appBar && React.cloneElement(appBar, { 
         onDrawerClick: toggleDrawer,
         showDrawerBtn: hasDrawer 
       })}
 
-      {/* 2. Drawer 区域 */}
+      {/* 2. Drawer 侧边栏 */}
       {hasDrawer && (
         <>
           <div 
@@ -71,8 +84,18 @@ export const Scaffold = ({ appBar, drawerMenu = [], drawerTitle = "控制台", b
         </>
       )}
 
-      {/* 3. Body 区域 */}
-      <main className={styles.body}>{body}</main>
+      {/* 3. Body 内容区域 */}
+      <main className={styles.body}>
+        {body}
+      </main>
+
+      {/* 4. BottomNavigationBar 底部导航区域 */}
+      {bottomNavigationBar && (
+        <footer className={styles.bottomBar}>
+          {bottomNavigationBar}
+          <div className={styles.safeAreaBottom} />
+        </footer>
+      )}
     </div>
   );
 };
