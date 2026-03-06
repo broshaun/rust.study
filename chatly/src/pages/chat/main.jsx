@@ -57,6 +57,9 @@ export function Chat() {
   if (!isMobile) {
     return (
       <DesktopShell>
+        {/* <DesktopShell.Header>
+        <AppBar title={title} /> 
+        </DesktopShell.Header> */}
         <DesktopShell.Left width={80}>
           <Center>
             <SizedBox height={20} />
@@ -75,7 +78,7 @@ export function Chat() {
           </Center>
         </DesktopShell.Left>
         <DesktopShell.Content>
-          <AppBar title={title} />
+
           <Outlet />
         </DesktopShell.Content>
       </DesktopShell>

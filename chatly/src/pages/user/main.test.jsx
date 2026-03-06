@@ -4,7 +4,7 @@ import { AppBar, Container, Center, Padding, AppShell, Drawer, ListView, Divider
 
 
 
-export function User() {
+export function User2() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('主页')
 

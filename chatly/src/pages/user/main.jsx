@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
-import { AppBar, Container, Center, Padding, AppShell, Drawer, ListView, Divider, Icon, Heading } from 'components/flutter';
+import { AppBar, Container, Center, Padding, AppShell, Drawer, ListView, Divider, Icon } from 'components/flutter';
 
 
 
@@ -21,31 +21,31 @@ export function User() {
     item.onTap();
     setOpen(false);
   };
-  return (
+  return <React.Fragment>
+    <Drawer isOpen={open} onClose={() => setOpen(false)} width={150}>
+      <Padding>
+        <Center alignment='bottom'>
+          <h3>导航</h3>
+        </Center>
+      </Padding>
+      <Divider />
+      <Padding>
+        <ListView>
+          {drawerMenu.filter(i => i.display !== false).map((item) =>
+            <Padding value={5}>
+              <Icon
+                name={item?.icon.name}
+                label={item?.icon.label}
+                onClick={() => handleItemClick(item)}
+                labelPos='right'
+              />
+            </Padding>
+          )}
+        </ListView>
+      </Padding>
+    </Drawer>
 
     <AppShell>
-      <Drawer width={150} isOpen={open} onClose={() => setOpen(false)}>
-        <Padding>
-          <Center>
-            <h3>菜单</h3>
-          </Center>
-        </Padding>
-        <Divider />
-        <Padding>
-          <ListView>
-            {drawerMenu.filter(i => i.display !== false).map((item) =>
-              <Padding value={5}>
-                <Icon
-                  name={item?.icon.name}
-                  label={item?.icon.label}
-                  onClick={() => handleItemClick(item)}
-                  labelPos='right'
-                />
-              </Padding>
-            )}
-          </ListView>
-        </Padding>
-      </Drawer>
 
       <AppShell.Header>
         <AppBar title={title} leading="menu" onLeadingClick={() => setOpen(true)} />
@@ -65,5 +65,5 @@ export function User() {
     </AppShell>
 
 
-  );
+  </React.Fragment>
 };

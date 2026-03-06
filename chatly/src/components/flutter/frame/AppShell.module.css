@@ -5,27 +5,19 @@
   height: 100dvh;
   background: var(--app-bg);
   overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: relative;
 }
 
 .header {
-  /* 核心：实际高度 = 刘海高度 + 业务高度 */
-  height: calc(env(safe-area-inset-top, 0px) + var(--h, 56) * 1px);
-  padding-top: env(safe-area-inset-top, 0px);
-  
+  height: calc(var(--h, 56) * 1px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end; /* 将 AppBar 压到底部，避开刘海 */
-  
+  align-items: flex-end; /* 确保内容在刘海下方对齐 */
   background: var(--panel-bg);
-  backdrop-filter: var(--panel-blur);
-  -webkit-backdrop-filter: var(--panel-blur);
-  border-bottom: var(--panel-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  z-index: 100;
-  box-sizing: border-box;
 }
 
 .content {
@@ -34,24 +26,8 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.footer {
-  /* 实际高度 = 底部小黑条 + 业务高度 */
-  height: calc(env(safe-area-inset-bottom, 0px) + var(--f, 64) * 1px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  
-  background: var(--panel-bg);
-  backdrop-filter: var(--panel-blur);
-  border-top: var(--panel-border);
-  flex-shrink: 0;
-  z-index: 100;
-  box-sizing: border-box;
-}
-
 .header, .footer {
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  box-sizing: border-box;
 }
