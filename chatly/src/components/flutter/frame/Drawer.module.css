@@ -1,0 +1,42 @@
+.drawerContainer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  visibility: hidden;
+}
+.drawerContainer.open {
+  visibility: visible;
+}
+.mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+.open .mask {
+  opacity: 1;
+}
+.content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  /* 核心：确保背景色有足够的对比度 */
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+  border-right: var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* 关键：确保内部元素不继承任何模糊滤镜 */
+  filter: none !important; 
+}
+.open .content {
+  transform: translateX(0);
+}

@@ -1,0 +1,25 @@
+.listView {
+  display: flex;
+  width: 100%;
+  height: 100%; /* 填满父级 Container */
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* 开启硬件加速，确保滚动不掉帧 */
+  -webkit-overflow-scrolling: touch;
+  
+  /* 移除列表特有的间隙污染 */
+  margin: 0;
+  list-style: none;
+}
+
+/* 针对水平滚动的扩展支持 */
+.listView[style*="flex-direction: row"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* 隐藏滚动条（出口系统追求极简视觉） */
+.listView::-webkit-scrollbar {
+  display: none;
+}

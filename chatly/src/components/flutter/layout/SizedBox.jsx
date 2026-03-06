@@ -1,24 +1,30 @@
 import React from 'react';
 
 /**
- * Flutter 风格 SizedBox 组件
- * 用于精确控制组件间的间距或固定容器尺寸
+ * SizedBox - 万能布局占位器
+ * 职责：提供绝对精确的间距，确保在任何皮肤材质下布局不坍塌。
  */
-export const SizedBox = ({ width, height, child, children }) => {
-  const content = child || children;
-  
-  const style = {
-    // 自动处理数字（转为px）或字符串
-    width: typeof width === 'number' ? `${width}px` : width,
-    height: typeof height === 'number' ? `${height}px` : height,
-    // 防止在 Flex 布局中被压缩
+export const SizedBox = ({ width, height, children, style }) => {
+  const boxStyle = {
+    // 1. 尺寸锁定
+    width: typeof width === 'number' ? `${width}px` : width || (children ? 'auto' : '0px'),
+    height: typeof height === 'number' ? `${height}px` : height || (children ? 'auto' : '0px'),
+    
+    // 2. 布局约束
+    display: children ? 'inline-block' : 'block',
     flexShrink: 0, 
-    display: content ? 'block' : 'inline-block'
+    flexGrow: 0,
+    
+    // 3. 细节修正：消除行内元素的基线对齐导致的细微位移
+    verticalAlign: 'middle',
+    boxSizing: 'border-box',
+    
+    // 确保即便是有 children 时，背景逻辑也不会干扰整体皮肤
+    backgroundColor: 'transparent',
+    ...style
   };
 
-  return (
-    <div style={style}>
-      {content}
-    </div>
-  );
+  return <div style={boxStyle}>{children}</div>;
 };
+
+export default SizedBox;

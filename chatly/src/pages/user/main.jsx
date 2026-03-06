@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
-import { Scaffold, AppBar, Container, Center, Padding } from 'components/flutter';
+import { AppBar, Container, Center, Padding, AppShell, Drawer, ListView, Divider, Icon, Heading } from 'components/flutter';
 
 
 
@@ -30,27 +30,57 @@ export function User() {
     </div>
   );
 
+  const [open, setOpen] = useState(false);
+  const handleItemClick = (item) => {
+    if (!item) return;
+    item.onTap();
+    setOpen(false);
+  };
   return (
-    <Scaffold
-      appBar={
-        <AppBar title={title} iconDrawer="menu" />
-      }
-      drawerTitle="首页"
-      drawerMenu={drawerMenu}
 
-      body={
-        <Padding value={32}>
-          <Center mode='vertical'>
-            <Container width={380} >
-              <Outlet />
-            </Container>
+    <AppShell>
+      <Drawer width={150} isOpen={open} onClose={() => setOpen(false)}>
+        <Padding>
+          <Center>
+            <h3>菜单</h3>
           </Center>
         </Padding>
-      }
+        <Divider />
+        <Padding>
+          <ListView>
+            {drawerMenu.filter(i => i.display !== false).map((item) =>
+              <Padding value={5}>
+                <Icon
+                  name={item?.icon.name}
+                  label={item?.icon.label}
+                  onClick={() => handleItemClick(item)}
+                  labelPos='right'
+                />
+              </Padding>
+            )}
+          </ListView>
+        </Padding>
+      </Drawer>
 
-      bottomNavigationBar={renderBottomNav}
+      <AppShell.Header>
+        <AppBar title={title} leading="menu" onLeadingClick={() => setOpen(true)} />
+        {renderBottomNav}
+      </AppShell.Header>
+      <AppShell.Content>
+        <Center>
+          <Container width={380} >
+            <Padding>
+              <Outlet />
+            </Padding>
+          </Container>
+        </Center>
+      </AppShell.Content>
+      <AppShell.Footer>
+        {renderBottomNav}
+      </AppShell.Footer>
+    </AppShell>
 
-    />
+
   );
 };
 

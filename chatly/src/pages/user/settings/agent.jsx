@@ -4,7 +4,7 @@ import { useLocalStorageState, useRequest } from 'ahooks';
 import { useHttpClient } from 'hooks/http';
 import { useNavigate } from 'react-router-dom';
 import { Modal, } from 'components';
-import { Button, TextField, Row, SizedBox, Center, Divider } from 'components/flutter';
+import { Button, TextField, Row, SizedBox, Center, Divider, Right } from 'components/flutter';
 
 
 export const Agent = () => {
@@ -53,11 +53,13 @@ export const Agent = () => {
             />
         </Row>
         <SizedBox height={20} />
-        <Row mainAxisAlignment="center">
-            <Button
-                label='测试'
-                onPressed={() => { ping(); setOpen(true); }}
-            />
+        <Row>
+            <Right>
+                <Button
+                    label='测试'
+                    onPressed={() => { ping(); setOpen(true); }}
+                />
+            </Right>
         </Row>
         <SizedBox height={150} />
     </Center>

@@ -2,25 +2,33 @@
   display: inline-flex;
   align-items: center;
   height: 40px;
-  border: 1px solid rgba(34, 36, 38, .15);
-  border-radius: 6px;
-  background: #ffffff;
+  /* --- 核心：接入通用皮肤变量 --- */
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+  border: var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  border-radius: 12px; /* 配合液态玻璃的大圆角 */
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
 .inputContainer:focus-within {
-  border-color: var(--primary-color);
+  /* 聚焦时使用皮肤的强调色 */
+  border-color: var(--accent-color);
+  box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.2); 
 }
 
 .leftLabel {
   height: 100%;
   padding: 0 14px;
-  background-color: #f9f9f9;
-  border-right: 1px solid rgba(34, 36, 38, .15);
-  color: #666666;
+  /* 制造比背景稍深的色块，产生“蚀刻”或“嵌入”感 */
+  background-color: rgba(0, 0, 0, 0.05); 
+  border-right: var(--panel-border);
+  color: var(--text-primary);
   font-size: 14px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   white-space: nowrap;
@@ -37,14 +45,15 @@
   outline: none;
   background: transparent;
   font-size: 15px;
-  color: #212121;
+  color: var(--text-primary); /* 确保文字颜色随皮肤切换 */
 }
 
 .input::placeholder {
-  color: #cccccc;
+  color: var(--text-secondary);
+  opacity: 0.6;
 }
 
 .disabled {
-  background: #f5f5f5;
+  opacity: 0.5;
   cursor: not-allowed;
 }

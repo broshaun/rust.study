@@ -1,0 +1,53 @@
+.appBar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px; /* 增加一点边距，更符合手机端直觉 */
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.leading, .actions {
+  display: flex;
+  align-items: center;
+  min-width: 40px; /* 保证即便没内容也占个坑，方便标题居中 */
+  z-index: 2;
+}
+
+.actions {
+  justify-content: flex-end;
+}
+
+.title {
+  position: absolute; /* 绝对定位确保在任何情况下都完美居中 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%; /* 限制宽度防止遮挡两侧按钮 */
+  text-align: center;
+  font-weight: 600;
+  font-size: 17px;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none; /* 防止遮挡两侧按钮的点击 */
+}
+
+.iconBtn {
+  border: none;
+  background: transparent;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent; /* 去除移动端点击蓝框 */
+}
+
+.iconBtn:active {
+  background-color: #f5f5f5;
+}

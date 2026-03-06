@@ -61,31 +61,37 @@ export function Register() {
             <SizedBox height={10} />
             <Divider indent={40} endIndent={40} color="#eeeeee" />
             <SizedBox height={40} />
-            <Row mainAxisAlignment="center">
-                <TextField
-                    label="账号"
-                    width="70%"
-                    hintText="请输入账号"
-                    value={account}
-                    onChanged={(value) => setAccount(value)}
-                />
+            <Row >
+                <Center>
+                    <TextField
+                        label="账号"
+                        width="70%"
+                        hintText="请输入账号"
+                        value={account}
+                        onChanged={(value) => setAccount(value)}
+                    />
+                </Center>
             </Row >
             <SizedBox height={5} />
-            <Row mainAxisAlignment="center">
-                <TextField
-                    label="密码"
-                    width="70%"
-                    hintText="请输入密码"
-                    obscureText={true}
-                    value={password}
-                    onChanged={(value) => setPassword(value)}
-                />
+            <Row>
+                <Center>
+                    <TextField
+                        label="密码"
+                        width="70%"
+                        hintText="请输入密码"
+                        obscureText={true}
+                        value={password}
+                        onChanged={(value) => setPassword(value)}
+                    />
+                </Center>
             </Row>
             <SizedBox height={10} />
-            <Row mainAxisAlignment="center" >
-                <Button label='注册' width="70%"
-                    onPressed={() => { runLogin(account, password) }}
-                />
+            <Row >
+                <Center>
+                    <Button label='注册' width="70%"
+                        onPressed={() => { runLogin(account, password) }}
+                    />
+                </Center>
             </Row>
         </Center>
 

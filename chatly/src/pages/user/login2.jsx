@@ -1,11 +1,11 @@
-import { Button, TextField, Row, SizedBox, Center, Divider } from 'components/flutter';
+
 import { Avatar, Modal } from "components";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useLogin, useHttpClient, useWinWidth } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage } from 'hooks/http';
-
+import { Button, TextField, Row, SizedBox, Center, Divider } from 'components/flutter';
 
 
 export function LogOn() {
@@ -67,31 +67,38 @@ export function LogOn() {
             <SizedBox height={10} />
             <Divider indent={40} endIndent={40} color="#eeeeee" />
             <SizedBox height={40} />
-            <Row mainAxisAlignment="center">
-                <TextField
-                    label="账号"
-                    width="70%"
-                    hintText="请输入账号"
-                    value={account}
-                    onChanged={(value) => setAccount(value)}
-                />
+            <Row>
+                <Center>
+                    <TextField
+                        label="账号"
+                        width="70%"
+                        hintText="请输入账号"
+                        value={account}
+                        onChanged={(value) => setAccount(value)}
+                    />
+                </Center>
             </Row >
             <SizedBox height={5} />
-            <Row mainAxisAlignment="center">
-                <TextField
-                    label="密码"
-                    width="70%"
-                    hintText="请输入密码"
-                    obscureText={true}
-                    value={password}
-                    onChanged={(value) => setPassword(value)}
-                />
+            <Row>
+                <Center>
+                    <TextField
+                        label="密码"
+                        width="70%"
+                        hintText="请输入密码"
+                        obscureText={true}
+                        value={password}
+                        onChanged={(value) => setPassword(value)}
+                    />
+                </Center>
             </Row>
             <SizedBox height={10} />
+
             <Row mainAxisAlignment="center" >
-                <Button label='登录' width="70%"
-                    onPressed={() => { runLogin(account, password) }}
-                />
+                <Center>
+                    <Button label='登录' width="70%"
+                        onPressed={() => { runLogin(account, password) }}
+                    />
+                </Center>
             </Row>
         </Center>
     </React.Fragment>

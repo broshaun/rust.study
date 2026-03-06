@@ -1,19 +1,20 @@
 .container {
-  /* 基础复位：极其精简 */
   outline: none;
   border: none;
   display: block;
   box-sizing: border-box;
+  /* 确保换肤时背景与阴影的过渡丝滑 */
+  transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.1s ease;
 }
 
-/* 仅在明确需要点击时才激活的“硅胶感”反馈 */
+/* 激活“硅胶感”反馈 */
 .clickable {
   cursor: pointer;
-  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none; /* 防止长按选中文本，更像 App */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .clickable:active {
-  transform: scale(0.98);
-  filter: brightness(0.92); /* 稍微加深一点暗度，反馈更明确 */
+  transform: scale(0.97); /* 略微深一点的下陷感 */
+  filter: brightness(0.95);
 }
