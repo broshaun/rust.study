@@ -1,31 +1,3 @@
-### 生成 keystore（macOS
-
-keytool -genkeypair \
-  -keystore chatly-release.jks \
-  -storetype JKS \
-  -alias chatly \
-  -keyalg RSA -keysize 2048 -validity 10000
-
-
-git tag android-v1.0.19
-git push origin android-v1.0.19
-
-
-
-
-## 安卓项目
-cargo tauri android init
-
-
-1. 强行建立安卓目录结构
-mkdir -p src-tauri/gen/android/app/src/main
-
-
-2. 直接写入 AndroidManifest.xml
-执行以下命令，直接把锁死竖屏的完整代码灌入该路径：
-
-```shell
-cat <<EOF > src-tauri/gen/android/app/src/main/AndroidManifest.xml
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -51,5 +23,3 @@ cat <<EOF > src-tauri/gen/android/app/src/main/AndroidManifest.xml
     </application>
 
 </manifest>
-EOF
-```

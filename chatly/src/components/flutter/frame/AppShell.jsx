@@ -1,8 +1,12 @@
 import React, { Children, isValidElement } from 'react';
 import styles from './AppShell.module.css';
 
+/**
+ * Scaffold (AppShell) - 移动端精简脚手架
+ * 职责：适配刘海屏安全区，支持动态高度。
+ */
 export const AppShell = ({ children }) => {
-  const subComponents = Children.toArray(children).reduce((acc, child) => {
+  const sub = Children.toArray(children).reduce((acc, child) => {
     if (isValidElement(child)) {
       if (child.type === AppShell.Header) acc.header = child;
       if (child.type === AppShell.Footer) acc.footer = child;
@@ -13,45 +17,37 @@ export const AppShell = ({ children }) => {
 
   return (
     <div className={styles.appShell}>
-      {subComponents.header && (
+      {sub.header && (
         <header 
           className={styles.header} 
-          style={{ '--header-height': typeof subComponents.header.props.height === 'number' ? `${subComponents.header.props.height}px` : subComponents.header.props.height }}
+          style={{ '--h': sub.header.props.height || 56 }}
         >
-          {subComponents.header}
+          {sub.header}
         </header>
       )}
 
       <main className={styles.content}>
-        {subComponents.content}
+        {sub.content}
       </main>
 
-      {subComponents.footer && (
+      {sub.footer && (
         <footer 
           className={styles.footer} 
-          style={{ '--footer-height': typeof subComponents.footer.props.height === 'number' ? `${subComponents.footer.props.height}px` : subComponents.footer.props.height }}
+          style={{ '--f': sub.footer.props.height || 64 }}
         >
-          {subComponents.footer}
+          {sub.footer}
         </footer>
       )}
     </div>
   );
 };
 
-// --- 子组件挂载 ---
-AppShell.Header = ({ children, height = 56, style }) => (
-  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', ...style }}>{children}</div>
-);
+// 子组件挂载
+AppShell.Header = ({ children, height = 56 }) => <>{children}</>;
+AppShell.Footer = ({ children, height = 64 }) => <>{children}</>;
+AppShell.Content = ({ children }) => <>{children}</>;
 
-AppShell.Footer = ({ children, height = 64, style }) => (
-  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', ...style }}>{children}</div>
-);
-
-AppShell.Content = ({ children, style }) => (
-  <div style={{ width: '100%', height: '100%', ...style }}>{children}</div>
-);
-
-// --- 别名导出 ---
+// 别名导出
 export const Scaffold = AppShell;
 Scaffold.Header = AppShell.Header;
 Scaffold.Footer = AppShell.Footer;
