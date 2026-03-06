@@ -5,7 +5,7 @@
 }
 
 /* 1. 极致毛玻璃 (Ultra Glass) */
-:root,[data-theme='glass'] {
+ :root, [data-theme='glass'] {
   --app-bg: fixed linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
   --panel-bg: rgba(255, 255, 255, 0.45); /* 提高白场，防止透底太杂 */
   --panel-blur: blur(20px);
@@ -17,13 +17,13 @@
   --accent-color: #3b82f6;
 }
 
+
 /* 2. 乳胶温润 (Latex Soft) - 优化了色彩厚度 */
 [data-theme='light'] {
   --app-bg: #f4f4f9; 
   --panel-bg: rgba(255, 255, 255, 0.96); 
   --panel-blur: blur(10px); 
   --panel-border: 1px solid rgba(255, 255, 255, 1); 
-  /* 增加内阴影模拟边缘厚度 */
   --panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 1);
   --text-primary: #1c1c1e;
   --text-primary-rgb: 28, 28, 30;
@@ -38,7 +38,6 @@
   --panel-bg: rgba(13, 25, 41, 0.85);
   --panel-blur: blur(15px);
   --panel-border: 1px solid rgba(76, 201, 240, 0.5);
-  /* 发光投影 */
   --panel-shadow: 0 0 20px rgba(76, 201, 240, 0.15), inset 0 0 10px rgba(76, 201, 240, 0.05);
   --text-primary: #e0f7fa;
   --text-primary-rgb: 224, 247, 250;
@@ -47,7 +46,7 @@
 }
 
 /* 4. 沙漠绿洲 (Oasis Luxury) - 增加了丝绒感 */
-[data-theme='oasis'] {
+ [data-theme='oasis'] {
   --app-bg: #ebe3d5;
   --panel-bg: rgba(255, 251, 245, 0.7);
   --panel-blur: blur(12px);
@@ -60,7 +59,7 @@
 }
 
 /* 5. 液态玻璃 (Liquid Shine) - 强化高光 */
- [data-theme='liquid'] {
+[data-theme='liquid'] {
   --app-bg: linear-gradient(160deg, #dbeafe 0%, #f8fafc 100%);
   --panel-bg: rgba(255, 255, 255, 0.35);
   --panel-blur: blur(18px);

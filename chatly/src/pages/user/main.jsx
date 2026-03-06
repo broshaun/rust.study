@@ -48,7 +48,7 @@ export function User() {
     <AppShell>
 
       <AppShell.Header>
-        <AppBar title={title} leading="menu" onLeadingClick={() => setOpen(true)} />
+        <AppBar leading="menu" onLeadingClick={() => setOpen(true)} />
 
       </AppShell.Header>
       <AppShell.Content>

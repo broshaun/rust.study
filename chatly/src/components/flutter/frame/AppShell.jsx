@@ -1,34 +1,53 @@
 import React, { Children, isValidElement } from 'react';
 import styles from './AppShell.module.css';
 
+/**
+ * 全平台沉浸式 AppShell (Scaffold)
+ * 职责：适配 iOS 刘海屏与 macOS 透明标题栏，支持 7 套主题融合。
+ */
 export const AppShell = ({ children }) => {
-  const slots = Children.toArray(children).reduce((acc, child) => {
-    if (isValidElement(child)) {
-      const type = child.type.displayName;
-      if (type === 'Header') acc.header = child;
-      else if (type === 'Footer') acc.footer = child;
-      else acc.content.push(child);
-    }
-    return acc;
-  }, { header: null, footer: null, content: [] });
+  const childrenArray = Children.toArray(children);
+  
+  // 精准识别插槽组件
+  const header = childrenArray.find(c => c.type === AppShell.Header);
+  const footer = childrenArray.find(c => c.type === AppShell.Footer);
+  const content = childrenArray.find(c => c.type === AppShell.Content) || childrenArray.filter(c => c.type !== AppShell.Header && c.type !== AppShell.Footer);
 
   return (
     <div className={styles.appShell}>
-      {slots.header && (
-        <header className={styles.header} style={{ '--h': slots.header.props.height || 56 }}>
-          {slots.header}
+      {header && (
+        <header 
+          className={styles.header} 
+          style={{ '--h': header.props.height || 56 }}
+          data-tauri-drag-region /* 允许在 Mac/Windows 顶栏拖动窗口 */
+        >
+          {header}
         </header>
       )}
-      <main className={styles.content}>{slots.content}</main>
-      {slots.footer && (
-        <footer className={styles.footer} style={{ '--f': slots.footer.props.height || 64 }}>
-          {slots.footer}
+
+      <main className={styles.content}>
+        {content}
+      </main>
+
+      {footer && (
+        <footer 
+          className={styles.footer} 
+          style={{ '--f': footer.props.height || 64 }}
+        >
+          {footer}
         </footer>
       )}
     </div>
   );
 };
 
-AppShell.Header = Object.assign(({ children }) => <>{children}</>, { displayName: 'Header' });
-AppShell.Footer = Object.assign(({ children }) => <>{children}</>, { displayName: 'Footer' });
-AppShell.Content = Object.assign(({ children }) => <>{children}</>, { displayName: 'Content' });
+// 定义子组件并设置识别标识
+AppShell.Header = ({ children }) => <div className={styles.innerSlot}>{children}</div>;
+AppShell.Footer = ({ children }) => <>{children}</>;
+AppShell.Content = ({ children }) => <>{children}</>;
+
+// 别名导出（Flutter 习惯）
+export const Scaffold = AppShell;
+Scaffold.Header = AppShell.Header;
+Scaffold.Footer = AppShell.Footer;
+Scaffold.Content = AppShell.Content;
