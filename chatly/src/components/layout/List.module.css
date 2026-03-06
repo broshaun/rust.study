@@ -1,90 +1,55 @@
-/* 核心容器：移除固定min-height，改为自适应 + 溢出滚动 */
 .listContainer {
-  position: relative;
   width: 100%;
-  /* 移除固定min-height，避免高度限制导致内容截断 */
-  min-height: auto;
-  max-height: 400px; /* 可选：设置最大高度，避免过长 */
   box-sizing: border-box;
-  overflow-y: auto; /* 内容超出时显示滚动条 */
-  background-color: #f9f9f9; /* 超浅灰（始终生效） */
-  /* 新增：去掉overflow:hidden，允许内容溢出时滚动 */
-  overflow: visible;
+  /* 接入皮肤，但列表容器通常保持背景透明，由 Item 承载材质 */
+  background: transparent;
 }
 
-/* Items 层：改为相对定位，自适应内容高度 */
 .itemsLayer {
-  position: relative; /* 从absolute改为relative，避免高度继承截断 */
   width: 100%;
-  /* 移除固定height:100%，改为自适应 */
-  height: auto;
-  padding: 8px 12px;
-  box-sizing: border-box;
-  z-index: 1; /* 底层 */
-  background-color: #f9f9f9; /* 同容器超浅灰 */
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* 增加微小间距，让 Item 更有颗粒感 */
 }
 
-/* 列表项样式：浅灰底色，取消悬浮/点击背景变化 */
 .item {
   display: flex;
   align-items: center;
   height: var(--item-height);
+  padding: 0 12px;
   cursor: pointer;
-  background: #fafafa !important; /* 固定浅灰底色，不再变化 */
   -webkit-tap-highlight-color: transparent;
-  border-radius: 4px; /* 轻微圆角，弱化浅灰的生硬感 */
-  /* 新增：确保每个项完整显示 */
-  width: 100%;
-  box-sizing: border-box;
+  transition: all 0.2s ease;
+  
+  /* 列表项材质：接入皮肤变量 */
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+  color: var(--text-primary);
 }
 
-/* 取消 focus/active/hover 时的背景色变化 */
-.item:focus,
-.item:active,
-.item:hover {
-  background: #fafafa !important; /* 保持和默认状态一致的背景色 */
-  outline: none;
+/* 激活反馈：硅胶感缩放 */
+.item:active {
+  transform: scale(0.98);
+  filter: brightness(0.9);
 }
 
-/* 分隔线：极浅灰，适配浅灰背景 */
+/* 分隔线：使用皮肤统一边框色 */
 .divider {
-  border-bottom: 1px solid #f0f0f0; /* 极浅灰分隔线 */
+  border-bottom: 1px solid var(--panel-border);
 }
 
-/* 图标容器：移除图标颜色控制，让图标使用默认色 */
 .icon {
   display: flex;
-  align-items: center;
-  justify-content: center;
   margin-right: var(--icon-label-gap);
-  /* 新增：防止图标挤压 */
   flex-shrink: 0;
 }
 
-/* 文本标签：浅灰背景下文字更清晰，支持换行 */
 .label {
   font-size: var(--label-font-size);
-  color: #757575; /* 中灰文字 */
+  color: inherit; /* 继承 Item 的文字色 */
   font-weight: 500;
-  user-select: none;
-  transition: color 0.1s ease;
-  /* 新增：支持长文本换行，避免截断 */
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-/* 保留文字点击变色（如需取消可删除这行） */
-.item:active .label {
-  color: #333333; /* 点击后文字稍深 */
-}
-
-/* Content 层：透明背景，保留（兼容原有逻辑） */
-.contentLayer {
-  position: relative;
-  z-index: 10; /* 上层，覆盖 Items */
-  width: 100%;
-  min-height: 100%;
-  padding: 8px 12px;
-  box-sizing: border-box;
-  background-color: transparent; /* 透明，不遮挡 Container 主题 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 出口清单通常需要截断以保持整齐 */
 }

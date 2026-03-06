@@ -1,20 +1,15 @@
 import { useState } from 'react';
 import { useLocalStorageState, useRequest } from 'ahooks';
-
 import { useHttpClient } from 'hooks/http';
-import { useNavigate } from 'react-router-dom';
 import { Modal, } from 'components';
 import { Button, TextField, Row, SizedBox, Center, Divider, Right } from 'components/flutter';
 
 
 export const Agent = () => {
-    const navigate = useNavigate()
     const [apiBase, setApiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
     const { http } = useHttpClient('/api/chat/ping')
-
-
 
     const { runAsync: ping } = useRequest(() => {
         http.requestParams('GET').then((results) => {
@@ -30,8 +25,6 @@ export const Agent = () => {
         return 'ok'
     }, { manual: true, refreshDeps: [http, apiBase] })
 
-    const [isUpdate, setIsUpdate] = useState(false)
-
 
 
     return <Center>
@@ -42,7 +35,7 @@ export const Agent = () => {
         </Modal>
         <h3>测试连接</h3>
         <SizedBox height={10} />
-        <Divider indent={40} endIndent={40} color="#eeeeee" />
+        <Divider/>
         <SizedBox height={20} />
         <Row>
             <TextField
