@@ -1,10 +1,15 @@
 .appShell {
   display: flex;
   flex-direction: column;
+  /* 解决移动端 100vh 在某些浏览器带工具栏时的显示问题 */
+  height: 100dvh; 
   width: 100vw;
-  height: 100vh;
   overflow: hidden;
   background: var(--app-bg);
+  /* 强制锁定，防止移动端橡皮筋效应拉动背景 */
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 .header {
@@ -15,12 +20,23 @@
   backdrop-filter: var(--panel-blur);
   border-bottom: var(--panel-border);
   z-index: 100;
+  
+  /* 适配 iOS 刘海屏：增加顶部安全区域内边距 */
+  padding-top: env(safe-area-inset-top, 0px);
+  /* 实际高度 = 设定高度 + 安全区高度 */
+  height: calc(var(--header-height, 56px) + env(safe-area-inset-top, 0px));
 }
 
 .content {
-  flex: 1; /* 自动占据中间所有剩余空间 */
+  flex: 1;
   overflow-y: auto;
+  /* 开启移动端丝滑滚动 */
   -webkit-overflow-scrolling: touch;
+  /* 隐藏滚动条但保留功能，让界面更像 App */
+  scrollbar-width: none; 
+}
+.content::-webkit-scrollbar {
+  display: none;
 }
 
 .footer {
@@ -31,4 +47,9 @@
   backdrop-filter: var(--panel-blur);
   border-top: var(--panel-border);
   z-index: 100;
+
+  /* 适配 iOS 底部小黑条：增加底部安全区域内边距 */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* 实际高度 = 设定高度 + 安全区底部高度 */
+  height: calc(var(--footer-height, 64px) + env(safe-area-inset-bottom, 0px));
 }

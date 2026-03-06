@@ -5,7 +5,7 @@ import { MenuMobile } from 'components';
 import { useRequest } from 'ahooks';
 import { db } from 'hooks/db';
 
-import { AppShell, DesktopShell, Row, Padding, Icon, Center, ListView, SizedBox } from 'components/flutter';
+import { AppShell, AppBar, DesktopShell, Row, Padding, Icon, Center, ListView, SizedBox } from 'components/flutter';
 
 
 export function Chat() {
@@ -71,7 +71,7 @@ export function Chat() {
       :
       <AppShell>
         <AppShell.Header>
-
+          <AppBar />
         </AppShell.Header>
         <AppShell.Content>
           <Outlet />

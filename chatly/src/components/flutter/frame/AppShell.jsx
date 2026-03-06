@@ -13,7 +13,6 @@ export const AppShell = ({ children }) => {
 
   return (
     <div className={styles.appShell}>
-      {/* 1. Header 支持自定义高度 */}
       {subComponents.header && (
         <header 
           className={styles.header} 
@@ -23,12 +22,10 @@ export const AppShell = ({ children }) => {
         </header>
       )}
 
-      {/* 2. 主内容区 */}
       <main className={styles.content}>
         {subComponents.content}
       </main>
 
-      {/* 3. Footer 支持自定义高度 */}
       {subComponents.footer && (
         <footer 
           className={styles.footer} 
@@ -41,15 +38,21 @@ export const AppShell = ({ children }) => {
   );
 };
 
-// 子组件定义
+// --- 子组件挂载 ---
 AppShell.Header = ({ children, height = 56, style }) => (
-  <div style={{ width: '100%', height: '100%', ...style }}>{children}</div>
+  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', ...style }}>{children}</div>
 );
 
 AppShell.Footer = ({ children, height = 64, style }) => (
-  <div style={{ width: '100%', height: '100%', ...style }}>{children}</div>
+  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', ...style }}>{children}</div>
 );
 
 AppShell.Content = ({ children, style }) => (
   <div style={{ width: '100%', height: '100%', ...style }}>{children}</div>
 );
+
+// --- 别名导出 ---
+export const Scaffold = AppShell;
+Scaffold.Header = AppShell.Header;
+Scaffold.Footer = AppShell.Footer;
+Scaffold.Content = AppShell.Content;
