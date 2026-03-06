@@ -5,6 +5,8 @@ import { MenuMobile } from 'components';
 import { useRequest } from 'ahooks';
 import { db } from 'hooks/db';
 
+import { AppShell, DesktopShell, Row, Padding, Icon, Center, ListView, SizedBox } from 'components/flutter';
+
 
 export function Chat() {
   const navigate = useNavigate();
@@ -27,23 +29,76 @@ export function Chat() {
   }, { pollingInterval: 1000, pollingWhenHidden: false })
 
   const { isMobile } = useWinWidth()
-  const [title, setTitle] = useState('主页')
+  const [title, setTitle] = useState('Chatly')
   const items2 = [
     // { key: 'home', display: true, icon: { name: 'home', label: '主页' }, onClick: () => navigate('/apps/') },
-    { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表') } },
+    { key: 'self', display: true, icon: { name: 'user-oouline', label: '我的' }, onClick: () => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息') } },
+
     { key: 'friend', display: true, icon: { name: 'users_oline', label: '好友' }, onClick: () => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表') } },
     // { key: 'users', display: true, icon: { name: 'user-group-oline', label: '群聊' }, },
-    { key: 'self', display: true, icon: { name: 'user-oouline', label: '我的' }, onClick: () => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息') } },
+    { key: 'news', display: true, icon: { name: 'chat-bubble-bottom-center-text', label: '消息' }, onClick: () => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表') } },
   ];
+  const handleItemClick = (item) => {
+    if (!item) return;
+    item.onClick();
+  };
 
   return <React.Fragment>
-    <MenuMobile size={46}>
-      <MenuMobile.Head title={title} show={isMobile} />
-      <MenuMobile.Items position={isMobile ? 'bottom' : 'left'}>{items2}</MenuMobile.Items>
-      <MenuMobile.Content>
-        <Outlet />
-      </MenuMobile.Content>
-    </MenuMobile>
+    {!isMobile ?
+      <DesktopShell>
+        <DesktopShell.Left>
+          <Center>
+            <SizedBox height={20} />
+            <ListView>
+              {items2.filter(i => i.display !== false).map((item) =>
+                <Padding value={5}>
+                  <Icon
+                    name={item?.icon.name}
+                    label={item?.icon.label}
+                    onClick={() => handleItemClick(item)}
+
+                  />
+                </Padding>
+              )}
+            </ListView>
+          </Center>
+        </DesktopShell.Left>
+        <DesktopShell.Content>
+          <Outlet />
+        </DesktopShell.Content>
+
+      </DesktopShell>
+      :
+      <AppShell>
+        <AppShell.Header>
+
+        </AppShell.Header>
+        <AppShell.Content>
+          <Outlet />
+        </AppShell.Content>
+        <AppShell.Footer>
+          <Row>
+            {
+              items2.filter(i => i.display !== false).map((item) =>
+                <Row.Col>
+                  <Padding value={6}>
+                    <Center>
+                      <Icon
+                        size={20}
+                        name={item?.icon.name}
+                        label={item?.icon.label}
+                        onClick={() => handleItemClick(item)}
+                      />
+                    </Center>
+                  </Padding>
+                </Row.Col>
+              )
+            }
+          </Row>
+        </AppShell.Footer>
+      </AppShell>
+    }
+
   </React.Fragment>
 
 

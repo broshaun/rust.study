@@ -1,31 +1,34 @@
-.shell {
+.appShell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
   overflow: hidden;
-  /* 确保全屏背景过渡平滑 */
-  transition: background 0.4s ease; 
+  background: var(--app-bg);
 }
 
-.header, .footer {
+.header {
+  height: var(--header-height, 56px);
+  width: 100%;
   flex-shrink: 0;
-  /* 关键：阴影可见性 */
-  /* 在液态玻璃风格下，阴影可能超出容器，设为 visible 确保高光不被切断 */
-  overflow: visible; 
-  position: relative;
-  z-index: 10;
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-blur);
+  border-bottom: var(--panel-border);
+  z-index: 100;
 }
 
 .content {
-  flex: 1;
+  flex: 1; /* 自动占据中间所有剩余空间 */
   overflow-y: auto;
-  /* 解决 iOS 滚动回弹的橡皮条白边问题，使其背景色与皮肤同步 */
-  background-color: transparent; 
   -webkit-overflow-scrolling: touch;
 }
 
-.safeAreaBottom {
-  /* 自动适配 iPhone 等全面屏底部的感应区高度 */
-  height: env(safe-area-inset-bottom, 20px); 
+.footer {
+  height: var(--footer-height, 64px);
+  width: 100%;
+  flex-shrink: 0;
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-blur);
+  border-top: var(--panel-border);
+  z-index: 100;
 }
