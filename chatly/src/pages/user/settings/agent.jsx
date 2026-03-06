@@ -3,13 +3,16 @@ import { useLocalStorageState, useRequest } from 'ahooks';
 import { useHttpClient } from 'hooks/http';
 import { Modal, } from 'components';
 import { Button, TextField, Row, SizedBox, Center, Divider, Right } from 'components/flutter';
+import { useNavigate } from 'react-router-dom';
 
 
 export const Agent = () => {
+     const navigate = useNavigate();
     const [apiBase, setApiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
     const { http } = useHttpClient('/api/chat/ping')
+    const [isUpdate,setUpdate] = useState(false);
 
     const { runAsync: ping } = useRequest(() => {
         http.requestParams('GET').then((results) => {
@@ -24,6 +27,8 @@ export const Agent = () => {
         });
         return 'ok'
     }, { manual: true, refreshDeps: [http, apiBase] })
+
+
 
 
 
@@ -42,16 +47,24 @@ export const Agent = () => {
                 label='代理'
                 hintText='输入代理地址'
                 value={apiBase}
-                onChanged={(value) => { setApiBase(value); }}
+                onChanged={(value) => { setApiBase(value);setUpdate(true); }}
             />
-        </Row>
+        </Row>  
         <SizedBox height={20} />
         <Row>
             <Right>
+                {isUpdate?
+                    <Button
+                    label='修改'
+                    onPressed={() => { navigate('/user/settings/setlist/') }}
+                />
+                :
                 <Button
                     label='测试'
                     onPressed={() => { ping(); setOpen(true); }}
                 />
+                }
+            
             </Right>
         </Row>
         <SizedBox height={150} />

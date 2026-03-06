@@ -13,8 +13,8 @@
 .mask {
   position: absolute;
   inset: 0;
-  /* 稍微加深遮罩背景，让抽屉更突出 */
-  background: rgba(0, 0, 0, 0.5);
+  /* 遮罩颜色建议也随主题微调，深色主题用更深的遮罩 */
+  background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 1;
@@ -31,17 +31,13 @@
   height: 100%;
   width: var(--w, 250px);
   
-  /* --- 核心优化：调高不透明度 --- */
-  /* 使用固定的背景色（如纯白或深色），混合少量透明度以保留毛玻璃感 */
-  background: rgba(255, 255, 255, 0.92); 
-  /* 适配暗色模式建议使用：rgba(30, 30, 30, 0.92) */
+  /* --- 关键：继承全局主题变量 --- */
+  background: var(--panel-bg); 
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+  border-right: var(--panel-border);
   
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  
-  /* 增加明显的边缘线 */
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  
+  /* 初始隐藏 */
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
@@ -49,18 +45,26 @@
   padding-bottom: env(safe-area-inset-bottom);
   box-sizing: border-box;
   z-index: 2;
+
+  /* 继承圆角逻辑 (适配乳胶风格的圆润感) */
+  border-radius: 0 var(--radius-main, 0px) var(--radius-main, 0px) 0;
 }
 
 .open .aside {
   transform: translateX(0);
-  /* 强化投影，将抽屉从背景中“托”起来 */
-  box-shadow: 15px 0 30px rgba(0, 0, 0, 0.25);
+  /* 使用主题定义的投影，若主题没定义则提供默认工业感投影 */
+  box-shadow: var(--panel-shadow, 15px 0 30px rgba(0, 0, 0, 0.2));
 }
 
 .scrollArea {
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* 强制文本颜色，确保高对比度 */
-  color: #000000; 
+  /* 关键：文字颜色必须随主题变化 */
+  color: var(--text-primary); 
+}
+
+/* 针对滚动条的精细化处理，确保不破坏质感 */
+.scrollArea::-webkit-scrollbar {
+  display: none;
 }

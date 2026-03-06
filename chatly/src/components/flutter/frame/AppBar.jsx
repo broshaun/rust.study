@@ -1,26 +1,26 @@
 import React from 'react';
 import styles from './AppBar.module.css';
-import { IconSvg } from '../base/IconSvg';
+import { Icon } from '../base/Icon';
 
 /**
- * 手机端适配版 AppBar
- * 职责：绝对居中的标题，标准化的热区反馈，适配 Scaffold 材质。
+ * 工业级全主题适配 AppBar
+ * 职责：继承主题变量，提供一致的导航交互。
  */
 export const AppBar = ({ title, leading, actions, onLeadingClick, style }) => (
   <div className={styles.appBar} style={style}>
-    {/* 左侧槽位 */}
+    {/* 左侧：返回或菜单 */}
     <div className={styles.leading}>
       {leading && (
         <button className={styles.iconBtn} onClick={onLeadingClick}>
-          {typeof leading === 'string' ? <IconSvg name={leading} size={24} /> : leading}
+          {typeof leading === 'string' ? <Icon name={leading} size={24} /> : leading}
         </button>
       )}
     </div>
 
-    {/* 中间标题：始终基于外部容器绝对居中 */}
+    {/* 中间：标题 (自动适配颜色) */}
     <div className={styles.title}>{title}</div>
 
-    {/* 右侧槽位 */}
+    {/* 右侧：功能按钮 */}
     <div className={styles.actions}>
       {actions}
     </div>
