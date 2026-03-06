@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
-import { AppBar, Container, Center, Padding, AppShell, Drawer, ListView, Divider, Icon, Heading } from 'components/flutter';
+import { AppBar, Container, Center, Padding, AppShell, Drawer, ListView, Divider, Icon, DesktopShell,SizedBox } from 'components/flutter';
 
 
 
@@ -15,6 +15,21 @@ export function User() {
   ];
 
 
+  // 2. 定义底部导航（BottomNavigationBar）
+  const renderBottomNav = (
+    <div style={{ display: 'flex', justifyContent: 'space-around', padding: '8px 0' }}>
+      <button >
+        首页
+      </button>
+      <button >
+        订单
+      </button>
+      <button >
+        我的
+      </button>
+    </div>
+  );
+
   const [open, setOpen] = useState(false);
   const handleItemClick = (item) => {
     if (!item) return;
@@ -23,35 +38,10 @@ export function User() {
   };
   return (
 
-    <AppShell>
-      <Drawer width={150} isOpen={open} onClose={() => setOpen(false)}>
-        <Padding>
-          <Center>
-            <h3>菜单</h3>
-          </Center>
-        </Padding>
-        <Divider />
-        <Padding>
-          <ListView>
-            {drawerMenu.filter(i => i.display !== false).map((item) =>
-              <Padding value={5}>
-                <Icon
-                  name={item?.icon.name}
-                  label={item?.icon.label}
-                  onClick={() => handleItemClick(item)}
-                  labelPos='right'
-                />
-              </Padding>
-            )}
-          </ListView>
-        </Padding>
-      </Drawer>
-
-      <AppShell.Header>
-        <AppBar title={title} leading="menu" onLeadingClick={() => setOpen(true)} />
-
-      </AppShell.Header>
-      <AppShell.Content>
+    <DesktopShell>
+      <DesktopShell.Header>
+      </DesktopShell.Header>
+      <DesktopShell.Content>
         <Center>
           <Container width={380} >
             <Padding>
@@ -59,10 +49,28 @@ export function User() {
             </Padding>
           </Container>
         </Center>
-      </AppShell.Content>
-      {/* <AppShell.Footer>
-      </AppShell.Footer> */}
-    </AppShell>
+      </DesktopShell.Content>
+      <DesktopShell.Left>
+        <Center>
+          <SizedBox height={20}/>
+          <Divider/>
+          <ListView>
+            
+            {drawerMenu.filter(i => i.display !== false).map((item) =>
+              <Padding value={5}>
+                <Icon
+                  name={item?.icon.name}
+                  label={item?.icon.label}
+                  onClick={() => handleItemClick(item)}
+
+                />
+              </Padding>
+            )}
+
+          </ListView>
+        </Center>
+      </DesktopShell.Left>
+    </DesktopShell>
 
 
   );

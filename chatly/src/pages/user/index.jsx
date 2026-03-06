@@ -1,5 +1,5 @@
 import { Route } from "react-router-dom";
-import { User } from "./main";
+import { User } from "./main.test";
 import { LogOn } from "./login2";
 import { Register } from "./register2";
 import { Settings } from "./settings";

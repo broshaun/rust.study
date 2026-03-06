@@ -7,6 +7,7 @@ export { Center, Left, Right } from './layout/Alignments'
 
 // frame 骨架
 export { AppShell } from './frame/AppShell'
+export { DesktopShell } from './frame/DesktopShell'
 export { Drawer } from './frame/Drawer'
 export { ListView } from './frame/ListView'
 //
