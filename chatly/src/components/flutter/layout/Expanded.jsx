@@ -1,25 +1,20 @@
-// src/components/flutter/Expanded/Expanded.jsx
 import React from 'react';
-import styles from './Expanded.module.css';
 
-const Expanded = ({
-  flex = 1, // Flutter 的 flex 属性，默认1
-  child,
-  children,
-}) => {
-  const content = child || children;
-
-  const expandedStyle = {
-    flex: flex,
-    minWidth: 0, // 解决 flex 子元素溢出问题
-    minHeight: 0,
-  };
-
+/**
+ * Expanded - 弹性伸缩器
+ * 职责：占据 Row 或 Column 中的所有剩余可用空间。
+ */
+export const Expanded = ({ children, flex = 1, style }) => {
   return (
-    <div className={styles.expanded} style={expandedStyle}>
-      {content}
+    <div style={{
+      flex: flex,
+      display: 'flex',
+      flexDirection: 'column',
+      minWidth: 0,  // 关键：防止 Flex 内容溢出导致容器变形
+      minHeight: 0, 
+      ...style
+    }}>
+      {children}
     </div>
   );
 };
-
-export default Expanded;

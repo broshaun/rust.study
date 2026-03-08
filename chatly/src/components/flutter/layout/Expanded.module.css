@@ -1,6 +1,0 @@
-/* src/components/flutter/Expanded/Expanded.module.css */
-.expanded {
-  /* 占满父容器剩余空间，Flutter Expanded 等效 */
-  display: flex;
-  box-sizing: border-box;
-}

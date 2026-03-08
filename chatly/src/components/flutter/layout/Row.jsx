@@ -2,8 +2,8 @@ import React from 'react';
 import styles from './Row.module.css';
 
 /**
- * Row - 万能风格适配版
- * 职责：作为水平轨道，通过变量系统同步整行色调
+ * Row - 纯净布局版
+ * 职责：仅作为水平轨道，负责子元素的横向排列。
  */
 const Row = ({ children, width, style }) => {
   return (
@@ -14,8 +14,7 @@ const Row = ({ children, width, style }) => {
         flexDirection: 'row',
         flexWrap: 'nowrap',
         width: typeof width === 'number' ? `${width}px` : width || '100%',
-        color: 'var(--text-primary)', // 确保整行文字颜色跟随皮肤
-        transition: 'color 0.4s ease',
+        // 移除风格相关属性：不再干涉文字颜色和过渡动画
         ...style
       }}
     >
@@ -25,8 +24,8 @@ const Row = ({ children, width, style }) => {
 };
 
 /**
- * Col - 强约束栅格
- * 职责：锁定宽度比例，确保在液态或金属背景下对齐不偏移
+ * Col - 纯净栅格版
+ * 职责：仅负责宽度比例锁定与对齐。
  */
 const Col = ({ children, span = 'auto', style }) => {
   const flexWidth = typeof span === 'number' && span <= 1 
@@ -41,11 +40,10 @@ const Col = ({ children, span = 'auto', style }) => {
       flexGrow: flexWidth === 'auto' ? 1 : 0,
       boxSizing: 'border-box',
       overflow: 'hidden',
-      /* 核心：在复杂背景下提升文字渲染质量 */
-      WebkitFontSmoothing: 'antialiased',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
+      // 移除风格相关属性：不再干涉 WebkitFontSmoothing
       ...style
     }}>
       {children}

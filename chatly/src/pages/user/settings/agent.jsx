@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useHttpClient } from 'hooks/http';
 import { Modal, } from 'components';
-import { Button, TextField, Row, SizedBox, Center, Divider, Right } from 'components/flutter';
+import { Button, TextField, Row, SizedBox, Center, Divider, Left } from 'components/flutter';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -52,7 +52,7 @@ export const Agent = () => {
         </Row>  
         <SizedBox height={20} />
         <Row>
-            <Right>
+            <Left>
                 {isUpdate?
                     <Button
                     label='修改'
@@ -65,7 +65,7 @@ export const Agent = () => {
                 />
                 }
             
-            </Right>
+            </Left>
         </Row>
         <SizedBox height={150} />
     </Center>

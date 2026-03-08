@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useWinWidth, useHttpClient, useDateTime } from 'hooks';
 import { useRequest } from 'ahooks';
 import { db } from 'hooks/db';
-import { AppShell, AppBar, DesktopShell, Row, Padding, Icon, Center, ListView, SizedBox } from 'components/flutter';
+import { AppShell, AppBar, DesktopShell, Row, Padding, Icon, Center, Column, SizedBox, ListView, BottomNav } from 'components/flutter';
 
 export function Chat() {
   const navigate = useNavigate();
@@ -12,6 +12,12 @@ export function Chat() {
   const { http: httpMsg } = useHttpClient('/api/chat/msg/single/');
   const { isMobile } = useWinWidth();
   const [title, setTitle] = useState('Chatly');
+
+
+
+  const [currentTab, setCurrentTab] = useState('home');
+
+
 
   // 1. 消息轮询逻辑 (保持不变)
   useRequest(() => {
@@ -33,21 +39,18 @@ export function Chat() {
   const items = useMemo(() => [
     {
       key: 'self',
-      path: '/chat/self/mylist/',
-      icon: { name: 'user-oouline', label: '我的' },
-      onClick: () => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }
+      label: '我的',
+      icon: <Icon name="home" onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} />
     },
     {
       key: 'friend',
-      path: isMobile ? '/chat/mobile/friend/' : '/chat/friend/',
-      icon: { name: 'users_oline', label: '好友' },
-      onClick: () => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }
+      label: '好友',
+      icon: <Icon name="users_oline" onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} />
     },
     {
       key: 'news',
-      path: isMobile ? '/chat/mobile/dialog/' : '/chat/dialog/',
-      icon: { name: 'chat-bubble-bottom-center-text', label: '消息' },
-      onClick: () => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); }
+      label: '消息',
+      icon: <Icon name="chat-bubble-bottom-center-text" onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} />
     },
   ], [isMobile, navigate, getTimestampMs]);
 
@@ -61,17 +64,13 @@ export function Chat() {
         <AppBar title={title} /> 
         </DesktopShell.Header> */}
         <DesktopShell.Left width={80}>
-          <Center>
+          <Center >
             <SizedBox height={20} />
+
             <ListView>
               {visibleItems.map((item) => (
-                <Padding value={5} key={item.key}>
-                  <Icon
-                    name={item.icon.name}
-                    label={item.icon.label}
-                    onClick={() => item.onClick()}
-                    active={location.pathname === item.path} // 自动高亮
-                  />
+                <Padding value={10} >
+                  {item.icon}
                 </Padding>
               ))}
             </ListView>
@@ -96,7 +95,13 @@ export function Chat() {
       </AppShell.Content>
 
       <AppShell.Footer height={70}>
-        <Row align="center">
+        <BottomNav
+          activeKey={currentTab}
+          onSelect={setCurrentTab}
+          items={visibleItems}
+        />
+
+        {/* <Row align="center">
           {visibleItems.map((item) => (
             <Row.Col key={item.key}>
               <Padding value={6}>
@@ -112,7 +117,7 @@ export function Chat() {
               </Padding>
             </Row.Col>
           ))}
-        </Row>
+        </Row> */}
       </AppShell.Footer>
     </AppShell>
   );

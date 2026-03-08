@@ -1,0 +1,29 @@
+/* Container.module.css */
+.container {
+  outline: none;
+  /* 显式声明默认无边框 */
+  border: none;
+  display: block;
+  box-sizing: border-box;
+  
+  /* 确保切换材质（如从透明切到毛玻璃）时的过渡丝滑 */
+  transition: 
+    background 0.4s ease, 
+    backdrop-filter 0.4s ease, 
+    box-shadow 0.4s ease, 
+    border 0.4s ease,
+    color 0.4s ease,
+    transform 0.1s ease;
+}
+
+/* 激活“硅胶感”反馈逻辑 */
+.clickable {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clickable:active {
+  transform: scale(0.97); /* 略微深一点的下陷感 */
+  filter: brightness(0.95);
+}
