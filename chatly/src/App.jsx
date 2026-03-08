@@ -11,7 +11,7 @@ const App = () => {
   const { isLogged } = useLogin();
 
   return <>
-    <MemoryRouter>
+    <HashRouter>
       <Routes>
         <Route index
           element={
@@ -24,7 +24,7 @@ const App = () => {
         {RsChat}
 
       </Routes>
-    </MemoryRouter>
+    </HashRouter>
     {/* <DebugOverlay /> */}
   </>
 }

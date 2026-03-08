@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useLogin, useHttpClient, useWinWidth } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
-import { useImage } from 'hooks/http';
+import { useImage, useHttpClient2 } from 'hooks/http';
 import { Button, TextField, Row, SizedBox, Center, Divider } from 'components/flutter';
 
 
@@ -15,7 +15,8 @@ export function LogOn() {
     const [avatar, setAvatar] = useLocalStorageState('saveOneself')
     const { src } = useImage("/imgs", avatar)
     const [password, setPassword] = useState("")
-    const { http } = useHttpClient('/api/chat/login/')
+    // const { http } = useHttpClient('/api/chat/login/')
+    const { http, endpoint } = useHttpClient2('/rpc/chat/login/')
     const { setToken, setTime } = useLogin()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
@@ -28,7 +29,8 @@ export function LogOn() {
             return
         }
 
-        http.requestBodyJson('POST', { 'email': account, 'pass_word': password })
+        // http.requestBodyJson('POST', { 'email': account, 'pass_word': password })
+        http.post('POST', { 'email': account, 'pass_word': password })
             .then((results) => {
                 if (!results) return;
                 const { code, message, data } = results
@@ -45,6 +47,7 @@ export function LogOn() {
         return 'ok'
     }, { manual: true })
 
+    console.log('endpoint',endpoint)
 
     return <React.Fragment>
         <Modal visible={open}>

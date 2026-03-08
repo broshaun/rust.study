@@ -9,7 +9,11 @@ function replacer(key, value) {
   if (value === undefined) return null;
   return value;
 }
-
+/**
+ * 通用版本http 方法，不在继续维护，以后只维护http 兼容版
+ * @param {*} baseUrl 
+ * @returns 
+ */
 export function useHttpClient(baseUrl) {
   const { apiBase } = useApiBase();
   const { fetcher } = useHttpFetch();
