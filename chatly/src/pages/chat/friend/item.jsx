@@ -6,8 +6,8 @@ import { FriendList } from 'components/chat';
 import { Chat, Container, Avatar } from 'components';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
-
-
+import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';
+import { Friend } from './Friend';
 
 
 export const Item = () => {
@@ -66,21 +66,27 @@ export const Item = () => {
         return () => sub.unsubscribe()
     }, [])
 
-
     return <Suspense fallback={<div>加载中...</div>}>
         {friends &&
-            <Chat>
-                <Chat.Left size={"30%"}>
-                    <Container verticalScroll={true} >
-                        <FriendList
-                            data={friends}
-                            onSelectFriend={openMsgWindow}
-                            renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-                            onFind={() => { navigate('/chat/mobile/find/'); }}
-                        />
-                    </Container>
-                </Chat.Left>
-            </Chat>
+            <Container height={800} >
+                <Border />
+                <Padding value={5}>
+                    <Right>
+                        <Icon name='magnifying-glass' />
+                    </Right>
+                </Padding>
+                <Divider />
+                <ListView
+                    itemCount={friends.length}
+                    itemHeight={42}
+                    buffer={5}
+                    itemBuilder={(index) => {
+                        console.log('index', index)
+                        const f = friends[index];
+                        return <Friend data={f} onSelect={openMsgWindow} />
+                    }}
+                />
+            </Container>
         }
     </Suspense>
 

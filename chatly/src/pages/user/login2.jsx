@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLogin, useHttpClient, useWinWidth } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage, useHttpClient2 } from 'hooks/http';
-import { Button, TextField, Row, SizedBox, Center, Divider,AppShell, Container, Column } from 'components/flutter';
+import { Button, TextField, Row, SizedBox, Center, Divider, AppShell, Container, Padding } from 'components/flutter';
 
 
 export function LogOn() {
@@ -47,16 +47,14 @@ export function LogOn() {
         return 'ok'
     }, { manual: true })
 
-    console.log('endpoint',endpoint)
-
     return <React.Fragment>
-        <Modal visible={open}>
+        {/* <Modal visible={open}>
             <Modal.Title>登录提示</Modal.Title>
             <Modal.Message>{msg}</Modal.Message>
             <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
-        </Modal>
+        </Modal> */}
 
-        <Center >
+        <Center>
             <Avatar
                 src={src}
                 size={60}
@@ -65,45 +63,50 @@ export function LogOn() {
                 borderColor="#e5e7eb"
                 hasShadow={true}
             />
+
             <SizedBox height={20} />
             <h3>登录界面</h3>
-            <SizedBox height={10} />
-            <Divider indent={40} endIndent={40} color="#eeeeee" />
-            <SizedBox height={40} />
+            <SizedBox height={20} />
+            <Divider fade={true} thickness={1} opacity={0.3} />
+            <SizedBox height={30} />
+
             <Row>
-                <Center>
+                <Padding value={5}>
                     <TextField
                         label="账号"
-                        width="70%"
                         hintText="请输入账号"
                         value={account}
                         onChanged={(value) => setAccount(value)}
                     />
-                </Center>
+                </Padding>
             </Row >
-            <SizedBox height={5} />
+
             <Row>
-                <Center>
+                <Padding value={5}>
                     <TextField
                         label="密码"
-                        width="70%"
                         hintText="请输入密码"
                         obscureText={true}
                         value={password}
                         onChanged={(value) => setPassword(value)}
                     />
-                </Center>
+                </Padding>
             </Row>
-            <SizedBox height={10} />
 
-            <Row mainAxisAlignment="center" >
-                <Center>
-                    <Button label='登录' width="70%"
+            <Row>
+                <Padding value={15}>
+                    <Button label='登录' width={235}
                         onPressed={() => { runLogin(account, password) }}
                     />
-                </Center>
+                </Padding>
+
             </Row>
         </Center>
+
+
+
+
+
     </React.Fragment>
 }
 

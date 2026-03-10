@@ -1,12 +1,14 @@
 .column {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
-  width: 100%;
+  align-items: stretch;
+
+  /* 核心：默认宽度 100%，拒绝缩水塌陷 */
+  width: var(--col-w, 100%);
+  height: auto;
+
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  /* 默认子元素宽度拉伸，符合 Flutter Column 习惯 */
-  align-items: stretch;
-  /* 允许内容在某些复杂布局中收缩或扩展 */
-  min-height: 0;
+  overflow: visible;
 }

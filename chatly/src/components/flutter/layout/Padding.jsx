@@ -1,25 +1,17 @@
 import React from 'react';
+import styles from './Padding.module.css';
 
 /**
  * Padding - 纯净布局组件
- * 职责：只负责空间占位。
+ * 职责：提供标准的内边距容器。
+ * @param {string} size - 间距大小: s(8px), m(16px), l(24px), xl(32px)
  */
-export const Padding = ({ children, value = 0, horizontal, vertical, style }) => {
-  const toUnit = (val) => (typeof val === 'number' ? `${val}px` : val);
-  
-  const pt = vertical !== undefined ? vertical : value;
-  const pl = horizontal !== undefined ? horizontal : value;
-
+export const Padding = ({ children, value = 10 }) => {
   return (
-    <div style={{
-      paddingTop: toUnit(pt),
-      paddingBottom: toUnit(vertical !== undefined ? vertical : value),
-      paddingLeft: toUnit(pl),
-      paddingRight: toUnit(horizontal !== undefined ? horizontal : value),
-      display: 'block',
-      boxSizing: 'border-box',
-      ...style
-    }}>
+    <div 
+      className={styles.paddingBase}
+      style={{ '--padding-val': typeof value === 'number' ? `${value}px` : value }}
+    >
       {children}
     </div>
   );

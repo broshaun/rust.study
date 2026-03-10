@@ -3,9 +3,12 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
-import { Chat, Container, Avatar } from 'components';
+// import { Chat, Container, Avatar } from 'components';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie'
+
+import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';
+import { Friend } from './Friend';
 
 
 export const Mian = () => {
@@ -17,19 +20,19 @@ export const Mian = () => {
 
     const openMsgWindow = useCallback((select) => {
         navigate('/chat/friend/detail/', { state: { select } });
+
+        console.log('++++++++++++++++++')
     }, [location.pathname]);
 
     const { runAsync: runGetFriend } = useRequest(
         async () => {
-            http.requestParams('GET',{ ask_state: 'agree' }).then((results) => {
+            http.requestParams('GET', { ask_state: 'agree' }).then((results) => {
                 if (!results) return 0;
                 const { code, message, data } = results;
                 if (code !== 200) return 0;
                 const list = data?.detail || []
                 list.forEach(element => {
                     db.table('friends').get(element?.id).then((row) => {
-                        // console.log('row', row)
-                        // console.log('element', element)
                         if (row) {
                             db.table('friends').update(row?.id, {
                                 'uid': element?.user_id,
@@ -39,16 +42,19 @@ export const Mian = () => {
                                 'nikename': element?.nikename
                             })
                         } else {
-                            db.table('friends').put({
-                                'id': element?.id,
-                                'uid': element?.user_id,
-                                'avatar_url': element?.avatar_url,
-                                'email': element?.email,
-                                'remark': element?.remark,
-                                'nikename': element?.nikename,
-                                'signal': 'old',
-                                'dialog': 0
-                            })
+                            for (let i = 0; i < 1000; i++) {
+                                db.table('friends').put({
+                                    // 'id': element?.id,
+                                    'id': i,
+                                    'uid': element?.user_id,
+                                    'avatar_url': element?.avatar_url,
+                                    'email': element?.email,
+                                    'remark': element?.remark,
+                                    'nikename': element?.nikename,
+                                    'signal': 'old',
+                                    'dialog': 0
+                                })
+                            }
                         }
                     })
                 });
@@ -68,26 +74,36 @@ export const Mian = () => {
         return () => sub.unsubscribe()
     }, [])
 
+    console.log('friends', friends.length)
 
     return <Suspense fallback={<div>加载中...</div>}>
-        {friends &&
-            <Chat>
-                <Chat.Left size={"30%"}>
-                    <Container verticalScroll={true} >
-                        <FriendList
-                            data={friends}
-                            onSelectFriend={openMsgWindow}
-                            renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-                            onFind={() => { navigate('/chat/friend/find/') }}
-                        />
-                    </Container>
-                </Chat.Left>
-                <Chat.Right size={"70%"}>
-                    <Outlet />
-                </Chat.Right>
-            </Chat>
-        }
+        <Row>
+            <Row.Col>
+                <Container height={800} >
+                    <Border />
+                    <Padding value={5}>
+                        <Right>
+                            <Icon name='magnifying-glass' />
+                        </Right>
+                    </Padding>
+                    <Divider />
+                    <ListView
+                        itemCount={friends.length}
+                        itemHeight={42}
+                        buffer={5}
+                        itemBuilder={(index) => {
+                            console.log('index', index)
+                            const f = friends[index];
+                            return <Friend data={f} onSelect={openMsgWindow} />
+                        }}
+                    />
 
+                </Container>
+            </Row.Col>
+            <Row.Col span={3}>
+                <Outlet />
+            </Row.Col>
+        </Row>
     </Suspense>
 
 }

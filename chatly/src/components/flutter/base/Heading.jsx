@@ -1,47 +1,40 @@
 import React from 'react';
+import { Text } from './Text';
 
 /**
- * Heading - 万能风格标题组件
- * 职责：锁定“单行截断”骨架，动态接入全局皮肤变量。
+ * Heading - 语义化标题组件
+ * @param {number} level - 标题等级 1-4 (1最大)
+ * @param {boolean} tight - 是否紧凑行高
  */
-export const Heading = ({ level = 2, children, style, onClick }) => {
-  const sizeMap = { 1: '26px', 2: '22px', 3: '18px', 4: '16px' };
-  const Tag = `h${level}`;
-
-  const baseStyle = {
-    // 1. 字体骨架
-    fontSize: sizeMap[level],
-    fontWeight: level <= 2 ? 700 : 600,
-    color: 'var(--text-primary)',
-    lineHeight: 1.2,
-    
-    // 2. 皮肤应用 (由 theme.css 驱动)
-    backgroundColor: 'var(--panel-bg)',
-    backdropFilter: 'var(--panel-blur)',
-    WebkitBackdropFilter: 'var(--panel-blur)', // 兼容 Safari
-    border: 'var(--panel-border)',
-    boxShadow: 'var(--panel-shadow)',
-    
-    // 3. 布局骨架 (锁定单行不换行)
-    display: 'inline-block',
-    padding: '8px 16px',
-    borderRadius: '12px',
-    maxWidth: '100%',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    boxSizing: 'border-box', // 确保 Padding 不会撑大宽度导致截断失效
-    
-    // 4. 交互增强
-    cursor: onClick ? 'pointer' : 'default',
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // 切换风格时的丝滑动画
-    
-    ...style
+export const Heading = ({ 
+  children, 
+  level = 2, 
+  tight = false, 
+  style, 
+  ...props 
+}) => {
+  // 定义字阶系统
+  const headingStyles = {
+    1: { size: 24, weight: 800, height: 1.2 },
+    2: { size: 20, weight: 700, height: 1.25 },
+    3: { size: 17, weight: 600, height: 1.3 },
+    4: { size: 15, weight: 600, height: 1.4 },
   };
 
+  const current = headingStyles[level] || headingStyles[2];
+
   return (
-    <Tag style={baseStyle} onClick={onClick}>
+    <Text
+      size={current.size}
+      weight={current.weight}
+      height={tight ? 1.1 : current.height}
+      style={{
+        letterSpacing: level <= 2 ? '-0.02em' : 'normal', // 大标题增加紧凑感
+        ...style
+      }}
+      {...props}
+    >
       {children}
-    </Tag>
+    </Text>
   );
 };

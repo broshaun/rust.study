@@ -1,0 +1,42 @@
+.divider {
+  /* 1. 基础物理形态 */
+  height: 1px;
+  width: 100%;
+  box-sizing: border-box;
+  
+  /* 确立上下呼吸感 */
+  margin-top: var(--div-spacing);
+  margin-bottom: var(--div-spacing);
+  
+  /* 核心防线：在 Flex 容器中绝对不允许被挤压变细 */
+  flex-shrink: 0; 
+  
+  /* 2. 视觉质感 (修复了原版 multiply 在暗黑模式下失效的问题) */
+  /* 直接使用带有透明度的前景色或主题边框色 */
+  background-color: var(--panel-border-color, rgba(128, 128, 128, 0.2));
+  
+  /* 微弱的底部高光，产生刻线般的立体感 */
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05); 
+}
+
+/* --- 3. 突破边界模式 (Bleed) --- */
+/* 当父容器有 Padding 时，利用负边距强行向左右扩张 */
+.bleed {
+  width: auto;
+  /* 这里的 -16px 需要对应你 Card 或 Container 的默认 padding */
+  /* 这样它就能完美抵消父级的内边距，真正切断整个容器 */
+  margin-left: -16px; 
+  margin-right: -16px;
+}
+
+/* --- 4. 渐隐模式 (Fade) --- */
+.fade {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--panel-border-color, rgba(128, 128, 128, 0.4)) 50%,
+    transparent 100%
+  );
+  /* 渐变模式下不需要立体高光，保持纯净 */
+  box-shadow: none; 
+}

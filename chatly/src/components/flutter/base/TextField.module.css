@@ -1,59 +1,64 @@
 .inputContainer {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  height: 40px;
-  /* --- 核心：接入通用皮肤变量 --- */
+  min-height: 40px;
+  width: 100%; /* 默认占满 Row.Col */
+  
+  /* --- 接入全局皮肤变量 --- */
   background: var(--panel-bg);
   backdrop-filter: var(--panel-blur);
   -webkit-backdrop-filter: var(--panel-blur);
   border: var(--panel-border);
   box-shadow: var(--panel-shadow);
-  border-radius: 12px; /* 配合液态玻璃的大圆角 */
+  border-radius: var(--radius-m, 12px);
+  
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s;
   box-sizing: border-box;
 }
 
 .inputContainer:focus-within {
-  /* 聚焦时使用皮肤的强调色 */
   border-color: var(--accent-color);
-  box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.2); 
 }
 
-.leftLabel {
-  height: 100%;
-  padding: 0 14px;
-  /* 制造比背景稍深的色块，产生“蚀刻”或“嵌入”感 */
-  background-color: rgba(0, 0, 0, 0.05); 
+.label {
+  padding: 0 16px;
+  /* --- 融合关键：去掉灰色背景，直接透出底层的 panel-bg --- */
+  background-color: transparent; 
+  
+  /* 使用细微的分割线，保持融合感 */
   border-right: var(--panel-border);
+  
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  display: flex;
-  align-items: center;
   white-space: nowrap;
   user-select: none;
   flex-shrink: 0;
+  
+  /* 稍微降低透明度，产生自然深度感而不产生色块 */
+  opacity: 0.8;
 }
 
 .input {
   flex: 1;
   min-width: 0;
   height: 100%;
-  padding: 0 12px;
+  padding: 0 14px;
   border: none;
   outline: none;
   background: transparent;
-  font-size: 15px;
-  color: var(--text-primary); /* 确保文字颜色随皮肤切换 */
+  font-size: 14px;
+  color: var(--text-primary);
 }
 
 .input::placeholder {
   color: var(--text-secondary);
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
-.disabled {
+/* 适配禁用状态 */
+.inputContainer:has(input:disabled) {
   opacity: 0.5;
   cursor: not-allowed;
 }

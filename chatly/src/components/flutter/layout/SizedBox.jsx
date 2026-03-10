@@ -1,20 +1,22 @@
 import React from 'react';
+import styles from './SizedBox.module.css';
 
 /**
- * SizedBox - 布局空间调节器
- * 职责：强制产生固定尺寸的间隙，或作为容器约束子元素尺寸。
+ * SizedBox - 纯净空间调节器
+ * 职责：严格约束子元素的空间尺寸。
  */
-export const SizedBox = ({ children, width, height, style }) => {
-  const toUnit = (val) => (typeof val === 'number' ? `${val}px` : val);
-  
+export const SizedBox = ({ children, width, height }) => {
+  // 构建 CSS 变量，如果是数字则默认为 px
+  const vars = {
+    '--sb-width': typeof width === 'number' ? `${width}px` : width,
+    '--sb-height': typeof height === 'number' ? `${height}px` : height,
+  };
+
   return (
-    <div style={{
-      width: toUnit(width) || (children ? 'auto' : '0px'),
-      height: toUnit(height) || (children ? 'auto' : '0px'),
-      display: children ? 'block' : 'inline-block',
-      flexShrink: 0, // 防止在 Row/Column 中被挤压
-      ...style
-    }}>
+    <div 
+      className={children ? styles.sizedBoxWithContent : styles.sizedBoxEmpty}
+      style={vars}
+    >
       {children}
     </div>
   );

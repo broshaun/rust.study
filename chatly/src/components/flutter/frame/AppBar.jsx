@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './AppBar.module.css';
-import { Center, Left, Right } from '../layout/Alignments';
+import { Center, Left, Right } from '../layout/Align';
 
 /**
  * AppBar - 材质适配导航栏

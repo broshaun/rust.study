@@ -1,36 +1,33 @@
 import React, { useState, useEffect, Suspense } from 'react'
 import { useNavigate, useLocation } from "react-router-dom";
-import { useHttpClient } from 'hooks';
-import { UserChat } from 'components/chat';
-import { Container } from 'components';
-import { useRequest } from 'ahooks';
+import { useWinWidth, useHttpClient } from 'hooks';
 import { db } from 'hooks/db';
-import { useWinWidth } from 'hooks';
+import { useRequest } from 'ahooks';
+import { Container, Avatar, Row, Border, Button, Center, Divider, Column, SizedBox, Padding, Heading, Card, Right, Left } from 'components/flutter';
+import { InfoTile } from './InfoTile';
 
 
 export function Detail() {
     const navigate = useNavigate();
     const location = useLocation();
-    const select = location.state?.select;
-    const [friend, setFriend] = useState();
+    const friend = location.state?.select;
     const { http: httpImgs } = useHttpClient('/imgs');
     const { http: http2 } = useHttpClient('/api/chat/friend/')
     const { isMobile } = useWinWidth()
 
 
-    useEffect(() => {
-        setFriend(select);
-    }, [select]);
+    console.log('friend', friend)
 
     // 删除好友
     const { runAsync: delFid } = useRequest((id) => {
-        http2.requestBodyJson('DELETE', { id }).then((results) => {
-            if (!results) return;
-            db.table('friends').get(id).then((row) => {
-                db.table('message').where('uid').equals(row?.uid).delete()
-                db.table('friends').delete(id)
-            })
-        })
+        console.log('id', id)
+        // http2.requestBodyJson('DELETE', { id }).then((results) => {
+        //     if (!results) return;
+        //     db.table('friends').get(id).then((row) => {
+        //         db.table('message').where('uid').equals(row?.uid).delete()
+        //         db.table('friends').delete(id)
+        //     })
+        // })
     }, { manual: true })
 
 
@@ -43,49 +40,77 @@ export function Detail() {
     }, { manual: true })
 
     // 打开聊天
-    function openMsgWindow(select) {
-        db.table('friends').update(select?.id, { 'signal': 'old', 'dialog': 1 })
+    function openMsgWindow(friend) {
+        db.table('friends').update(friend?.id, { 'signal': 'old', 'dialog': 1 })
         if (isMobile) {
-            navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
+            navigate('/chat/mobile/msg/', { state: { 'uid': friend?.uid, 'avatar_url': friend?.avatar_url } })
         } else {
-            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
+            navigate('/chat/dialog/msg/', { state: { 'uid': friend?.uid, 'avatar_url': friend?.avatar_url } })
         }
     }
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Container alignItems='center'>
-            <br />
-            {friend &&
+        <SizedBox height={100} />
 
-                <UserChat friendData={friend}>
-                    <UserChat.Avatar avatarUrl={httpImgs.buildUrl(friend?.avatar_url)} />
-                    <UserChat.Text lable='名称' >{friend?.nikename}</UserChat.Text>
-                    <UserChat.Text lable='邮箱' >{friend?.email}</UserChat.Text>
-                    <UserChat.Text lable='备注' onConfirm={(remark) => { setFriend(p => ({ ...p, remark })); updRemark(friend?.id, remark); }}>{friend?.remark}
-                    </UserChat.Text>
-                    <UserChat.Button
-                        lable="发起聊天"
-                        color="#409eff"
-                        onClick={(p) => openMsgWindow(p)}
-                    />
+        <Center>
+            <Avatar size={75} />
+        </Center>
 
-                    <UserChat.Button
-                        lable="删除好友"
-                        color="#ff4d4f"
-                        onClick={(v) => {
-                            delFid(v?.id);
-                            isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/');
-                        }}
-                    />
+        <Divider fade={true} />
+        <Padding value={20}>
+            <Column>
+                <Heading level={4}>账户信息</Heading>
+                <SizedBox height={10} />
+                <InfoTile icon="user" label="名称" value={friend?.nikename} />
+                <InfoTile icon="email" label="邮箱" value={friend?.email} />
+                <InfoTile icon="edit" label="备注" value={friend?.remark} isLast={true} />
+                <Divider />
+                <SizedBox height={10} />
+                <Row>
+                    <Row.Col>
+                        <Left>
+                            <Button
+                                label="发起聊天"
+                                onPressed={() => openMsgWindow(friend)}
+                                style={{
+                                    background: 'var(--accent-color)',
+                                    color: '#fff',
+                                    border: 'none'
+                                }}
+                            />
+                        </Left>
+                    </Row.Col>
 
-                    {/* <UserChat.Button
-                        lable="发起视频"
-                        color="#67c23a"
-                        onClick={(v) => startVideo(v)}
-                    /> */}
-                </UserChat>
-            }
-        </Container>
+                    <Row.Col>
+                        <Right>
+                            <Button
+                                label="删除好友"
+                                onPressed={() => {
+                                    delFid(friend?.id);
+                                    isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/');
+                                }}
+                                style={{
+                                    color: '#fff',
+                                    background: '#ff4d4f',
+                                    border: 'none'
+                                }}
+                            />
+                        </Right>
+                    </Row.Col>
+
+                </Row>
+            </Column>
+
+        </Padding>
+
+
+
+
+
+
+
+
+
 
     </Suspense>
 }

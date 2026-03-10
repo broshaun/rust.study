@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useWinWidth, useHttpClient, useDateTime } from 'hooks';
 import { useRequest } from 'ahooks';
 import { db } from 'hooks/db';
-import { AppShell, AppBar, DesktopShell, Row, Padding, Icon, Center, Column, SizedBox, ListView, BottomNav } from 'components/flutter';
+import { AppShell, AppBar, PCShell, Row, Padding, Icon, Center, Column, SizedBox, ListView, Right } from 'components/flutter';
 
 export function Chat() {
   const navigate = useNavigate();
@@ -14,10 +14,7 @@ export function Chat() {
   const [title, setTitle] = useState('Chatly');
 
 
-
   const [currentTab, setCurrentTab] = useState('home');
-
-
 
   // 1. 消息轮询逻辑 (保持不变)
   useRequest(() => {
@@ -37,21 +34,9 @@ export function Chat() {
 
   // 2. 菜单定义 (抽离逻辑，增加路径判断)
   const items = useMemo(() => [
-    {
-      key: 'self',
-      label: '我的',
-      icon: <Icon name="home" onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} />
-    },
-    {
-      key: 'friend',
-      label: '好友',
-      icon: <Icon name="users_oline" onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} />
-    },
-    {
-      key: 'news',
-      label: '消息',
-      icon: <Icon name="chat-bubble-bottom-center-text" onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} />
-    },
+    { key: 'self', icon: <Icon name="user-oouline" label='我的' onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} /> },
+    { key: 'friend', icon: <Icon name="users_oline" label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },
+    { key: 'news', icon: <Icon name="chat-bubble-bottom-center-text" label='消息' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); }} /> },
   ], [isMobile, navigate, getTimestampMs]);
 
   const visibleItems = items; // 如果有 display: false 的需求，在此过滤
@@ -59,28 +44,25 @@ export function Chat() {
   // --- PC 端布局 ---
   if (!isMobile) {
     return (
-      <DesktopShell>
-        {/* <DesktopShell.Header>
-        <AppBar title={title} /> 
-        </DesktopShell.Header> */}
-        <DesktopShell.Left width={80}>
-          <Center >
+      <PCShell>
+        <PCShell.Left width={60}>
+          <Column>
             <SizedBox height={20} />
-
-            <ListView>
-              {visibleItems.map((item) => (
-                <Padding value={10} >
+            {visibleItems.map((item) => (
+              <Padding value={5}>
+                <Center >
                   {item.icon}
-                </Padding>
-              ))}
-            </ListView>
-          </Center>
-        </DesktopShell.Left>
-        <DesktopShell.Content>
+                </Center>
+              </Padding>
+            ))}
 
+          </Column>
+        </PCShell.Left>
+
+        <PCShell.Content>
           <Outlet />
-        </DesktopShell.Content>
-      </DesktopShell>
+        </PCShell.Content>
+      </PCShell>
     );
   }
 
@@ -90,34 +72,25 @@ export function Chat() {
       <AppShell.Header>
         <AppBar title={title} />
       </AppShell.Header>
+
       <AppShell.Content>
         <Outlet />
       </AppShell.Content>
 
       <AppShell.Footer height={70}>
-        <BottomNav
-          activeKey={currentTab}
-          onSelect={setCurrentTab}
-          items={visibleItems}
-        />
-
-        {/* <Row align="center">
-          {visibleItems.map((item) => (
-            <Row.Col key={item.key}>
-              <Padding value={6}>
-                <Center>
-                  <Icon
-                    size={22}
-                    name={item.icon.name}
-                    label={item.icon.label}
-                    onClick={() => item.onClick()}
-                    active={location.pathname === item.path} // 自动高亮
-                  />
-                </Center>
-              </Padding>
-            </Row.Col>
-          ))}
-        </Row> */}
+        <Center>
+          <Row>
+            {
+              visibleItems.map((item) =>
+                <Row.Col>
+                  <Padding value={10} >
+                    <Center>{item.icon}</Center>
+                  </Padding>
+                </Row.Col>
+              )
+            }
+          </Row>
+        </Center>
       </AppShell.Footer>
     </AppShell>
   );

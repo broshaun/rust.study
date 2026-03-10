@@ -1,25 +1,45 @@
-.listView {
-  display: flex;
+.container {
   width: 100%;
-  height: 100%; /* 填满父级 Container */
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  
-  /* 开启硬件加速，确保滚动不掉帧 */
-  -webkit-overflow-scrolling: touch;
-  
-  /* 移除列表特有的间隙污染 */
-  margin: 0;
-  list-style: none;
+  position: relative;
+  /* 移除 mask-image，极大减轻 GPU 合成压力 */
+  outline: none;
+  scrollbar-width: none; /* 针对火狐隐藏，保持界面清爽 */
 }
 
-/* 针对水平滚动的扩展支持 */
-.listView[style*="flex-direction: row"] {
-  overflow-x: auto;
-  overflow-y: hidden;
+.container::-webkit-scrollbar {
+  display: none; /* 针对 Chrome 隐藏，利用骨架感知滚动 */
 }
 
-/* 隐藏滚动条（出口系统追求极简视觉） */
-.listView::-webkit-scrollbar {
-  display: none;
+/* 仅在底部建立一个渐隐遮罩 */
+.container::after {
+  content: '';
+  position: sticky; /* 使用 sticky 锁定在视口底部 */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px; /* 渐隐区域高度 */
+  background: linear-gradient(to top, var(--app-bg), transparent);
+  pointer-events: none; /* 穿透点击，不干扰列表操作 */
+  z-index: 10;
+}
+
+.phantom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+}
+
+.content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* 开启 3D 加速，强制内容层进入独立合成层 */
+  transform: translateZ(0); 
+  will-change: transform;
 }

@@ -1,0 +1,35 @@
+.decoratedBox {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+  
+  /* 确保边框、投影和圆角在切换主题时平滑过渡 */
+  transition: 
+    border 0.3s ease, 
+    box-shadow 0.3s ease, 
+    backdrop-filter 0.3s ease,
+    background-color 0.3s ease;
+  
+  /* 防止子内容溢出圆角（尤其是有背景色的子 Container 时） */
+  overflow: hidden; 
+}
+
+/* 逻辑类：由 JS 动态注入 */
+.hasBorder {
+  border: var(--panel-border);
+}
+
+.hasShadow {
+  box-shadow: var(--panel-shadow);
+}
+
+.hasBlur {
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+}
+
+/* 针对不同主题的圆角微调，默认读取全局变量 */
+.rounded {
+  border-radius: var(--radius-main, 12px);
+}

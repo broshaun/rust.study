@@ -2,18 +2,18 @@ import React from 'react';
 import styles from './Column.module.css';
 
 /**
- * Column - 纯净布局版
- * 职责：仅作为垂直轨道，确保子元素纵向排列。
+ * Column - 直觉垂直轨道
+ * 职责：强制子元素垂直排列。默认横向占满父级，提供充足的对齐空间。
+ * @param {number|string} width - 轨道宽度，默认 100%
  */
-export const Column = ({ children, height, className = '', style }) => {
+export const Column = ({ children, width = '100%' }) => {
+  // 尺寸单位自动补全：如果是数字自动加 px，否则保留原样（如 '100%', 'auto'）
+  const f = (v) => typeof v === 'number' ? `${v}px` : v;
+  
   return (
     <div 
-      className={`${styles.column} ${className}`} 
-      style={{
-        height: typeof height === 'number' ? `${height}px` : height || 'auto',
-        // 移除风格相关属性：不再干涉文字颜色和过渡动画
-        ...style
-      }}
+      className={styles.column} 
+      style={{ '--col-w': f(width) }}
     >
       {children}
     </div>

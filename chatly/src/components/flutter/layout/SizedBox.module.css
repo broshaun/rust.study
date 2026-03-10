@@ -1,0 +1,27 @@
+/* 1. 基础公共样式 */
+.sizedBoxWithContent, .sizedBoxEmpty {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow: visible; /* 允许发光或阴影溢出 */
+}
+
+/* 2. 当有内容时：作为容器使用 */
+.sizedBoxWithContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 垂直居中 */
+  
+  /* 优先级：显式设置 > 100% */
+  width: var(--sb-width, 100%);
+  height: var(--sb-height, auto);
+}
+
+/* 3. 当没有内容时：纯占位使用 */
+.sizedBoxEmpty {
+  display: inline-block;
+  vertical-align: top;
+  
+  /* 优先级：显式设置 > 0px */
+  width: var(--sb-width, 0px);
+  height: var(--sb-height, 0px);
+}

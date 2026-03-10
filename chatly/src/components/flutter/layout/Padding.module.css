@@ -1,0 +1,6 @@
+.paddingBase {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--padding-val, 0px);
+}

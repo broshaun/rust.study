@@ -2,55 +2,29 @@ import React from 'react';
 import styles from './Row.module.css';
 
 /**
- * Row - 纯净布局版
- * 职责：仅作为水平轨道，负责子元素的横向排列。
+ * Col - 比例分割单元
  */
-const Row = ({ children, width, style }) => {
+const Col = ({ children, span = 1 }) => {
   return (
-    <div 
-      className={styles.row} 
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'nowrap',
-        width: typeof width === 'number' ? `${width}px` : width || '100%',
-        // 移除风格相关属性：不再干涉文字颜色和过渡动画
-        ...style
-      }}
-    >
+    <div className={styles.col} style={{ '--col-span': span }}>
       {children}
     </div>
   );
 };
 
 /**
- * Col - 纯净栅格版
- * 职责：仅负责宽度比例锁定与对齐。
+ * Row - 横向轨道
+ * 仅增加 height 属性控制高度
  */
-const Col = ({ children, span = 'auto', style }) => {
-  const flexWidth = typeof span === 'number' && span <= 1 
-    ? `${span * 100}%` 
-    : span;
+export const Row = ({ children, height }) => {
+  // 如果传了 height，就转成带有 px 的变量，没传就是空对象
+  const vars = height ? { '--row-h': typeof height === 'number' ? `${height}px` : height } : {};
 
   return (
-    <div style={{
-      width: flexWidth === 'auto' ? 'auto' : flexWidth,
-      flexBasis: flexWidth === 'auto' ? 'auto' : flexWidth,
-      flexShrink: 0,
-      flexGrow: flexWidth === 'auto' ? 1 : 0,
-      boxSizing: 'border-box',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      // 移除风格相关属性：不再干涉 WebkitFontSmoothing
-      ...style
-    }}>
+    <div className={styles.row} style={vars}>
       {children}
     </div>
   );
 };
 
 Row.Col = Col;
-
-export { Row };

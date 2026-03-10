@@ -2,41 +2,26 @@ import React from 'react';
 import styles from './TextField.module.css';
 
 /**
- * TextField - 万能风格适配版
- * 职责：接入全局皮肤系统，支持 7 种主题一键变脸。
+ * TextField - 皮肤适配版 (融合增强)
+ * 职责：纯粹的输入桥接器，处理 Label 与 Input 的水平排列。
  */
 export const TextField = ({ 
   label, 
   hintText, 
   value, 
   onChanged, 
-  obscureText = false, 
-  width = '100%',
-  disabled = false,
-  style
+  obscureText = false 
 }) => {
-  
   return (
-    <div 
-      className={`${styles.inputContainer} ${disabled ? styles.disabled : ''}`} 
-      style={{ 
-        width: typeof width === 'number' ? `${width}px` : width,
-        ...style 
-      }}
-    >
-      {label && (
-        <div className={styles.leftLabel}>
-          {label}
-        </div>
-      )}
-
+    <div className={styles.inputContainer}>
+      {label && <div className={styles.label}>{label}</div>}
+      
       <input
         className={styles.input}
         type={obscureText ? 'password' : 'text'}
         placeholder={hintText}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChanged && onChanged(e.target.value)}
+        value={value ?? ''}
+        onChange={(e) => onChanged?.(e.target.value)}
       />
     </div>
   );
