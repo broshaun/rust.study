@@ -1,8 +1,9 @@
-import React, { useEffect, useState,  useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Chat, Container, DialogList, Avatar } from 'components';
+import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
+import { DialogItem } from './DialogItem';
 
 
 export const Item = () => {
@@ -22,7 +23,7 @@ export const Item = () => {
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/chat/mobile/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
+            navigate('/message/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
         })
     }, [])
 
@@ -37,18 +38,29 @@ export const Item = () => {
         }
     }, [])
 
-    return <Chat>
-        <Chat.Left size={"30%"}>
-            <Container verticalScroll={true} >
-                <DialogList
-                    dialogData={dialog}
-                    onSelectDialog={(select) => { openMsgWindow(select) }}
-                    onClear={(p) => handleClear(p)}
-                    renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-                />
-            </Container>
-        </Chat.Left>
-    </Chat>
+
+    console.log('dialog', dialog)
+
+    return <Suspense fallback={<div>加载中...</div>}>
+        <Container height={800} >
+            <Border />
+            <Padding value={5}>
+                <Right>
+                    <Icon name='magnifying-glass' />
+                </Right>
+            </Padding>
+            <Divider />
+            <ListView
+                itemCount={dialog.length}
+                itemHeight={42}
+                buffer={5}
+                itemBuilder={(index) => {
+                    const f = dialog[index];
+                    return <DialogItem data={f} onSelect={openMsgWindow} onClear={(p) => handleClear(p)} />
+                }}
+            />
+        </Container>
+    </Suspense>
 }
 
 

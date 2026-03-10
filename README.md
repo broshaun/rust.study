@@ -7,7 +7,6 @@
 - cnpm create rsbuild@latest
 - cnpm install react-router-dom@7.6.x
 - cnpm install zustand ahooks@3.9.x
-
 - cnpm install
 
 

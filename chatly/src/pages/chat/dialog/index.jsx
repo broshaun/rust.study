@@ -14,7 +14,7 @@ export const RsDialog = (
 
         <Route path="mobile" element={<Mobile />} >
             <Route path="dialog" element={<Item />} />
-            <Route path="msg" element={<Msg />} />
+            {/* <Route path="msg" element={<Msg />} /> */}
         </Route>
 
     </>

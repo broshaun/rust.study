@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react'
 import { useNavigate, useLocation } from "react-router-dom";
-import { useWinWidth, useHttpClient } from 'hooks';
+import { useWinSize, useHttpClient } from 'hooks';
 import { db } from 'hooks/db';
 import { useRequest } from 'ahooks';
 import { Container, Avatar, Row, Border, Button, Center, Divider, Column, SizedBox, Padding, Heading, Card, Right, Left } from 'components/flutter';
@@ -13,7 +13,7 @@ export function Detail() {
     const friend = location.state?.select;
     const { http: httpImgs } = useHttpClient('/imgs');
     const { http: http2 } = useHttpClient('/api/chat/friend/')
-    const { isMobile } = useWinWidth()
+    const { isMobile } = useWinSize()
 
 
     console.log('friend', friend)
@@ -43,7 +43,7 @@ export function Detail() {
     function openMsgWindow(friend) {
         db.table('friends').update(friend?.id, { 'signal': 'old', 'dialog': 1 })
         if (isMobile) {
-            navigate('/chat/mobile/msg/', { state: { 'uid': friend?.uid, 'avatar_url': friend?.avatar_url } })
+            navigate('/message/', { state: { 'uid': friend?.uid, 'avatar_url': friend?.avatar_url } })
         } else {
             navigate('/chat/dialog/msg/', { state: { 'uid': friend?.uid, 'avatar_url': friend?.avatar_url } })
         }

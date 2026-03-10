@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, Suspense, useCallback } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Chat, Container, DialogList, Avatar } from 'components';
+// import { Chat, Container, DialogList, Avatar } from 'components';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 
+import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';
+import { DialogItem } from './DialogItem';
 
 export const Mian = () => {
     const navigate = useNavigate()
@@ -38,21 +40,32 @@ export const Mian = () => {
         }
     }, [])
 
-    return <Chat>
-        <Chat.Left size={"30%"}>
-            <Container verticalScroll={true} >
-                <DialogList
-                    dialogData={dialog}
-                    onSelectDialog={(select) => { openMsgWindow(select) }}
-                    onClear={(p) => handleClear(p)}
-                    renderAvatar={(item) => <Avatar src={item.avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-                />
-            </Container>
-        </Chat.Left>
-        <Chat.Right size={"70%"}>
-            <Outlet />
-        </Chat.Right>
-    </Chat>
+    return <Suspense fallback={<div>加载中...</div>}>
+        <Row>
+            <Row.Col>
+                <Container >
+                    <Border />
+                    <Padding value={5}>
+                        <Right>
+                            <Icon name='magnifying-glass' />
+                        </Right>
+                    </Padding>
+                    <Divider />
+                    <ListView
+                        itemCount={dialog.length}
+                        itemHeight={42}
+                        buffer={5}
+                        itemBuilder={(index) => {
+                            return <DialogItem data={dialog[index]} onSelect={openMsgWindow} onClear={(p) => handleClear(p)} />
+                        }}
+                    />
+                </Container>
+            </Row.Col>
+            <Row.Col span={3}>
+                <Outlet />
+            </Row.Col>
+        </Row>
+    </Suspense>
 
 
 

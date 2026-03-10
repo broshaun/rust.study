@@ -3,16 +3,21 @@ import { Chat } from "./main";
 import { RsFriend } from "./friend";
 import { RsDialog } from "./dialog";
 import { RsMyInfo } from "./myinfo";
+import { Msg } from "./dialog/msg";
 
 
 
 export const RsChat = (
-  <Route path="chat" element={<Chat />}>
-    {RsFriend}
-    {RsDialog}
-    {RsMyInfo}
+  <>
 
+    <Route path="chat" element={<Chat />}>
+      {RsFriend}
+      {RsDialog}
+      {RsMyInfo}
+    </Route>
 
-  </Route>
+    <Route path="message" element={<Msg />} />
+    
+  </>
 );
 

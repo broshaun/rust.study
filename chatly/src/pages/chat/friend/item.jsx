@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useHttpClient } from 'hooks/http';
 import { useRequest } from 'ahooks';
 import { FriendList } from 'components/chat';
-import { Chat, Container, Avatar } from 'components';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';

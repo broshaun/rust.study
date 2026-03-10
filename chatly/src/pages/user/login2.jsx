@@ -2,7 +2,7 @@
 import { Avatar, Modal } from "components";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useLogin, useHttpClient, useWinWidth } from 'hooks';
+import { useLogin, useHttpClient, useWinSize } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage, useHttpClient2 } from 'hooks/http';
 import { Button, TextField, Row, SizedBox, Center, Divider, AppShell, Container, Padding } from 'components/flutter';
@@ -20,7 +20,7 @@ export function LogOn() {
     const { setToken, setTime } = useLogin()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
-    const { isMobile } = useWinWidth()
+    const { isMobile } = useWinSize()
 
     const { data, runAsync: runLogin } = useRequest((account, password) => {
         if (!account || !password) {

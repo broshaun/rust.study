@@ -1,0 +1,93 @@
+/* --- 1. 外层容器：负责左右对齐 --- */
+.msgWrapper {
+  display: flex;
+  width: 100%;
+  padding: 8px 12px;     /* 上下留出呼吸感，左右预留边距 */
+  box-sizing: border-box;
+}
+
+/* send: 靠右 */
+.wrapperSend {
+  justify-content: flex-end;
+}
+
+/* receive: 靠左 */
+.wrapperReceive {
+  justify-content: flex-start;
+}
+
+/* --- 2. 消息主体：头像 + 气泡 --- */
+.chatRow {
+  display: flex;
+  align-items: flex-start;
+  max-width: 85%;        /* 防止超长文本把整行占满，留出一点空白更好看 */
+}
+
+/* 发送方：头像排在右边，气泡在左 */
+.sendRow {
+  flex-direction: row-reverse;
+}
+
+/* 接收方：头像排在左边，气泡在右 */
+.receiveRow {
+  flex-direction: row;
+}
+
+/* --- 3. 细节元素 --- */
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--panel-bg, #e5e7eb);
+  color: var(--text-secondary, #666);
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  font-size: 13px;
+  flex-shrink: 0;        /* 关键：防止头像被长消息挤扁 */
+  margin: 0 8px;
+}
+
+.bubbleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;          /* 允许内容在溢出时进行截断或换行 */
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap; /* 保留空格和换行 */
+  word-break: break-word; /* 防止长字母串撑破布局 */
+}
+
+/* 发送方：蓝色背景，右下角尖角 */
+.sendBubble {
+  background: var(--accent-color, #007aff);
+  color: #fff;
+  border-bottom-right-radius: 2px;
+}
+
+/* 接收方：灰色/面板背景，左下角尖角 */
+.receiveBubble {
+  background: var(--panel-bg, #f2f2f7);
+  color: var(--text-primary, #1c1c1e);
+  border-bottom-left-radius: 2px;
+  border: 1px solid var(--panel-border-color, rgba(0,0,0,0.05));
+}
+
+.time {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  padding: 0 4px;
+}
+
+/* 自己的时间戳右对齐，对方的左对齐 */
+.sendRow .time { text-align: right; }
+.receiveRow .time { text-align: left; }

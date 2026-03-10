@@ -42,19 +42,16 @@ export const Mian = () => {
                                 'nikename': element?.nikename
                             })
                         } else {
-                            for (let i = 0; i < 1000; i++) {
-                                db.table('friends').put({
-                                    // 'id': element?.id,
-                                    'id': i,
-                                    'uid': element?.user_id,
-                                    'avatar_url': element?.avatar_url,
-                                    'email': element?.email,
-                                    'remark': element?.remark,
-                                    'nikename': element?.nikename,
-                                    'signal': 'old',
-                                    'dialog': 0
-                                })
-                            }
+                            db.table('friends').put({
+                                'id': element?.id,
+                                'uid': element?.user_id,
+                                'avatar_url': element?.avatar_url,
+                                'email': element?.email,
+                                'remark': element?.remark,
+                                'nikename': element?.nikename,
+                                'signal': 'old',
+                                'dialog': 0
+                            })
                         }
                     })
                 });

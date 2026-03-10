@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useWinWidth, useHttpClient, useDateTime } from 'hooks';
+import { useWinSize, useHttpClient, useDateTime, useTitle } from 'hooks';
 import { useRequest } from 'ahooks';
 import { db } from 'hooks/db';
 import { AppShell, AppBar, PCShell, Row, Padding, Icon, Center, Column, SizedBox, ListView, Right } from 'components/flutter';
@@ -10,8 +10,8 @@ export function Chat() {
   const location = useLocation(); // 获取当前路径用于判断 Active 状态
   const { getTimestampMs } = useDateTime();
   const { http: httpMsg } = useHttpClient('/api/chat/msg/single/');
-  const { isMobile } = useWinWidth();
-  const [title, setTitle] = useState('Chatly');
+  const { isMobile } = useWinSize();
+  const { title, setTitle } = useTitle()
 
 
   const [currentTab, setCurrentTab] = useState('home');
@@ -26,6 +26,7 @@ export function Chat() {
         db.table('friends').where('uid').equals(data?.uid).modify((user) => {
           user.signal = 'news';
           user.dialog = 1;
+          user.timestamp = data?.timestamp
         });
       }
     });

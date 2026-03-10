@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLocation } from "react-router-dom";
-import { useHttpClient, useDateTime } from 'hooks';
-import { ChatMsg } from 'components/chat';
-import { Avatar } from 'components';
+import { useHttpClient, useDateTime, useWinSize } from 'hooks';
+
+
 import { useRequest, useLocalStorageState } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
+import { MsgItem, ChatMsg } from 'components/chat';
+import { Column, Border, Divider, Container, Row, Right, Icon, Avatar, AppShell, ListView } from 'components/flutter';
+
+
 
 
 export function Msg() {
@@ -16,6 +20,12 @@ export function Msg() {
     const [msgs, setMsgs] = useState([]);
     const { http } = useHttpClient('/api/chat/msg/single/')
     const { getDateTimeStr } = useDateTime()
+
+
+
+    const { winHeight } = useWinSize()
+
+    console.log('winHeight', winHeight)
 
     useEffect(() => {
         const sub = liveQuery(
@@ -40,13 +50,25 @@ export function Msg() {
         return 'ok'
     }, { manual: true })
 
-    return <React.Fragment>
-        <ChatMsg
-            friendAvatar={() => <Avatar src={avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-            oneselfAvatar={() => <Avatar src={selfAvatar} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-        >
-            <ChatMsg.Message>{msgs}</ChatMsg.Message>
-            <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
-        </ChatMsg>
-    </React.Fragment>
+    return <ChatMsg>
+        <ChatMsg.Meta
+            title="张三"
+            left={<Icon name="chevron-left" />}
+            receiveAvatar={() => <Avatar src={avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
+            sendAvatar={() => <Avatar src={selfAvatar} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
+        />
+        <ChatMsg.Content height={winHeight - 120}>
+            <ListView
+                itemCount={msgs.length}
+                itemHeight={75}
+                buffer={25}
+                itemBuilder={(index) => {
+                    return <MsgItem data={msgs[index]} />
+                }}
+            />
+        </ChatMsg.Content>
+        <ChatMsg.Send
+            onSend={(newMsg) => { console.log('newMsg', newMsg) }}
+        />
+    </ChatMsg>
 }
