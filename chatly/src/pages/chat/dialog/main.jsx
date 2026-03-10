@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 // import { Chat, Container, DialogList, Avatar } from 'components';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
+import { useVirtualList } from 'ahooks';
 
 import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';
 import { DialogItem } from './DialogItem';

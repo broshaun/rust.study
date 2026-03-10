@@ -1,31 +1,33 @@
 .container {
-  /* 1. 骨架基因：默认尝试填充父级剩余空间 */
-  flex: 1;
+  /* --- 1. 布局基座 --- */
   display: flex;
   flex-direction: column;
   position: relative;
-  
-  /* 2. 关键：防止容器被内部绝对定位或长内容撑爆，锁定物理视口 */
-  min-height: 0;
-  min-width: 0;
   box-sizing: border-box;
 
-  /* 3. 尺寸优先级：显式变量 > 继承/自适应 */
-  /* 使用 100% 作为回退，确保它默认是“支撑型”的 */
+  /* --- 2. 尺寸锁定 --- */
+  /* 默认为 100% 以支撑父级空间；min-size: 0 防止被 Flex 子项撑爆 */
   width: var(--c-w, 100%);
   height: var(--c-h, 100%);
+  min-height: 0;
+  min-width: 0;
+  
   padding: var(--c-p, 0);
   margin: var(--c-m, 0);
+
+  /* 默认裁剪溢出 */
+  overflow: hidden;
 }
 
-/* 4. 纵向滚动：强制 block 化，解决部分浏览器下 flex 子项高度计算不准的问题 */
+/* --- 3. 纵向滚动模式 --- */
 .container[data-v="true"] {
   overflow-y: auto;
   overflow-x: hidden;
+  /* 使用 block 解决某些旧版浏览器下 Flex 容器滚动高度计算不准的问题 */
   display: block; 
 }
 
-/* 5. 横向滚动 */
+/* --- 4. 横向滚动模式 --- */
 .container[data-h="true"] {
   overflow-x: auto;
   overflow-y: hidden;
@@ -34,11 +36,11 @@
   flex-wrap: nowrap;
 }
 
-/* 6. 极致脱水：隐藏滚动条 */
+/* --- 5. 隐藏滚动条 (极致视觉体验) --- */
 .container::-webkit-scrollbar {
   display: none;
 }
 .container {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }

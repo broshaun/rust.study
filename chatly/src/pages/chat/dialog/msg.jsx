@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useLocation } from "react-router-dom";
 import { useHttpClient, useDateTime, useWinSize } from 'hooks';
-
-
-import { useRequest, useLocalStorageState } from 'ahooks';
+import { useRequest, useLocalStorageState, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
-import { Column, Border, Divider, Container, Row, Right, Icon, Avatar, AppShell, ListView } from 'components/flutter';
-
+import { Container, Icon, Avatar } from 'components/flutter';
 
 
 
@@ -20,12 +17,9 @@ export function Msg() {
     const [msgs, setMsgs] = useState([]);
     const { http } = useHttpClient('/api/chat/msg/single/')
     const { getDateTimeStr } = useDateTime()
-
-
-
     const { winHeight } = useWinSize()
 
-    console.log('winHeight', winHeight)
+
 
     useEffect(() => {
         const sub = liveQuery(
@@ -50,6 +44,27 @@ export function Msg() {
         return 'ok'
     }, { manual: true })
 
+
+
+    const containerRef = useRef(null);
+    const wrapperRef = useRef(null)
+    const [list, scrollTo] = useVirtualList(msgs, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 44,
+        overscan: 5,
+    });
+
+    useEffect(() => {
+        if (msgs.length > 0) {
+            requestAnimationFrame(() => {
+                scrollTo(msgs.length - 1);
+            });
+        }
+    }, [msgs.length]);
+
+
+
     return <ChatMsg>
         <ChatMsg.Meta
             title="张三"
@@ -57,18 +72,15 @@ export function Msg() {
             receiveAvatar={() => <Avatar src={avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
             sendAvatar={() => <Avatar src={selfAvatar} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
         />
-        <ChatMsg.Content height={winHeight - 120}>
-            <ListView
-                itemCount={msgs.length}
-                itemHeight={75}
-                buffer={25}
-                itemBuilder={(index) => {
-                    return <MsgItem data={msgs[index]} />
-                }}
-            />
+        <ChatMsg.Content>
+            <Container verticalScroll={true} ref={containerRef} margin={10} height={winHeight - 180}>
+                <div ref={wrapperRef}>
+                    {list.map((item) => {
+                        return <MsgItem data={item.data} />
+                    })}
+                </div>
+            </Container>
         </ChatMsg.Content>
-        <ChatMsg.Send
-            onSend={(newMsg) => { console.log('newMsg', newMsg) }}
-        />
+        <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
     </ChatMsg>
 }
