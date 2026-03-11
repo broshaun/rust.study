@@ -2,7 +2,7 @@ import { useState, useCallback, useTransition, Suspense } from 'react';
 import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { Row, Col, InputText2 } from 'components';
 import { IconCustomColor } from 'components/icon';
-import { useHttpClient } from 'hooks';
+import { useHttpClient2 } from 'hooks/http';
 import { useRequest } from 'ahooks';
 
 
@@ -10,13 +10,13 @@ import { useRequest } from 'ahooks';
 export const Nikename = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { http: apiLogin } = useHttpClient('/api/chat/login/');
+    const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const [name, setName] = useState()
     const { runAsync: update } = useRequest(
         async (nikename) => {
             try {
                 if (!nikename) return '请输入昵称'
-                const { code, message, data } = await apiLogin.requestBodyJson('PATCH', { nikename: nikename })
+                const { code, message, data } = await apiLogin.post('PATCH', { nikename: nikename })
                 console.log('message', message)
                 return 'ok'
             } catch {

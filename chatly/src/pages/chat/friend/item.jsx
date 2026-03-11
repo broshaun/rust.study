@@ -1,26 +1,28 @@
-import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import React, { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useHttpClient } from 'hooks/http';
-import { useRequest } from 'ahooks';
-import { FriendList } from 'components/chat';
+import { useHttpClient2 } from 'hooks/http';
+import { useWinSize } from 'hooks';
+import { useRequest, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
-import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';
-import { Friend } from './Friend';
+import { Divider, Container, Right, Icon, Padding } from 'components/flutter';
+import { Friend } from 'components/chat';
 
 
 export const Item = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [friends, setFriends] = useState([]);
-    const { http } = useHttpClient('/api/chat/friend/')
+    const { http } = useHttpClient2('/rpc/chat/friend/')
+    const { winHeight, isMobile } = useWinSize()
+
     const openMsgWindow = useCallback((select) => {
         navigate('/chat/mobile/detail/', { state: { select } });
     }, [navigate, location.pathname]);
 
     const { runAsync: runGetFriend } = useRequest(
         async () => {
-            http.requestParams('GET', { ask_state: 'agree' }).then((results) => {
+            http.requestBodyJson('GET', { ask_state: 'agree' }).then((results) => {
                 if (!results) return 0;
                 const { code, message, data } = results;
                 if (code !== 200) return 0;
@@ -65,28 +67,37 @@ export const Item = () => {
         return () => sub.unsubscribe()
     }, [])
 
+
+
+    const containerRef = useRef(null);
+    const wrapperRef = useRef(null)
+    const [list] = useVirtualList(friends, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 74,
+        overscan: 10,
+    });
+
+
     return <Suspense fallback={<div>加载中...</div>}>
-        {friends &&
-            <Container height={800} >
-                <Border />
-                <Padding value={5}>
-                    <Right>
-                        <Icon name='magnifying-glass' />
-                    </Right>
-                </Padding>
-                <Divider />
-                <ListView
-                    itemCount={friends.length}
-                    itemHeight={42}
-                    buffer={5}
-                    itemBuilder={(index) => {
-                        console.log('index', index)
-                        const f = friends[index];
-                        return <Friend data={f} onSelect={openMsgWindow} />
-                    }}
-                />
-            </Container>
-        }
+        <Container verticalScroll={true} ref={containerRef} height={winHeight}>
+            <Padding value={5}>
+                <Right>
+                    <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
+                </Right>
+            </Padding>
+            <Divider />
+            <Padding value={5}>
+                <div ref={wrapperRef}>
+                    {list.map((item) => {
+                        return <Friend
+                            data={item.data}
+                            onSelect={openMsgWindow}
+                        />
+                    })}
+                </div>
+            </Padding>
+        </Container>
     </Suspense>
 
 }

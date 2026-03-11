@@ -2,10 +2,10 @@
 import { Avatar, Modal } from "components";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useLogin, useHttpClient, useWinSize } from 'hooks';
+import { useLogin, useWinSize } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage, useHttpClient2 } from 'hooks/http';
-import { Button, TextField, Row, SizedBox, Center, Divider, AppShell, Container, Padding } from 'components/flutter';
+import { Button, TextField, Row, SizedBox, Center, Divider, Padding } from 'components/flutter';
 
 
 export function LogOn() {
@@ -15,7 +15,6 @@ export function LogOn() {
     const [avatar, setAvatar] = useLocalStorageState('saveOneself')
     const { src } = useImage("/imgs", avatar)
     const [password, setPassword] = useState("")
-    // const { http } = useHttpClient('/api/chat/login/')
     const { http, endpoint } = useHttpClient2('/rpc/chat/login/')
     const { setToken, setTime } = useLogin()
     const [open, setOpen] = useState(false);
@@ -29,7 +28,6 @@ export function LogOn() {
             return
         }
 
-        // http.requestBodyJson('POST', { 'email': account, 'pass_word': password })
         http.post('POST', { 'email': account, 'pass_word': password })
             .then((results) => {
                 if (!results) return;
@@ -48,11 +46,11 @@ export function LogOn() {
     }, { manual: true })
 
     return <React.Fragment>
-        {/* <Modal visible={open}>
+        <Modal visible={open}>
             <Modal.Title>登录提示</Modal.Title>
             <Modal.Message>{msg}</Modal.Message>
             <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
-        </Modal> */}
+        </Modal>
 
         <Center>
             <Avatar
@@ -71,12 +69,15 @@ export function LogOn() {
             <SizedBox height={30} />
 
             <Row>
+
                 <Padding value={5}>
                     <TextField
                         label="账号"
+                        maxWidth={250}
                         hintText="请输入账号"
                         value={account}
                         onChanged={(value) => setAccount(value)}
+
                     />
                 </Padding>
             </Row >
@@ -85,6 +86,7 @@ export function LogOn() {
                 <Padding value={5}>
                     <TextField
                         label="密码"
+                        maxWidth={250}
                         hintText="请输入密码"
                         obscureText={true}
                         value={password}
@@ -94,11 +96,15 @@ export function LogOn() {
             </Row>
 
             <Row>
+
                 <Padding value={15}>
-                    <Button label='登录' width={235}
-                        onPressed={() => { runLogin(account, password) }}
-                    />
+                    <Center>
+                        <Button label='登录' width={250}
+                            onPressed={() => { runLogin(account, password) }}
+                        />
+                    </Center>
                 </Padding>
+
 
             </Row>
         </Center>

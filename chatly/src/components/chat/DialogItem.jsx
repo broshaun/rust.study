@@ -43,6 +43,7 @@ export const DialogItem = ({ data, onSelect, onClear, onAvatarClick }) => {
           >
             <Avatar
               src={data.avatar_url}
+              imageBaseUrl='/imgs'
               alt={name}
               variant="rounded"
               size={38}

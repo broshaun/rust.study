@@ -1,46 +1,53 @@
 .container {
-  /* --- 1. 布局基座 --- */
   display: flex;
   flex-direction: column;
-  position: relative;
   box-sizing: border-box;
-
-  /* --- 2. 尺寸锁定 --- */
-  /* 默认为 100% 以支撑父级空间；min-size: 0 防止被 Flex 子项撑爆 */
-  width: var(--c-w, 100%);
-  height: var(--c-h, 100%);
-  min-height: 0;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden; 
+  position: relative;
   
-  padding: var(--c-p, 0);
-  margin: var(--c-m, 0);
-
-  /* 默认裁剪溢出 */
-  overflow: hidden;
+  /* --- 滚动条平滑滚动 --- */
+  scroll-behavior: smooth;
+  /* --- Firefox 简易美化 --- */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--text-primary-rgb), 0.2) transparent;
 }
 
-/* --- 3. 纵向滚动模式 --- */
+/* --- Chrome / Safari / Edge 美化 --- */
+.container::-webkit-scrollbar {
+  width: 5px;  /* 纵向滚动条宽度 */
+  height: 5px; /* 横向滚动条高度 */
+}
+
+/* 滚动条轨道 */
+.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 滚动条滑块 (Thumb) */
+.container::-webkit-scrollbar-thumb {
+  /* 使用基于文字色的透明度，完美适配 7 套主题 */
+  background-color: rgba(var(--text-primary-rgb), 0.15);
+  border-radius: 10px;
+  transition: background-color 0.3s;
+}
+
+/* 悬停时滑块加深，增加交互感 */
+.container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--text-primary-rgb), 0.3);
+}
+
+/* 纵向滚动模式 */
 .container[data-v="true"] {
   overflow-y: auto;
-  overflow-x: hidden;
-  /* 使用 block 解决某些旧版浏览器下 Flex 容器滚动高度计算不准的问题 */
   display: block; 
+
 }
 
-/* --- 4. 横向滚动模式 --- */
+/* 横向滚动模式 */
 .container[data-h="true"] {
   overflow-x: auto;
-  overflow-y: hidden;
-  display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-}
-
-/* --- 5. 隐藏滚动条 (极致视觉体验) --- */
-.container::-webkit-scrollbar {
-  display: none;
-}
-.container {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
 }

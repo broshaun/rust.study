@@ -2,18 +2,24 @@ import React from 'react';
 import styles from './TextField.module.css';
 
 /**
- * TextField - 皮肤适配版 (融合增强)
- * 职责：纯粹的输入桥接器，处理 Label 与 Input 的水平排列。
+ * TextField - 皮肤适配版
+ * 添加 maxWidth 支持，并优化了字体渲染
  */
 export const TextField = ({ 
   label, 
   hintText, 
   value, 
   onChanged, 
+  maxWidth, // 新增：支持传入数字或字符串
   obscureText = false 
 }) => {
+  // 处理宽度逻辑
+  const containerStyle = {
+    maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth
+  };
+
   return (
-    <div className={styles.inputContainer}>
+    <div className={styles.inputContainer} style={containerStyle}>
       {label && <div className={styles.label}>{label}</div>}
       
       <input

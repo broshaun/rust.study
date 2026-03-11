@@ -1,8 +1,8 @@
 import React, { useMemo, Children, isValidElement } from 'react';
-import { Icon } from 'components/flutter'; // 统一使用我们改造后的 Icon
+import { Icon } from 'components/flutter'; 
 import styles from './List.module.css';
 
-const RATIO = { icon: 0.45, label: 0.32, tierGap: 0.1, itemHeight: 1.2 };
+const RATIO = { icon: 0.42, label: 0.26, tierGap: 0.1, itemHeight: 1.2 };
 
 const List = ({
   size = 46,
@@ -10,17 +10,20 @@ const List = ({
   iconLabelGap = 12,
   children
 }) => {
-  // 1. 直接解析子组件，不进行二次存储，提升性能
-  const items = Children.toArray(children).filter(
-    child => isValidElement(child) && child.type === List.Items
-  );
-
+  // 1. 先计算尺寸变量（确保后面 map 循环时 computed 已存在）
   const computed = useMemo(() => ({
     itemHeight: `${Math.round(size * RATIO.itemHeight)}px`,
     iconSize: Math.round(size * RATIO.icon),
     labelFontSize: `${Math.round(size * RATIO.label)}px`,
     iconLabelGap: `${iconLabelGap}px`
   }), [size, iconLabelGap]);
+
+  // 2. 解析子组件
+  const items = useMemo(() => 
+    Children.toArray(children).filter(
+      child => isValidElement(child) && child.type === List.Items
+    ), [children]
+  );
 
   return (
     <div className={styles.listContainer}>
@@ -44,6 +47,11 @@ const List = ({
               </div>
             )}
             <span className={styles.label}>{item.props.children}</span>
+            
+            {/* 增加右侧箭头，增加列表的“可点击”视觉引导 */}
+            <div className={styles.arrow}>
+               <Icon name="chevron-right" size={computed.iconSize * 0.6} opacity={0.3} />
+            </div>
           </div>
         ))}
       </div>
@@ -51,7 +59,6 @@ const List = ({
   );
 };
 
-// 仅作为声明使用
 List.Items = () => null;
 
 export default List;

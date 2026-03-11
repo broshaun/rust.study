@@ -33,6 +33,7 @@ export const Friend = ({
             style={{ position: 'relative', flexShrink: 0 }}
           >
             <Avatar
+              imageBaseUrl='/imgs'
               src={data.avatar_url}
               alt={name}
               variant="rounded"
@@ -99,15 +100,3 @@ export const Friend = ({
 };
 
 
-
-
-const aa =    {
-        "id": 12,
-        "uid": "69a2b43697c7c8a9cf3ab14e",
-        "avatar_url": "73d2dc732b0f526e91a8fd5a538f17fa.jpg",
-        "email": "3818@qq.com",
-        "remark": null,
-        "nikename": null,
-        "signal": "old" | "new" ,
-        "timestamp" : "2026-03-10 14:44:08"
-    }

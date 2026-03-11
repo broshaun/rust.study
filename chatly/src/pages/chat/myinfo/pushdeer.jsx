@@ -1,8 +1,8 @@
-import { useState, useCallback, useTransition, Suspense } from 'react';
-import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { Row, Col, InputText2 } from 'components';
+import { useState,  Suspense } from 'react';
+import {  useNavigate, useLocation } from 'react-router-dom';
+import { Row, InputText2 } from 'components';
 import { IconCustomColor } from 'components/icon';
-import { useHttpClient } from 'hooks';
+import { useHttpClient2 } from 'hooks/http';
 import { useRequest } from 'ahooks';
 
 
@@ -10,13 +10,13 @@ import { useRequest } from 'ahooks';
 export const PushDeer = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { http: apiLogin } = useHttpClient('/api/chat/login/');
+    const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const [pushKey, setPushKey] = useState(location.state?.pushKey)
 
 
     const { runAsync: update } = useRequest((push_key) => {
         if (!push_key) return '请输入推送码'
-        apiLogin.requestBodyJson('PATCH', { push_key: push_key }).then((results) => {
+        apiLogin.post('PATCH', { push_key: push_key }).then((results) => {
             if (!results) return;
             const { code, message, data } = results
             console.log('message', message)

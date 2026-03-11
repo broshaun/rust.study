@@ -3,171 +3,114 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  
-  /* --- 主题变量适配 --- */
+  overflow: hidden;
+  box-sizing: border-box;
+
+
+  /* --- 核心主题映射 --- */
   background: var(--panel-bg);
   backdrop-filter: var(--panel-blur);
-  -webkit-backdrop-filter: var(--panel-blur); /* 兼容 Safari */
-  border: var(--panel-border);
+  -webkit-backdrop-filter: var(--panel-blur);
   box-shadow: var(--panel-shadow);
   border-radius: var(--radius-main);
   color: var(--text-primary);
-  
-  overflow: hidden;
-  box-sizing: border-box;
   transition: all var(--transition-speed) ease;
+  
+  /* 移除外部边框 */
+  border: none; 
 }
 
-/* --- Header (Meta) --- */
+/* Header */
 .head {
-  flex: 0 0 auto;
+  flex: 0 0 56px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  min-height: 56px;
-  padding: 0 16px;
-  /* 使用主题文字颜色的低透明度作为分割线 */
-  border-bottom: 1px solid rgba(var(--text-primary-rgb), 0.08);
-  box-sizing: border-box;
+  padding: 0 20px;
+  /* 极淡的分割线 */
+  border-bottom: 1px solid rgba(var(--text-primary-rgb), 0.05);
 }
 
-.headTitle {
+.title {
   flex: 1;
-  min-width: 0;
   text-align: center;
   font-size: 16px;
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 
-.headSide {
+.side {
   width: 48px;
-  min-width: 48px;
   display: flex;
-  align-items: center;
   color: var(--text-secondary);
 }
 
-.headSideRight {
-  justify-content: flex-end;
-}
-
-/* --- Content 消息区域 --- */
+/* Content 消息区域 */
 .content {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1;
   min-height: 0;
+  position: relative;
   overflow-y: auto;
-  overflow-x: hidden;
-  padding: 12px;
-  -webkit-overflow-scrolling: touch;
-  box-sizing: border-box;
-  scroll-behavior: smooth;
+  /* 隐藏滚动条 (Firefox) */
+  scrollbar-width: none; 
+  /* 隐藏滚动条 (IE/Edge) */
+  -ms-overflow-style: none; 
 }
 
-/* 滚动条适配主题文字色 */
+/* 隐藏滚动条 (Chrome/Safari/Webkit) */
 .content::-webkit-scrollbar {
-  width: 5px;
-}
-.content::-webkit-scrollbar-track {
-  background: transparent;
-}
-.content::-webkit-scrollbar-thumb {
-  background-color: rgba(var(--text-primary-rgb), 0.2);
-  border-radius: 10px;
-}
-.content::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(var(--text-primary-rgb), 0.4);
+  display: none;
 }
 
-.bottomAnchor {
-  height: 1px;
-  width: 100%;
-}
-
-/* --- Send 发送区域 --- */
+/* Send 发送区域 */
 .send {
   flex: 0 0 auto;
-  padding: 16px;
-  /* 顶部分割线同步 */
-  border-top: 1px solid rgba(var(--text-primary-rgb), 0.08);
+  padding: 16px 20px;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  /* 发送栏背景微调，增加层次感 */
+  gap: 12px;
+  border-top: 1px solid rgba(var(--text-primary-rgb), 0.05);
   background: rgba(var(--text-primary-rgb), 0.02);
-  box-sizing: border-box;
 }
 
-/* --- Input 输入框 (极致干净) --- */
 .input {
   flex: 1;
-  min-width: 0;
-  height: 40px;
+  height: 42px;
   max-height: 120px;
-  padding: 10px 14px;
-  /* 输入框边框适配主题 */
-  border: 1px solid rgba(var(--text-primary-rgb), 0.1);
-  border-radius: calc(var(--radius-main) * 0.75);
-  background: rgba(var(--text-primary-rgb), 0.04);
+  padding: 11px 16px;
+  border: none; /* 移除输入框边框 */
+  border-radius: calc(var(--radius-main) * 0.5);
+  background: rgba(var(--text-primary-rgb), 0.05);
   color: var(--text-primary);
   
   resize: none;
-  font-size: 14px;
   outline: none;
+  font-size: 14px;
   line-height: 20px;
-  font-family: inherit;
   box-sizing: border-box;
-  transition: border-color var(--transition-speed);
-
-  /* 彻底禁用滚动条 */
-  overflow: hidden !important;
+  
+  /* 隐藏输入框滚动条 */
+  overflow: hidden;
   scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
 .input::-webkit-scrollbar {
-  display: none !important;
+  display: none;
 }
 
-.input:focus {
-  border-color: var(--accent-color);
-}
-
-.input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.6;
-}
-
-/* --- Button 发送按钮 --- */
 .btn {
-  height: 40px;
-  padding: 0 18px;
-  border-radius: calc(var(--radius-main) * 0.75);
+  height: 42px;
+  padding: 0 20px;
+  border-radius: calc(var(--radius-main) * 0.5);
   background: var(--accent-color);
   color: #fff;
   border: none;
   font-weight: 600;
   cursor: pointer;
   flex: 0 0 auto;
-  transition: all var(--transition-speed);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(var(--text-primary-rgb), 0.1);
 }
 
-.btn:hover:not(:disabled) {
+.btn:active {
+  transform: scale(0.96);
   opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-.btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn:disabled {
-  opacity: 0.3;
-  filter: grayscale(1);
-  cursor: not-allowed;
 }

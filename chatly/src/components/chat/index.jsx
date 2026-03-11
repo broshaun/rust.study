@@ -1,7 +1,6 @@
-export * from './DialogList'
-export * from './UserInfoCard'
-export { default as FriendList } from './FriendList'
-export { default as UserChat } from './UserChat'
+export { UserInfoCard } from './UserInfoCard'
 export { MsgItem } from './MsgItem'
-
-export * from './ChatMsg'
+export { ChatMsg } from './ChatMsg'
+export { DialogItem } from './DialogItem'
+export { Friend } from './Friend' 
+export { InfoTile } from './InfoTile'

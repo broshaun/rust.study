@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { SimpleSelect } from 'components';
-import { useHttpClient } from 'hooks';
+import { useHttpClient2 } from 'hooks/http';
 
 export const Address = ({ label, onChange, defaultValue }) => {
     const full = defaultValue ? String(defaultValue) : '';
     const provinceDefault = full ? full.slice(0, 2) : '';
 
-    const { http: http1 } = useHttpClient('/api/friend/address/province/');
-    const { http: http2 } = useHttpClient('/api/friend/address/city/');
+    const { http: http1 } = useHttpClient2('/rpc/friend/address/province/');
+    const { http: http2 } = useHttpClient2('/rpc/friend/address/city/');
 
     const [options1, setOptions1] = useState();
     const [options2, setOptions2] = useState();
@@ -15,7 +15,7 @@ export const Address = ({ label, onChange, defaultValue }) => {
 
     // 省份
     useEffect(() => {
-        http1.requestParams('GET').then(({ code, data }) => {
+        http1.post('GET').then(({ code, data }) => {
             if (code === 200) setOptions1(data);
         });
     }, [http1]);
@@ -28,7 +28,7 @@ export const Address = ({ label, onChange, defaultValue }) => {
     // 城市
     useEffect(() => {
         if (!payload2?.province_code) return;
-        http2.requestParams('GET', payload2).then(({ code, data }) => {
+        http2.requestBodyJson('GET', payload2).then(({ code, data }) => {
             if (code === 200) setOptions2(data);
         });
     }, [http2, payload2]);

@@ -2,12 +2,57 @@
   position: relative;
   display: flex;
   height: 100%;
-  padding: 0 12px;
+  padding: 0 16px; /* 增加一点内边距 */
+  align-items: center;
+  background: transparent; /* 容器透明，背景由父级 wrapper 决定 */
+  user-select: none; /* 防止标题被误选中 */
 }
+
 .titleContainer {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  pointer-events: none;
+  pointer-events: none; /* 确保标题不遮挡下方点击事件 */
+  width: 50%; /* 限制宽度，防止过长标题撑爆 */
+  display: flex;
+  justify-content: center;
+}
+
+.titleText {
+  margin: 0;
+  padding: 0;
+  font-size: 15px; /* 苹果应用标准字体大小 */
+  font-weight: 600; /* 半粗体 */
+  
+  /* 颜色跟随主题文字色 */
+  color: var(--text-primary);
+  
+  /* 字体美化：使用系统默认无衬线，字间距稍微收紧 */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.02em;
+  
+  /* 文本截断：标题过长时显示 ... */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  /* 稍微增加一点抗锯齿平滑 */
+  -webkit-font-smoothing: antialiased;
+  
+  /* 根据主题增加微弱的文本投影，提升层级感 */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 适配暗色或高对比主题时的微调 */
+[data-theme='cyber'] .titleText,
+[data-theme='brushed'] .titleText {
+  letter-spacing: 0.05em; /* 赛博/金属风格稍微拉开字间距更有科技感 */
+  text-transform: uppercase; /* 自动大写 */
+  text-shadow: 0 0 8px rgba(var(--text-primary-rgb), 0.3);
+}
+
+[data-theme='oasis'] .titleText {
+  font-family: "Georgia", serif; /* 沙漠绿洲主题可以尝试衬线体增加高级感 */
+  font-style: italic;
 }

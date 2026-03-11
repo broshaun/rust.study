@@ -1,29 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useLocation } from "react-router-dom";
-import { useHttpClient, useDateTime, useWinSize } from 'hooks';
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { useLocation, useNavigate } from "react-router-dom";
+import { useDateTime, useWinSize } from 'hooks';
 import { useRequest, useLocalStorageState, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
-import { Container, Icon, Avatar } from 'components/flutter';
-
-
+import { Container, Icon, Padding } from 'components/flutter';
+import { useHttpClient2 } from 'hooks/http';
 
 export function Msg() {
     const location = useLocation();
+    const navigate = useNavigate()
+
     const uid = location.state?.uid
     const avatar_url = location.state?.avatar_url
+    const displayName = location.state?.displayName
+
     const [selfAvatar] = useLocalStorageState('saveOneself')
     const [msgs, setMsgs] = useState([]);
-    const { http } = useHttpClient('/api/chat/msg/single/')
+    const { http } = useHttpClient2('/rpc/chat/msg/single/')
     const { getDateTimeStr } = useDateTime()
-    const { winHeight } = useWinSize()
+    const { winHeight, isMobile } = useWinSize()
+
+    const f_url = useMemo(() => { return isMobile ? '/chat/mobile/dialog/' : '/chat/dialog/' }, [isMobile])
 
 
 
     useEffect(() => {
         const sub = liveQuery(
-            () => db.table('message').where('uid').equals(uid).toArray()
+            () => db.table('message').where('uid').equals(uid).reverse().toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
@@ -44,43 +49,45 @@ export function Msg() {
         return 'ok'
     }, { manual: true })
 
-
-
     const containerRef = useRef(null);
     const wrapperRef = useRef(null)
     const [list, scrollTo] = useVirtualList(msgs, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight: 44,
-        overscan: 5,
+        itemHeight: 74,
+        overscan: 10,
     });
 
     useEffect(() => {
         if (msgs.length > 0) {
-            requestAnimationFrame(() => {
-                scrollTo(msgs.length - 1);
-            });
+            scrollTo(0);
         }
-    }, [msgs.length]);
-
-
+    }, [msgs.length, scrollTo])
 
     return <ChatMsg>
         <ChatMsg.Meta
-            title="张三"
-            left={<Icon name="chevron-left" />}
-            receiveAvatar={() => <Avatar src={avatar_url} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
-            sendAvatar={() => <Avatar src={selfAvatar} size={36} roundedRadius={6} variant="rounded" fit="cover" />}
+            title={displayName}
+            left={<Icon name="chevron-left" onClick={() => { navigate(f_url) }} />}
         />
         <ChatMsg.Content>
-            <Container verticalScroll={true} ref={containerRef} margin={10} height={winHeight - 180}>
-                <div ref={wrapperRef}>
-                    {list.map((item) => {
-                        return <MsgItem data={item.data} />
-                    })}
-                </div>
+            <Container verticalScroll={true} ref={containerRef} height={winHeight - 135}>
+                <Padding>
+                    <div ref={wrapperRef}>
+                        {list.map((item) => {
+                            return <MsgItem
+                                data={item.data}
+                                receiveAvatar={avatar_url}
+                                sendAvatar={selfAvatar}
+                            />
+                        })}
+                    </div>
+                </Padding>
             </Container>
         </ChatMsg.Content>
         <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
-    </ChatMsg>
+    </ChatMsg >
 }
+
+
+
+

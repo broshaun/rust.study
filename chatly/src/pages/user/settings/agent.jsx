@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocalStorageState, useRequest } from 'ahooks';
-import { useHttpClient } from 'hooks/http';
+// import { useHttpClient } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/http';
 import { Modal, } from 'components';
 import { Button, TextField, Row, SizedBox, Center, Divider, Left } from 'components/flutter';
 import { useNavigate } from 'react-router-dom';
@@ -11,11 +12,13 @@ export const Agent = () => {
     const [apiBase, setApiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
-    const { http } = useHttpClient('/api/chat/ping')
+    // const { http } = useHttpClient('/api/chat/ping')
+    const { http } = useHttpClient2('/rpc/chat/ping')
     const [isUpdate,setUpdate] = useState(false);
 
     const { runAsync: ping } = useRequest(() => {
-        http.requestParams('GET').then((results) => {
+        // http.requestParams('GET').then((results) => {
+        http.post('GET').then((results) => {
             console.log('results', results)
             const { code, message, data } = results
             setMsg(data)

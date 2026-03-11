@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
-import { useHttpClient } from 'hooks';
+// import { useHttpClient } from 'hooks';
 import { useRequest } from 'ahooks';
 import { Avatar, Modal } from "components";
-import { Button, TextField, Row, SizedBox, Center, Divider } from 'components/flutter';
+import { Button, TextField, Row, SizedBox, Center, Divider ,Padding} from 'components/flutter';
+import {  useHttpClient2 } from 'hooks/http';
 
 
 export function Register() {
     const [account, setAccount] = useState('')
     const [password, setPassword] = useState("")
-    const { http } = useHttpClient('/api/chat/register/')
+    // const { http } = useHttpClient('/api/chat/register/')
+    const { http, endpoint } = useHttpClient2('/rpc/chat/login/')
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
 
@@ -19,7 +21,8 @@ export function Register() {
             return
         }
 
-        http.requestBodyJson('PUT', { 'email': account, 'pass_word': password })
+        // http.requestBodyJson('PUT', { 'email': account, 'pass_word': password })
+        http.post('POST', { 'email': account, 'pass_word': password })
             .then((results) => {
                 if (!results) return;
                 const { code, message, data } = results
@@ -65,7 +68,7 @@ export function Register() {
 
                 <TextField
                     label="账号"
-                    width="70%"
+                    maxWidth={250}
                     hintText="请输入账号"
                     value={account}
                     onChanged={(value) => setAccount(value)}
@@ -77,7 +80,7 @@ export function Register() {
 
                 <TextField
                     label="密码"
-                    width="70%"
+                    maxWidth={250}
                     hintText="请输入密码"
                     obscureText={true}
                     value={password}
@@ -87,11 +90,13 @@ export function Register() {
             </Row>
             <SizedBox height={10} />
             <Row >
-
-                <Button label='注册' width={235}
-                    onPressed={() => { runLogin(account, password) }}
-                />
-
+                <Padding value={15}>
+                    <Center>
+                        <Button label='注册' width={250}
+                            onPressed={() => { runLogin(account, password) }}
+                        />
+                    </Center>
+                </Padding>
             </Row>
         </Center>
 

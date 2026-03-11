@@ -1,16 +1,16 @@
 import {  Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { List } from 'components';
-import { useHttpClient } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/http';
 import { useRequest } from 'ahooks';
 
 
 export const MyList = () => {
     const navigate = useNavigate();
-    const { http: apiLogin } = useHttpClient('/api/chat/login/');
+    const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const { data: apiInfo } = useRequest(async () => {
         try {
-            const { code, message, data } = await apiLogin.requestParams('GET')
+            const { code, message, data } = await apiLogin.post('GET')
             if (code === 200) {
                 return data;
             } else {

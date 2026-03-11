@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SimpleSelect } from 'components';
-import { useHttpClient } from 'hooks';
+import { useHttpClient2 } from 'hooks/http';
 
 
 
@@ -15,7 +15,7 @@ export const MaritalStatus = ({
     onChange,
 }) => {
     const [options, setOptions] = useState();
-    const { http } = useHttpClient('/api/report/dataset/')
+    const { http } = useHttpClient2('/rpc/report/dataset/')
 
     useEffect(() => {
         let sql = `SELECT options_value as value,options_label as label FROM public.dictionary WHERE organize='marital_status'`

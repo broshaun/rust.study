@@ -2,42 +2,46 @@
   display: flex;
   align-items: center;
   min-height: 40px;
-  width: 100%; /* 默认占满 Row.Col */
+  width: 100%; 
+  margin: 0 auto; /* 配合 maxWidth 实现居中 */
   
   /* --- 接入全局皮肤变量 --- */
   background: var(--panel-bg);
   backdrop-filter: var(--panel-blur);
   -webkit-backdrop-filter: var(--panel-blur);
-  border: var(--panel-border);
+  border: 1px solid var(--panel-border);
   box-shadow: var(--panel-shadow);
-  border-radius: var(--radius-m, 12px);
+  
+  /* 默认圆角 */
+  border-radius: var(--radius-main);
   
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
+/* 激活反馈 */
 .inputContainer:focus-within {
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
 }
 
 .label {
   padding: 0 16px;
-  /* --- 融合关键：去掉灰色背景，直接透出底层的 panel-bg --- */
   background-color: transparent; 
-  
-  /* 使用细微的分割线，保持融合感 */
-  border-right: var(--panel-border);
-  
+  border-right: 1px solid var(--panel-border);
   color: var(--text-primary);
-  font-size: 13px;
+  
+  /* --- 字体优化 --- */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 12px; /* 标签稍微小一点更高级 */
   font-weight: 500;
+  letter-spacing: -0.01em;
+  
   white-space: nowrap;
   user-select: none;
   flex-shrink: 0;
-  
-  /* 稍微降低透明度，产生自然深度感而不产生色块 */
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .input {
@@ -48,17 +52,30 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: 14px;
   color: var(--text-primary);
+  
+  /* --- 字体优化 --- */
+  font-family: inherit;
+  font-size: 13px; /* 输入文字不宜过大 */
 }
 
 .input::placeholder {
   color: var(--text-secondary);
-  opacity: 0.4;
+  opacity: 0.35;
+}
+
+/* --- 主题匹配逻辑 --- */
+
+/* 赛博/直角模式适配 */
+[data-theme='cyber'] .inputContainer,
+[data-theme='brushed'] .inputContainer {
+  border-radius: 0; /* 彻底消除圆角 */
+  border-left: 3px solid var(--accent-color); /* 侧边加强视觉感 */
 }
 
 /* 适配禁用状态 */
 .inputContainer:has(input:disabled) {
   opacity: 0.5;
+  filter: grayscale(1);
   cursor: not-allowed;
 }

@@ -1,15 +1,15 @@
-import React, { useEffect, useState, Suspense, useCallback } from 'react';
+import React, { useEffect, useState, Suspense, useCallback, useRef } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-// import { Chat, Container, DialogList, Avatar } from 'components';
 import { db } from 'hooks/db';
+import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
 import { useVirtualList } from 'ahooks';
-
-import { Column, Border, Divider, Container, Row, Right, Icon, Padding, ListView } from 'components/flutter';
-import { DialogItem } from './DialogItem';
+import {  Divider, Container, Row, Right, Icon, Padding } from 'components/flutter';
+import { DialogItem } from 'components/chat';
 
 export const Mian = () => {
     const navigate = useNavigate()
+    const { winHeight, isMobile } = useWinSize()
     const [dialog, setDialog] = useState([])
 
     useEffect(() => {
@@ -22,11 +22,13 @@ export const Mian = () => {
         return () => sub.unsubscribe()
     }, [])
 
+
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
+        const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url } })
+            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName } })
         })
     }, [])
 
@@ -41,28 +43,41 @@ export const Mian = () => {
         }
     }, [])
 
+
+    const containerRef = useRef(null);
+    const wrapperRef = useRef(null)
+    const [list] = useVirtualList(dialog, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 74,
+        overscan: 10,
+    });
+
+
     return <Suspense fallback={<div>加载中...</div>}>
         <Row>
-            <Row.Col>
-                <Container >
-                    <Border />
-                    <Padding value={5}>
+            <Row.Col span={2}>
+                <Container verticalScroll={true} ref={containerRef} height={winHeight}>
+                    {/* <Padding value={5}>
                         <Right>
                             <Icon name='magnifying-glass' />
                         </Right>
                     </Padding>
-                    <Divider />
-                    <ListView
-                        itemCount={dialog.length}
-                        itemHeight={42}
-                        buffer={5}
-                        itemBuilder={(index) => {
-                            return <DialogItem data={dialog[index]} onSelect={openMsgWindow} onClear={(p) => handleClear(p)} />
-                        }}
-                    />
+                    <Divider /> */}
+                    <Padding value={5}>
+                        <div ref={wrapperRef}>
+                            {list.map((item) => {
+                                return <DialogItem
+                                    data={item.data}
+                                    onSelect={openMsgWindow}
+                                    onClear={(p) => handleClear(p)}
+                                />
+                            })}
+                        </div>
+                    </Padding>
                 </Container>
             </Row.Col>
-            <Row.Col span={3}>
+            <Row.Col span={4}>
                 <Outlet />
             </Row.Col>
         </Row>

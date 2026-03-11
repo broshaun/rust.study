@@ -92,6 +92,7 @@ export function useHttpClient(baseUrl) {
   const http = useMemo(
     () => ({
       post,
+      requestBodyJson:post,
       getById,
       uploadFiles
     }),

@@ -1,55 +1,87 @@
 .listContainer {
   width: 100%;
   box-sizing: border-box;
-  /* 接入皮肤，但列表容器通常保持背景透明，由 Item 承载材质 */
   background: transparent;
+  padding: 4px 0;
 }
 
 .itemsLayer {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 2px; /* 增加微小间距，让 Item 更有颗粒感 */
+  /* 移除固定的 gap，改由各个主题控制间距 */
 }
 
 .item {
   display: flex;
   align-items: center;
   height: var(--item-height);
-  padding: 0 12px;
+  padding: 0 16px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* 列表项材质：接入皮肤变量 */
+  /* 核心材质变量 */
   background: var(--panel-bg);
   backdrop-filter: var(--panel-blur);
   -webkit-backdrop-filter: var(--panel-blur);
   color: var(--text-primary);
+  
+  /* 默认圆角随主题变量 */
+  border-radius: var(--radius-main);
+  margin: 2px 8px; /* 让 Item 悬浮在背景上，更有层次感 */
 }
 
-/* 激活反馈：硅胶感缩放 */
-.item:active {
-  transform: scale(0.98);
-  filter: brightness(0.9);
+/* 字体美化核心 */
+.label {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--label-font-size);
+  color: inherit;
+  font-weight: 500;
+  letter-spacing: -0.015em; /* 稍微收紧，更有苹果味 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
-/* 分隔线：使用皮肤统一边框色 */
-.divider {
+/* --- 主题特定适配 --- */
+
+/* 赛博/金属模式：直角 + 边框 */
+[data-theme='cyber'] .item,
+[data-theme='brushed'] .item {
+  border-radius: 0;
+  margin: 0;
   border-bottom: 1px solid var(--panel-border);
+}
+
+/* 玻璃模式：高亮边框 */
+[data-theme='glass'] .item {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 交互反馈 */
+.item:hover {
+  background: rgba(var(--text-primary-rgb), 0.05);
+}
+
+.item:active {
+  transform: scale(0.97); /* 缩放更有肉感 */
+  filter: brightness(1.1); /* 亮色皮肤变亮，暗色皮肤也变亮 */
 }
 
 .icon {
   display: flex;
   margin-right: var(--icon-label-gap);
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  /* 让图标稍微带一点投影 */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
-.label {
-  font-size: var(--label-font-size);
-  color: inherit; /* 继承 Item 的文字色 */
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* 出口清单通常需要截断以保持整齐 */
+/* 移除最后的分割线 */
+.divider {
+  border-bottom: 1px solid var(--panel-border);
 }

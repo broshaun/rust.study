@@ -1,14 +1,14 @@
 import React, { useState, Suspense } from 'react';
 import { InputText2, Container } from 'components';
-import { useHttpClient } from 'hooks';
+import { useHttpClient2 } from 'hooks/http';
 import { useRequest, useDebounce } from 'ahooks';
 import { UserInfoCard } from 'components/chat';
 import { Divider } from 'components/flutter';
 
 
 export const Find = () => {
-    const { http } = useHttpClient('/api/chat/friend/')
-    const { http: httpImgs } = useHttpClient('/imgs');
+    const { http } = useHttpClient2('/rpc/chat/friend/')
+    const { endpoint} = useHttpClient2('/imgs');
     const [keyword, setKeyword] = useState();
     const debouncedKeyword = useDebounce(keyword, { wait: 500 });
 
@@ -74,7 +74,7 @@ export const Find = () => {
                     onAddFriend={(v) => { run2(v?.id) }}
                 >
                     <UserInfoCard.Avatar>
-                        <img src={httpImgs.buildUrl(user?.avatar_url)} />
+                        <img src={`${endpoint}/${user?.avatar_url}`} />
                     </UserInfoCard.Avatar>
                     <UserInfoCard.Info>{user}</UserInfoCard.Info>
                 </UserInfoCard>
@@ -90,7 +90,7 @@ export const Find = () => {
                     refuseAdd={(v) => { isPass(v?.id, 'refuse') }}
                 >
                     <UserInfoCard.Avatar>
-                        <img src={httpImgs.buildUrl(user?.avatar_url)} />
+                        <img src={`${endpoint}/${user?.avatar_url}`} />
                     </UserInfoCard.Avatar>
                     <UserInfoCard.Info>{user}</UserInfoCard.Info>
                 </UserInfoCard>
