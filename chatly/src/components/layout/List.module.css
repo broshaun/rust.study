@@ -3,85 +3,296 @@
   box-sizing: border-box;
   background: transparent;
   padding: 4px 0;
+
+  /* 和 Background 配合的关键变量 */
+  --list-radius: var(--radius-main, 16px);
+  --list-item-bg: var(--panel-bg);
+  --list-item-color: var(--text-primary);
+  --list-item-muted: var(--text-secondary);
+  --list-item-border-color: rgba(var(--text-primary-rgb), 0.08);
+  --list-item-hover-bg: rgba(var(--text-primary-rgb), 0.05);
+  --list-item-active-bg: rgba(var(--text-primary-rgb), 0.08);
+  --list-item-shadow: var(--panel-shadow, none);
+  --list-item-blur: var(--panel-blur, none);
+
+  --list-item-margin-x: 8px;
+  --list-item-margin-y: 2px;
+  --list-item-padding-x: 16px;
+  --list-divider-left: calc(var(--list-item-padding-x) + var(--list-icon-size) + var(--icon-label-gap));
+  --list-arrow-opacity: 0.36;
+}
+
+/* 与 Background 一起用时，默认不要再自己制造太重的第二层背景 */
+.listContainer[data-blend='soft'] {
+  --list-item-bg: rgba(var(--text-primary-rgb), 0.035);
+  --list-item-border-color: rgba(var(--text-primary-rgb), 0.08);
+  --list-item-shadow: none;
+  --list-item-blur: none;
+  --list-item-hover-bg: rgba(var(--text-primary-rgb), 0.06);
+  --list-item-active-bg: rgba(var(--text-primary-rgb), 0.09);
+}
+
+.listContainer[data-blend='clear'] {
+  --list-item-bg: transparent;
+  --list-item-border-color: rgba(var(--text-primary-rgb), 0.1);
+  --list-item-shadow: none;
+  --list-item-blur: none;
+  --list-item-hover-bg: rgba(var(--text-primary-rgb), 0.04);
+  --list-item-active-bg: rgba(var(--text-primary-rgb), 0.07);
 }
 
 .itemsLayer {
   width: 100%;
   display: flex;
   flex-direction: column;
-  /* 移除固定的 gap，改由各个主题控制间距 */
+  min-width: 0;
+  background: transparent;
 }
 
 .item {
+  position: relative;
   display: flex;
   align-items: center;
+  min-width: 0;
   height: var(--item-height);
-  padding: 0 16px;
-  cursor: pointer;
+  margin: var(--list-item-margin-y) var(--list-item-margin-x);
+  padding: 0 var(--list-item-padding-x);
+  box-sizing: border-box;
+  overflow: hidden;
+
+  background: var(--list-item-bg);
+  color: var(--list-item-color);
+  border-radius: var(--list-radius);
+  box-shadow: var(--list-item-shadow);
+  backdrop-filter: var(--list-item-blur);
+  -webkit-backdrop-filter: var(--list-item-blur);
+
   -webkit-tap-highlight-color: transparent;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* 核心材质变量 */
-  background: var(--panel-bg);
-  backdrop-filter: var(--panel-blur);
-  -webkit-backdrop-filter: var(--panel-blur);
-  color: var(--text-primary);
-  
-  /* 默认圆角随主题变量 */
-  border-radius: var(--radius-main);
-  margin: 2px 8px; /* 让 Item 悬浮在背景上，更有层次感 */
+  transition:
+    background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 字体美化核心 */
+.clickable {
+  cursor: pointer;
+}
+
 .label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: var(--label-font-size);
   color: inherit;
   font-weight: 500;
-  letter-spacing: -0.015em; /* 稍微收紧，更有苹果味 */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
+  letter-spacing: -0.015em;
 }
 
-/* --- 主题特定适配 --- */
-
-/* 赛博/金属模式：直角 + 边框 */
-[data-theme='cyber'] .item,
-[data-theme='brushed'] .item {
-  border-radius: 0;
-  margin: 0;
-  border-bottom: 1px solid var(--panel-border);
+.icon,
+.iconPlaceholder,
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* 玻璃模式：高亮边框 */
-[data-theme='glass'] .item {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-/* 交互反馈 */
-.item:hover {
-  background: rgba(var(--text-primary-rgb), 0.05);
-}
-
-.item:active {
-  transform: scale(0.97); /* 缩放更有肉感 */
-  filter: brightness(1.1); /* 亮色皮肤变亮，暗色皮肤也变亮 */
+.icon,
+.iconPlaceholder {
+  width: var(--list-icon-size);
+  height: var(--list-icon-size);
+  margin-right: var(--icon-label-gap);
 }
 
 .icon {
-  display: flex;
-  margin-right: var(--icon-label-gap);
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  /* 让图标稍微带一点投影 */
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  color: var(--accent-color);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
 }
 
-/* 移除最后的分割线 */
-.divider {
-  border-bottom: 1px solid var(--panel-border);
+.arrow {
+  width: var(--list-arrow-size);
+  height: var(--list-arrow-size);
+  margin-left: 12px;
+  color: var(--list-item-muted);
+  opacity: var(--list-arrow-opacity);
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.clickable:hover {
+  background: var(--list-item-hover-bg);
+}
+
+.clickable:hover .arrow {
+  transform: translateX(1px);
+  opacity: 0.58;
+}
+
+.clickable:active {
+  background: var(--list-item-active-bg);
+  transform: scale(0.985);
+}
+
+.divider::after {
+  content: '';
+  position: absolute;
+  left: var(--list-divider-left);
+  right: var(--list-item-padding-x);
+  bottom: 0;
+  height: 1px;
+  background: var(--list-item-border-color);
+  pointer-events: none;
+}
+
+/* inset 关闭后，适合贴边布局 */
+.listContainer[data-inset='false'] {
+  --list-item-margin-x: 0px;
+  --list-item-margin-y: 0px;
+}
+
+/* ========== 与主题/背景联动 ========== */
+
+/* 默认 / glass：保持轻玻璃，但不要压过 Background */
+:root .item,
+[data-theme='glass'] .item {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+:root .divider::after,
+[data-theme='glass'] .divider::after {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* light */
+[data-theme='light'] .item {
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+[data-theme='light'] .listContainer[data-blend='soft'] .item,
+[data-theme='light'] .listContainer[data-blend='clear'] .item {
+  border: 1px solid rgba(28, 28, 30, 0.06);
+  box-shadow: none;
+}
+
+/* oasis */
+[data-theme='oasis'] .item {
+  border: 1px solid rgba(181, 150, 93, 0.18);
+  box-shadow: 0 8px 18px rgba(101, 80, 40, 0.05);
+}
+
+[data-theme='oasis'] .divider::after {
+  background: rgba(181, 150, 93, 0.16);
+}
+
+[data-theme='oasis'] .listContainer[data-blend='soft'] .item,
+[data-theme='oasis'] .listContainer[data-blend='clear'] .item {
+  box-shadow: none;
+}
+
+/* liquid */
+[data-theme='liquid'] .item {
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.04),
+    inset 0 3px 5px rgba(255, 255, 255, 0.75);
+}
+
+[data-theme='liquid'] .listContainer[data-blend='soft'] .item,
+[data-theme='liquid'] .listContainer[data-blend='clear'] .item {
+  border: 1px solid rgba(30, 64, 175, 0.08);
+  box-shadow: none;
+}
+
+/* cyber：和 Background 的赛博氛围配合，不再额外太厚 */
+[data-theme='cyber'] .listContainer {
+  --list-radius: 0px;
+  --list-item-margin-x: 0px;
+  --list-item-margin-y: 0px;
+  --list-arrow-opacity: 0.5;
+}
+
+[data-theme='cyber'] .item {
+  border: 1px solid rgba(76, 201, 240, 0.18);
+  box-shadow: inset 0 0 10px rgba(76, 201, 240, 0.03);
+}
+
+[data-theme='cyber'] .divider::after {
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(76, 201, 240, 0),
+    rgba(76, 201, 240, 0.28) 20%,
+    rgba(76, 201, 240, 0.28) 80%,
+    rgba(76, 201, 240, 0)
+  );
+}
+
+[data-theme='cyber'] .icon,
+[data-theme='cyber'] .arrow {
+  filter: drop-shadow(0 0 6px rgba(76, 201, 240, 0.22));
+}
+
+[data-theme='cyber'] .listContainer[data-blend='soft'] .item,
+[data-theme='cyber'] .listContainer[data-blend='clear'] .item {
+  background: rgba(76, 201, 240, 0.02);
+  box-shadow: none;
+}
+
+/* brushed */
+[data-theme='brushed'] .listContainer {
+  --list-radius: 0px;
+  --list-item-margin-x: 0px;
+  --list-item-margin-y: 0px;
+}
+
+[data-theme='brushed'] .item {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+[data-theme='brushed'] .divider::after {
+  left: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='brushed'] .listContainer[data-blend='soft'] .item,
+[data-theme='brushed'] .listContainer[data-blend='clear'] .item {
+  background: rgba(255, 255, 255, 0.015);
+  box-shadow: none;
+}
+
+/* metal */
+[data-theme='metal'] .item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='metal'] .divider::after {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='metal'] .listContainer[data-blend='soft'] .item,
+[data-theme='metal'] .listContainer[data-blend='clear'] .item {
+  background: rgba(255, 255, 255, 0.015);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .arrow {
+    transition: none;
+  }
 }

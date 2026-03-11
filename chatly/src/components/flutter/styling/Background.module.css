@@ -1,0 +1,30 @@
+.background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: transparent;
+}
+
+.base,
+.glow,
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.base {
+  background: var(--app-bg);
+}
+
+.glow {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 36%),
+    radial-gradient(circle at 80% 15%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 30%);
+}
+
+.overlay {
+  background: rgba(var(--text-primary-rgb), 0.015);
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Divider, Container, Right, Icon, Padding } from 'components/flutter';
+import { Container, Padding ,Background} from 'components/flutter';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
@@ -54,6 +54,7 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
+        <Background/>
         <Container verticalScroll={true} ref={containerRef} height={winHeight}>
             {/* <Padding value={5}>
                 <Right>

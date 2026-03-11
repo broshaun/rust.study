@@ -5,7 +5,7 @@ import { useRequest, useLocalStorageState, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
-import { Container, Icon, Padding } from 'components/flutter';
+import { Container, Icon, Padding,Background } from 'components/flutter';
 import { useHttpClient2 } from 'hooks/http';
 
 export function Msg() {
@@ -70,6 +70,7 @@ export function Msg() {
             left={<Icon name="chevron-left" onClick={() => { navigate(f_url) }} />}
         />
         <ChatMsg.Content>
+            <Background/>
             <Container verticalScroll={true} ref={containerRef} height={winHeight - 135}>
                 <Padding>
                     <div ref={wrapperRef}>

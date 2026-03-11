@@ -21,6 +21,7 @@ export { Container } from './frame/Container'
 export { Border } from './styling/Border'
 export { Card } from './styling/Card'
 export { DecoratedBox } from './styling/DecoratedBox'
+export { default as Background } from './styling/Background'
 
 // base
 export { Button } from './base/Button';

@@ -3,7 +3,7 @@ import { InputText2, Container } from 'components';
 import { useHttpClient2 } from 'hooks/http';
 import { useRequest, useDebounce } from 'ahooks';
 import { UserInfoCard } from 'components/chat';
-import { Divider } from 'components/flutter';
+import { Divider, } from 'components/flutter';
 
 
 export const Find = () => {
@@ -39,7 +39,7 @@ export const Find = () => {
     const { loading: loading2, data: askFriends } = useRequest(
         async () => {
             try {
-                const { code, data } = await http.requestParams('GET', { ask_state: 'await' })
+                const { code, data } = await http.requestBodyJson('GET', { ask_state: 'await' })
                 if (code === 200) {
                     return data?.detail || [];
                 }
@@ -60,6 +60,7 @@ export const Find = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
+        
         <Container alignItems='center' verticalScroll={true}>
             <br />
             <InputText2 placeholder="搜索好友" onChangeValue={handleEmailChange}>

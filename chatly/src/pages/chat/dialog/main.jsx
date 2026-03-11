@@ -4,7 +4,7 @@ import { db } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
 import { useVirtualList } from 'ahooks';
-import {  Divider, Container, Row, Right, Icon, Padding } from 'components/flutter';
+import {   Container, Row, Background, Padding } from 'components/flutter';
 import { DialogItem } from 'components/chat';
 
 export const Mian = () => {
@@ -57,6 +57,7 @@ export const Mian = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         <Row>
             <Row.Col span={2}>
+                <Background/>
                 <Container verticalScroll={true} ref={containerRef} height={winHeight}>
                     {/* <Padding value={5}>
                         <Right>

@@ -11,9 +11,10 @@ export function Chat() {
   const { title, setTitle } = useTitle()
 
   const items = useMemo(() => [
-    { key: 'self', icon: <Icon name="user-oouline" label='我的' onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} /> },
-    { key: 'friend', icon: <Icon name="users_oline" label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },
     { key: 'news', icon: <Icon name="chat-bubble-bottom-center-text" label='消息' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); }} /> },
+    { key: 'friend', icon: <Icon name="users_oline" label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },
+    
+    { key: 'self', icon: <Icon name="user-oouline" label='我的' onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} /> },
   ], [isMobile, navigate, getTimestampMs]);
 
   
@@ -24,9 +25,9 @@ export function Chat() {
       <PCShell>
         <PCShell.Left width={60}>
           <Column>
-            <SizedBox height={20} />
+            <SizedBox height={50} />
             {visibleItems.map((item) => (
-              <Padding value={5}>
+              <Padding value={10}>
                 <Center >
                   {item.icon}
                 </Center>

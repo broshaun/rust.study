@@ -5,7 +5,7 @@ import { useRequest, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
-import { Border, Divider, Container, Row, Right, Icon, Padding } from 'components/flutter';
+import { Border, Divider, Container, Row, Right, Icon, Padding, Background } from 'components/flutter';
 import { Friend } from 'components/chat';
 
 
@@ -83,25 +83,27 @@ export const Mian = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         <Row>
             <Row.Col>
-                <Container verticalScroll={true} ref={containerRef} height={winHeight}>
-                    <Border />
-                    <Padding value={5}>
-                        <Right>
-                            <Icon name='magnifying-glass' />
-                        </Right>
-                    </Padding>
-                    <Divider />
-                    <Padding value={5}>
-                        <div ref={wrapperRef}>
-                            {list.map((item) => {
-                                return <Friend
-                                    data={item.data}
-                                    onSelect={(value)=>openMsgWindow(value)}
-                                />
-                            })}
-                        </div>
-                    </Padding>
-                </Container>
+                <Background/>
+                    <Container verticalScroll={true} ref={containerRef} height={winHeight}>
+                        <Border />
+                        <Padding value={5}>
+                            <Right>
+                                <Icon name='magnifying-glass' />
+                            </Right>
+                        </Padding>
+                        <Divider />
+                        <Padding value={5}>
+                            <div ref={wrapperRef}>
+                                {list.map((item) => {
+                                    return <Friend
+                                        data={item.data}
+                                        onSelect={(value) => openMsgWindow(value)}
+                                    />
+                                })}
+                            </div>
+                        </Padding>
+                    </Container>
+               
             </Row.Col>
             <Row.Col span={3}>
                 <Outlet />
