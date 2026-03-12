@@ -12,22 +12,27 @@
   gap: var(--yb-gap, 0px);
   padding: var(--yb-pad, 0px);
 
+  /* 只控制上下分布 */
   justify-content: var(--yb-justify, flex-start);
 
-  /* 子项默认通过 Segment 的 align-self 控制横向对齐 */
+  /* 默认保持子元素撑满宽度 */
   align-items: stretch;
+
+  overflow: visible;
+  background: transparent;
 }
 
+/* 子元素默认行为 */
+.ybox > * {
+  min-width: 0;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+/* 垂直滚动 */
 .ybox[data-scroll='true'] {
   overflow-y: auto;
   overflow-x: hidden;
-}
-
-.segment {
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-
-  min-width: 0;
-  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
 }

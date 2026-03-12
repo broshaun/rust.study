@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef, Children, isValidElement } from 'react';
 import styles from './XBox.module.css';
 
 const toUnit = (v) => {
@@ -6,116 +6,76 @@ const toUnit = (v) => {
   return typeof v === 'number' ? `${v}px` : v;
 };
 
+const alignMap = {
+  top: 'flex-start',
+  middle: 'center',
+  bottom: 'flex-end',
+  stretch: 'stretch',
+};
+
+const justifyMap = {
+  left: 'flex-start',
+  center: 'center',
+  right: 'flex-end',
+  between: 'space-between',
+};
+
 /**
- * XBox.Segment - 横向分区
+ * XBox.Segment
+ * 横向分区项
  *
- * 用于在 XBox 中按比例分配空间，并控制内容对齐。
- *
- * Props
- * @param {number} span
- *   占比权重，例如 1 : 2 : 1
- *
- * @param {number|string} padding
- *   内边距
- *
- * @param {'left'|'center'|'right'} align
- *   内容水平对齐
- *
- * @param {'top'|'middle'|'bottom'|'stretch'} vertical
- *   内容垂直对齐
- *
- * @param {boolean} divider
- *   是否显示右侧分割线
- *
- * @param {string} dividerColor
- *   分割线颜色，默认跟随主题
+ * 作用：
+ * 1. 按 span 比例分配宽度
+ * 2. 可覆盖父级的水平 / 垂直对齐
+ * 3. 支持内边距和右分割线
  */
 const Segment = ({
   children,
   span = 1,
   padding = 0,
-  align = 'center',
-  vertical = 'middle',
+  align,
+  vertical,
   divider = false,
   dividerColor,
-  style
+  className = '',
+  style,
 }) => {
-  const alignMap = {
-    left: 'flex-start',
-    center: 'center',
-    right: 'flex-end'
-  };
-
-  const verticalMap = {
-    top: 'flex-start',
-    middle: 'center',
-    bottom: 'flex-end',
-    stretch: 'stretch'
-  };
-
-  const vars = {
+  const segStyle = {
     '--xb-seg-span': span,
     '--xb-seg-pad': toUnit(padding) || '0px',
-    '--xb-seg-align': alignMap[align] || align,
-    '--xb-seg-vertical': verticalMap[vertical] || vertical,
+    '--xb-seg-align': align ? (justifyMap[align] || align) : 'var(--xb-seg-align-default)',
+    '--xb-seg-vertical': vertical ? (alignMap[vertical] || vertical) : 'var(--xb-seg-vertical-default)',
     '--xb-seg-divider-width': divider ? '1px' : '0px',
-    '--xb-seg-divider-color': dividerColor || 'var(--xb-divider-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
-    ...style
+    '--xb-seg-divider-color':
+      dividerColor ||
+      'var(--xb-divider-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
+    ...style,
   };
 
   return (
-    <div className={styles.segment} style={vars}>
+    <div
+      className={[styles.segment, className].filter(Boolean).join(' ')}
+      style={segStyle}
+    >
       {children}
     </div>
   );
 };
 
+Segment.__XBOX_SEGMENT__ = true;
+
 /**
- * XBox - 横向比例布局容器
- *
- * 类似 Flutter Row + Expanded。
- *
- * Props
- * @param {number|string} height
- * @param {number|string} width
- * @param {number|string} gap
- * @param {number|string} padding
- * @param {'top'|'middle'|'bottom'|'stretch'} align
- * @param {'left'|'center'|'right'|'between'} justify
- * @param {boolean} wrap
- *
- * @param {boolean} border
- *   是否显示边框
- *
- * @param {string} borderColor
- *   边框颜色，默认跟随主题
- *
- * @param {number|string} borderWidth
- *   边框宽度
- *
- * @param {number|string} radius
- *   圆角，默认跟随主题
- *
- * @param {boolean} panel
- *   是否启用主题面板风格（panel-bg / panel-border / panel-shadow / panel-blur）
- *
- * @param {string} background
- *   自定义背景，默认跟随主题
- *
- * @param {string} shadow
- *   自定义阴影，默认跟随主题
- *
- * @param {boolean} clip
- *   是否裁剪圆角内容
+ * XBox
+ * 横向流 / 横向分区容器
  */
-export const XBox = ({
+export const XBox = forwardRef(({
   children,
-  height,
   width = '100%',
+  height,
   gap = 0,
   padding = 0,
   align = 'middle',
-  justify = 'center',
+  justify = 'left',
   wrap = false,
 
   border = false,
@@ -128,25 +88,12 @@ export const XBox = ({
   shadow,
   clip = false,
 
-  style
-}) => {
-  const alignMap = {
-    top: 'flex-start',
-    middle: 'center',
-    bottom: 'flex-end',
-    stretch: 'stretch'
-  };
-
-  const justifyMap = {
-    left: 'flex-start',
-    center: 'center',
-    right: 'flex-end',
-    between: 'space-between'
-  };
-
+  className = '',
+  style,
+}, ref) => {
   const vars = {
-    '--xb-h': height == null ? 'auto' : toUnit(height),
     '--xb-w': toUnit(width) || '100%',
+    '--xb-h': toUnit(height) || 'auto',
     '--xb-gap': toUnit(gap) || '0px',
     '--xb-pad': toUnit(padding) || '0px',
     '--xb-align': alignMap[align] || align,
@@ -155,7 +102,8 @@ export const XBox = ({
 
     '--xb-border-width': border ? (toUnit(borderWidth) || '1px') : '0px',
     '--xb-border-color':
-      borderColor || 'var(--panel-border-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
+      borderColor ||
+      'var(--panel-border-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
     '--xb-radius': toUnit(radius) || 'var(--radius-main, 16px)',
 
     '--xb-bg': background || (panel ? 'var(--panel-bg, transparent)' : 'transparent'),
@@ -165,15 +113,35 @@ export const XBox = ({
     '--xb-text-color': 'var(--text-primary, inherit)',
     '--xb-overflow': clip ? 'hidden' : 'visible',
 
-    ...style
+    /* Segment 默认继承父级 */
+    '--xb-seg-align-default': justifyMap[justify] || justify,
+    '--xb-seg-vertical-default': alignMap[align] || align,
+
+    ...style,
   };
 
   return (
-    <div className={styles.xbox} style={vars}>
-      {children}
+    <div
+      ref={ref}
+      className={[styles.xbox, className].filter(Boolean).join(' ')}
+      style={vars}
+    >
+      {Children.map(children, (child) => {
+        if (child == null) return null;
+
+        if (!isValidElement(child)) {
+          return <Segment>{child}</Segment>;
+        }
+
+        if (child.type?.__XBOX_SEGMENT__) {
+          return child;
+        }
+
+        return <Segment>{child}</Segment>;
+      })}
     </div>
   );
-};
+});
 
 XBox.Segment = Segment;
 
