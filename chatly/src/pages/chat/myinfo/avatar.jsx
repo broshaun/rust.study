@@ -1,6 +1,6 @@
 import { useCallback, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Row, Col, ImageUpload } from 'components';
+import { ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient2 } from 'hooks/http';
 import { useLocalStorageState } from 'ahooks';
