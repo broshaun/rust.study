@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Text, SizedBox, Icon } from 'components/flutter';
+import { Text, SizedBox, Icon, XBox } from 'components/flutter';
 
 /**
  * InfoTile - 信息行（支持编辑）
@@ -36,7 +36,7 @@ export const InfoTile = ({ icon, label, value, onConfirm }) => {
   };
 
   return (
-    <Row alignment="center" style={{ width: '100%' }}>
+    <XBox alignment="center" style={{ width: '100%' }}>
 
       {/* 图标 */}
       {icon && (
@@ -59,7 +59,7 @@ export const InfoTile = ({ icon, label, value, onConfirm }) => {
 
       <SizedBox width={12} />
 
-      <Row alignment="center" style={{ flex: 1, minWidth: 0 }}>
+      <XBox alignment="center" style={{ flex: 1, minWidth: 0 }}>
 
         {/* 非编辑模式 */}
         {!editing && (
@@ -112,7 +112,7 @@ export const InfoTile = ({ icon, label, value, onConfirm }) => {
 
             <button
               type="button"
-              onMouseDown={(e)=>e.preventDefault()} 
+              onMouseDown={(e) => e.preventDefault()}
               onClick={confirm}
               style={{
                 height: 32,
@@ -130,8 +130,8 @@ export const InfoTile = ({ icon, label, value, onConfirm }) => {
           </div>
         )}
 
-      </Row>
+      </XBox>
 
-    </Row>
+    </XBox>
   );
 };

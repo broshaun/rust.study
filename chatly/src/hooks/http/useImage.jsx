@@ -3,9 +3,11 @@ import { useApiBase } from "./useApiBase";
 import { useHttpFetch } from "./useHttpFetch";
 
 const DEFAULT_CACHE_NAME = "img-hash-v1";
-// 全局请求锁：防止同一个哈希文件在多处同时下载
 const fetchLock = new Map();
 
+/**
+ * useImage - 增强版头像/图片缓存加载 Hook
+ */
 export function useImage(baseUrl, hashName, opt = {}) {
   const { apiBase } = useApiBase();
   const { fetcher } = useHttpFetch();
@@ -13,32 +15,60 @@ export function useImage(baseUrl, hashName, opt = {}) {
   const {
     enabled = true,
     cacheName = DEFAULT_CACHE_NAME,
+    isAvatar = false, // 是否开启头像模式
   } = opt;
 
-  // 1. 状态显式声明
   const [src, setSrc] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // 2. 引用管理
   const curRef = useRef("");
   const reqIdRef = useRef(0);
 
-  // 3. 路径计算
+  // 1. 远程路径计算
   const remoteUrl = useMemo(() => {
     if (!hashName) return "";
+    // 如果是头像模式且 baseUrl 不包含 avatars，可在此处进行逻辑增强
     const base = `${apiBase || ""}${baseUrl}`.replace(/\/+$/, "");
     return `${base}/${hashName}`;
   }, [apiBase, baseUrl, hashName]);
 
+  // 2. 新增：头像化路径处理 (用于 UI 显式区分)
+  const avatarSrc = useMemo(() => {
+    if (!src) return "";
+    // 如果需要对头像 Blob URL 做进一步包装，可在此处处理
+    return src; 
+  }, [src]);
+
   const revoke = (u) => u?.startsWith("blob:") && URL.revokeObjectURL(u);
 
-  // 4. 加载逻辑
+  const clearLocal = useCallback(() => {
+    reqIdRef.current++;
+    if (curRef.current) {
+      revoke(curRef.current);
+      curRef.current = "";
+    }
+    setSrc("");
+    setError(null);
+  }, []);
+
+  const clearAllCache = useCallback(async () => {
+    clearLocal();
+    setLoading(true);
+    try {
+      await caches.delete(cacheName);
+      fetchLock.clear();
+    } catch (e) {
+      setError(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [cacheName, clearLocal]);
+
   const load = useCallback(async () => {
     if (!enabled || !remoteUrl) {
-      setSrc("");
+      clearLocal();
       setLoading(false);
-      setError(null);
       return;
     }
 
@@ -51,7 +81,6 @@ export function useImage(baseUrl, hashName, opt = {}) {
       let response = await cache.match(remoteUrl);
       
       if (!response) {
-        // --- 并发控制 ---
         if (!fetchLock.has(remoteUrl)) {
           const fetchPromise = fetcher(remoteUrl).then(async (res) => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -66,8 +95,6 @@ export function useImage(baseUrl, hashName, opt = {}) {
       }
 
       const blob = await response.clone().blob();
-      
-      // 竞态检查
       if (reqId !== reqIdRef.current) return;
 
       const objUrl = URL.createObjectURL(blob);
@@ -83,25 +110,20 @@ export function useImage(baseUrl, hashName, opt = {}) {
         setSrc("");
       }
     }
-  }, [enabled, remoteUrl, cacheName, fetcher]);
+  }, [enabled, remoteUrl, cacheName, fetcher, clearLocal]);
 
   useEffect(() => {
     load();
-    return () => {
-      reqIdRef.current++;
-      if (curRef.current) {
-        revoke(curRef.current);
-        curRef.current = "";
-      }
-    };
-  }, [load]);
+    return () => clearLocal();
+  }, [load, clearLocal]);
 
-  // --- 显式返回所有参数，方便一目了然 ---
   return { 
-    src,        // 最终可用于 <img src={...} /> 的地址
-    loading,    // 加载状态
-    error,      // 错误对象
-    url: remoteUrl, // 原始请求的远程 URL
-    reload: load    // 手动刷新函数
+    src,           // 通用图片路径
+    avatarSrc,     // 专门用于头像的路径接口
+    loading,
+    error,
+    url: remoteUrl,
+    reload: load,
+    clearAll: clearAllCache
   };
 }

@@ -2,7 +2,7 @@ import { useCallback, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2, useImage } from 'hooks/http';
 import { useLocalStorageState } from 'ahooks';
 import { Avatar, Container, XBox } from 'components/flutter';
 
@@ -42,9 +42,7 @@ export const Avatar2 = () => {
             </XBox.Segment>
         </XBox>
 
-        <Container align='center' padding={10}>
-            <Avatar imageBaseUrl={endpoint} src={avatar} variant='square' size={"500"} fit='cover' />
-        </Container>
+        <Avatar imageBaseUrl={endpoint} src={avatar} variant='square' size={"500"} fit='cover' />
 
     </Suspense>
 

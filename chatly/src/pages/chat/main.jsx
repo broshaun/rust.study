@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
 import { useWinSize, useDateTime, useTitle } from 'hooks';
-import { AppShell, AppBar, PCShell, Icon,  XBox, YBox } from 'components/flutter';
+import { AppShell, AppBar, PCShell, Icon, XBox, YBox } from 'components/flutter';
 
 
 export function Chat() {
@@ -13,7 +13,6 @@ export function Chat() {
   const items = useMemo(() => [
     { key: 'news', icon: <Icon name="chat-bubble-bottom-center-text" label='消息' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); }} /> },
     { key: 'friend', icon: <Icon name="users_oline" label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },
-
     { key: 'self', icon: <Icon name="user-oouline" label='我的' onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} /> },
   ], [isMobile, navigate, getTimestampMs]);
 
@@ -25,9 +24,9 @@ export function Chat() {
       <PCShell>
         <PCShell.Left width={60}>
           <YBox gap={10} padding={20}>
-            {visibleItems.map((item) => (
-              <div>{item.icon}</div>
-            ))}
+            {
+              visibleItems.map((item) => <div>{item.icon}</div>)
+            }
           </YBox>
         </PCShell.Left>
         <PCShell.Content>

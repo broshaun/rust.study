@@ -1,40 +1,40 @@
 import React from 'react';
-import { Text } from './Text';
+import styles from './Heading.module.css';
 
 /**
- * Heading - 语义化标题组件
- * @param {number} level - 标题等级 1-4 (1最大)
- * @param {boolean} tight - 是否紧凑行高
+ * Heading - 语义化主题标题
+ * 职责：提供 H1-H4 的字阶支持，并自动适配全局主题变量。
+ * * @param {Object} props
+ * @param {number} [props.level=2] - 标题等级 1-4
+ * @param {boolean} [props.tight=false] - 是否开启紧凑行高
+ * @param {string} [props.color] - 自定义颜色变量（如 var(--accent-color)）
  */
 export const Heading = ({ 
   children, 
   level = 2, 
   tight = false, 
+  color,
   style, 
+  className = "",
   ...props 
 }) => {
-  // 定义字阶系统
-  const headingStyles = {
-    1: { size: 24, weight: 800, height: 1.2 },
-    2: { size: 20, weight: 700, height: 1.25 },
-    3: { size: 17, weight: 600, height: 1.3 },
-    4: { size: 15, weight: 600, height: 1.4 },
+  // 确保 level 在 1-4 范围内
+  const safeLevel = Math.min(Math.max(level, 1), 4);
+  const Tag = `h${safeLevel}`;
+
+  const vars = {
+    '--h-color': color,
+    '--h-lh': tight ? 1.1 : undefined,
+    ...style
   };
 
-  const current = headingStyles[level] || headingStyles[2];
-
   return (
-    <Text
-      size={current.size}
-      weight={current.weight}
-      height={tight ? 1.1 : current.height}
-      style={{
-        letterSpacing: level <= 2 ? '-0.02em' : 'normal', // 大标题增加紧凑感
-        ...style
-      }}
+    <Tag
+      className={`${styles.heading} ${styles[`h${safeLevel}`]} ${className}`}
+      style={vars}
       {...props}
     >
       {children}
-    </Text>
+    </Tag>
   );
 };
