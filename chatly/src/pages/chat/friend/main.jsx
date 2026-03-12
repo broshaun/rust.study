@@ -5,7 +5,7 @@ import { useRequest, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
-import { Divider, Container, Icon, YBox, XBox } from 'components/flutter';
+import { Divider, Icon, YBox, XBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 
 
