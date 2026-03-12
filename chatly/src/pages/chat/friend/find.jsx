@@ -1,20 +1,20 @@
 import React, { useState, Suspense } from 'react';
-import { InputText2, Container } from 'components';
+import { InputText2, } from 'components';
 import { useHttpClient2 } from 'hooks/http';
 import { useRequest, useDebounce } from 'ahooks';
 import { UserInfoCard } from 'components/chat';
-import { Divider, } from 'components/flutter';
+import { Divider, YBox } from 'components/flutter';
 
 
 export const Find = () => {
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    const { endpoint} = useHttpClient2('/imgs');
+    const { endpoint } = useHttpClient2('/imgs');
     const [keyword, setKeyword] = useState();
     const debouncedKeyword = useDebounce(keyword, { wait: 500 });
 
 
     // 查找好友
-    const { data: user, loading, runAsync: run } = useRequest(
+    const { data: findByUser, loading, runAsync: run } = useRequest(
         async (email) => {
             if (!email) return;
             const results = await http.requestBodyJson('POST', { 'email': email });
@@ -26,8 +26,10 @@ export const Find = () => {
     // 添加好友
     const { runAsync: run2 } = useRequest(
         async (user_id) => {
+            // console.log('添加好友', user_id)
             if (!user_id) return;
-            await http.requestBodyJson('PUT', { 'user_id': user_id })
+            const { code, message, data } = await http.requestBodyJson('PUT', { 'user_id': user_id })
+            console.log(code, message, data)
             return 'ok'
         }, { manual: true })
 
@@ -60,44 +62,56 @@ export const Find = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        
-        <Container alignItems='center' verticalScroll={true}>
-            <br />
+
+        <YBox align='center' verticalScroll={true} gap={10} padding={10}>
+
             <InputText2 placeholder="搜索好友" onChangeValue={handleEmailChange}>
                 <InputText2.Right icon='magnifying-glass-circle' onClick={() => run(debouncedKeyword)} />
             </InputText2>
+
             <Divider />
-            {!loading && Object.keys(user || {}).length !== 0 &&
-                <UserInfoCard
-                    background="#f5f8ff"
-                    butText='添加好友'
-                    title='用户信息'
-                    onAddFriend={(v) => { run2(v?.id) }}
-                >
-                    <UserInfoCard.Avatar>
-                        <img src={`${endpoint}/${user?.avatar_url}`} />
-                    </UserInfoCard.Avatar>
-                    <UserInfoCard.Info>{user}</UserInfoCard.Info>
-                </UserInfoCard>
-            }
-            <Divider />
-            {!loading2 && askFriends.map(user =>
+            {!loading && Object.keys(findByUser || {}).length !== 0 &&
                 <UserInfoCard
                     background="#FFF9E8"
-                    title='好友请求'
-                    butText='通过'
-                    onAddFriend={(v) => { isPass(v?.id, 'agree') }}
-                    refuseText='拒绝'
-                    refuseAdd={(v) => { isPass(v?.id, 'refuse') }}
+                    title='用户信息'
+                    actionText='添加'
+                    onAction={(type) => {
+                        if (type === 'accept') { run2(findByUser?.id) }
+                    }}
+                >
+                    <UserInfoCard.Avatar>
+                        <img src={`${endpoint}/${findByUser?.avatar_url}`} />
+                    </UserInfoCard.Avatar>
+                    <UserInfoCard.Info>{findByUser}</UserInfoCard.Info>
+                </UserInfoCard>
+
+            }
+
+            {!loading2 && askFriends.map(user =>
+
+                <UserInfoCard
+                    background="#FFF9E8"
+                    title="好友请求"
+                    actionText="通过"
+                    refuseText="拒绝"
+                    onAction={(type) => {
+                        if (type === 'accept') {
+                            return isPass(user?.id, 'agree');
+                        }
+                        if (type === 'refuse') {
+                            return isPass(user?.id, 'refuse');
+                        }
+                    }}
                 >
                     <UserInfoCard.Avatar>
                         <img src={`${endpoint}/${user?.avatar_url}`} />
                     </UserInfoCard.Avatar>
                     <UserInfoCard.Info>{user}</UserInfoCard.Info>
                 </UserInfoCard>
+
             )}
 
-        </Container>
+        </YBox>
     </Suspense>
 }
 

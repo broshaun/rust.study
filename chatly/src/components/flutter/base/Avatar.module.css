@@ -12,18 +12,6 @@
   cursor: pointer;
 }
 
-/* Hover 效果 - 可禁用 */
-.avatar:not(.noHover):hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* 禁用 hover 效果 */
-.avatar.noHover {
-  cursor: default;
-  transform: none !important;
-  box-shadow: inherit !important;
-}
 
 /* 加载过渡 - 更丝滑 */
 .avatar {

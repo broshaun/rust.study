@@ -4,7 +4,7 @@ import { db } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
 import { useVirtualList } from 'ahooks';
-import {   Container, Row, Background, Padding } from 'components/flutter';
+import { Container, Row, Background, Padding, Border } from 'components/flutter';
 import { DialogItem } from 'components/chat';
 
 export const Mian = () => {
@@ -28,7 +28,7 @@ export const Mian = () => {
         if (!select?.id) return;
         const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName } })
+            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, displayName } })
         })
     }, [])
 
@@ -56,9 +56,10 @@ export const Mian = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         <Row>
-            <Row.Col span={2}>
-                <Background/>
+            <Row.Col >
+
                 <Container verticalScroll={true} ref={containerRef} height={winHeight}>
+                    <Border />
                     {/* <Padding value={5}>
                         <Right>
                             <Icon name='magnifying-glass' />
@@ -78,8 +79,10 @@ export const Mian = () => {
                     </Padding>
                 </Container>
             </Row.Col>
-            <Row.Col span={4}>
-                <Outlet />
+            <Row.Col span={3}>
+                <Container>
+                    <Outlet />
+                </Container>
             </Row.Col>
         </Row>
     </Suspense>

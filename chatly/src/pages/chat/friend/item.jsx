@@ -5,7 +5,7 @@ import { useWinSize } from 'hooks';
 import { useRequest, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
-import { Divider, Container, Right, Icon, Padding, Background } from 'components/flutter';
+import { Divider, Icon, YBox, XBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 
 
@@ -80,26 +80,21 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Background/>
-            <Container verticalScroll={true} ref={containerRef} height={winHeight}>
-                <Padding value={5}>
-                    <Right>
-                        <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
-                    </Right>
-                </Padding>
-                <Divider />
-                <Padding value={5}>
-                    <div ref={wrapperRef}>
-                        {list.map((item) => {
-                            return <Friend
-                                data={item.data}
-                                onSelect={openMsgWindow}
-                            />
-                        })}
-                    </div>
-                </Padding>
-            </Container>
+        <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
+            <XBox height={36} width="100%" align="middle" justify="right" padding={10}>
+                <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
+            </XBox>
+            <Divider />
+            <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
+                {list.map((item) => {
+                    return <Friend
+                        data={item.data}
+                        onSelect={openMsgWindow}
+                    />
 
+                })}
+            </div>
+        </YBox>
     </Suspense>
 
 }

@@ -6,6 +6,9 @@ export { Divider } from './layout/Divider'
 export { Center, Left, Right } from './layout/Align'
 export { Padding } from './layout/Padding';
 
+export { XBox } from './layout/XBox'
+export { YBox } from './layout/YBox'
+export { Container } from './layout/Container'
 
 
 // frame 骨架
@@ -13,7 +16,7 @@ export { AppShell } from './frame/AppShell'
 export { AppBar } from './frame/AppBar'
 export { PCShell } from './frame/PCShell'
 export { Drawer } from './frame/Drawer'
-export { Container } from './frame/Container'
+
 
 
 

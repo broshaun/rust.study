@@ -38,7 +38,7 @@ function Listen() {
       }
     });
     return 'ok';
-  }, { pollingInterval: 1000, pollingWhenHidden: false });
+  }, { pollingInterval: 2000, pollingWhenHidden: false });
 
   return <div><Outlet /></div>
 }

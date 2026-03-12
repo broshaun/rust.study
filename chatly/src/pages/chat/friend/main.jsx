@@ -5,7 +5,7 @@ import { useRequest, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
-import { Border, Divider, Container, Row, Right, Icon, Padding, Background } from 'components/flutter';
+import { Divider, Container, Icon, YBox, XBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 
 
@@ -18,7 +18,6 @@ export const Mian = () => {
 
 
     const openMsgWindow = useCallback((select) => {
-        // console.log('select',select)
         navigate('/chat/friend/detail/', { state: { select } });
     }, [location.pathname]);
 
@@ -81,34 +80,28 @@ export const Mian = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Row>
-            <Row.Col>
-                <Background/>
-                    <Container verticalScroll={true} ref={containerRef} height={winHeight}>
-                        <Border />
-                        <Padding value={5}>
-                            <Right>
-                                <Icon name='magnifying-glass' />
-                            </Right>
-                        </Padding>
-                        <Divider />
-                        <Padding value={5}>
-                            <div ref={wrapperRef}>
-                                {list.map((item) => {
-                                    return <Friend
-                                        data={item.data}
-                                        onSelect={(value) => openMsgWindow(value)}
-                                    />
-                                })}
-                            </div>
-                        </Padding>
-                    </Container>
-               
-            </Row.Col>
-            <Row.Col span={3}>
+        <XBox>
+            <XBox.Segment>
+                <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
+                    <XBox height={36} width="100%" align="middle" justify="right" padding={10}>
+                        <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
+                    </XBox>
+                    <Divider />
+                    <div ref={wrapperRef}>
+                        {list.map((item) => {
+                            return <Friend
+                                data={item.data}
+                                onSelect={(value) => openMsgWindow(value)}
+                            />
+                        })}
+                    </div>
+                </YBox>
+
+            </XBox.Segment>
+            <XBox.Segment span={3}>
                 <Outlet />
-            </Row.Col>
-        </Row>
+            </XBox.Segment>
+        </XBox>
     </Suspense>
 
 }

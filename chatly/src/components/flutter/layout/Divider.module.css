@@ -3,40 +3,39 @@
   height: 1px;
   width: 100%;
   box-sizing: border-box;
+  flex-shrink: 0; 
   
-  /* 确立上下呼吸感 */
+  /* 呼吸感控制 */
   margin-top: var(--div-spacing);
   margin-bottom: var(--div-spacing);
   
-  /* 核心防线：在 Flex 容器中绝对不允许被挤压变细 */
-  flex-shrink: 0; 
+  /* 2. 主题适配视觉逻辑 */
+  /* 使用文字颜色的低透明度作为线条色，确保在任何背景（浅色/深色/毛玻璃）下都可见 */
+  background-color: rgba(var(--text-primary-rgb), 0.12);
   
-  /* 2. 视觉质感 (修复了原版 multiply 在暗黑模式下失效的问题) */
-  /* 直接使用带有透明度的前景色或主题边框色 */
-  background-color: var(--panel-border-color, rgba(128, 128, 128, 0.2));
+  /* 模拟物理刻痕：上方暗线（由bg提供），下方亮线（由shadow提供） */
+  /* 在暗黑主题下（如赛博、金属），亮线提供精致的金属边缘感 */
+  box-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.05); 
   
-  /* 微弱的底部高光，产生刻线般的立体感 */
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05); 
+  /* 平滑过度 */
+  transition: background var(--transition-speed) ease;
 }
 
 /* --- 3. 突破边界模式 (Bleed) --- */
-/* 当父容器有 Padding 时，利用负边距强行向左右扩张 */
 .bleed {
-  width: auto;
-  /* 这里的 -16px 需要对应你 Card 或 Container 的默认 padding */
-  /* 这样它就能完美抵消父级的内边距，真正切断整个容器 */
+  width: calc(100% + 32px); /* 补偿左右各 16px 的负边距 */
   margin-left: -16px; 
   margin-right: -16px;
 }
 
 /* --- 4. 渐隐模式 (Fade) --- */
 .fade {
+  /* 动态生成适配主题的渐变色 */
   background: linear-gradient(
     to right,
     transparent 0%,
-    var(--panel-border-color, rgba(128, 128, 128, 0.4)) 50%,
+    rgba(var(--text-primary-rgb), 0.2) 50%,
     transparent 100%
   );
-  /* 渐变模式下不需要立体高光，保持纯净 */
   box-shadow: none; 
 }

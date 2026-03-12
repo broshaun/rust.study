@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Row, Column, SizedBox, Avatar } from 'components/flutter';
+import { useHttpClient2 } from 'hooks/http';
 
 /**
  * 时间格式化工具 (保持不变)
@@ -28,6 +29,7 @@ export const DialogItem = ({ data, onSelect, onClear, onAvatarClick }) => {
   const email = data.email || "未绑定邮箱";
   const timeStr = formatDialogTime(data.timestamp);
   const isNew = data.signal === "new";
+  const { endpoint } = useHttpClient2('/imgs');
 
   return (
     <div onClick={() => onSelect?.(data)} style={{ cursor: 'pointer' }}>
@@ -43,7 +45,7 @@ export const DialogItem = ({ data, onSelect, onClear, onAvatarClick }) => {
           >
             <Avatar
               src={data.avatar_url}
-              imageBaseUrl='/imgs'
+              imageBaseUrl={endpoint}
               alt={name}
               variant="rounded"
               size={38}

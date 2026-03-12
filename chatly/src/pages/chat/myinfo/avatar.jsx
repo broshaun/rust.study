@@ -4,17 +4,18 @@ import { Row, Image, Col, Container, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient2, useImage } from 'hooks/http';
 import { useLocalStorageState } from 'ahooks';
+import { Avatar } from 'components/flutter';
 
 
 
-
-export const Avatar = () => {
+export const Avatar2 = () => {
     const navigate = useNavigate()
     const location = useLocation()
-    const [avatar, setAvatar] = useLocalStorageState('saveOneself', { defaultValue: location.state?.avatar_url } )
+    const [avatar, setAvatar] = useLocalStorageState('saveOneself', { defaultValue: location.state?.avatar_url })
     const { http: httpFiles } = useHttpClient2('/files/img/')
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/')
-    const { src, loading } = useImage("/imgs", avatar)
+    // const { src, loading } = useImage("/imgs", avatar)
+    const { endpoint } = useHttpClient2('/imgs');
 
     const uploadFile = useCallback((file) => {
         if (!file) return;
@@ -40,11 +41,11 @@ export const Avatar = () => {
                 />
             </Col>
         </Row>
-        {!loading &&
-            <Container>
-                <Image src={src} />
-            </Container>
-        }
+
+        <Container>
+            <Avatar imageBaseUrl={endpoint} src={avatar} variant='square' size={"500"} fit='cover'/>
+        </Container>
+
     </Suspense>
 
 

@@ -1,25 +1,31 @@
-import React, { Children, isValidElement } from 'react';
+import React, { Children } from 'react';
 import styles from './AppShell.module.css';
 
 /**
- * 全平台沉浸式 AppShell (Scaffold)
- * 职责：适配 iOS 刘海屏与 macOS 透明标题栏，支持 7 套主题融合。
+ * AppShell - 全平台沉浸式布局骨架
+ * 职责：
+ * 1. 只负责 Header / Content / Footer 的结构布局
+ * 2. 处理 safe-area
+ * 3. 不负责具体内容的对齐方式
  */
 export const AppShell = ({ children }) => {
   const childrenArray = Children.toArray(children);
-  
-  // 精准识别插槽组件
+
   const header = childrenArray.find(c => c.type === AppShell.Header);
   const footer = childrenArray.find(c => c.type === AppShell.Footer);
-  const content = childrenArray.find(c => c.type === AppShell.Content) || childrenArray.filter(c => c.type !== AppShell.Header && c.type !== AppShell.Footer);
+  const content =
+    childrenArray.find(c => c.type === AppShell.Content) ||
+    childrenArray.filter(
+      c => c.type !== AppShell.Header && c.type !== AppShell.Footer
+    );
 
   return (
     <div className={styles.appShell}>
       {header && (
-        <header 
-          className={styles.header} 
+        <header
+          className={styles.header}
           style={{ '--h': header.props.height || 56 }}
-          data-tauri-drag-region /* 允许在 Mac/Windows 顶栏拖动窗口 */
+          data-tauri-drag-region
         >
           {header}
         </header>
@@ -30,8 +36,8 @@ export const AppShell = ({ children }) => {
       </main>
 
       {footer && (
-        <footer 
-          className={styles.footer} 
+        <footer
+          className={styles.footer}
           style={{ '--f': footer.props.height || 64 }}
         >
           {footer}
@@ -41,13 +47,23 @@ export const AppShell = ({ children }) => {
   );
 };
 
-// 定义子组件并设置识别标识
-AppShell.Header = ({ children }) => <div className={styles.innerSlot}>{children}</div>;
-AppShell.Footer = ({ children }) => <>{children}</>;
+AppShell.Header = ({ children }) => (
+  <div className={styles.innerSlot}>
+    {children}
+  </div>
+);
+
 AppShell.Content = ({ children }) => <>{children}</>;
 
-// 别名导出（Flutter 习惯）
+AppShell.Footer = ({ children }) => (
+  <div className={styles.footerInner}>
+    {children}
+  </div>
+);
+
 export const Scaffold = AppShell;
 Scaffold.Header = AppShell.Header;
 Scaffold.Footer = AppShell.Footer;
 Scaffold.Content = AppShell.Content;
+
+export default AppShell;

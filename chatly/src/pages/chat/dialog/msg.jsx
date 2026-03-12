@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDateTime, useWinSize } from 'hooks';
 import { useRequest, useLocalStorageState, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
-import { Container, Icon, Padding,Background } from 'components/flutter';
+import { Container, Icon, Padding, Background } from 'components/flutter';
 import { useHttpClient2 } from 'hooks/http';
 
 export function Msg() {
@@ -15,6 +15,9 @@ export function Msg() {
     const uid = location.state?.uid
     const avatar_url = location.state?.avatar_url
     const displayName = location.state?.displayName
+
+
+    console.log('displayName', displayName)
 
     const [selfAvatar] = useLocalStorageState('saveOneself')
     const [msgs, setMsgs] = useState([]);
@@ -67,11 +70,12 @@ export function Msg() {
     return <ChatMsg>
         <ChatMsg.Meta
             title={displayName}
-            left={<Icon name="chevron-left" onClick={() => { navigate(f_url) }} />}
+            left={isMobile ? <Icon name="chevron-left" onClick={() => { navigate(f_url) }} /> : <></>}
         />
         <ChatMsg.Content>
-            <Background/>
+
             <Container verticalScroll={true} ref={containerRef} height={winHeight - 135}>
+
                 <Padding>
                     <div ref={wrapperRef}>
                         {list.map((item) => {
@@ -87,6 +91,7 @@ export function Msg() {
         </ChatMsg.Content>
         <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
     </ChatMsg >
+
 }
 
 

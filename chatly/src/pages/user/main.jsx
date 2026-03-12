@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
-import { AppBar, Container, Center, Padding, AppShell, Column, Drawer, Divider, Icon } from 'components/flutter';
+import { AppBar, AppShell, Drawer, Divider, Icon, XBox, YBox } from 'components/flutter';
 
 
 
@@ -19,27 +19,22 @@ export function User() {
     setOpen(false);
   };
   return <React.Fragment>
-    <Drawer isOpen={open} onClose={() => setOpen(false)} width={150}>
-      <Padding>
-        <Center alignment='bottom'>
-          <h3>导航</h3>
-        </Center>
-      </Padding>
+    <Drawer isOpen={open} onClose={() => setOpen(false)} width={120}>
+      <XBox padding={20}>
+        <h3>导航</h3>
+      </XBox>
       <Divider fade={true} />
-      <Padding>
-        <Column>
-          {drawerMenu.filter(i => i.display !== false).map((item) =>
-            <Padding value={5}>
-              <Icon
-                name={item?.icon.name}
-                label={item?.icon.label}
-                onClick={() => handleItemClick(item)}
-                labelPos='right'
-              />
-            </Padding>
-          )}
-        </Column>
-      </Padding>
+
+      <YBox padding={10} gap={20}>
+        {drawerMenu.filter(i => i.display !== false).map((item) =>
+          <Icon
+            name={item?.icon.name}
+            label={item?.icon.label}
+            onClick={() => handleItemClick(item)}
+            labelPos='right'
+          />
+        )}
+      </YBox>
     </Drawer>
 
     <AppShell>
@@ -47,11 +42,7 @@ export function User() {
         <AppBar leading={<Icon name="menu" onClick={() => setOpen(true)} />} />
       </AppShell.Header>
       <AppShell.Content>
-        <Center alignment='top'>
-          <Container width={380}>
-            <Outlet />
-          </Container>
-        </Center>
+        <Outlet />
       </AppShell.Content>
     </AppShell>
   </React.Fragment>

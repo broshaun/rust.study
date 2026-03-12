@@ -10,8 +10,9 @@
   --list-item-color: var(--text-primary);
   --list-item-muted: var(--text-secondary);
   --list-item-border-color: rgba(var(--text-primary-rgb), 0.08);
-  --list-item-hover-bg: rgba(var(--text-primary-rgb), 0.05);
-  --list-item-active-bg: rgba(var(--text-primary-rgb), 0.08);
+  /* 移除 hover/active 背景色变量（或设为和默认一致） */
+  --list-item-hover-bg: var(--list-item-bg);
+  --list-item-active-bg: var(--list-item-bg);
   --list-item-shadow: var(--panel-shadow, none);
   --list-item-blur: var(--panel-blur, none);
 
@@ -28,8 +29,9 @@
   --list-item-border-color: rgba(var(--text-primary-rgb), 0.08);
   --list-item-shadow: none;
   --list-item-blur: none;
-  --list-item-hover-bg: rgba(var(--text-primary-rgb), 0.06);
-  --list-item-active-bg: rgba(var(--text-primary-rgb), 0.09);
+  /* 移除 hover/active 背景色变化 */
+  --list-item-hover-bg: var(--list-item-bg);
+  --list-item-active-bg: var(--list-item-bg);
 }
 
 .listContainer[data-blend='clear'] {
@@ -37,8 +39,9 @@
   --list-item-border-color: rgba(var(--text-primary-rgb), 0.1);
   --list-item-shadow: none;
   --list-item-blur: none;
-  --list-item-hover-bg: rgba(var(--text-primary-rgb), 0.04);
-  --list-item-active-bg: rgba(var(--text-primary-rgb), 0.07);
+  /* 移除 hover/active 背景色变化 */
+  --list-item-hover-bg: var(--list-item-bg);
+  --list-item-active-bg: var(--list-item-bg);
 }
 
 .itemsLayer {
@@ -68,8 +71,8 @@
   -webkit-backdrop-filter: var(--list-item-blur);
 
   -webkit-tap-highlight-color: transparent;
+  /* 移除 background 过渡（可选，若想保留其他过渡可保留） */
   transition:
-    background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -123,8 +126,9 @@
   transition: transform 0.18s ease, opacity 0.18s ease;
 }
 
+/* 移除 hover 背景色变化 */
 .clickable:hover {
-  background: var(--list-item-hover-bg);
+  background: var(--list-item-bg);
 }
 
 .clickable:hover .arrow {
@@ -132,8 +136,9 @@
   opacity: 0.58;
 }
 
+/* 移除 active 背景色变化，保留缩放效果（若不需要缩放可删除 transform） */
 .clickable:active {
-  background: var(--list-item-active-bg);
+  background: var(--list-item-bg);
   transform: scale(0.985);
 }
 
@@ -216,6 +221,9 @@
   --list-item-margin-x: 0px;
   --list-item-margin-y: 0px;
   --list-arrow-opacity: 0.5;
+  /* 确保 cyber 主题下也无背景色变化 */
+  --list-item-hover-bg: var(--list-item-bg);
+  --list-item-active-bg: var(--list-item-bg);
 }
 
 [data-theme='cyber'] .item {
@@ -251,6 +259,9 @@
   --list-radius: 0px;
   --list-item-margin-x: 0px;
   --list-item-margin-y: 0px;
+  /* 确保 brushed 主题下也无背景色变化 */
+  --list-item-hover-bg: var(--list-item-bg);
+  --list-item-active-bg: var(--list-item-bg);
 }
 
 [data-theme='brushed'] .item {

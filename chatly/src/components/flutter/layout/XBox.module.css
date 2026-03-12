@@ -1,0 +1,35 @@
+.xbox {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: var(--xb-wrap, nowrap);
+
+  align-items: var(--xb-align, center);
+  justify-content: var(--xb-justify, center);
+
+  gap: var(--xb-gap, 0px);
+
+  width: var(--xb-w, 100%);
+  height: var(--xb-h, auto);
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: var(--xb-pad, 0px);
+  box-sizing: border-box;
+}
+
+.segment {
+  display: flex;
+
+  flex: var(--xb-seg-span, 1) 1 0%;
+  min-width: 0;
+  min-height: 0;
+
+  padding: var(--xb-seg-pad, 0px);
+  box-sizing: border-box;
+
+  align-items: var(--xb-seg-vertical, center);
+  justify-content: var(--xb-seg-align, flex-start);
+
+  height: 100%;
+}

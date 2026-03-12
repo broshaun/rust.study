@@ -1,22 +1,3 @@
-
-// const a =
-// {   
-//     'id': "69a54ef454dcebe92b576f9d",
-//     'avatar_url': "ea4086dd1ec9a9baeff9af843dba75a0.jpg",
-//     'email': "77254@qq.com",
-//     'nikename': "Shaun",
-//     'remark': '备注名',
-//     'uid': "69a2b43697c7c8a9cf3ab14d",
-// }
-
-
-
-// return <div>
-//     <Friend data={a} 选择整个回调 选中头像回调/>
-// </div>
-
-
-
 import React, { useMemo } from "react";
 import styles from "./Avatar.module.css";
 import { useImage } from "hooks/http";
@@ -70,6 +51,7 @@ const Avatar = ({
 }) => {
   // 优化：类名拼接函数抽离 + 空值过滤
   const cx = useMemo(() => (...xs) => xs.filter(Boolean).join(" "), []);
+
 
   // 缓存图片加载逻辑
   const { src: cachedSrc, loading, error } = useImage(

@@ -4,7 +4,7 @@ import { useWinSize } from 'hooks';
 import { useHttpClient2 } from 'hooks/http';
 import { db } from 'hooks/db';
 import { useRequest } from 'ahooks';
-import { Avatar, Row, Button, Center, Divider, Column, SizedBox, Padding, Heading, Right, Left, Container,Background} from 'components/flutter';
+import { Avatar, Button, Divider, Heading, YBox, XBox } from 'components/flutter';
 import { InfoTile } from 'components/chat';
 
 
@@ -39,6 +39,7 @@ export function Detail() {
 
     // 好友备注
     const { runAsync: updRemark } = useRequest((id, remark) => {
+        console.log('id, remark', id, remark)
         http2.requestBodyJson('PATCH', { id, remark }).then((results) => {
             if (!results) return;
             console.log('results++', results)
@@ -58,65 +59,57 @@ export function Detail() {
     }
 
 
-    console.log(`++++++ ${endpoint}/${friend?.avatar_url}`)
-
     return <Suspense fallback={<div>加载中...</div>}>
-        <Background/>
 
-        <Container>
 
-            <SizedBox height={100} />
 
-            <Center>
+        <YBox padding={20}>
+            <XBox align='center' padding={20}>
                 <Avatar size={75} src={`${endpoint}/${friend?.avatar_url}`} fit="cover" />
-            </Center>
+            </XBox>
 
-            <Divider fade={true} />
-            <Padding value={20}>
-                <Column>
-                    <Heading level={4}>账户信息</Heading>
-                    <SizedBox height={10} />
-                    <InfoTile icon="user" label="名称" value={friend?.nikename} />
-                    <InfoTile icon="email" label="邮箱" value={friend?.email} />
-                    <InfoTile icon="edit" label="备注" value={friend?.remark} onConfirm={(remark) => { setFriend(p => ({ ...p, remark })); updRemark(friend?.id, remark); }} />
-                    <Divider />
-                    <SizedBox height={10} />
-                    <Row>
-                        <Row.Col>
-                            <Left>
-                                <Button
-                                    label="发起聊天"
-                                    onPressed={() => openMsgWindow(friend)}
-                                    style={{
-                                        background: 'var(--accent-color)',
-                                        color: '#fff',
-                                        border: 'none'
-                                    }}
-                                />
-                            </Left>
-                        </Row.Col>
+            <Heading level={4}>账户信息</Heading>
+            <Divider />
+            <InfoTile icon="user" label="名称" value={friend?.nikename} />
+            <InfoTile icon="email" label="邮箱" value={friend?.email} />
+            <InfoTile icon="edit" label="备注" value={friend?.remark} onConfirm={(remark) => { setFriend(p => ({ ...p, remark })); updRemark(friend?.id, remark); }} />
 
-                        <Row.Col>
-                            <Right>
-                                <Button
-                                    label="删除好友"
-                                    onPressed={() => {
-                                        delFid(friend?.id);
-                                        isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/');
-                                    }}
-                                    style={{
-                                        color: '#fff',
-                                        background: '#ff4d4f',
-                                        border: 'none'
-                                    }}
-                                />
-                            </Right>
-                        </Row.Col>
+            <XBox align='center' padding={20} gap={50}>
+                <Button
+                    label="发起聊天"
+                    onPressed={() => openMsgWindow(friend)}
+                    style={{
+                        background: 'var(--accent-color)',
+                        color: '#fff',
+                        border: 'none'
+                    }}
+                />
+                <Button
+                    label="删除好友"
+                    onPressed={() => {
+                        delFid(friend?.id).then(() => {
+                            isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/')
+                        })
+                    }}
+                    style={{
+                        color: '#fff',
+                        background: '#ff4d4f',
+                        border: 'none'
+                    }}
+                />
 
-                    </Row>
-                </Column>
-            </Padding>
-        </Container>
+
+            </XBox>
+
+
+
+
+
+
+
+
+
+        </YBox>
 
     </Suspense>
 }

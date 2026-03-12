@@ -1,0 +1,36 @@
+.ybox {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  width: var(--yb-w, 100%);
+  height: var(--yb-h, auto);
+
+  min-width: 0;
+  min-height: 0;
+
+  gap: var(--yb-gap, 0px);
+  padding: var(--yb-pad, 0px);
+
+  /* 只负责纵向分布，不影响横向宽度 */
+  align-items: stretch;
+  justify-content: var(--yb-justify, flex-start);
+
+  overflow: visible;
+  background: transparent;
+}
+
+/* 直接子元素默认占满宽度 */
+.ybox > * {
+  min-width: 0;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+/* 垂直滚动 */
+.ybox[data-scroll='true'] {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}

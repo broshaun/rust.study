@@ -3,8 +3,7 @@ import { Container } from 'components/flutter';
 
 
 export const Settings = () => {
-    return <Container>
-        <Outlet />
-    </Container>
+    return <Outlet />
+
 }
 

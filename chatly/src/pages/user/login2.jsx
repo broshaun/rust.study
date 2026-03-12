@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLogin, useWinSize } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage, useHttpClient2 } from 'hooks/http';
-import { Button, TextField, Row, SizedBox, Center, Divider, Padding } from 'components/flutter';
+import { Button, TextField, Divider, XBox } from 'components/flutter';
 
 
 export function LogOn() {
@@ -52,7 +52,7 @@ export function LogOn() {
             <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
         </Modal>
 
-        <Center>
+        <XBox>
             <Avatar
                 src={src}
                 size={60}
@@ -61,57 +61,40 @@ export function LogOn() {
                 borderColor="#e5e7eb"
                 hasShadow={true}
             />
+        </XBox>
 
-            <SizedBox height={20} />
+        <XBox padding={20}>
             <h3>登录界面</h3>
-            <SizedBox height={20} />
-            <Divider fade={true} thickness={1} opacity={0.3} />
-            <SizedBox height={30} />
+        </XBox>
 
-            <Row>
+        <Divider fade={true} thickness={1} opacity={0.3} />
 
-                <Padding value={5}>
-                    <TextField
-                        label="账号"
-                        maxWidth={250}
-                        hintText="请输入账号"
-                        value={account}
-                        onChanged={(value) => setAccount(value)}
+        <XBox padding={5}>
+            <TextField
+                label="账号"
+                maxWidth={250}
+                hintText="请输入账号"
+                value={account}
+                onChanged={(value) => setAccount(value)}
+            />
+        </XBox>
 
-                    />
-                </Padding>
-            </Row >
+        <XBox padding={5}>
+            <TextField
+                label="密码"
+                maxWidth={250}
+                hintText="请输入密码"
+                obscureText={true}
+                value={password}
+                onChanged={(value) => setPassword(value)}
+            />
+        </XBox>
 
-            <Row>
-                <Padding value={5}>
-                    <TextField
-                        label="密码"
-                        maxWidth={250}
-                        hintText="请输入密码"
-                        obscureText={true}
-                        value={password}
-                        onChanged={(value) => setPassword(value)}
-                    />
-                </Padding>
-            </Row>
-
-            <Row>
-
-                <Padding value={15}>
-                    <Center>
-                        <Button label='登录' width={250}
-                            onPressed={() => { runLogin(account, password) }}
-                        />
-                    </Center>
-                </Padding>
-
-
-            </Row>
-        </Center>
-
-
-
-
+        <XBox padding={10}>
+            <Button label='登录' width={250}
+                onPressed={() => { runLogin(account, password) }}
+            />
+        </XBox>
 
     </React.Fragment>
 }
