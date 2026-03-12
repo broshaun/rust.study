@@ -1,10 +1,10 @@
-import { useState, useCallback, useTransition, Suspense } from 'react';
-import { Outlet, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { Row, Col, InputText2 } from 'components';
+import { useState, Suspense } from 'react';
+import {  useNavigate, useLocation } from 'react-router-dom';
+import { InputText2 } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient2 } from 'hooks/http';
 import { useRequest } from 'ahooks';
-
+import { XBox } from 'components/flutter';
 
 
 export const Nikename = () => {
@@ -28,14 +28,14 @@ export const Nikename = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         <br />
-        <Row>
-            <Col span={1} >
+        <XBox padding={10}>
+            <XBox.Segment span={1} >
                 <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/') }} />
-            </Col>
-            <Col span={15} ><h3>修改的昵称：</h3></Col>
-        </Row>
+            </XBox.Segment>
+            <XBox.Segment span={15} ><h3>修改的昵称：</h3></XBox.Segment>
+        </XBox>
 
-        <Row>
+        <XBox padding={10}>
 
             {location.state &&
                 <InputText2 defaultValue={location.state?.nikename} onChangeValue={(value) => { setName(value) }}>
@@ -44,8 +44,7 @@ export const Nikename = () => {
                 </InputText2>
             }
 
-
-        </Row>
+        </XBox>
     </Suspense>
 
 

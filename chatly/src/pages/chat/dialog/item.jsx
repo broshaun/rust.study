@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Padding ,Background} from 'components/flutter';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useVirtualList } from 'ahooks';
 import { useWinSize } from 'hooks';
+import { YBox } from 'components/flutter';
 
 
 export const Item = () => {
@@ -54,25 +54,17 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Background/>
-        <Container verticalScroll={true} ref={containerRef} height={winHeight}>
-            {/* <Padding value={5}>
-                <Right>
-                    <Icon name='magnifying-glass' />
-                </Right>
-            </Padding>
-            <Divider /> */}
-            <Padding value={5}>
-                <div ref={wrapperRef}>
-                    {list.map((item) => {
-                        return <DialogItem
-                            data={item.data}
-                            onSelect={openMsgWindow}
-                            onClear={(p) => handleClear(p)}
-                        />
-                    })}
-                </div>
-            </Padding>
-        </Container>
+        <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
+            <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
+                {list.map((item) => {
+                    return <DialogItem
+                        data={item.data}
+                        onSelect={openMsgWindow}
+                        onClear={(p) => handleClear(p)}
+                    />
+                })}
+            </div>
+
+        </YBox>
     </Suspense>
 }

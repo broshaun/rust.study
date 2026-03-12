@@ -1,10 +1,10 @@
 import { useCallback, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Row, Image, Col, Container, ImageUpload } from 'components';
+import { Row, Col, ImageUpload } from 'components';
 import { IconCustomColor } from 'components/icon';
-import { useHttpClient2, useImage } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/http';
 import { useLocalStorageState } from 'ahooks';
-import { Avatar } from 'components/flutter';
+import { Avatar, Container, XBox } from 'components/flutter';
 
 
 
@@ -27,23 +27,23 @@ export const Avatar2 = () => {
     }, [httpFiles, apiLogin]);
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Row justify='left'>
-            <Col span={1} >
+        <XBox padding={20}>
+            <XBox.Segment >
                 <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/') }} />
-            </Col>
-            <Col span={4} />
-            <Col width={200} >
+            </XBox.Segment>
+
+            <XBox.Segment span={3} align='right'>
                 <ImageUpload
                     onConfirm={(file) => { uploadFile(file) }}
                     maxSize={2}
                     btnText="上传头像"
                     previewSize="120px"
                 />
-            </Col>
-        </Row>
+            </XBox.Segment>
+        </XBox>
 
-        <Container>
-            <Avatar imageBaseUrl={endpoint} src={avatar} variant='square' size={"500"} fit='cover'/>
+        <Container align='center' padding={10}>
+            <Avatar imageBaseUrl={endpoint} src={avatar} variant='square' size={"500"} fit='cover' />
         </Container>
 
     </Suspense>

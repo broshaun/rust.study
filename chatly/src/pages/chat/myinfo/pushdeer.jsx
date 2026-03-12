@@ -1,9 +1,10 @@
-import { useState,  Suspense } from 'react';
-import {  useNavigate, useLocation } from 'react-router-dom';
+import { useState, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Row, InputText2 } from 'components';
 import { IconCustomColor } from 'components/icon';
 import { useHttpClient2 } from 'hooks/http';
 import { useRequest } from 'ahooks';
+import { XBox } from 'components/flutter';
 
 
 
@@ -26,19 +27,19 @@ export const PushDeer = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Row justify='flex-start'>
+        <XBox justify='left' padding={20}>
             <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
-        </Row>
-        <Row justify='center' ><h3>请输入PushKey：</h3></Row>
+        </XBox>
+        <XBox justify='center' padding={20}><h3>请输入PushKey</h3></XBox>
 
-        <Row>
+        <XBox padding={20}>
             {location.state &&
                 <InputText2 showMask minWidth='300' defaultValue={pushKey} onChangeValue={(value) => { setPushKey(value) }} >
                     <InputText2.Left icon='key' />
                     <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/chat/self/mylist/'); }} />
                 </InputText2>
             }
-        </Row>
+        </XBox>
 
 
     </Suspense>

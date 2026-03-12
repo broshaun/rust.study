@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDateTime, useWinSize } from 'hooks';
 import { useRequest, useLocalStorageState, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
-import { Container, Icon, Padding, Background } from 'components/flutter';
+import { Icon, YBox } from 'components/flutter';
 import { useHttpClient2 } from 'hooks/http';
 
 export function Msg() {
@@ -32,6 +32,7 @@ export function Msg() {
     useEffect(() => {
         const sub = liveQuery(
             () => db.table('message').where('uid').equals(uid).reverse().toArray()
+            // () => db.table('message').where('uid').equals(uid).toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
@@ -73,21 +74,18 @@ export function Msg() {
             left={isMobile ? <Icon name="chevron-left" onClick={() => { navigate(f_url) }} /> : <></>}
         />
         <ChatMsg.Content>
+            <YBox ref={containerRef} verticalScroll={true} height={winHeight - 135} padding={10}>
+                <div ref={wrapperRef} >
+                    {list.map((item) => {
+                        return <MsgItem
+                            data={item.data}
 
-            <Container verticalScroll={true} ref={containerRef} height={winHeight - 135}>
-
-                <Padding>
-                    <div ref={wrapperRef}>
-                        {list.map((item) => {
-                            return <MsgItem
-                                data={item.data}
-                                receiveAvatar={avatar_url}
-                                sendAvatar={selfAvatar}
-                            />
-                        })}
-                    </div>
-                </Padding>
-            </Container>
+                            receiveAvatar={avatar_url}
+                            sendAvatar={selfAvatar}
+                        />
+                    })}
+                </div>
+            </YBox>
         </ChatMsg.Content>
         <ChatMsg.Send onSend={(newMsg) => { fnSend(uid, newMsg) }} />
     </ChatMsg >

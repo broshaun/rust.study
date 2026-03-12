@@ -4,7 +4,7 @@ import { db } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
 import { useVirtualList } from 'ahooks';
-import { Container, Row, Background, Padding, Border } from 'components/flutter';
+import { YBox, XBox } from 'components/flutter';
 import { DialogItem } from 'components/chat';
 
 export const Mian = () => {
@@ -55,36 +55,24 @@ export const Mian = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Row>
-            <Row.Col >
-
-                <Container verticalScroll={true} ref={containerRef} height={winHeight}>
-                    <Border />
-                    {/* <Padding value={5}>
-                        <Right>
-                            <Icon name='magnifying-glass' />
-                        </Right>
-                    </Padding>
-                    <Divider /> */}
-                    <Padding value={5}>
-                        <div ref={wrapperRef}>
-                            {list.map((item) => {
-                                return <DialogItem
-                                    data={item.data}
-                                    onSelect={openMsgWindow}
-                                    onClear={(p) => handleClear(p)}
-                                />
-                            })}
-                        </div>
-                    </Padding>
-                </Container>
-            </Row.Col>
-            <Row.Col span={3}>
-                <Container>
-                    <Outlet />
-                </Container>
-            </Row.Col>
-        </Row>
+        <XBox>
+            <XBox.Segment >
+                <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
+                    <div ref={wrapperRef}>
+                        {list.map((item) => {
+                            return <DialogItem
+                                data={item.data}
+                                onSelect={openMsgWindow}
+                                onClear={(p) => handleClear(p)}
+                            />
+                        })}
+                    </div>
+                </YBox>
+            </XBox.Segment>
+            <XBox.Segment span={3}>
+                <Outlet />
+            </XBox.Segment>
+        </XBox>
     </Suspense>
 
 
