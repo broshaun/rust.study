@@ -55,8 +55,8 @@ export const Mian = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <XBox>
-            <XBox.Segment >
+        <XBox panel border padding={12} gap={8} radius={24}>
+            <XBox.Segment divider>
                 <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
                     <div ref={wrapperRef}>
                         {list.map((item) => {
@@ -69,7 +69,7 @@ export const Mian = () => {
                     </div>
                 </YBox>
             </XBox.Segment>
-            <XBox.Segment span={3}>
+            <XBox.Segment span={3} divider>
                 <Outlet />
             </XBox.Segment>
         </XBox>

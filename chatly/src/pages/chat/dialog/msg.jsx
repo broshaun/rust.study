@@ -6,21 +6,22 @@ import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Icon, YBox } from 'components/flutter';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2, useImage } from 'hooks/http';
 
 export function Msg() {
     const location = useLocation();
     const navigate = useNavigate()
 
     const uid = location.state?.uid
-    const avatar_url = location.state?.avatar_url
+    // const avatar_url = location.state?.avatar_url
     const displayName = location.state?.displayName
-
-
-    console.log('displayName', displayName)
-
     const [selfAvatar] = useLocalStorageState('saveOneself')
     const [msgs, setMsgs] = useState([]);
+
+    const { avatarSrc: receiveAvatarSrc, loading: loading1 } = useImage("/imgs", location.state?.avatar_url, { isAvatar: true });
+    const { avatarSrc: sendAvatarSrc, loading: loading2 } = useImage("/imgs", selfAvatar, { isAvatar: true });
+
+
     const { http } = useHttpClient2('/rpc/chat/msg/single/')
     const { getDateTimeStr } = useDateTime()
     const { winHeight, isMobile } = useWinSize()
@@ -32,7 +33,6 @@ export function Msg() {
     useEffect(() => {
         const sub = liveQuery(
             () => db.table('message').where('uid').equals(uid).reverse().toArray()
-            // () => db.table('message').where('uid').equals(uid).toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
@@ -79,9 +79,8 @@ export function Msg() {
                     {list.map((item) => {
                         return <MsgItem
                             data={item.data}
-
-                            receiveAvatar={avatar_url}
-                            sendAvatar={selfAvatar}
+                            receiveAvatar={receiveAvatarSrc}
+                            sendAvatar={sendAvatarSrc}
                         />
                     })}
                 </div>

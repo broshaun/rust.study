@@ -80,8 +80,8 @@ export const Mian = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <XBox>
-            <XBox.Segment>
+        <XBox panel border padding={12} gap={8} radius={24}>
+            <XBox.Segment divider>
                 <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
                     <XBox height={36} width="100%" align="middle" justify="right" padding={10}>
                         <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
@@ -98,7 +98,8 @@ export const Mian = () => {
                 </YBox>
 
             </XBox.Segment>
-            <XBox.Segment span={3}>
+
+            <XBox.Segment span={3} divider>
                 <Outlet />
             </XBox.Segment>
         </XBox>

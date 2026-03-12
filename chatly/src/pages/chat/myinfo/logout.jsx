@@ -15,11 +15,15 @@ export const Logout = () => {
 
 
   const logout = () => {
+
+
+
     http.post('DELETE').catch(console.error);
     fnLogout()
     delUser()
     clearAllTables().then(console.log('记录清空'))
     navigate('/user/login/', { replace: true });
+
   }
 
 

@@ -31,7 +31,7 @@ const DEFAULT_BACKGROUND = "#f3f4f6";
  * @param {boolean} [props.disableHover=false] - 是否禁用 hover 效果
  * @returns {React.ReactElement}
  */
-const Avatar = ({
+const Avatar = React.memo(({
   src,
   alt = "头像",
   variant = "circle",
@@ -152,6 +152,6 @@ const Avatar = ({
       aria-label={error ? "头像加载失败" : alt}
     />
   );
-};
+});
 
 export default Avatar;

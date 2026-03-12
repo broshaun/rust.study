@@ -3,9 +3,10 @@ import Dexie from 'dexie';
 export const db = new Dexie('chatDB');
 
 // 定义表结构
-db.version(8).stores({
+db.version(9).stores({
   message: '++id, uid, timestamp',
   friends: 'id, uid, timestamp, dialog, signal',
+  imageMetadata: 'url, lastAccessed'
 });
 
 

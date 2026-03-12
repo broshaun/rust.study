@@ -12,16 +12,21 @@
   gap: var(--yb-gap, 0px);
   padding: var(--yb-pad, 0px);
 
-  align-items: stretch;
+  /* 只控制上下分布 */
   justify-content: var(--yb-justify, flex-start);
 
+  /* 默认保持子元素撑满宽度 */
+  align-items: stretch;
+
+  overflow: visible;
   background: transparent;
 }
 
-/* 子元素默认占满宽度 */
+/* 子元素默认行为 */
 .ybox > * {
   min-width: 0;
-  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
   box-sizing: border-box;
 }
 
@@ -30,8 +35,4 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-}
-
-.ybox[data-scroll='false'] {
-  overflow: visible;
 }

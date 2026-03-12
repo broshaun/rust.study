@@ -2,16 +2,23 @@ import React, { useMemo } from "react";
 import styles from "./Avatar.module.css";
 
 /**
- * 修复部署环境下 static 路径 404 的逻辑
+ * 获取绝对基础路径
+ * 解决部署在子目录（如 domain.com/app/）时相对路径失效的问题
  */
-const getStaticAsset = (path) => {
-  const cleanPath = path.replace(/^\//, "");
-  // 确保不管在什么子路径部署，都能通过相对基准找到 static
-  const baseUrl = window.location.origin + (import.meta.env?.BASE_URL || "/");
+const getStaticPath = (path) => {
+  // 移除路径开头的斜杠
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  
+  // 方案 A: 如果你使用的是 Vite/Webpack，通常可以从环境变量获取 base
+  // 方案 B: 原生动态拼接（最稳健）
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+  
+  // 返回拼接后的 static 资源地址
   return new URL(`static/${cleanPath}`, baseUrl).href;
 };
 
-const DEFAULT_AVATAR = getStaticAsset("favicon.png");
+// 预定义默认头像地址
+const DEFAULT_AVATAR = getStaticPath('favicon.png');
 
 export const Avatar = React.memo(({
   src,
@@ -25,16 +32,26 @@ export const Avatar = React.memo(({
 }) => {
   const f = (v) => (typeof v === "number" ? `${v}px` : v);
 
-  const finalSrc = useMemo(() => {
-    if (!src) return DEFAULT_AVATAR;
-    const s = String(src);
-    // 允许本地地址、Base64 或 Blob
-    const isLocal = s.startsWith("blob:") || s.startsWith("data:") || s.startsWith("/") || s.startsWith("./");
-    // 如果是外部 http 连接且不支持缓存降级时，这里也允许通过
-    const isHttp = s.startsWith("http");
-    
-    return (isLocal || isHttp) ? src : DEFAULT_AVATAR;
+  /**
+   * 判断是否为合法的本地资源
+   */
+  const isValidSrc = useMemo(() => {
+    if (!src) return false;
+    return (
+      src.startsWith("blob:") ||
+      src.startsWith("data:") ||
+      src.startsWith("/") ||
+      src.startsWith("./")
+    );
   }, [src]);
+
+  /**
+   * 最终图片路径
+   * 如果 src 无效，则指向 static 文件夹下的默认图
+   */
+  const finalSrc = useMemo(() => {
+    return isValidSrc ? src : DEFAULT_AVATAR;
+  }, [isValidSrc, src]);
 
   const dynamicStyle = useMemo(() => {
     let borderRadius = "50%";
@@ -61,6 +78,7 @@ export const Avatar = React.memo(({
         loading="lazy"
         decoding="async"
         onError={(e) => {
+          // 容错处理：确保 onError 也能找到正确的 static 路径
           if (e.currentTarget.src !== DEFAULT_AVATAR) {
             e.currentTarget.src = DEFAULT_AVATAR;
           }

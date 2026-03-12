@@ -14,8 +14,9 @@ export const Avatar2 = () => {
     const [avatar, setAvatar] = useLocalStorageState('saveOneself', { defaultValue: location.state?.avatar_url })
     const { http: httpFiles } = useHttpClient2('/files/img/')
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/')
-    // const { src, loading } = useImage("/imgs", avatar)
-    const { endpoint } = useHttpClient2('/imgs');
+
+    const { src, avatarSrc, loading, url, clearAll } = useImage("/imgs", avatar)
+
 
     const uploadFile = useCallback((file) => {
         if (!file) return;
@@ -27,6 +28,9 @@ export const Avatar2 = () => {
     }, [httpFiles, apiLogin]);
 
     return <Suspense fallback={<div>加载中...</div>}>
+       
+        {/* <button onClick={() => { clearAll() }}>清除所有图片缓存</button>  */}
+
         <XBox padding={20}>
             <XBox.Segment >
                 <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/') }} />
@@ -41,8 +45,9 @@ export const Avatar2 = () => {
                 />
             </XBox.Segment>
         </XBox>
-
-        <Avatar imageBaseUrl={endpoint} src={avatar} variant='square' size={"500"} fit='cover' />
+        <Container padding={10}>
+            <Avatar src={avatarSrc} variant='square' size={"500"} fit='cover' />
+        </Container>
 
     </Suspense>
 

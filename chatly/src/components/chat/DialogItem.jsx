@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, XBox, YBox, Avatar } from 'components/flutter';
-import { useHttpClient2 } from 'hooks/http';
+import { useImage } from 'hooks/http';
 
 /**
  * 时间格式化工具
@@ -38,14 +38,14 @@ const formatDialogTime = (timestamp) => {
  * 2. 与 Friend 的主体尺寸保持一致
  * 3. 外层总高保持紧凑
  */
-export const DialogItem = ({ data, onSelect, onClear, onAvatarClick, height = 50 }) => {
+export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, height = 50 }) => {
   if (!data) return null;
 
   const name = data.remark || data.nikename || data.email || "未知联系人";
   const email = data.email || "未绑定邮箱";
   const timeStr = formatDialogTime(data.timestamp);
   const isNew = data.signal === "new";
-  const { endpoint } = useHttpClient2('/imgs');
+  const { src, avatarSrc, loading, url, clearAll } = useImage("/imgs", data?.avatar_url ,{ isAvatar: true })
 
   return (
     <div
@@ -83,15 +83,11 @@ export const DialogItem = ({ data, onSelect, onClear, onAvatarClick, height = 50
               }}
             >
               <Avatar
-                src={data.avatar_url}
-                imageBaseUrl={endpoint}
-                alt={name}
+                src={avatarSrc}
                 variant="rounded"
                 size={38}
                 fit="cover"
-                roundedRadius={0}
-                disableHover={true}
-                cache="cacheStorage"
+                roundedRadius={8}
               />
             </div>
           </XBox.Segment>
@@ -220,6 +216,6 @@ export const DialogItem = ({ data, onSelect, onClear, onAvatarClick, height = 50
       </Container>
     </div>
   );
-};
+});
 
 export default DialogItem;

@@ -1,7 +1,7 @@
 import React, { Suspense, useState, useEffect } from 'react'
 import { useNavigate, useLocation } from "react-router-dom";
 import { useWinSize } from 'hooks';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2, useImage } from 'hooks/http';
 import { db } from 'hooks/db';
 import { useRequest } from 'ahooks';
 import { Avatar, Button, Divider, Heading, YBox, XBox } from 'components/flutter';
@@ -19,11 +19,9 @@ export function Detail() {
         setFriend(select);
     }, [select]);
 
-
-    const { endpoint } = useHttpClient2('/imgs');
     const { http: http2 } = useHttpClient2('/rpc/chat/friend/')
+    const { src, avatarSrc, loading, url, clearAll } = useImage("/imgs", friend?.avatar_url)
     const { isMobile } = useWinSize()
-
 
     // 删除好友
     const { runAsync: delFid } = useRequest((id) => {
@@ -61,11 +59,9 @@ export function Detail() {
 
     return <Suspense fallback={<div>加载中...</div>}>
 
-
-
         <YBox padding={20}>
             <XBox align='center' padding={20}>
-                <Avatar size={75} src={`${endpoint}/${friend?.avatar_url}`} fit="cover" />
+                <Avatar size={75} src={avatarSrc} fit="cover" />
             </XBox>
 
             <Heading level={4}>账户信息</Heading>

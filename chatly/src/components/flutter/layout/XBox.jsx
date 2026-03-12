@@ -1,7 +1,10 @@
 import React from 'react';
 import styles from './XBox.module.css';
 
-const toUnit = (v) => (typeof v === 'number' ? `${v}px` : v);
+const toUnit = (v) => {
+  if (v == null || v === '') return undefined;
+  return typeof v === 'number' ? `${v}px` : v;
+};
 
 /**
  * XBox.Segment - 横向分区
@@ -21,11 +24,11 @@ const toUnit = (v) => (typeof v === 'number' ? `${v}px` : v);
  * @param {'top'|'middle'|'bottom'|'stretch'} vertical
  *   内容垂直对齐
  *
- * 示例
+ * @param {boolean} divider
+ *   是否显示右侧分割线
  *
- * <XBox.Segment span={1} align="right">
- *   <Icon name="more"/>
- * </XBox.Segment>
+ * @param {string} dividerColor
+ *   分割线颜色，默认跟随主题
  */
 const Segment = ({
   children,
@@ -33,9 +36,10 @@ const Segment = ({
   padding = 0,
   align = 'center',
   vertical = 'middle',
+  divider = false,
+  dividerColor,
   style
 }) => {
-
   const alignMap = {
     left: 'flex-start',
     center: 'center',
@@ -51,9 +55,11 @@ const Segment = ({
 
   const vars = {
     '--xb-seg-span': span,
-    '--xb-seg-pad': toUnit(padding),
+    '--xb-seg-pad': toUnit(padding) || '0px',
     '--xb-seg-align': alignMap[align] || align,
     '--xb-seg-vertical': verticalMap[vertical] || vertical,
+    '--xb-seg-divider-width': divider ? '1px' : '0px',
+    '--xb-seg-divider-color': dividerColor || 'var(--xb-divider-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
     ...style
   };
 
@@ -63,7 +69,6 @@ const Segment = ({
     </div>
   );
 };
-
 
 /**
  * XBox - 横向比例布局容器
@@ -78,6 +83,30 @@ const Segment = ({
  * @param {'top'|'middle'|'bottom'|'stretch'} align
  * @param {'left'|'center'|'right'|'between'} justify
  * @param {boolean} wrap
+ *
+ * @param {boolean} border
+ *   是否显示边框
+ *
+ * @param {string} borderColor
+ *   边框颜色，默认跟随主题
+ *
+ * @param {number|string} borderWidth
+ *   边框宽度
+ *
+ * @param {number|string} radius
+ *   圆角，默认跟随主题
+ *
+ * @param {boolean} panel
+ *   是否启用主题面板风格（panel-bg / panel-border / panel-shadow / panel-blur）
+ *
+ * @param {string} background
+ *   自定义背景，默认跟随主题
+ *
+ * @param {string} shadow
+ *   自定义阴影，默认跟随主题
+ *
+ * @param {boolean} clip
+ *   是否裁剪圆角内容
  */
 export const XBox = ({
   children,
@@ -88,9 +117,19 @@ export const XBox = ({
   align = 'middle',
   justify = 'center',
   wrap = false,
+
+  border = false,
+  borderColor,
+  borderWidth = 1,
+  radius,
+
+  panel = false,
+  background,
+  shadow,
+  clip = false,
+
   style
 }) => {
-
   const alignMap = {
     top: 'flex-start',
     middle: 'center',
@@ -107,12 +146,25 @@ export const XBox = ({
 
   const vars = {
     '--xb-h': height == null ? 'auto' : toUnit(height),
-    '--xb-w': toUnit(width),
-    '--xb-gap': toUnit(gap),
-    '--xb-pad': toUnit(padding),
+    '--xb-w': toUnit(width) || '100%',
+    '--xb-gap': toUnit(gap) || '0px',
+    '--xb-pad': toUnit(padding) || '0px',
     '--xb-align': alignMap[align] || align,
     '--xb-justify': justifyMap[justify] || justify,
     '--xb-wrap': wrap ? 'wrap' : 'nowrap',
+
+    '--xb-border-width': border ? (toUnit(borderWidth) || '1px') : '0px',
+    '--xb-border-color':
+      borderColor || 'var(--panel-border-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
+    '--xb-radius': toUnit(radius) || 'var(--radius-main, 16px)',
+
+    '--xb-bg': background || (panel ? 'var(--panel-bg, transparent)' : 'transparent'),
+    '--xb-shadow': shadow || (panel ? 'var(--panel-shadow, none)' : 'none'),
+    '--xb-backdrop': panel ? 'var(--panel-blur, blur(0px))' : 'blur(0px)',
+    '--xb-divider-color': 'rgba(var(--text-primary-rgb, 0, 0, 0), 0.12)',
+    '--xb-text-color': 'var(--text-primary, inherit)',
+    '--xb-overflow': clip ? 'hidden' : 'visible',
+
     ...style
   };
 

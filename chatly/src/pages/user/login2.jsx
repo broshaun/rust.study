@@ -1,11 +1,11 @@
 
-import { Avatar, Modal } from "components";
+import { Modal } from "components";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useLogin, useWinSize } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage, useHttpClient2 } from 'hooks/http';
-import { Button, TextField, Divider, XBox } from 'components/flutter';
+import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
 
 
 export function LogOn() {
@@ -13,9 +13,10 @@ export function LogOn() {
     const navigate = useNavigate();
     const [account, setAccount] = useLocalStorageState('savedAccount')
     const [avatar, setAvatar] = useLocalStorageState('saveOneself')
-    const { src } = useImage("/imgs", avatar)
+
     const [password, setPassword] = useState("")
-    const { http, endpoint } = useHttpClient2('/rpc/chat/login/')
+    const { http } = useHttpClient2('/rpc/chat/login/')
+    const { avatarSrc } = useImage("/imgs", avatar, { isAvatar: true })
     const { setToken, setTime } = useLogin()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
@@ -54,12 +55,10 @@ export function LogOn() {
 
         <XBox>
             <Avatar
-                src={src}
+                src={avatarSrc}
                 size={60}
                 shape="circle"
                 fit='cover'
-                borderColor="#e5e7eb"
-                hasShadow={true}
             />
         </XBox>
 

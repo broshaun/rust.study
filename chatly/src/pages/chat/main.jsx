@@ -22,8 +22,8 @@ export function Chat() {
   if (!isMobile) {
     return (
       <PCShell>
-        <PCShell.Left width={60}>
-          <YBox gap={10} padding={20}>
+        <PCShell.Left width={80}>
+          <YBox gap={10} padding={25}>
             {
               visibleItems.map((item) => <div>{item.icon}</div>)
             }

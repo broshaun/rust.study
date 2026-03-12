@@ -1,11 +1,11 @@
 import React from 'react';
 import { Container, XBox, YBox, Avatar } from 'components/flutter';
-import { useHttpClient2 } from 'hooks/http';
-
+// import { useHttpClient2 } from 'hooks/http';
+import { useImage } from 'hooks/http';
 /**
  * Friend - 紧凑型好友列表项
  */
-export const Friend = ({
+export const Friend = React.memo(({
   data,
   onSelect,
   onAvatarClick,
@@ -17,7 +17,9 @@ export const Friend = ({
   const name = data.remark || data.nikename || data.email || "未知好友";
   const email = data.email || "未绑定邮箱";
   const isOnline = !!data[onlineStatusKey];
-  const { endpoint } = useHttpClient2('/imgs');
+
+  const { src, avatarSrc, loading, url, clearAll } = useImage("/imgs", data?.avatar_url,{ isAvatar: true })
+
 
   return (
     <div
@@ -57,15 +59,11 @@ export const Friend = ({
               }}
             >
               <Avatar
-                imageBaseUrl={endpoint}
-                src={data.avatar_url}
-                alt={name}
+                src={avatarSrc}
                 variant="rounded"
                 size={38}
                 fit="cover"
-                roundedRadius={0}
-                disableHover={true}
-                cache="cacheStorage"
+                roundedRadius={8}
               />
 
               {isOnline && (
@@ -139,4 +137,4 @@ export const Friend = ({
       </Container>
     </div>
   );
-};
+});
