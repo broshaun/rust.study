@@ -69,7 +69,7 @@ export function Detail() {
             </YBox.Segment>
 
             <Divider />
-            <YBox.Segment padding={20} align='left'>
+            <YBox.Segment padding={20} align='left' width={500}>
                 <InfoTile icon="user" label="名称" value={friend?.nikename} />
                 <InfoTile icon="email" label="邮箱" value={friend?.email} />
                 <InfoTile icon="edit" label="备注" value={friend?.remark} onConfirm={(remark) => { setFriend(p => ({ ...p, remark })); updRemark(friend?.id, remark); }} />

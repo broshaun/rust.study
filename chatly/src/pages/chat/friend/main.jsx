@@ -85,7 +85,7 @@ export const Mian = () => {
 
             <XBox.Segment divider>
 
-                <YBox ref={containerRef} scroll={true} height={winHeight - 24}>
+                <YBox ref={containerRef} scroll={true} height={winHeight - 25}>
                     <YBox.Segment height={36} width="100%" align="right" justify="middle" padding={10}>
                         <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
                     </YBox.Segment>

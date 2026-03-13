@@ -54,7 +54,7 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} scroll={true} height={winHeight-24}>
+        <YBox ref={containerRef} scroll={true} height={winHeight-25}>
             <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
                 {list.map((item) => {
                     return <DialogItem

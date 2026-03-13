@@ -74,10 +74,9 @@ export function Msg() {
             left={isMobile ? <Icon name="chevron-left" onClick={() => { navigate(f_url) }} /> : <></>}
         />
         <ChatMsg.Content>
-            <YBox ref={containerRef} scroll={true} height={winHeight - 134} padding={10}>
+            <YBox ref={containerRef} scroll={true} height={winHeight - 150} padding={10}>
                 <div ref={wrapperRef} >
                     {list.map((item) => {
-                        // console.log('item', item)
                         return <MsgItem
                             key={item.data.id}
                             data={item.data}

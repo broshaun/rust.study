@@ -28,11 +28,13 @@ const justifyMap = {
 const Segment = ({
   children,
   align,
+  width,
   className = '',
   style,
 }) => {
   const segmentStyle = {
     alignSelf: align ? (alignMap[align] || align) : 'var(--yb-align)',
+    width: width != null ? toUnit(width) : undefined,
     ...style,
   };
 
