@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "win-v*"
-      - "all-v*"
+      - "windows-v*"
 
 concurrency:
   group: win-${{ github.ref }}
