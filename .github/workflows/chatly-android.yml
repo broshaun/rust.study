@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "android-v*"
+      - "all-v*"
 
 concurrency:
   group: android-${{ github.ref }}

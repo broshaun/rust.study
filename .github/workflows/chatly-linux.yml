@@ -1,0 +1,76 @@
+name: Tauri2 Linux Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "linux-v*"
+      - "all-v*"
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_VERSION: "20"
+      WORKING_DIR: "chatly"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Rust
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # Node
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      # Linux system dependencies
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            curl \
+            wget
+
+      # Install frontend deps
+      - name: Install frontend dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          npm config set registry https://registry.npmmirror.com
+          npm ci || npm install
+          npm install -D @tauri-apps/cli@2
+          npm pkg set scripts.tauri="tauri"
+
+      # Build Linux app
+      - name: Build Linux app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ${{ env.WORKING_DIR }}
+          tagName: ${{ github.ref_name }}
+          releaseName: "Chatly ${{ github.ref_name }}"
+          releaseBody: "Linux build for ${{ github.ref_name }}"
+          releaseDraft: false
+          prerelease: false
+          args: --bundles appimage,deb

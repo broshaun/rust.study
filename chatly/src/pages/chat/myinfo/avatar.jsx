@@ -46,7 +46,7 @@ export const Avatar2 = () => {
             </XBox.Segment>
         </XBox>
         <Container padding={10}>
-            <Avatar src={avatarSrc} variant='square' size={"500"} fit='cover' />
+            <Avatar src={avatarSrc} variant='square' size={500} fit='cover' />
         </Container>
 
     </Suspense>
