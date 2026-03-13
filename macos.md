@@ -1,5 +1,4 @@
-git tag "macos-v1.0.21
-git push origin "macos-v1.0.21
+
 
 
 
@@ -16,3 +15,9 @@ git push origin "macos-v1.0.21
 
 ### 全兼容打包
 - cargo tauri build --target universal-apple-darwin 
+
+
+
+
+git tag "macos-v1.0.21
+git push origin "macos-v1.0.21

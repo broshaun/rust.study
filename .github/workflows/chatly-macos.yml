@@ -6,7 +6,6 @@ on:
     tags:
       - "macos-v*"
 
-
 concurrency:
   group: mac-${{ github.ref }}
   cancel-in-progress: true
@@ -22,9 +21,13 @@ jobs:
       NODE_VERSION: "20"
       WORKING_DIR: "chatly"
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -32,11 +35,10 @@ jobs:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          package-manager-cache: false
 
       - name: Install frontend dependencies
         working-directory: ${{ env.WORKING_DIR }}
@@ -47,7 +49,7 @@ jobs:
           npm pkg set scripts.tauri="tauri"
 
       - name: Build macOS universal app
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
