@@ -44,7 +44,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm ci
+          npm install
           npm install -D @tauri-apps/cli@^2
           npm pkg set scripts.tauri="tauri"
 
