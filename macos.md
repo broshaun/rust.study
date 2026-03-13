@@ -1,6 +1,5 @@
-git tag mac-v1.0.21
-git push origin mac-v1.0.21
-
+git tag "macos-v1.0.21
+git push origin "macos-v1.0.21
 
 
 
@@ -14,4 +13,6 @@ git push origin mac-v1.0.21
 - rustup target add aarch64-apple-darwin
 - cargo tauri build --target aarch64-apple-darwin
 
+
+### 全兼容打包
 - cargo tauri build --target universal-apple-darwin 

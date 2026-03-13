@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "mac-v*"
-      - "all-v*"
+      - "macos-v*"
+
 
 concurrency:
   group: mac-${{ github.ref }}
@@ -42,19 +42,19 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm ci || npm install
-          npm install -D @tauri-apps/cli@2
+          npm ci
+          npm install -D @tauri-apps/cli@^2
           npm pkg set scripts.tauri="tauri"
 
-      - name: Build macOS app
-        uses: tauri-apps/tauri-action@v0
+      - name: Build macOS universal app
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: ${{ env.WORKING_DIR }}
           tagName: ${{ github.ref_name }}
           releaseName: "Chatly ${{ github.ref_name }}"
-          releaseBody: "macOS build for ${{ github.ref_name }}"
+          releaseBody: "macOS universal build for ${{ github.ref_name }}"
           releaseDraft: false
           prerelease: false
-          args: --target universal-apple-darwin --bundles app,dmg
+          args: --target universal-apple-darwin --bundles app
