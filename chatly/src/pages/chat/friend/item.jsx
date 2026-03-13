@@ -80,14 +80,16 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
-            <XBox height={36} width="100%" align="middle" justify="right" padding={10}>
+        <YBox ref={containerRef} scroll={true} height={winHeight-24} padding={10} >
+            <YBox.Segment width="100%" align="right" justify="middle" >
                 <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
-            </XBox>
+            </YBox.Segment>
             <Divider />
+            
             <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
                 {list.map((item) => {
                     return <Friend
+                        key={item.data.id}
                         data={item.data}
                         onSelect={openMsgWindow}
                     />

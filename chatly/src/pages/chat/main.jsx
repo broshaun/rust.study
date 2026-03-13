@@ -25,11 +25,12 @@ export function Chat() {
         <PCShell.Left width={80}>
           <YBox gap={10} padding={25}>
             {
-              visibleItems.map((item) => <div>{item.icon}</div>)
+              visibleItems.map((item) => <div key={item.key}>{item.icon}</div>)
             }
           </YBox>
         </PCShell.Left>
         <PCShell.Content>
+  
           <Outlet />
         </PCShell.Content>
       </PCShell>
@@ -44,13 +45,14 @@ export function Chat() {
       </AppShell.Header>
 
       <AppShell.Content>
+
         <Outlet />
       </AppShell.Content>
 
       <AppShell.Footer height={70}>
         <XBox>
           {
-            visibleItems.map((item) => <XBox.Segment>{item.icon}</XBox.Segment>)
+            visibleItems.map((item) => <XBox.Segment key={item.key}>{item.icon}</XBox.Segment>)
           }
         </XBox>
 

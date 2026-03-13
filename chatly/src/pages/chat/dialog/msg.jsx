@@ -55,7 +55,7 @@ export function Msg() {
 
     const containerRef = useRef(null);
     const wrapperRef = useRef(null)
-    const [list, scrollTo] = useVirtualList(msgs, {
+    const [list] = useVirtualList(msgs, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 74,
@@ -63,10 +63,10 @@ export function Msg() {
     });
 
     useEffect(() => {
-        if (msgs.length > 0) {
-            scrollTo(0);
+        if (containerRef.current) {
+            containerRef.current.scrollTop = 0;
         }
-    }, [msgs.length, scrollTo])
+    }, [msgs.length])
 
     return <ChatMsg>
         <ChatMsg.Meta
@@ -74,10 +74,12 @@ export function Msg() {
             left={isMobile ? <Icon name="chevron-left" onClick={() => { navigate(f_url) }} /> : <></>}
         />
         <ChatMsg.Content>
-            <YBox ref={containerRef} verticalScroll={true} height={winHeight - 135} padding={10}>
+            <YBox ref={containerRef} scroll={true} height={winHeight - 134} padding={10}>
                 <div ref={wrapperRef} >
                     {list.map((item) => {
+                        // console.log('item', item)
                         return <MsgItem
+                            key={item.data.id}
                             data={item.data}
                             receiveAvatar={receiveAvatarSrc}
                             sendAvatar={sendAvatarSrc}

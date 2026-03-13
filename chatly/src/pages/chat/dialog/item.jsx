@@ -54,10 +54,11 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} verticalScroll={true} height={winHeight} align='left'>
+        <YBox ref={containerRef} scroll={true} height={winHeight-24}>
             <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
                 {list.map((item) => {
                     return <DialogItem
+                        key={item.data.id}
                         data={item.data}
                         onSelect={openMsgWindow}
                         onClear={(p) => handleClear(p)}

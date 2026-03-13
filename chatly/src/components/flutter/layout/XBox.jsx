@@ -75,7 +75,7 @@ export const XBox = forwardRef(({
   gap = 0,
   padding = 0,
   align = 'middle',
-  justify = 'left',
+  justify = 'center',
   wrap = false,
 
   border = false,

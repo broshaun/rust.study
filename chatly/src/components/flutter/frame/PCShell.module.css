@@ -10,11 +10,9 @@
 .header {
   width: 100%;
   flex-shrink: 0;
-  /* 关键：彻底透明 */
   background: transparent; 
   border-bottom: none;
   box-shadow: none;
-  /* 这里的 z-index 确保顶栏图标在侧边栏之上 */
   z-index: 101; 
 }
 
@@ -23,9 +21,9 @@
   display: flex;
   flex-direction: row;
   overflow: hidden;
-  /* 如果你希望内容从 Header 下方开始，保持现状。
-     如果你希望侧边栏穿透 Header 顶到头，可以给这个容器加负 margin 或将 Header 设为 absolute */
 }
+
+
 
 .sidebar {
   height: 100%;
@@ -38,9 +36,10 @@
   transition: width 0.3s ease, background 0.4s ease;
 }
 
+
 .content {
   flex: 1;
-  overflow-y: auto;
   min-width: 0;
+  min-height: 0;
   background: transparent;
 }

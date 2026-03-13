@@ -80,16 +80,21 @@ export const Mian = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
+
         <XBox panel border padding={12} gap={8} radius={24}>
+
             <XBox.Segment divider>
-                <YBox ref={containerRef} verticalScroll={true} height={winHeight}>
+
+                <YBox ref={containerRef} scroll={true} height={winHeight - 24}>
                     <YBox.Segment height={36} width="100%" align="right" justify="middle" padding={10}>
                         <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
                     </YBox.Segment>
-                    <Divider />
+                    <Divider fade/>
                     <div ref={wrapperRef}>
                         {list.map((item) => {
+                            // console.log('item',item)
                             return <Friend
+                                key={item.data.id}
                                 data={item.data}
                                 onSelect={(value) => openMsgWindow(value)}
                             />

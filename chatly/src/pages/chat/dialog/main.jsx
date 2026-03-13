@@ -57,10 +57,11 @@ export const Mian = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         <XBox panel border padding={12} gap={8} radius={24}>
             <XBox.Segment divider>
-                <YBox ref={containerRef} verticalScroll={true} height={winHeight}>
+                <YBox ref={containerRef} scroll={true} height={winHeight-24}>
                     <div ref={wrapperRef}>
                         {list.map((item) => {
                             return <DialogItem
+                                key={item.data.id}
                                 data={item.data}
                                 onSelect={openMsgWindow}
                                 onClear={(p) => handleClear(p)}
