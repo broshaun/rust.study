@@ -13,6 +13,7 @@ export const Mian = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [friends, setFriends] = useState([]);
+    const [afriend, setAfriend] = useState(0);
     const { http } = useHttpClient2('/rpc/chat/friend/')
     const { winHeight, isMobile } = useWinSize()
 
@@ -23,7 +24,7 @@ export const Mian = () => {
 
     const { runAsync: runGetFriend } = useRequest(
         async () => {
-            http.requestBodyJson('GET', { ask_state: 'agree' }).then((results) => {
+            http.requestBodyJson('GET').then((results) => {
                 if (!results) return 0;
                 const { code, message, data } = results;
                 if (code !== 200) return 0;
@@ -36,7 +37,8 @@ export const Mian = () => {
                                 'avatar_url': element?.avatar_url,
                                 'email': element?.email,
                                 'remark': element?.remark,
-                                'nikename': element?.nikename
+                                'nikename': element?.nikename,
+                                'ask_state': element?.ask_state,
                             })
                         } else {
                             db.table('friends').put({
@@ -46,8 +48,9 @@ export const Mian = () => {
                                 'email': element?.email,
                                 'remark': element?.remark,
                                 'nikename': element?.nikename,
+                                'ask_state': element?.ask_state,
                                 'signal': 'old',
-                                'dialog': 0
+                                'dialog': 0,
                             })
                         }
                     })
@@ -57,15 +60,30 @@ export const Mian = () => {
         }, { manual: true }
     )
 
+    // console.log('afriend', afriend)
+    // console.log('friends', friends)
+
     useEffect(() => {
         runGetFriend()
+
         const sub = liveQuery(
-            () => db.table('friends').toArray()
+            () => db.table('friends').where('ask_state').equals('agree').toArray()
         ).subscribe({
             next: rows => setFriends(rows),
             error: console.error
         })
-        return () => sub.unsubscribe()
+
+        const sub2 = liveQuery(
+            () => db.table('friends').where('ask_state').equals('await').count()
+        ).subscribe({
+            next: count => setAfriend(count),
+            error: console.error
+        })
+
+        return () => {
+            sub.unsubscribe()
+            sub2.unsubscribe()
+        }
     }, [])
 
 
@@ -81,15 +99,15 @@ export const Mian = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
 
-        <XBox panel border padding={12} gap={8} radius={24}>
+        <XBox panel border radius={24}>
 
             <XBox.Segment divider>
 
-                <YBox ref={containerRef} scroll={true} height={winHeight - 25}>
-                    <YBox.Segment height={36} width="100%" align="right" justify="middle" padding={10}>
-                        <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
+                <YBox ref={containerRef} scroll={true} height={winHeight - 25} padding={10} gap={8}>
+                    <YBox.Segment align="right" >
+                        <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend}/>
                     </YBox.Segment>
-                    <Divider fade/>
+                    <Divider fade />
                     <div ref={wrapperRef}>
                         {list.map((item) => {
                             // console.log('item',item)

@@ -4,10 +4,6 @@ const SVG_BASE_URL = 'static/svg/';
 
 /**
  * Icon - 稳健版 + 红点角标
- * 支持：
- * dot -> 小红点
- * badge -> 数字
- * badgeContent -> 自定义内容
  */
 export const Icon = ({
   name,
@@ -20,7 +16,6 @@ export const Icon = ({
   onClick,
   style,
 
-  // ===== 新增参数 =====
   dot = false,
   badge = null,
   badgeContent = null
@@ -28,7 +23,13 @@ export const Icon = ({
 
   const currentColor = active ? activeColor : color;
 
-  const showBadge = dot || badge !== null || badgeContent !== null;
+  // 0 不显示
+  const validBadge =
+    badgeContent !== null && badgeContent !== undefined && badgeContent !== 0
+      ? badgeContent
+      : (badge !== null && badge !== 0 ? badge : null);
+
+  const showBadge = dot || validBadge !== null;
 
   return (
     <div
@@ -46,8 +47,7 @@ export const Icon = ({
         ...style
       }}
     >
-
-      {/* 图标 + 红点容器 */}
+      {/* 图标容器 */}
       <div style={{ position: 'relative', display: 'inline-block' }}>
 
         <i
@@ -70,13 +70,13 @@ export const Icon = ({
               position: 'absolute',
               top: '-4px',
               right: '-4px',
-              minWidth: '8px',
-              height: '8px',
-              padding: badge || badgeContent ? '0 4px' : 0,
+              minWidth: validBadge ? '16px' : '8px',
+              height: validBadge ? '16px' : '8px',
+              padding: validBadge ? '0 4px' : 0,
               background: '#ff3b30',
               color: '#fff',
               fontSize: '10px',
-              lineHeight: '14px',
+              lineHeight: '16px',
               borderRadius: '999px',
               display: 'flex',
               alignItems: 'center',
@@ -86,7 +86,7 @@ export const Icon = ({
               pointerEvents: 'none'
             }}
           >
-            {badgeContent || (badge > 99 ? '99+' : badge)}
+            {validBadge !== null ? (validBadge > 99 ? '99+' : validBadge) : null}
           </span>
         )}
 
@@ -104,7 +104,6 @@ export const Icon = ({
           {label}
         </span>
       )}
-
     </div>
   );
 };

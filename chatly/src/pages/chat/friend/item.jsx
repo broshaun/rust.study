@@ -13,6 +13,7 @@ export const Item = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [friends, setFriends] = useState([]);
+    const [afriend, setAfriend] = useState(0);
     const { http } = useHttpClient2('/rpc/chat/friend/')
     const { winHeight, isMobile } = useWinSize()
 
@@ -36,7 +37,8 @@ export const Item = () => {
                                 'avatar_url': element?.avatar_url,
                                 'email': element?.email,
                                 'remark': element?.remark,
-                                'nikename': element?.nikename
+                                'nikename': element?.nikename,
+                                'ask_state': element?.ask_state,
                             })
                         } else {
                             db.table('friends').put({
@@ -46,6 +48,7 @@ export const Item = () => {
                                 'email': element?.email,
                                 'remark': element?.remark,
                                 'nikename': element?.nikename,
+                                'ask_state': element?.ask_state,
                                 'signal': 'old',
                                 'dialog': 0
                             })
@@ -59,13 +62,25 @@ export const Item = () => {
 
     useEffect(() => {
         runGetFriend()
-        
+
         const sub = liveQuery(
-            () => db.table('friends').toArray()
+            () => db.table('friends').where('ask_state').equals('agree').toArray()
         ).subscribe({
             next: rows => setFriends(rows),
+            error: console.error
         })
-        return () => sub.unsubscribe()
+
+        const sub2 = liveQuery(
+            () => db.table('friends').where('ask_state').equals('await').count()
+        ).subscribe({
+            next: count => setAfriend(count),
+            error: console.error
+        })
+
+        return () => {
+            sub.unsubscribe()
+            sub2.unsubscribe()
+        }
     }, [])
 
 
@@ -82,8 +97,8 @@ export const Item = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         <YBox ref={containerRef} scroll={true} height={winHeight-25} padding={10} >
-            <YBox.Segment width="100%" align="right" justify="middle" >
-                <Icon name='magnifying-glass' onClick={() => { navigate('/chat/mobile/find/') }} />
+            <YBox.Segment  align="right" >
+                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend}/>
             </YBox.Segment>
             <Divider />
             
