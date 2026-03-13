@@ -59,6 +59,7 @@ export const Item = () => {
 
     useEffect(() => {
         runGetFriend()
+        
         const sub = liveQuery(
             () => db.table('friends').toArray()
         ).subscribe({

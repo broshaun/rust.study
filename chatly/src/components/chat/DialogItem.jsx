@@ -10,6 +10,7 @@ const formatDialogTime = (timestamp) => {
   const safeTimeStr = typeof timestamp === 'string' ? timestamp.replace(/-/g, '/') : timestamp;
   const t = new Date(safeTimeStr);
   if (isNaN(t.getTime())) return "";
+
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const targetDay = new Date(t.getFullYear(), t.getMonth(), t.getDate());
@@ -33,19 +34,23 @@ const formatDialogTime = (timestamp) => {
 
 /**
  * DialogItem
- * 目标：
- * 1. 改为 XBox / YBox
- * 2. 与 Friend 的主体尺寸保持一致
- * 3. 外层总高保持紧凑
+ * signal === 'news' 时显示红点
  */
-export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, height = 50 }) => {
+export const DialogItem = React.memo(({
+  data,
+  onSelect,
+  onClear,
+  onAvatarClick,
+  height = 50
+}) => {
   if (!data) return null;
 
   const name = data.remark || data.nikename || data.email || "未知联系人";
   const email = data.email || "未绑定邮箱";
   const timeStr = formatDialogTime(data.timestamp);
-  const isNew = data.signal === "new";
-  const { src, avatarSrc, loading, url, clearAll } = useImage("/imgs", data?.avatar_url ,{ isAvatar: true })
+  const showDot = data.signal === 'news';
+
+  const { avatarSrc } = useImage('/imgs', data?.avatar_url, { isAvatar: true });
 
   return (
     <div
@@ -59,7 +64,8 @@ export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, 
     >
       <Container height="100%" width="100%" padding="2px 10px">
         <XBox height="100%" width="100%" align="middle" gap={8}>
-          {/* 左侧头像：与 Friend 保持一致 */}
+          
+          {/* 左侧头像 */}
           <XBox.Segment
             span={1}
             style={{
@@ -89,10 +95,28 @@ export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, 
                 fit="cover"
                 roundedRadius={8}
               />
+
+              {/* 新消息红点（无边框） */}
+              {showDot && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    backgroundColor: '#ff3b30',
+                    transform: 'translate(25%, -25%)',
+                    pointerEvents: 'none',
+                    zIndex: 2
+                  }}
+                />
+              )}
             </div>
           </XBox.Segment>
 
-          {/* 中间信息区：与 Friend 保持一致 */}
+          {/* 中间信息区 */}
           <XBox.Segment
             span={1}
             align="left"
@@ -111,7 +135,7 @@ export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, 
                 style={{
                   width: '100%',
                   fontSize: '14px',
-                  fontWeight: '500',
+                  fontWeight: showDot ? '600' : '500',
                   color: 'var(--text-primary)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -126,8 +150,8 @@ export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, 
                 style={{
                   width: '100%',
                   fontSize: '11px',
-                  color: 'var(--text-secondary)',
-                  opacity: 0.72,
+                  color: showDot ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  opacity: showDot ? 0.9 : 0.72,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -178,18 +202,6 @@ export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, 
                 justify="right"
                 gap={6}
               >
-                {isNew && (
-                  <div
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      backgroundColor: 'var(--accent-color, #ff3b30)',
-                      flex: '0 0 auto'
-                    }}
-                  />
-                )}
-
                 <div
                   onClick={(e) => {
                     e.stopPropagation();
@@ -212,6 +224,7 @@ export const DialogItem = React.memo(({ data, onSelect, onClear, onAvatarClick, 
               </XBox>
             </YBox>
           </XBox.Segment>
+
         </XBox>
       </Container>
     </div>
