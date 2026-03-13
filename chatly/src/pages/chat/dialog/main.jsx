@@ -50,14 +50,14 @@ export const Mian = () => {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 74,
-        overscan: 10,
+        overscan: 5,
     });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
         <XBox panel border padding={12} gap={8} radius={24}>
             <XBox.Segment divider>
-                <YBox ref={containerRef} scroll={true} height={winHeight-25}>
+                <YBox ref={containerRef} scroll={true} height={winHeight-30}>
                     <div ref={wrapperRef}>
                         {list.map((item) => {
                             return <DialogItem

@@ -2,7 +2,6 @@ import React, { useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLogin, useUser } from 'hooks';
 import { Modal } from 'components';
-import { clearAllTables } from 'hooks/db';
 import { useHttpClient2 } from 'hooks/http';
 
 export const Logout = () => {
@@ -15,15 +14,10 @@ export const Logout = () => {
 
 
   const logout = () => {
-
-
-
     http.post('DELETE').catch(console.error);
     fnLogout()
     delUser()
-    clearAllTables().then(console.log('记录清空'))
     navigate('/user/login/', { replace: true });
-
   }
 
 

@@ -91,16 +91,16 @@ export const Item = () => {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 74,
-        overscan: 10,
+        overscan: 5,
     });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} scroll={true} height={winHeight-25} padding={10} >
+        <YBox ref={containerRef} scroll={true} height={winHeight-30} padding={10} >
             <YBox.Segment  align="right" >
                 <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend}/>
             </YBox.Segment>
-            <Divider />
+            <Divider fade/>
             
             <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
                 {list.map((item) => {

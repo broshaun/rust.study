@@ -22,7 +22,6 @@ export const RsChat = (
 
 
 function Listen() {
-
   const { http: httpMsg } = useHttpClient2('/rpc/chat/msg/single/');
   useRequest(() => {
     httpMsg.post('POST').then((results) => {

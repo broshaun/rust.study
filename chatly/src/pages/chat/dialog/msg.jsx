@@ -59,7 +59,7 @@ export function Msg() {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 74,
-        overscan: 10,
+        overscan: 5,
     });
 
     useEffect(() => {
@@ -74,7 +74,7 @@ export function Msg() {
             left={isMobile ? <Icon name="chevron-left" onClick={() => { navigate(f_url) }} /> : <></>}
         />
         <ChatMsg.Content>
-            <YBox ref={containerRef} scroll={true} height={winHeight - 150} padding={10}>
+            <YBox ref={containerRef} scroll={true} height={winHeight - 145} padding={10}>
                 <div ref={wrapperRef} >
                     {list.map((item) => {
                         return <MsgItem
