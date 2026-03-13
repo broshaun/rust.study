@@ -38,19 +38,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm ci
+          npm install
           npm install -D @tauri-apps/cli@^2
           npm pkg set scripts.tauri="tauri"
 
       - name: Build Windows app
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
