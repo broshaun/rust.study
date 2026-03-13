@@ -2,5 +2,5 @@
 
 
 ## github action
-- git tag rspi-v1.0.24
-- git push origin rspi-v1.0.25
+- git tag rpi-v1.0.25
+- git push origin rpi-v1.0.25
