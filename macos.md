@@ -19,5 +19,5 @@
 
 
 ## github action
-- git tag macos-v1.0.22
-- git push origin macos-v1.0.22
+- git tag macos-v1.0.23
+- git push origin macos-v1.0.23
