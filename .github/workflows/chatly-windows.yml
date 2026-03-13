@@ -21,6 +21,10 @@ jobs:
       NODE_VERSION: "20"
       WORKING_DIR: "chatly"
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,12 +45,12 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm ci || npm install
-          npm install -D @tauri-apps/cli@2
+          npm ci
+          npm install -D @tauri-apps/cli@^2
           npm pkg set scripts.tauri="tauri"
 
       - name: Build Windows app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
