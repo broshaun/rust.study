@@ -1,7 +1,4 @@
 
-
-
-
 ## 指定系统架构打包
 
 ### 打包 Intel 目标
@@ -15,8 +12,6 @@
 
 ### 全兼容打包
 - cargo tauri build --target universal-apple-darwin 
-
-
 
 ## github action
 - git tag macos-v1.0.23
