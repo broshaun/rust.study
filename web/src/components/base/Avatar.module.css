@@ -1,0 +1,44 @@
+/* 基础样式 - 精简 + 增强兼容性 */
+.avatar {
+  /* 核心：盒模型 + 图片展示 */
+  display: block;
+  box-sizing: border-box;
+  object-fit: inherit; /* 由 JS 控制 objectFit，避免样式冲突 */
+  border: 1px solid;
+  /* 自适应兜底 */
+  max-width: 100%;
+  max-height: 100%;
+  /* 光标交互 */
+  cursor: pointer;
+}
+
+/* Hover 效果 - 可禁用 */
+.avatar:not(.noHover):hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 禁用 hover 效果 */
+.avatar.noHover {
+  cursor: default;
+  transform: none !important;
+  box-shadow: inherit !important;
+}
+
+/* 加载过渡 - 更丝滑 */
+.avatar {
+  transition: opacity 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 图片加载状态 */
+.avatar[src] {
+  opacity: 1;
+}
+.avatar:not([src]) {
+  opacity: 0;
+}
+
+/* 修复：透明图片背景展示 */
+.avatar {
+  background-color: inherit; /* 由 JS 控制背景色，避免冲突 */
+}

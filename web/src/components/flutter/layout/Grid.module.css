@@ -1,0 +1,62 @@
+.grid {
+  display: grid;
+  box-sizing: border-box;
+
+  width: var(--gd-w, 100%);
+  height: var(--gd-h, auto);
+
+  min-width: 0;
+  min-height: 0;
+
+  grid-template-columns: var(--gd-columns, repeat(2, minmax(0, 1fr)));
+  grid-template-rows: var(--gd-rows, auto);
+
+  column-gap: var(--gd-col-gap, 0px);
+  row-gap: var(--gd-row-gap, 0px);
+  padding: var(--gd-pad, 0px);
+
+  justify-items: var(--gd-justify-items, stretch);
+  align-items: var(--gd-align-items, stretch);
+
+  color: var(--gd-text-color, inherit);
+  background: var(--gd-bg, transparent);
+  box-shadow: var(--gd-shadow, none);
+
+  border-style: solid;
+  border-width: var(--gd-border-width, 0px);
+  border-color: var(--gd-border-color, transparent);
+  border-radius: var(--gd-radius, var(--radius-main, 16px));
+
+  overflow: var(--gd-overflow, visible);
+
+  backdrop-filter: var(--gd-backdrop, blur(0px));
+  -webkit-backdrop-filter: var(--gd-backdrop, blur(0px));
+
+  transition:
+    background var(--transition-speed, 0.3s),
+    border-color var(--transition-speed, 0.3s),
+    box-shadow var(--transition-speed, 0.3s),
+    color var(--transition-speed, 0.3s);
+}
+
+.grid[data-dense='true'] {
+  grid-auto-flow: row dense;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+
+  padding: var(--gd-item-pad, 0px);
+
+  grid-column: var(--gd-item-col-start, auto) / span var(--gd-item-col, 1);
+  grid-row: var(--gd-item-row-start, auto) / span var(--gd-item-row, 1);
+
+  justify-content: var(--gd-item-align, stretch);
+  align-items: var(--gd-item-justify, stretch);
+}
