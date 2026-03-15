@@ -12,7 +12,7 @@ export function LogOn() {
 
     const navigate = useNavigate();
     const [account, setAccount] = useLocalStorageState('savedAccount')
-    const [avatar, setAvatar] = useLocalStorageState('saveOneself')
+    const [avatar, setAvatar] = useLocalStorageState('myAvatar')
 
     const [password, setPassword] = useState("")
     const { http } = useHttpClient2('/rpc/chat/login/')

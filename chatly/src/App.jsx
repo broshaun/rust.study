@@ -1,32 +1,24 @@
-import { HashRouter, Routes, Route, Navigate, MemoryRouter } from "react-router-dom";
+import { Routes, Route, Navigate, MemoryRouter } from "react-router-dom";
 import Home2 from "pages/home";
 import { RsUser } from "pages/user";
 import { RsChat } from "pages/chat";
-import { useLogin } from "hooks";
-import DebugOverlay from "components/DebugOverlay";
-
+import { useToken } from "hooks";
 
 
 const App = () => {
-  const { isLogged } = useLogin();
-
+  const { remainSeconds } = useToken();
   return <>
-    <HashRouter>
+    <MemoryRouter>
       <Routes>
-        <Route index
-          element={
-            isLogged
-              ? <Navigate to="/chat/" replace />
-              : <Navigate to="/user/login/" replace />
-          } />
+        <Route index element={remainSeconds > 0 ? <Navigate to="/chat/" replace /> : <Navigate to="/user/login/" replace />} />
         <Route path="apps" element={<Home2 />} />
-        
+
         {RsUser}
         {RsChat}
 
       </Routes>
-    </HashRouter>
-    {/* <DebugOverlay /> */}
+    </MemoryRouter>
+
   </>
 }
 

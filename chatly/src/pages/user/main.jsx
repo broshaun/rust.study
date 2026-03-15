@@ -28,6 +28,7 @@ export function User() {
       <YBox padding={10} gap={20}>
         {drawerMenu.filter(i => i.display !== false).map((item) =>
           <Icon
+            key={item.key}
             name={item?.icon.name}
             label={item?.icon.label}
             onClick={() => handleItemClick(item)}

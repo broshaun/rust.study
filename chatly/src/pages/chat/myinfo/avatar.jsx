@@ -11,7 +11,7 @@ import { Avatar, Container, XBox } from 'components/flutter';
 export const Avatar2 = () => {
     const navigate = useNavigate()
     const location = useLocation()
-    const [avatar, setAvatar] = useLocalStorageState('saveOneself', { defaultValue: location.state?.avatar_url })
+    const [avatar, setAvatar] = useLocalStorageState('myAvatar', { defaultValue: location.state?.avatar_url })
     const { http: httpFiles } = useHttpClient2('/files/img/')
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/')
 

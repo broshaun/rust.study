@@ -9,7 +9,6 @@
     "core:default",
     "http:allow-fetch",
     "core:webview:allow-create-webview-window",
-    "log:default",
     {
       "identifier": "http:default",
       "allow": [
@@ -21,6 +20,7 @@
         }
       ]
     },
-    "store:default"
+    "dialog:default",
+    "fs:default"
   ]
 }

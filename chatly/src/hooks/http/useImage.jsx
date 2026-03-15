@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApiBase } from "./useApiBase";
-import { useHttpFetch } from "./useHttpFetch";
+import { useHttpFetch } from "./useHttpFetch待删除";
 import { db } from "hooks/db";
 
 const CACHE_NAME = "img-hash-v1";

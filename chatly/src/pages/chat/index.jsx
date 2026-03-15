@@ -1,13 +1,15 @@
-import { Route } from "react-router-dom";
+import { Route, } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import { Chat } from "./main";
 import { RsFriend } from "./friend";
 import { RsDialog } from "./dialog";
 import { RsMyInfo } from "./myinfo";
 import { Msg } from "./dialog/msg";
 import { useHttpClient2 } from 'hooks/http';
-import { useRequest } from 'ahooks';
+import { useRequest, useTimeout } from 'ahooks';
 import { db } from 'hooks/db';
 import { Outlet } from "react-router-dom";
+import { useToken } from "hooks/store"
 
 export const RsChat = (
   <Route element={<Listen />}>
@@ -22,7 +24,11 @@ export const RsChat = (
 
 
 function Listen() {
+  const navigate = useNavigate();
+
+  const { remainSeconds } = useToken()
   const { http: httpMsg } = useHttpClient2('/rpc/chat/msg/single/');
+
   useRequest(() => {
     httpMsg.post('POST').then((results) => {
       if (!results) return;
@@ -38,6 +44,12 @@ function Listen() {
     });
     return 'ok';
   }, { pollingInterval: 2000, pollingWhenHidden: false });
+
+
+  useTimeout(() => {
+    console.log("登录到期");
+    navigate('/user/login/', { replace: true });
+  }, remainSeconds * 1000);
 
   return <div><Outlet /></div>
 }

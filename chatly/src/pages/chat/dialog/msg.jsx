@@ -15,7 +15,7 @@ export function Msg() {
     const uid = location.state?.uid
     // const avatar_url = location.state?.avatar_url
     const displayName = location.state?.displayName
-    const [selfAvatar] = useLocalStorageState('saveOneself')
+    const [selfAvatar] = useLocalStorageState('myAvatar')
     const [msgs, setMsgs] = useState([]);
 
     const { avatarSrc: receiveAvatarSrc, loading: loading1 } = useImage("/imgs", location.state?.avatar_url, { isAvatar: true });

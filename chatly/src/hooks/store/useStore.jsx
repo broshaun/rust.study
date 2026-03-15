@@ -56,7 +56,7 @@ const safeStringify = (v) => {
  * @param {boolean} [options.listenStorageChange] 是否监听跨标签页存储变化
  * @returns {ReturnType<typeof create>} Zustand store 实例
  */
-export const useGlobalStore = (key = "default", options) => {
+export const useStore = (key = "default", options) => {
   // 解构配置项，设置默认值（避免 undefined 报错）
   const { defaultValue, listenStorageChange = false } = options || {};
   const storageKey = `zustand:${key}`;

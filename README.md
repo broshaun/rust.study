@@ -34,39 +34,24 @@ source ~/.zshrc
 ## 前端打包
 - pnpm build
 
-
-
-
-## App 核心库
+## Tauri 前端运行调用Rust Api。
 - pnpm add @tauri-apps/api@2.10.2
-- pnpm add @tauri-apps/plugin-http
-- pnpm add @tauri-apps/plugin-log
 
-## 开发库
+## Tauri 的命令行工具。
 - pnpm add -D @tauri-apps/cli@^2
-- pnpm add -D concurrently
 
-
-# 进入前端的项目路径
+## 进入前端的项目路径
 ## 安装 Tauri 的 CLI 工具
 ## 初始化项目
 - cargo tauri init
 - cd src-tauri
-- cargo uninstall tauri-cli
-- cargo install tauri-cli --version "^2.10" --locked
-
-- cargo add tauri-plugin-http
-- cargo add tauri-plugin-log
-
 
 ## 运行调试
 - cargo tauri dev
 ## 执行编译
 - cargo tauri build
 
-
-
-### 完全自动安装tauri插件
+### 自动安装tauri插件
 - pnpm tauri add http
-- pnpm tauri add store
-
+- pnpm tauri add dialog
+- pnpm tauri add fs

@@ -2,7 +2,7 @@
 import { Modal } from "components";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useLogin, useWinSize } from 'hooks';
+import { useWinSize ,useToken} from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage, useHttpClient2 } from 'hooks/http';
 import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
@@ -12,12 +12,12 @@ export function LogOn() {
 
     const navigate = useNavigate();
     const [account, setAccount] = useLocalStorageState('savedAccount')
-    const [avatar, setAvatar] = useLocalStorageState('saveOneself')
+    const [avatar, setAvatar] = useLocalStorageState('myAvatar')
 
     const [password, setPassword] = useState("")
     const { http } = useHttpClient2('/rpc/chat/login/')
     const { avatarSrc } = useImage("/imgs", avatar, { isAvatar: true })
-    const { setToken, setTime } = useLogin()
+    const { setToken } = useToken()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
     const { isMobile } = useWinSize()
@@ -34,11 +34,11 @@ export function LogOn() {
                 if (!results) return;
                 const { code, message, data } = results
                 if (code === 200) {
-                    setToken(results.data?.login_token)
-                    setTime(results.data?.login_expired)
+                    setToken(results.data?.login_token, results.data?.login_expired)
+                    setAvatar(data?.user?.avatar_url)
+
                     isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
                     
-                    setAvatar(data?.user?.avatar_url)
                 } else {
                     setMsg(message)
                     setOpen(true)

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Outlet, useNavigate } from "react-router-dom";
-import { useWinSize, useDateTime, useTitle } from 'hooks';
+import { useWinSize, useDateTime } from 'hooks';
 import { AppShell, AppBar, PCShell, Icon, XBox, YBox } from 'components/flutter';
 import { liveQuery } from 'dexie';
 import { db } from 'hooks/db';
@@ -10,7 +10,7 @@ export function Chat() {
   const navigate = useNavigate();
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
-  const { title, setTitle } = useTitle()
+  const [title, setTitle ] = useState()
   const [dot, setDot] = useState(false)
 
   const items = useMemo(() => {
