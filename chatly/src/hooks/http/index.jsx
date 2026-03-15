@@ -1,2 +1,2 @@
-export { useHttpClient as useHttpClient2 } from './useHttpClien2';
+export { useHttpClient as useHttpClient2 } from './useHttpClien';
 export { useImage } from './useImage';

@@ -14,7 +14,7 @@ export function Chat() {
   const [dot, setDot] = useState(false)
 
   const items = useMemo(() => {
-    console.log(dot)
+    // console.log(dot)
     return [
       { key: 'news', icon: <Icon name="chat-bubble-bottom-center-text" label='消息' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); setDot(false) }} dot={dot} /> },
       { key: 'friend', icon: <Icon name="users_oline" label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },

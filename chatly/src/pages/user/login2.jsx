@@ -37,6 +37,7 @@ export function LogOn() {
                     setToken(results.data?.login_token)
                     setTime(results.data?.login_expired)
                     isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
+                    
                     setAvatar(data?.user?.avatar_url)
                 } else {
                     setMsg(message)

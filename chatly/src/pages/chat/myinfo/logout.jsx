@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useLogin, useUser } from 'hooks';
 import { Modal } from 'components';
 import { useHttpClient2 } from 'hooks/http';
+import { removeToken } from "hooks"
 
 export const Logout = () => {
   const navigate = useNavigate();
-  const { fnLogout } = useLogin();
+  // const { fnLogout } = useLogin();
   const { delUser } = useUser();
   const { http } = useHttpClient2('/rpc/chat/login/')
   const [open, setOpen] = useState(true);
@@ -15,7 +16,10 @@ export const Logout = () => {
 
   const logout = () => {
     http.post('DELETE').catch(console.error);
-    fnLogout()
+    // fnLogout()
+    removeToken().then(()=>{
+      console.log("删除token成功")
+    })
     delUser()
     navigate('/user/login/', { replace: true });
   }

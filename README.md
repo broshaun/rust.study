@@ -58,10 +58,15 @@ source ~/.zshrc
 - cargo add tauri-plugin-http
 - cargo add tauri-plugin-log
 
+
 ## 运行调试
 - cargo tauri dev
 ## 执行编译
 - cargo tauri build
 
 
+
+### 完全自动安装tauri插件
+- pnpm tauri add http
+- pnpm tauri add store
 
