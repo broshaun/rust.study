@@ -1,13 +1,14 @@
 import React from 'react';
 import { Container, XBox, YBox, Avatar } from 'components/flutter';
-import { useImage } from 'hooks/http';
+import { useApiBase } from 'hooks/http';
 
 /**
  * 时间格式化工具
  */
 const formatDialogTime = (timestamp) => {
   if (!timestamp) return "";
-  const safeTimeStr = typeof timestamp === 'string' ? timestamp.replace(/-/g, '/') : timestamp;
+  const safeTimeStr =
+    typeof timestamp === 'string' ? timestamp.replace(/-/g, '/') : timestamp;
   const t = new Date(safeTimeStr);
   if (isNaN(t.getTime())) return "";
 
@@ -21,7 +22,7 @@ const formatDialogTime = (timestamp) => {
     return t.toLocaleTimeString("zh-CN", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false
+      hour12: false,
     });
   }
   if (diffDays === 1) return "昨天";
@@ -43,6 +44,8 @@ export const DialogItem = React.memo(({
   onAvatarClick,
   height = 50
 }) => {
+  const { apiBase } = useApiBase();
+
   if (!data) return null;
 
   const name = data.remark || data.nikename || data.email || "未知联系人";
@@ -50,7 +53,9 @@ export const DialogItem = React.memo(({
   const timeStr = formatDialogTime(data.timestamp);
   const showDot = data.signal === 'news';
 
-  const { avatarSrc } = useImage('/imgs', data?.avatar_url, { isAvatar: true });
+  const avatarSrc = data?.avatar_url
+    ? `${String(apiBase || "").replace(/\/+$/, "")}/imgs/${String(data.avatar_url).replace(/^\/+/, "")}`
+    : "";
 
   return (
     <div
@@ -59,19 +64,31 @@ export const DialogItem = React.memo(({
         cursor: 'pointer',
         width: '100%',
         height: typeof height === 'number' ? `${height}px` : height,
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        background: 'transparent'
       }}
     >
-      <Container height="100%" width="100%" padding="2px 10px">
-        <XBox height="100%" width="100%" align="middle" gap={8}>
-          
+      <Container
+        height="100%"
+        width="100%"
+        padding="2px 10px"
+        style={{ background: 'transparent' }}
+      >
+        <XBox
+          height="100%"
+          width="100%"
+          align="middle"
+          gap={8}
+          style={{ background: 'transparent' }}
+        >
           {/* 左侧头像 */}
           <XBox.Segment
             span={1}
             style={{
               flex: '0 0 auto',
               width: 38,
-              padding: 0
+              padding: 0,
+              background: 'transparent'
             }}
           >
             <div
@@ -85,18 +102,18 @@ export const DialogItem = React.memo(({
                 height: 38,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                background: 'transparent'
               }}
             >
               <Avatar
                 src={avatarSrc}
-                variant="rounded"
+                variant="square"
                 size={38}
                 fit="cover"
-                roundedRadius={8}
+                roundedRadius={0}
               />
 
-              {/* 新消息红点（无边框） */}
               {showDot && (
                 <span
                   style={{
@@ -122,14 +139,15 @@ export const DialogItem = React.memo(({
             align="left"
             style={{
               minWidth: 0,
-              padding: 0
+              padding: 0,
+              background: 'transparent'
             }}
           >
             <YBox
               height="100%"
               justify="middle"
               gap={1}
-              style={{ minWidth: 0 }}
+              style={{ minWidth: 0, background: 'transparent' }}
             >
               <span
                 style={{
@@ -169,7 +187,8 @@ export const DialogItem = React.memo(({
             style={{
               flex: '0 0 auto',
               padding: 0,
-              width: 48
+              width: 48,
+              background: 'transparent'
             }}
             align="right"
           >
@@ -179,7 +198,8 @@ export const DialogItem = React.memo(({
               gap={2}
               style={{
                 width: '100%',
-                minWidth: 0
+                minWidth: 0,
+                background: 'transparent'
               }}
             >
               <span
@@ -201,6 +221,7 @@ export const DialogItem = React.memo(({
                 align="middle"
                 justify="right"
                 gap={6}
+                style={{ background: 'transparent' }}
               >
                 <div
                   onClick={(e) => {
@@ -216,7 +237,8 @@ export const DialogItem = React.memo(({
                     fontSize: '12px',
                     color: 'var(--text-secondary)',
                     opacity: 0.35,
-                    flex: '0 0 auto'
+                    flex: '0 0 auto',
+                    background: 'transparent'
                   }}
                 >
                   ✕
@@ -224,7 +246,6 @@ export const DialogItem = React.memo(({
               </XBox>
             </YBox>
           </XBox.Segment>
-
         </XBox>
       </Container>
     </div>

@@ -47,7 +47,6 @@ export function Chat() {
           </YBox>
         </PCShell.Left>
         <PCShell.Content>
-
           <Outlet />
         </PCShell.Content>
       </PCShell>

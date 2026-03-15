@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, XBox, YBox, Avatar } from 'components/flutter';
-// import { useHttpClient2 } from 'hooks/http';
-import { useImage } from 'hooks/http';
+import { useApiBase } from 'hooks/http';
+
 /**
  * Friend - 紧凑型好友列表项
  */
@@ -12,14 +12,17 @@ export const Friend = React.memo(({
   onlineStatusKey = "is_online",
   height = 50
 }) => {
+  const { apiBase } = useApiBase();
+
   if (!data) return null;
 
   const name = data.remark || data.nikename || data.email || "未知好友";
   const email = data.email || "未绑定邮箱";
   const isOnline = !!data[onlineStatusKey];
 
-  const { src, avatarSrc, loading, url, clearAll } = useImage("/imgs", data?.avatar_url,{ isAvatar: true })
-
+  const avatarSrc = data?.avatar_url
+    ? `${String(apiBase || "").replace(/\/+$/, "")}/imgs/${String(data.avatar_url).replace(/^\/+/, "")}`
+    : "";
 
   return (
     <div
@@ -27,21 +30,32 @@ export const Friend = React.memo(({
       style={{
         cursor: 'pointer',
         height: typeof height === 'number' ? `${height}px` : height,
-        width: '100%',           // ⭐关键：撑满父容器
-        boxSizing: 'border-box'
+        width: '100%',
+        boxSizing: 'border-box',
+        background: 'transparent'
       }}
     >
-      <Container height="100%" width="100%" padding="2px 10px">
-
-        <XBox height="100%" width="100%" align="middle" gap={8}>
-
+      <Container
+        height="100%"
+        width="100%"
+        padding="2px 10px"
+        style={{ background: 'transparent' }}
+      >
+        <XBox
+          height="100%"
+          width="100%"
+          align="middle"
+          gap={8}
+          style={{ background: 'transparent' }}
+        >
           {/* 左侧头像 */}
           <XBox.Segment
             span={1}
             style={{
               flex: '0 0 auto',
               width: 38,
-              padding: 0
+              padding: 0,
+              background: 'transparent'
             }}
           >
             <div
@@ -55,15 +69,16 @@ export const Friend = React.memo(({
                 height: 38,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                background: 'transparent'
               }}
             >
               <Avatar
                 src={avatarSrc}
-                variant="rounded"
+                variant="square"
                 size={38}
                 fit="cover"
-                roundedRadius={8}
+                roundedRadius={0}
               />
 
               {isOnline && (
@@ -76,7 +91,6 @@ export const Friend = React.memo(({
                     height: 9,
                     borderRadius: '50%',
                     backgroundColor: 'var(--accent-color, #34c759)',
-                    border: '1.5px solid var(--app-bg, #fff)',
                     zIndex: 2
                   }}
                 />
@@ -89,8 +103,9 @@ export const Friend = React.memo(({
             span={1}
             align="left"
             style={{
-              minWidth: 0,       // ⭐关键：允许文本收缩
-              padding: 0
+              minWidth: 0,
+              padding: 0,
+              background: 'transparent'
             }}
           >
             <YBox
@@ -98,7 +113,7 @@ export const Friend = React.memo(({
               justify="middle"
               align="left"
               gap={1}
-              style={{ minWidth: 0 }}
+              style={{ minWidth: 0, background: 'transparent' }}
             >
               <span
                 style={{
@@ -131,10 +146,10 @@ export const Friend = React.memo(({
               </span>
             </YBox>
           </XBox.Segment>
-
         </XBox>
-
       </Container>
     </div>
   );
 });
+
+export default Friend;

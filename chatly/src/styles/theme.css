@@ -1,99 +1,231 @@
-/* --- 全局默认变量 --- */
-:root {
-  --radius-main: 16px;
-  --transition-speed: 0.3s;
-}
+/* =========================
+   Theme Tokens
+   目标：
+   1. 无圆角
+   2. 无阴影
+   3. 降低重绘与混合成本
+   4. 保持主题差异，但整体更利落
+   ========================= */
 
-/* 1. 极致毛玻璃 (Ultra Glass) */
-[data-theme='glass'] {
-  --app-bg: fixed linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-  --panel-bg: rgba(255, 255, 255, 0.45); /* 提高白场，防止透底太杂 */
-  --panel-blur: blur(20px);
-  --panel-border: 1px solid rgba(255, 255, 255, 0.4);
-  --panel-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+:root {
+  --radius-main: 0;
+  --transition-speed: 0.16s;
+
+  --app-bg: #f3f6fb;
+  --panel-bg: #ffffff;
+  --panel-border: 1px solid rgba(15, 23, 42, 0.08);
+
   --text-primary: #0f172a;
   --text-primary-rgb: 15, 23, 42;
   --text-secondary: #475569;
   --accent-color: #3b82f6;
+
+  --surface-1: transparent;
+  --surface-2: rgba(255, 255, 255, 0.72);
 }
 
+/* 1. Glass -> 改成轻量半透明，不使用 blur */
+:root,
+[data-theme='glass'] {
+  --app-bg: linear-gradient(135deg, #e6edf7 0%, #d8e4f2 100%);
+  --panel-bg: rgba(255, 255, 255, 0.72);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.52);
+  --text-primary: #0f172a;
+  --text-primary-rgb: 15, 23, 42;
+  --text-secondary: #526173;
+  --accent-color: #3b82f6;
+  --surface-1: rgba(255, 255, 255, 0.28);
+  --surface-2: rgba(255, 255, 255, 0.72);
+}
 
-/* 2. 乳胶温润 (Latex Soft) - 优化了色彩厚度 */
+/* 2. Light */
 [data-theme='light'] {
-  --app-bg: #f4f4f9; 
-  --panel-bg: rgba(255, 255, 255, 0.96); 
-  --panel-blur: blur(10px); 
-  --panel-border: 1px solid rgba(255, 255, 255, 1); 
-  --panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 1);
+  --app-bg: #f4f4f9;
+  --panel-bg: #ffffff;
+  --panel-border: 1px solid rgba(28, 28, 30, 0.08);
   --text-primary: #1c1c1e;
   --text-primary-rgb: 28, 28, 30;
   --text-secondary: #8e8e93;
   --accent-color: #34c759;
-  --radius-main: 24px;
+  --surface-1: #fafafa;
+  --surface-2: #ffffff;
 }
 
-/* 3. 赛博医疗 (Cyber Pulse) - 增加了呼吸感 */
- [data-theme='cyber'] {
-  --app-bg: radial-gradient(circle at 50% 0%, #1a2a3a 0%, #050a0f 100%);
-  --panel-bg: rgba(13, 25, 41, 0.85);
-  --panel-blur: blur(15px);
-  --panel-border: 1px solid rgba(76, 201, 240, 0.5);
-  --panel-shadow: 0 0 20px rgba(76, 201, 240, 0.15), inset 0 0 10px rgba(76, 201, 240, 0.05);
+/* 3. Cyber */
+[data-theme='cyber'] {
+  --app-bg: linear-gradient(180deg, #0b1320 0%, #050a0f 100%);
+  --panel-bg: #0d1929;
+  --panel-border: 1px solid rgba(76, 201, 240, 0.24);
   --text-primary: #e0f7fa;
   --text-primary-rgb: 224, 247, 250;
-  --text-secondary: #94a3b8;
+  --text-secondary: #8aa1b3;
   --accent-color: #4cc9f0;
+  --surface-1: rgba(76, 201, 240, 0.04);
+  --surface-2: #102033;
 }
 
-/* 4. 沙漠绿洲 (Oasis Luxury) - 增加了丝绒感 */
- :root, [data-theme='oasis'] {
+/* 4. Oasis */
+[data-theme='oasis'] {
   --app-bg: #ebe3d5;
-  --panel-bg: rgba(255, 251, 245, 0.7);
-  --panel-blur: blur(12px);
-  --panel-border: 1px solid rgba(181, 150, 93, 0.3);
-  --panel-shadow: 0 12px 24px rgba(101, 80, 40, 0.08);
+  --panel-bg: #fffaf2;
+  --panel-border: 1px solid rgba(181, 150, 93, 0.24);
   --text-primary: #3d362d;
   --text-primary-rgb: 61, 54, 45;
   --text-secondary: #8a7e6e;
   --accent-color: #1b4332;
+  --surface-1: rgba(181, 150, 93, 0.05);
+  --surface-2: #fffdf8;
 }
 
-/* 5. 液态玻璃 (Liquid Shine) - 强化高光 */
+/* 5. Liquid -> 改成清透平面，不做液态高光 */
 [data-theme='liquid'] {
   --app-bg: linear-gradient(160deg, #dbeafe 0%, #f8fafc 100%);
-  --panel-bg: rgba(255, 255, 255, 0.35);
-  --panel-blur: blur(18px);
-  --panel-border: 1px solid rgba(255, 255, 255, 0.7);
-  /* 双重内阴影模拟水滴感 */
-  --panel-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), inset 0 4px 8px rgba(255, 255, 255, 0.9), inset 0 -2px 6px rgba(0, 0, 0, 0.02);
+  --panel-bg: rgba(255, 255, 255, 0.78);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.62);
   --text-primary: #1e40af;
   --text-primary-rgb: 30, 64, 175;
   --text-secondary: #60a5fa;
   --accent-color: #2563eb;
+  --surface-1: rgba(255, 255, 255, 0.42);
+  --surface-2: rgba(255, 255, 255, 0.82);
 }
 
-/* 6. 拉丝金属 (Titanium Dark) - 增加纹理深度 */
+/* 6. Brushed */
 [data-theme='brushed'] {
   --app-bg: #121212;
-  --panel-bg: linear-gradient(145deg, #2a2d32, #1a1c1f);
-  --panel-blur: blur(0px);
+  --panel-bg: #1c1f24;
   --panel-border: 1px solid rgba(255, 255, 255, 0.08);
-  --panel-shadow: 10px 10px 30px rgba(0, 0, 0, 0.5), inset 1px 1px 0px rgba(255, 255, 255, 0.05);
   --text-primary: #f1f5f9;
   --text-primary-rgb: 241, 245, 249;
   --text-secondary: #64748b;
   --accent-color: #ef4444;
+  --surface-1: rgba(255, 255, 255, 0.02);
+  --surface-2: #20242a;
 }
 
-/* 7. 哑光金属 (Matte Black Edition) */
+/* 7. Metal */
 [data-theme='metal'] {
   --app-bg: #0a0a0a;
-  --panel-bg: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
-  --panel-blur: blur(0px);
-  --panel-border: 1px solid rgba(255, 255, 255, 0.1);
-  --panel-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  --panel-bg: #141414;
+  --panel-border: 1px solid rgba(255, 255, 255, 0.08);
   --text-primary: #e2e8f0;
   --text-primary-rgb: 226, 232, 240;
   --text-secondary: #94a3b8;
   --accent-color: #60a5fa;
+  --surface-1: rgba(255, 255, 255, 0.02);
+  --surface-2: #181818;
+}
+
+/* =========================
+   Global Base
+   ========================= */
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--text-primary);
+  transition:
+    background-color var(--transition-speed),
+    color var(--transition-speed),
+    border-color var(--transition-speed);
+}
+
+/* =========================
+   通用容器类
+   统一使用，避免组件内重复堆样式
+   ========================= */
+
+.theme-panel,
+.theme-card,
+.theme-block {
+  background: var(--panel-bg);
+  border: var(--panel-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* 高频列表/卡片，尽量使用纯色背景 */
+.theme-card {
+  background: var(--surface-2);
+}
+
+/* 分区层 */
+.theme-section {
+  background: var(--surface-1);
+  border: var(--panel-border);
+  border-radius: 0;
+}
+
+/* 文字 */
+.theme-title {
+  color: var(--text-primary);
+}
+
+.theme-text {
+  color: var(--text-secondary);
+}
+
+/* 强调色 */
+.theme-accent {
+  color: var(--accent-color);
+}
+
+.theme-accent-bg {
+  background: var(--accent-color);
+  color: #fff;
+  border: 0;
+}
+
+/* 输入类组件建议统一成轻量风格 */
+.theme-input,
+.theme-select,
+.theme-textarea,
+.theme-button {
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  transition:
+    border-color var(--transition-speed),
+    background-color var(--transition-speed),
+    color var(--transition-speed);
+}
+
+.theme-input,
+.theme-select,
+.theme-textarea {
+  background: var(--surface-2);
+  border: var(--panel-border);
+  color: var(--text-primary);
+}
+
+.theme-button {
+  background: var(--surface-2);
+  border: var(--panel-border);
+  color: var(--text-primary);
+}
+
+.theme-button.is-primary {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
+}
+
+/* 分割线统一 */
+.theme-divider {
+  height: 1px;
+  background: rgba(var(--text-primary-rgb), 0.08);
+}
+
+/* 可选：减少动画造成的额外负担 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

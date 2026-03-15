@@ -97,13 +97,11 @@ export const Mian = () => {
     });
 
 
-    return <Suspense fallback={<div>加载中...</div>}>
-
-         <XBox panel border padding={12} gap={8} radius={24}>
+    return <XBox panel border padding={12} gap={8} >
 
             <XBox.Segment divider>
 
-                <YBox ref={containerRef} scroll={true} height={winHeight - 30} padding={10} gap={8}>
+                <YBox ref={containerRef} scroll={true} height={winHeight - 26} padding={10} gap={8}>
                     <YBox.Segment align="right" >
                         <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend}/>
                     </YBox.Segment>
@@ -126,7 +124,7 @@ export const Mian = () => {
                 <Outlet />
             </XBox.Segment>
         </XBox>
-    </Suspense>
+
 
 }
 

@@ -1,6 +1,6 @@
 
 import { Modal } from "components";
-import React, { useState } from 'react'
+import React, { useState,useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useWinSize ,useToken} from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
@@ -16,7 +16,10 @@ export function LogOn() {
 
     const [password, setPassword] = useState("")
     const { http } = useHttpClient2('/rpc/chat/login/')
-    const { avatarSrc } = useImage("/imgs", avatar, { isAvatar: true })
+
+    
+
+    const { avatarSrc } = useImage("/imgs", avatar)
     const { setToken } = useToken()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');

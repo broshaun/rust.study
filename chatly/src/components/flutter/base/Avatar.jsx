@@ -6,12 +6,31 @@ import styles from "./Avatar.module.css";
  */
 const getStaticAsset = (path) => {
   const cleanPath = path.replace(/^\//, "");
-  // 确保不管在什么子路径部署，都能通过相对基准找到 static
   const baseUrl = window.location.origin + (import.meta.env?.BASE_URL || "/");
   return new URL(`static/${cleanPath}`, baseUrl).href;
 };
 
 const DEFAULT_AVATAR = getStaticAsset("favicon.png");
+
+/**
+ * 判断是否是有效图片 URL
+ */
+const isValidSrc = (src) => {
+  if (!src) return false;
+
+  const s = String(src).trim();
+
+  return (
+    s.startsWith("http://") ||
+    s.startsWith("https://") ||
+    s.startsWith("blob:") ||
+    s.startsWith("data:") ||
+    s.startsWith("/") ||
+    s.startsWith("./") ||
+    s.startsWith("../") ||
+    s.startsWith("//")
+  );
+};
 
 export const Avatar = React.memo(({
   src,
@@ -23,22 +42,26 @@ export const Avatar = React.memo(({
   className = "",
   style = {}
 }) => {
+
   const f = (v) => (typeof v === "number" ? `${v}px` : v);
 
+  /**
+   * 最终图片地址
+   */
   const finalSrc = useMemo(() => {
-    if (!src) return DEFAULT_AVATAR;
-    const s = String(src);
-    // 允许本地地址、Base64 或 Blob
-    const isLocal = s.startsWith("blob:") || s.startsWith("data:") || s.startsWith("/") || s.startsWith("./");
-    // 如果是外部 http 连接且不支持缓存降级时，这里也允许通过
-    const isHttp = s.startsWith("http");
-    
-    return (isLocal || isHttp) ? src : DEFAULT_AVATAR;
+    if (!isValidSrc(src)) return DEFAULT_AVATAR;
+    return src;
   }, [src]);
 
+  /**
+   * 样式计算
+   */
   const dynamicStyle = useMemo(() => {
+
     let borderRadius = "50%";
+
     if (variant === "square") borderRadius = "0px";
+
     if (variant === "rounded") {
       borderRadius = roundedRadius ? f(roundedRadius) : "var(--radius-main)";
     }
@@ -50,10 +73,14 @@ export const Avatar = React.memo(({
       objectFit: fit,
       ...style
     };
+
   }, [variant, size, fit, roundedRadius, style]);
 
   return (
-    <div className={`${styles.avatarContainer} ${className}`} style={dynamicStyle}>
+    <div
+      className={`${styles.avatarContainer} ${className}`}
+      style={dynamicStyle}
+    >
       <img
         src={finalSrc}
         alt={alt}

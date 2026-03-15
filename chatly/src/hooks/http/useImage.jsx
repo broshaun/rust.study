@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApiBase } from "./useApiBase";
-import { useHttpFetch } from "./useHttpFetch待删除";
+import { fetch as fetcher } from "@tauri-apps/plugin-http";
 import { db } from "hooks/db";
 
 const CACHE_NAME = "img-hash-v1";
@@ -8,178 +8,195 @@ const fetchLock = new Map();
 
 export function useImage(baseUrl, hashName, opt = {}) {
   const { apiBase } = useApiBase();
-  const { fetcher } = useHttpFetch();
 
   const {
     enabled = true,
-    isAvatar = false,
-    avatarSize = 128,
-    avatarType = "image/jpeg",
-    avatarQuality = 0.82,
-    maxAge = 7 * 24 * 60 * 60 * 1000 // 默认 7 天不读则清空
+    useCache = false,
+    maxAge = 7 * 24 * 60 * 60 * 1000,
   } = opt;
 
   const [src, setSrc] = useState("");
-  const [avatarSrc, setAvatarSrc] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const curRef = useRef("");
-  const avatarRef = useRef("");
+  const srcRef = useRef("");
   const reqIdRef = useRef(0);
 
   const remoteUrl = useMemo(() => {
-    if (!hashName) return "";
-    const base = `${apiBase || ""}${baseUrl}`.replace(/\/+$/, "");
-    return `${base}/${hashName}`;
-  }, [apiBase, baseUrl, hashName]);
+    if (!enabled || !hashName) return "";
 
-  const revoke = (u) => u?.startsWith("blob:") && URL.revokeObjectURL(u);
+    const origin = String(apiBase || "").replace(/\/+$/, "");
+    const path = String(baseUrl || "").replace(/^\/+|\/+$/g, "");
+    const file = String(hashName || "").replace(/^\/+/, "");
 
-  /**
-   * 自动清理机制：删除很久没读过的缓存
-   */
-  const purgeExpiredCache = useCallback(async () => {
+    if (!origin || !path || !file) return "";
+
+    return `${origin}/${path}/${file}`;
+  }, [apiBase, baseUrl, hashName, enabled]);
+
+  const revokeObjectUrl = useCallback((url) => {
+    if (url?.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+    }
+  }, []);
+
+  const touchCache = useCallback(async (url) => {
+    if (!useCache || !url) return;
+
     try {
+      await db.imageMetadata.put({
+        url,
+        lastAccessed: Date.now(),
+      });
+    } catch { }
+  }, [useCache]);
+
+  const purgeExpiredCache = useCallback(async () => {
+    if (!useCache) return;
+
+    try {
+      if (typeof window === "undefined" || !window.caches) return;
+
       const now = Date.now();
-      // 1. 从 Dexie 找出所有过期的记录
-      const expiredRecords = await db.imageMetadata
-        .filter(item => (now - item.lastAccessed) > maxAge)
+      const expired = await db.imageMetadata
+        .filter((item) => now - (item.lastAccessed || 0) > maxAge)
         .toArray();
 
-      if (expiredRecords.length > 0) {
-        const cache = await caches.open(CACHE_NAME);
-        for (const record of expiredRecords) {
-          await cache.delete(record.url); // 删除物理缓存
-          await db.imageMetadata.delete(record.url); // 删除数据库记录
-          console.log(`[useImage] Purged stale cache: ${record.url}`);
-        }
+      if (!expired.length) return;
+
+      const cache = await caches.open(CACHE_NAME);
+
+      await Promise.all(
+        expired.map(async (item) => {
+          await cache.delete(item.url);
+          await db.imageMetadata.delete(item.url);
+        })
+      );
+    } catch { }
+  }, [maxAge, useCache]);
+
+  const getBlobFromNetwork = useCallback(async (url) => {
+    const res = await fetcher(url, { method: "GET" });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    return await res.blob();
+  }, []);
+
+  const getBlobFromCacheOrNetwork = useCallback(
+    async (url) => {
+      const canUseCache =
+        useCache &&
+        typeof window !== "undefined" &&
+        typeof caches !== "undefined";
+
+      if (!canUseCache) {
+        return await getBlobFromNetwork(url);
       }
-    } catch (e) {
-      console.warn("[useImage] Purge failed", e);
-    }
-  }, [maxAge]);
 
-  /**
-   * 记录/更新访问时间
-   */
-  const touchCache = async (url) => {
-    try {
-      await db.imageMetadata.put({ url, lastAccessed: Date.now() });
-    } catch (e) {
-      console.warn("[useImage] Touch failed", e);
-    }
-  };
+      const cache = await caches.open(CACHE_NAME);
+      let cached = await cache.match(url);
 
-  const makeSquareAvatarBlob = useCallback(async (blob) => {
-    if (!blob) return blob;
-    const imageUrl = URL.createObjectURL(blob);
-    try {
-      const img = await new Promise((resolve, reject) => {
-        const image = new Image();
-        image.crossOrigin = "anonymous";
-        image.onload = () => resolve(image);
-        image.onerror = reject;
-        image.src = imageUrl;
-      });
-      const side = Math.min(img.width, img.height);
-      const sx = (img.width - side) / 2;
-      const sy = (img.height - side) / 2;
-      const canvas = document.createElement("canvas");
-      canvas.width = avatarSize;
-      canvas.height = avatarSize;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return blob;
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(img, sx, sy, side, side, 0, 0, avatarSize, avatarSize);
-      return await new Promise((resolve) => {
-        canvas.toBlob((b) => resolve(b || blob), avatarType, avatarQuality);
-      });
-    } catch (e) { return blob; } finally { revoke(imageUrl); }
-  }, [avatarSize, avatarType, avatarQuality]);
+      if (!cached) {
+        if (!fetchLock.has(url)) {
+          const task = (async () => {
+            const res = await fetcher(url, { method: "GET" });
+
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+
+            await cache.put(url, res.clone());
+            return res;
+          })().finally(() => {
+            fetchLock.delete(url);
+          });
+
+          fetchLock.set(url, task);
+        }
+
+        const res = await fetchLock.get(url);
+        cached = res.clone();
+      } else {
+        cached = cached.clone();
+      }
+
+      await touchCache(url);
+      return await cached.blob();
+    },
+    [useCache, getBlobFromNetwork, touchCache]
+  );
+
+  const updateObjectUrl = useCallback(
+    (nextSrc) => {
+      const oldSrc = srcRef.current;
+
+      srcRef.current = nextSrc;
+      setSrc(nextSrc);
+
+      if (oldSrc && oldSrc !== nextSrc) {
+        revokeObjectUrl(oldSrc);
+      }
+    },
+    [revokeObjectUrl]
+  );
 
   const load = useCallback(async () => {
-    if (!enabled || !remoteUrl) {
-      setLoading(false);
-      return;
-    }
+    if (!remoteUrl) return;
 
     const reqId = ++reqIdRef.current;
     setLoading(true);
     setError(null);
 
-    const hasCacheSupport = typeof window !== 'undefined' && !!window.caches;
-
     try {
-      let blob;
-      if (hasCacheSupport) {
-        const cache = await caches.open(CACHE_NAME);
-        let response = await cache.match(remoteUrl);
-
-        if (!response) {
-          if (!fetchLock.has(remoteUrl)) {
-            const p = fetcher(remoteUrl).then(async (res) => {
-              if (!res.ok) throw new Error(`HTTP ${res.status}`);
-              await cache.put(remoteUrl, res.clone());
-              return res;
-            }).finally(() => fetchLock.delete(remoteUrl));
-            fetchLock.set(remoteUrl, p);
-          }
-          await fetchLock.get(remoteUrl);
-          response = await cache.match(remoteUrl);
-        } else {
-          response = response.clone();
-        }
-        
-        // 🚩 只要读取成功，就更新 Dexie 中的访问时间
-        touchCache(remoteUrl);
-        blob = await response.blob();
-      } else {
-        const res = await fetcher(remoteUrl);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        blob = await res.blob();
-      }
+      const blob = await getBlobFromCacheOrNetwork(remoteUrl);
 
       if (reqId !== reqIdRef.current) return;
 
-      const objUrl = URL.createObjectURL(blob);
-      const oldSrc = curRef.current;
-      curRef.current = objUrl;
-      setSrc(objUrl);
-
-      if (isAvatar) {
-        const aBlob = await makeSquareAvatarBlob(blob);
-        if (reqId !== reqIdRef.current) return;
-        const aUrl = URL.createObjectURL(aBlob);
-        const oldAvatar = avatarRef.current;
-        avatarRef.current = aUrl;
-        setAvatarSrc(aUrl);
-        if (oldAvatar) setTimeout(() => revoke(oldAvatar), 1000);
-      } else {
-        setAvatarSrc(objUrl);
-      }
-
+      const nextSrc = URL.createObjectURL(blob);
+      updateObjectUrl(nextSrc);
       setLoading(false);
-      if (oldSrc) setTimeout(() => revoke(oldSrc), 1000);
-
     } catch (e) {
-      console.error("[useImage] Load Error:", e);
-      if (reqId === reqIdRef.current) {
-        setError(e);
-        setLoading(false);
-        setSrc(remoteUrl);
-        setAvatarSrc(remoteUrl);
-      }
+      if (reqId !== reqIdRef.current) return;
+
+      setError(e);
+      setLoading(false);
+      setSrc("");
     }
-  }, [enabled, remoteUrl, fetcher, isAvatar, makeSquareAvatarBlob]);
+  }, [remoteUrl, getBlobFromCacheOrNetwork, updateObjectUrl]);
 
   useEffect(() => {
-    load();
-    // 🚩 每次挂载时静默清理一次过期缓存
     purgeExpiredCache();
-    return () => { reqIdRef.current++; };
-  }, [load, purgeExpiredCache]);
+  }, [purgeExpiredCache]);
 
-  return { src, avatarSrc, loading, error, url: remoteUrl, reload: load };
+  useEffect(() => {
+    if (!remoteUrl) {
+      setSrc("");
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    load();
+
+    return () => {
+      reqIdRef.current += 1;
+    };
+  }, [remoteUrl, load]);
+
+  useEffect(() => {
+    return () => {
+      revokeObjectUrl(srcRef.current);
+    };
+  }, [revokeObjectUrl]);
+
+  return {
+    src,
+    avatarSrc: src,
+    loading,
+    error,
+    reload: load,
+  };
 }
