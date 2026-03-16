@@ -2,7 +2,7 @@
 import { Modal } from "components";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useWinSize ,useToken} from 'hooks';
+import { useWinSize ,useToken, useStore} from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
 import { useImage, useHttpClient2 } from 'hooks/http';
 import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
@@ -13,6 +13,7 @@ export function LogOn() {
     const navigate = useNavigate();
     const [account, setAccount] = useLocalStorageState('savedAccount')
     const [avatar, setAvatar] = useLocalStorageState('myAvatar')
+
 
     const [password, setPassword] = useState("")
     const { http } = useHttpClient2('/rpc/chat/login/')
