@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
-import { useWinSize, useToken,useStore ,useImage, useHttpClient2} from "@/hooks";
+import { useWinSize, useToken,useStore ,useImage, useHttpClient2} from "hooks";
 
 // import { Button, TextField, Divider, XBox, Avatar,Modal } from "@/components/flutter";
 
