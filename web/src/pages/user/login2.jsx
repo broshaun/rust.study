@@ -16,7 +16,7 @@ export function LogOn() {
 
     const [password, setPassword] = useState("")
     const { http } = useHttpClient2('/rpc/chat/login/')
-    const { avatarSrc } = useImage("/imgs", avatar, { isAvatar: true })
+    const { avatarSrc } = useImage("/imgs", avatar)
     const { setToken, setTime } = useLogin()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');

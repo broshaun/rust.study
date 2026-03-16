@@ -20,8 +20,6 @@
         }
       ]
     },
-    "dialog:default",
-    "fs:default",
-    "store:default"
+    "fs:default"
   ]
 }

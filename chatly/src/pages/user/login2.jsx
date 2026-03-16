@@ -2,9 +2,9 @@
 import { Modal } from "components";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useWinSize ,useToken} from 'hooks';
+import { useWinSize, useToken } from 'hooks';
 import { useLocalStorageState, useRequest } from 'ahooks';
-import { useImage, useHttpClient2 } from 'hooks/http';
+import { useHttpClient2, useImage } from 'hooks/http';
 import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
 
 
@@ -18,9 +18,11 @@ export function LogOn() {
     const [password, setPassword] = useState("")
     const { http } = useHttpClient2('/rpc/chat/login/')
 
-    
+    const { src: avatarSrc } = useImage(avatar)
 
-    const { avatarSrc } = useImage("/imgs", avatar)
+    console.log('avatar',avatar)
+    console.log('avatarSrc',avatarSrc)
+
     const { setToken } = useToken()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
@@ -42,7 +44,7 @@ export function LogOn() {
                     setAvatar(data?.user?.avatar_url)
 
                     isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
-                    
+
                 } else {
                     setMsg(message)
                     setOpen(true)
