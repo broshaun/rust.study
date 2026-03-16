@@ -1,0 +1,29 @@
+.avatarContainer {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  overflow: hidden;
+  vertical-align: middle;
+  flex-shrink: 0; /* 在 XBox/YBox 中防止被压缩 */
+  
+  /* --- 主题系统深度适配 --- */
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  
+  /* 确保主题切换（如从赛博变金属）时平滑过渡 */
+  transition: 
+    background var(--transition-speed) ease,
+    border var(--transition-speed) ease,
+    box-shadow var(--transition-speed) ease,
+    border-radius var(--transition-speed) ease;
+}
+
+.img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 关键：继承容器的动态圆角 */
+  border-radius: inherit;
+  object-fit: inherit;
+}
