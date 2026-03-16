@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from "react";
-import { useLatest, useLocalStorageState } from "ahooks";
 import { fetch as fetcher } from "@tauri-apps/plugin-http";
 import { useApiBase } from "./useApiBase";
+import { useToken } from "hooks";
 
 /**
  * JSON 序列化转换器
@@ -15,20 +15,13 @@ function replacer(key, value) {
 
 export function useHttpClient(baseUrl = "") {
   const { apiBase } = useApiBase();
-
-  const [loginToken] = useLocalStorageState("zustand:login_token");
-  const tokenRef = useLatest(loginToken);
+  const { token } = useToken();
 
   const endpoint = useMemo(() => {
     const origin = String(apiBase || "").replace(/\/+$/, "");
     const path = String(baseUrl || "").replace(/^\/+/, "");
     return origin && path ? `${origin}/${path}` : origin || path;
   }, [apiBase, baseUrl]);
-
-  const getAuthHeaders = useCallback(() => {
-    const token = tokenRef.current;
-    return token ? { Authorization: token } : {};
-  }, [tokenRef]);
 
   const request = useCallback(
     async (url, options = {}) => {
@@ -38,7 +31,7 @@ export function useHttpClient(baseUrl = "") {
       const res = await fetcher(url, {
         method,
         headers: {
-          ...getAuthHeaders(),
+          ...(token ? { Authorization: token } : {}),
           ...(isFormData || body === undefined
             ? {}
             : { "Content-Type": "application/json" }),
@@ -58,14 +51,14 @@ export function useHttpClient(baseUrl = "") {
         try {
           const err = await res.clone().json();
           message = err?.message || err?.msg || message;
-        } catch { }
+        } catch {}
 
         throw new Error(message);
       }
 
       return res.json();
     },
-    [getAuthHeaders]
+    [token]
   );
 
   const requestBodyJson = useCallback(
@@ -103,14 +96,17 @@ export function useHttpClient(baseUrl = "") {
 
   const http = useMemo(
     () => ({
+      request,
       requestBodyJson,
       post: requestBodyJson,
       getById,
       uploadFiles,
-      request,
     }),
-    [requestBodyJson, getById, uploadFiles, request]
+    [request, requestBodyJson, getById, uploadFiles]
   );
 
-  return { http, endpoint };
+  return {
+    http,
+    endpoint,
+  };
 }

@@ -1,23 +1,27 @@
 import { useMemo } from "react";
-import { useStore } from "./useStore";
+import { useLocalStorageState } from "ahooks";
 
 const TOKEN_KEY = "login_token";
 const EXPIRE_KEY = "login_expire";
 
 export function useToken() {
+  const [token, setTokenValue] = useLocalStorageState(TOKEN_KEY, {
+    defaultValue: "",
+  });
 
-  const [token, setTokenValue] = useStore(TOKEN_KEY, "");
-  const [expireTime, setExpireTime] = useStore(EXPIRE_KEY, 0);
+  const [expireTime, setExpireTime] = useLocalStorageState(EXPIRE_KEY, {
+    defaultValue: 0,
+  });
 
   /**
    * 设置 token
    */
-  const setToken = (tokenValue, validSeconds = 0) => {
-    if (!tokenValue) return;
+  const setToken = (token, validSeconds = 0) => {
+    if (!token) return;
 
     const expire = Date.now() + validSeconds * 1000;
 
-    setTokenValue(tokenValue);
+    setTokenValue(token);
     setExpireTime(expire);
   };
 
