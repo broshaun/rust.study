@@ -1,23 +1,23 @@
-import { children as resolveChildren, For } from "solid-js";
-import styles from "./XBox.module.css";
+import React, { forwardRef, Children, isValidElement } from 'react';
+import styles from './XBox.module.css';
 
 const toUnit = (v) => {
-  if (v == null || v === "") return undefined;
-  return typeof v === "number" ? `${v}px` : v;
+  if (v == null || v === '') return undefined;
+  return typeof v === 'number' ? `${v}px` : v;
 };
 
 const alignMap = {
-  top: "flex-start",
-  middle: "center",
-  bottom: "flex-end",
-  stretch: "stretch",
+  top: 'flex-start',
+  middle: 'center',
+  bottom: 'flex-end',
+  stretch: 'stretch',
 };
 
 const justifyMap = {
-  left: "flex-start",
-  center: "center",
-  right: "flex-end",
-  between: "space-between",
+  left: 'flex-start',
+  center: 'center',
+  right: 'flex-end',
+  between: 'space-between',
 };
 
 /**
@@ -29,113 +29,119 @@ const justifyMap = {
  * 2. 可覆盖父级的水平 / 垂直对齐
  * 3. 支持内边距和右分割线
  */
-const Segment = (props) => {
+const Segment = ({
+  children,
+  span = 1,
+  padding = 0,
+  align,
+  vertical,
+  divider = false,
+  dividerColor,
+  className = '',
+  style,
+}) => {
   const segStyle = {
-    "--xb-seg-span": props.span ?? 1,
-    "--xb-seg-pad": toUnit(props.padding ?? 0) || "0px",
-    "--xb-seg-align": props.align
-      ? justifyMap[props.align] || props.align
-      : "var(--xb-seg-align-default)",
-    "--xb-seg-vertical": props.vertical
-      ? alignMap[props.vertical] || props.vertical
-      : "var(--xb-seg-vertical-default)",
-    "--xb-seg-divider-width": props.divider ? "1px" : "0px",
-    "--xb-seg-divider-color":
-      props.dividerColor ||
-      "var(--xb-divider-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))",
-    ...(props.style || {}),
+    '--xb-seg-span': span,
+    '--xb-seg-pad': toUnit(padding) || '0px',
+    '--xb-seg-align': align ? (justifyMap[align] || align) : 'var(--xb-seg-align-default)',
+    '--xb-seg-vertical': vertical ? (alignMap[vertical] || vertical) : 'var(--xb-seg-vertical-default)',
+    '--xb-seg-divider-width': divider ? '1px' : '0px',
+    '--xb-seg-divider-color':
+      dividerColor ||
+      'var(--xb-divider-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
+    ...style,
   };
 
   return (
     <div
-      data-xbox-segment="true"
-      class={[styles.segment, props.className].filter(Boolean).join(" ")}
+      className={[styles.segment, className].filter(Boolean).join(' ')}
       style={segStyle}
     >
-      {props.children}
+      {children}
     </div>
   );
 };
 
-const normalizeChildren = (list) => {
-  const flat = [];
-  const walk = (item) => {
-    if (Array.isArray(item)) {
-      item.forEach(walk);
-      return;
-    }
-    if (item == null || item === false || item === true) return;
-    flat.push(item);
-  };
-  walk(list);
-  return flat;
-};
+Segment.__XBOX_SEGMENT__ = true;
 
 /**
  * XBox
  * 横向流 / 横向分区容器
  */
-export const XBox = (props) => {
-  const resolved = resolveChildren(() => props.children);
+export const XBox = forwardRef(({
+  children,
+  width = '100%',
+  height,
+  gap = 0,
+  padding = 0,
+  align = 'middle',
+  justify = 'center',
+  wrap = false,
 
+  border = false,
+  borderColor,
+  borderWidth = 1,
+  radius,
+
+  panel = false,
+  background,
+  shadow,
+  clip = false,
+
+  className = '',
+  style,
+}, ref) => {
   const vars = {
-    "--xb-w": toUnit(props.width ?? "100%") || "100%",
-    "--xb-h": toUnit(props.height) || "auto",
-    "--xb-gap": toUnit(props.gap ?? 0) || "0px",
-    "--xb-pad": toUnit(props.padding ?? 0) || "0px",
-    "--xb-align": alignMap[props.align || "middle"] || props.align || "center",
-    "--xb-justify":
-      justifyMap[props.justify || "center"] || props.justify || "center",
-    "--xb-wrap": props.wrap ? "wrap" : "nowrap",
+    '--xb-w': toUnit(width) || '100%',
+    '--xb-h': toUnit(height) || 'auto',
+    '--xb-gap': toUnit(gap) || '0px',
+    '--xb-pad': toUnit(padding) || '0px',
+    '--xb-align': alignMap[align] || align,
+    '--xb-justify': justifyMap[justify] || justify,
+    '--xb-wrap': wrap ? 'wrap' : 'nowrap',
 
-    "--xb-border-width": props.border
-      ? toUnit(props.borderWidth ?? 1) || "1px"
-      : "0px",
-    "--xb-border-color":
-      props.borderColor ||
-      "var(--panel-border-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))",
-    "--xb-radius": toUnit(props.radius) || "var(--radius-main, 16px)",
+    '--xb-border-width': border ? (toUnit(borderWidth) || '1px') : '0px',
+    '--xb-border-color':
+      borderColor ||
+      'var(--panel-border-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
+    '--xb-radius': toUnit(radius) || 'var(--radius-main, 16px)',
 
-    "--xb-bg":
-      props.background ||
-      (props.panel ? "var(--panel-bg, transparent)" : "transparent"),
-    "--xb-shadow":
-      props.shadow || (props.panel ? "var(--panel-shadow, none)" : "none"),
-    "--xb-backdrop": props.panel ? "var(--panel-blur, blur(0px))" : "blur(0px)",
-    "--xb-divider-color": "rgba(var(--text-primary-rgb, 0, 0, 0), 0.12)",
-    "--xb-text-color": "var(--text-primary, inherit)",
-    "--xb-overflow": props.clip ? "hidden" : "visible",
+    '--xb-bg': background || (panel ? 'var(--panel-bg, transparent)' : 'transparent'),
+    '--xb-shadow': shadow || (panel ? 'var(--panel-shadow, none)' : 'none'),
+    '--xb-backdrop': panel ? 'var(--panel-blur, blur(0px))' : 'blur(0px)',
+    '--xb-divider-color': 'rgba(var(--text-primary-rgb, 0, 0, 0), 0.12)',
+    '--xb-text-color': 'var(--text-primary, inherit)',
+    '--xb-overflow': clip ? 'hidden' : 'visible',
 
-    "--xb-seg-align-default":
-      justifyMap[props.justify || "center"] || props.justify || "center",
-    "--xb-seg-vertical-default":
-      alignMap[props.align || "middle"] || props.align || "center",
+    /* Segment 默认继承父级 */
+    '--xb-seg-align-default': justifyMap[justify] || justify,
+    '--xb-seg-vertical-default': alignMap[align] || align,
 
-    ...(props.style || {}),
-  };
-
-  const renderChild = (child) => {
-    if (
-      typeof Element !== "undefined" &&
-      child instanceof Element &&
-      child.getAttribute?.("data-xbox-segment") === "true"
-    ) {
-      return child;
-    }
-
-    return <Segment>{child}</Segment>;
+    ...style,
   };
 
   return (
     <div
-      ref={props.ref}
-      class={[styles.xbox, props.className].filter(Boolean).join(" ")}
+      ref={ref}
+      className={[styles.xbox, className].filter(Boolean).join(' ')}
       style={vars}
     >
-      <For each={normalizeChildren(resolved())}>{renderChild}</For>
+      {Children.map(children, (child) => {
+        if (child == null) return null;
+
+        if (!isValidElement(child)) {
+          return <Segment>{child}</Segment>;
+        }
+
+        if (child.type?.__XBOX_SEGMENT__) {
+          return child;
+        }
+
+        return <Segment>{child}</Segment>;
+      })}
     </div>
   );
-};
+});
 
 XBox.Segment = Segment;
 

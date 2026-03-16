@@ -21,7 +21,7 @@ export { Button } from './base/Button';
 export { TextField } from './base/TextField';
 export { default as Modal } from './base/Modal';
 // export { Icon } from './base/Icon'
-// export { Avatar } from './base/Avatar'
+export { Avatar } from './base/Avatar'
 // export { Text } from './base/Text'
 // export { Heading } from './base/Heading'
 

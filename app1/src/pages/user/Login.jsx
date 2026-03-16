@@ -3,7 +3,7 @@ import { useNavigate } from "@solidjs/router";
 
 import { useWinSize, useToken,useStore ,useImage, useHttpClient2} from "hooks";
 
-// import { Button, TextField, Divider, XBox, Avatar,Modal } from "@/components/flutter";
+import { Button, TextField, Divider, XBox, Avatar,Modal } from "components/flutter";
 
 export function Login() {
   const navigate = useNavigate();
@@ -60,53 +60,53 @@ export function Login() {
       });
   };
 
-  return ( <div>123</div>
-    // <> 123
-    //   <Modal visible={open()}>
-    //     <Modal.Title>登录提示</Modal.Title>
-    //     <Modal.Message>{msg()}</Modal.Message>
-    //     <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
-    //   </Modal>
+  return ( 
+    <> 
+      <Modal visible={open()}>
+        <Modal.Title>登录提示</Modal.Title>
+        <Modal.Message>{msg()}</Modal.Message>
+        <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
+      </Modal>
 
-    //   <XBox>
-    //     <Avatar src={avatarSrc()} size={60} shape="circle" fit="cover" />
-    //   </XBox>
+      <XBox>
+        <Avatar src={avatarSrc()} size={60} shape="circle" fit="cover" />
+      </XBox>
 
-    //   <XBox padding={20}>
-    //     <h3>登录界面</h3>
-    //   </XBox>
+      <XBox padding={20}>
+        <h3>登录界面</h3>
+      </XBox>
 
-    //   <Divider fade={true} thickness={1} opacity={0.3} />
+      <Divider fade={true} thickness={1} opacity={0.3} />
 
-    //   <XBox padding={5}>
-    //     <TextField
-    //       label="账号"
-    //       maxWidth={250}
-    //       hintText="请输入账号"
-    //       value={account()}
-    //       onChanged={(value) => setAccount(value)}
-    //     />
-    //   </XBox>
+      <XBox padding={5}>
+        <TextField
+          label="账号"
+          maxWidth={250}
+          hintText="请输入账号"
+          value={account()}
+          onChanged={(value) => setAccount(value)}
+        />
+      </XBox>
 
-    //   <XBox padding={5}>
-    //     <TextField
-    //       label="密码"
-    //       maxWidth={250}
-    //       hintText="请输入密码"
-    //       obscureText={true}
-    //       value={password()}
-    //       onChanged={(value) => setPassword(value)}
-    //     />
-    //   </XBox>
+      <XBox padding={5}>
+        <TextField
+          label="密码"
+          maxWidth={250}
+          hintText="请输入密码"
+          obscureText={true}
+          value={password()}
+          onChanged={(value) => setPassword(value)}
+        />
+      </XBox>
 
-    //   <XBox padding={10}>
-    //     <Button
-    //       label={loading() ? "登录中..." : "登录"}
-    //       width={250}
-    //       disabled={loading()}
-    //       onPressed={runLogin}
-    //     />
-    //   </XBox>
-    // </>
+      <XBox padding={10}>
+        <Button
+          label={loading() ? "登录中..." : "登录"}
+          width={250}
+          disabled={loading()}
+          onPressed={runLogin}
+        />
+      </XBox>
+    </>
   );
 }

@@ -1,30 +1,28 @@
 {
   "name": "chatly",
-  "version": "0.1.0",
-  "description": "",
+  "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
-    "tauri": "tauri"
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
   },
-  "license": "MIT",
   "dependencies": {
-    "@solidjs/router": "^0.15.4",
-    "@tauri-apps/api": "^2",
+    "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "~2.6.0",
-    "@tauri-apps/plugin-fs": "~2.4.5",
-    "@tauri-apps/plugin-http": "~2.5.7",
-    "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-store": "~2.4.2",
+    "@tauri-apps/plugin-fs": "~2",
+    "@tauri-apps/plugin-http": "^2.5.7",
+    "ahooks": "^3.9.6",
     "dexie": "^4.3.0",
-    "solid-js": "^1.9.3"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.6.3",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
-    "vite": "^6.0.3",
-    "vite-plugin-solid": "^2.11.0"
+    "@rsbuild/core": "^1.7.1",
+    "@rsbuild/plugin-react": "^1.4.2",
+    "@tauri-apps/cli": "^2.10.0"
   }
 }
