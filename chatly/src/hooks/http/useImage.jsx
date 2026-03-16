@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createSignal, createMemo, createEffect, onCleanup } from "solid-js";
 import { useApiBase } from "./useApiBase";
 import { fetch as fetcher } from "@tauri-apps/plugin-http";
-import { db } from "hooks/db";
+import { db } from "@/hooks/db";
 
 const CACHE_NAME = "img-hash-v1";
 const fetchLock = new Map();
@@ -9,171 +9,169 @@ const fetchLock = new Map();
 export function useImage(baseUrl, hashName, opt = {}) {
   const { apiBase } = useApiBase();
 
-  const {
-    enabled = true,
-    useCache = false,
-    maxAge = 7 * 24 * 60 * 60 * 1000,
-  } = opt;
+  const enabled = opt.enabled ?? true;
+  const useCache = opt.useCache ?? false;
+  const maxAge = opt.maxAge ?? 7 * 24 * 60 * 60 * 1000;
 
-  const [src, setSrc] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [src, setSrc] = createSignal("");
+  const [loading, setLoading] = createSignal(false);
+  const [error, setError] = createSignal(null);
 
-  const srcRef = useRef("");
-  const reqIdRef = useRef(0);
+  let currentSrc = "";
+  let reqId = 0;
 
-  const remoteUrl = useMemo(() => {
+  const remoteUrl = createMemo(() => {
     if (!enabled || !hashName) return "";
 
-    const origin = String(apiBase || "").replace(/\/+$/, "");
+    const origin = String(apiBase() || "").replace(/\/+$/, "");
     const path = String(baseUrl || "").replace(/^\/+|\/+$/g, "");
     const file = String(hashName || "").replace(/^\/+/, "");
 
     if (!origin || !path || !file) return "";
 
     return `${origin}/${path}/${file}`;
-  }, [apiBase, baseUrl, hashName, enabled]);
+  });
 
-  const revokeObjectUrl = useCallback((url) => {
-    if (url?.startsWith("blob:")) {
+  const revokeObjectUrl = (url) => {
+    if (url && url.startsWith("blob:")) {
       URL.revokeObjectURL(url);
     }
-  }, []);
+  };
 
-  const touchCache = useCallback(async (url) => {
-    if (!useCache || !url) return;
+  const touchCache = (url) => {
+    if (!useCache || !url) return Promise.resolve();
 
-    try {
-      await db.imageMetadata.put({
+    return db.imageMetadata
+      .put({
         url,
         lastAccessed: Date.now(),
-      });
-    } catch { }
-  }, [useCache]);
+      })
+      .catch(() => {});
+  };
 
-  const purgeExpiredCache = useCallback(async () => {
-    if (!useCache) return;
+  const purgeExpiredCache = () => {
+    if (!useCache) return Promise.resolve();
+    if (typeof window === "undefined" || !window.caches) return Promise.resolve();
 
-    try {
-      if (typeof window === "undefined" || !window.caches) return;
+    const now = Date.now();
 
-      const now = Date.now();
-      const expired = await db.imageMetadata
-        .filter((item) => now - (item.lastAccessed || 0) > maxAge)
-        .toArray();
+    return db.imageMetadata
+      .filter((item) => now - (item.lastAccessed || 0) > maxAge)
+      .toArray()
+      .then((expired) => {
+        if (!expired.length) return;
 
-      if (!expired.length) return;
+        return caches.open(CACHE_NAME).then((cache) =>
+          Promise.all(
+            expired.map((item) =>
+              cache
+                .delete(item.url)
+                .then(() => db.imageMetadata.delete(item.url))
+                .catch(() => {})
+            )
+          )
+        );
+      })
+      .catch(() => {});
+  };
 
-      const cache = await caches.open(CACHE_NAME);
+  const getBlobFromNetwork = (url) => {
+    return fetcher(url, { method: "GET" }).then((res) => {
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
 
-      await Promise.all(
-        expired.map(async (item) => {
-          await cache.delete(item.url);
-          await db.imageMetadata.delete(item.url);
-        })
-      );
-    } catch { }
-  }, [maxAge, useCache]);
+      return res.blob();
+    });
+  };
 
-  const getBlobFromNetwork = useCallback(async (url) => {
-    const res = await fetcher(url, { method: "GET" });
+  const getBlobFromCacheOrNetwork = (url) => {
+    const canUseCache =
+      useCache &&
+      typeof window !== "undefined" &&
+      typeof caches !== "undefined";
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
+    if (!canUseCache) {
+      return getBlobFromNetwork(url);
     }
 
-    return await res.blob();
-  }, []);
+    return caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(url).then((cached) => {
+        if (!cached) {
+          if (!fetchLock.has(url)) {
+            const task = fetcher(url, { method: "GET" })
+              .then((res) => {
+                if (!res.ok) {
+                  throw new Error(`HTTP ${res.status}`);
+                }
 
-  const getBlobFromCacheOrNetwork = useCallback(
-    async (url) => {
-      const canUseCache =
-        useCache &&
-        typeof window !== "undefined" &&
-        typeof caches !== "undefined";
+                return cache.put(url, res.clone()).then(() => res);
+              })
+              .finally(() => {
+                fetchLock.delete(url);
+              });
 
-      if (!canUseCache) {
-        return await getBlobFromNetwork(url);
-      }
+            fetchLock.set(url, task);
+          }
 
-      const cache = await caches.open(CACHE_NAME);
-      let cached = await cache.match(url);
-
-      if (!cached) {
-        if (!fetchLock.has(url)) {
-          const task = (async () => {
-            const res = await fetcher(url, { method: "GET" });
-
-            if (!res.ok) {
-              throw new Error(`HTTP ${res.status}`);
-            }
-
-            await cache.put(url, res.clone());
-            return res;
-          })().finally(() => {
-            fetchLock.delete(url);
-          });
-
-          fetchLock.set(url, task);
+          return fetchLock.get(url).then((res) => res.clone());
         }
 
-        const res = await fetchLock.get(url);
-        cached = res.clone();
-      } else {
-        cached = cached.clone();
-      }
+        return cached.clone();
+      });
+    }).then((cached) => {
+      return touchCache(url).then(() => cached.blob());
+    });
+  };
 
-      await touchCache(url);
-      return await cached.blob();
-    },
-    [useCache, getBlobFromNetwork, touchCache]
-  );
+  const updateObjectUrl = (nextSrc) => {
+    const oldSrc = currentSrc;
 
-  const updateObjectUrl = useCallback(
-    (nextSrc) => {
-      const oldSrc = srcRef.current;
+    currentSrc = nextSrc;
+    setSrc(nextSrc);
 
-      srcRef.current = nextSrc;
-      setSrc(nextSrc);
+    if (oldSrc && oldSrc !== nextSrc) {
+      revokeObjectUrl(oldSrc);
+    }
+  };
 
-      if (oldSrc && oldSrc !== nextSrc) {
-        revokeObjectUrl(oldSrc);
-      }
-    },
-    [revokeObjectUrl]
-  );
+  const load = () => {
+    const url = remoteUrl();
 
-  const load = useCallback(async () => {
-    if (!remoteUrl) return;
+    if (!url) return Promise.resolve();
 
-    const reqId = ++reqIdRef.current;
+    const currentReqId = ++reqId;
     setLoading(true);
     setError(null);
 
-    try {
-      const blob = await getBlobFromCacheOrNetwork(remoteUrl);
+    return getBlobFromCacheOrNetwork(url)
+      .then((blob) => {
+        if (currentReqId !== reqId) return;
 
-      if (reqId !== reqIdRef.current) return;
+        const nextSrc = URL.createObjectURL(blob);
+        updateObjectUrl(nextSrc);
+        setLoading(false);
+      })
+      .catch((e) => {
+        if (currentReqId !== reqId) return;
 
-      const nextSrc = URL.createObjectURL(blob);
-      updateObjectUrl(nextSrc);
-      setLoading(false);
-    } catch (e) {
-      if (reqId !== reqIdRef.current) return;
+        setError(e);
+        setLoading(false);
+        setSrc("");
+      });
+  };
 
-      setError(e);
-      setLoading(false);
-      setSrc("");
-    }
-  }, [remoteUrl, getBlobFromCacheOrNetwork, updateObjectUrl]);
-
-  useEffect(() => {
+  createEffect(() => {
+    useCache;
+    maxAge;
     purgeExpiredCache();
-  }, [purgeExpiredCache]);
+  });
 
-  useEffect(() => {
-    if (!remoteUrl) {
-      setSrc("");
+  createEffect(() => {
+    const url = remoteUrl();
+
+    if (!url) {
+      updateObjectUrl("");
       setLoading(false);
       setError(null);
       return;
@@ -181,16 +179,14 @@ export function useImage(baseUrl, hashName, opt = {}) {
 
     load();
 
-    return () => {
-      reqIdRef.current += 1;
-    };
-  }, [remoteUrl, load]);
+    onCleanup(() => {
+      reqId += 1;
+    });
+  });
 
-  useEffect(() => {
-    return () => {
-      revokeObjectUrl(srcRef.current);
-    };
-  }, [revokeObjectUrl]);
+  onCleanup(() => {
+    revokeObjectUrl(currentSrc);
+  });
 
   return {
     src,

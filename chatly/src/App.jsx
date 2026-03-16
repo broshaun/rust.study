@@ -1,25 +1,35 @@
-import { Routes, Route, Navigate, MemoryRouter } from "react-router-dom";
-import Home2 from "pages/home";
-import { RsUser } from "pages/user";
-import { RsChat } from "pages/chat";
-import { useToken } from "hooks";
+import { Route, Navigate, MemoryRouter } from "@solidjs/router";
+// import Home2 from "pages/home";
+import { useToken } from "@/hooks/store";
+
+// import { RsUser } from "pages/user";
+// import { RsChat } from "pages/chat";
+
+import { Login } from "@/pages/user/Login";
 
 
 const App = () => {
   const { remainSeconds } = useToken();
-  return <>
+
+  return (
     <MemoryRouter>
-      <Routes>
-        <Route index element={remainSeconds > 0 ? <Navigate to="/chat/" replace /> : <Navigate to="/user/login/" replace />} />
-        <Route path="apps" element={<Home2 />} />
+      {/* <Route
+        path="/"
+        component={() =>
+          remainSeconds() > 0 ? (
+            <Navigate href="/chat/" />
+          ) : (
+            <Navigate href="/user/login/" />
+          )
+        }
+      /> */}
 
-        {RsUser}
-        {RsChat}
-
-      </Routes>
+      {/* <Route path="/apps" component={Home2} /> */}
+      <Route path="/" component={Login} />
+      {/* {RsUser} */}
+      {/* {RsChat}  */}
     </MemoryRouter>
-
-  </>
-}
+  );
+};
 
 export default App;

@@ -1,30 +1,24 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Chatly",
+  "productName": "chatly",
   "version": "0.1.0",
-  "identifier": "com.chatly.app",
+  "identifier": "com.huaz.chatly",
   "build": {
-    "frontendDist": "../dist",
-    "devUrl": "http://192.168.2.1:3000",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "Chatly",
-        "width": 1000,
-        "height": 700,
-        "resizable": true,
-        "fullscreen": false,
-        "transparent": true,
-        "decorations": true,
-        "titleBarStyle": "Transparent",
-        "hiddenTitle": true
+        "title": "chatly",
+        "width": 800,
+        "height": 600
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' https: http: data: blob:; connect-src 'self' https: http:;"
+      "csp": null
     }
   },
   "bundle": {

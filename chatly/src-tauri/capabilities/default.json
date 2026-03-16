@@ -1,26 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "enables the default permissions",
+  "description": "Capability for the main window",
   "windows": [
-    "*"
+    "main"
   ],
   "permissions": [
     "core:default",
-    "http:allow-fetch",
-    "core:webview:allow-create-webview-window",
-    {
-      "identifier": "http:default",
-      "allow": [
-        {
-          "url": "http://192.168.2.2:5015/*"
-        },
-        {
-          "url": "http://103.186.108.161:5015/*"
-        }
-      ]
-    },
+    "opener:default",
+    "http:default",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "store:default"
   ]
 }

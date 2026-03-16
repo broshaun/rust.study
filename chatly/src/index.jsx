@@ -1,16 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import { BrowserShell } from 'components';
-import "./styles/global.css";
-import './styles/theme.css';
+/* @refresh reload */
+import { render } from "solid-js/web";
+import App from "./App";
 
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <BrowserShell>
-      <App />
-    </BrowserShell>
-  </React.StrictMode>,
-);
+render(() => <App />, document.getElementById("root"));
