@@ -1,0 +1,57 @@
+.container {
+  position: fixed;
+  inset: 0;
+  z-index: 9999; /* 必须高于所有组件 */
+  visibility: hidden;
+  pointer-events: none;
+  transition: visibility 0.3s;
+}
+
+.container.open {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.open .mask {
+  opacity: 1;
+}
+
+.aside {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--w, 250px);
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+  border-right: var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  
+  /* 初始状态：藏在左侧 */
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  padding-top: env(safe-area-inset-top, 20px); 
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+.open .aside {
+  transform: translateX(0);
+}
+
+.scrollArea {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 16px;
+  color: var(--text-primary);
+}

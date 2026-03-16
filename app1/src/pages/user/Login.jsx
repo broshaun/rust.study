@@ -6,63 +6,63 @@ import { useWinSize, useToken,useStore ,useImage, useHttpClient2} from "hooks";
 import { Button, TextField, Divider, XBox, Avatar,Modal } from "components/flutter";
 
 export function Login() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const [account, setAccount] = useStore("savedAccount", "");
-  const [avatar, setAvatar] = useStore("myAvatar", "");
-  const [password, setPassword] = createSignal("");
-  const [open, setOpen] = createSignal(false);
-  const [msg, setMsg] = createSignal("");
-  const [loading, setLoading] = createSignal(false);
+  // const [account, setAccount] = useStore("savedAccount", "");
+  // const [avatar, setAvatar] = useStore("myAvatar", "");
+  // const [password, setPassword] = createSignal("");
+  // const [open, setOpen] = createSignal(false);
+  // const [msg, setMsg] = createSignal("");
+  // const [loading, setLoading] = createSignal(false);
 
-  const { http } = useHttpClient2("/rpc/chat/login/");
-  const { avatarSrc } = useImage("/imgs", avatar());
-  const { setToken } = useToken();
-  const { isMobile } = useWinSize();
+  // const { http } = useHttpClient2("/rpc/chat/login/");
+  // const { avatarSrc } = useImage("/imgs", avatar());
+  // const { setToken } = useToken();
+  // const { isMobile } = useWinSize();
 
-  const runLogin = () => {
-    const accountValue = account();
-    const passwordValue = password();
+  // const runLogin = () => {
+  //   const accountValue = account();
+  //   const passwordValue = password();
 
-    if (!accountValue || !passwordValue) {
-      setMsg("请输入账号密码 ...");
-      setOpen(true);
-      return Promise.resolve();
-    }
+  //   if (!accountValue || !passwordValue) {
+  //     setMsg("请输入账号密码 ...");
+  //     setOpen(true);
+  //     return Promise.resolve();
+  //   }
 
-    setLoading(true);
+  //   setLoading(true);
 
-    return http
-      .post("POST", { email: accountValue, pass_word: passwordValue })
-      .then((results) => {
-        if (!results) return;
+  //   return http
+  //     .post("POST", { email: accountValue, pass_word: passwordValue })
+  //     .then((results) => {
+  //       if (!results) return;
 
-        const { code, message, data } = results;
+  //       const { code, message, data } = results;
 
-        if (code === 200) {
-          setToken(results.data?.login_token, results.data?.login_expired);
-          setAvatar(data?.user?.avatar_url || "");
+  //       if (code === 200) {
+  //         setToken(results.data?.login_token, results.data?.login_expired);
+  //         setAvatar(data?.user?.avatar_url || "");
 
-          return isMobile()
-            ? navigate("/chat/mobile/dialog/")
-            : navigate("/chat/dialog/");
-        }
+  //         return isMobile()
+  //           ? navigate("/chat/mobile/dialog/")
+  //           : navigate("/chat/dialog/");
+  //       }
 
-        setMsg(message || "登录失败");
-        setOpen(true);
-      })
-      .catch((e) => {
-        setMsg(e?.message || "登录失败");
-        setOpen(true);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
+  //       setMsg(message || "登录失败");
+  //       setOpen(true);
+  //     })
+  //     .catch((e) => {
+  //       setMsg(e?.message || "登录失败");
+  //       setOpen(true);
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // };
 
   return ( 
-    <> 
-      <Modal visible={open()}>
+    <> 332255
+      {/* <Modal visible={open()}>
         <Modal.Title>登录提示</Modal.Title>
         <Modal.Message>{msg()}</Modal.Message>
         <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
@@ -106,7 +106,7 @@ export function Login() {
           disabled={loading()}
           onPressed={runLogin}
         />
-      </XBox>
+      </XBox> */}
     </>
   );
 }
