@@ -1,36 +1,27 @@
-import React, { forwardRef, Children, isValidElement } from "react";
-import styles from './Grid.module.css';
+import React, { Children, isValidElement } from "react";
+import styles from "./Grid.module.css";
 
-const toUnit = (v) => {
-  if (v == null || v === '') return undefined;
-  return typeof v === 'number' ? `${v}px` : v;
+const toUnit = (value) => {
+  if (value == null || value === "") return undefined;
+  return typeof value === "number" ? `${value}px` : value;
 };
 
 const alignMap = {
-  top: 'start',
-  middle: 'center',
-  bottom: 'end',
-  stretch: 'stretch',
+  top: "start",
+  middle: "center",
+  bottom: "end",
+  stretch: "stretch",
 };
 
 const justifyMap = {
-  left: 'start',
-  center: 'center',
-  right: 'end',
-  stretch: 'stretch',
+  left: "start",
+  center: "center",
+  right: "end",
+  stretch: "stretch",
 };
 
 /**
  * Grid.Item
- *
- * Props
- * @param {number} col       跨几列
- * @param {number} row       跨几行
- * @param {number} colStart  从第几列开始
- * @param {number} rowStart  从第几行开始
- * @param {number|string} padding
- * @param {'left'|'center'|'right'|'stretch'} align
- * @param {'top'|'middle'|'bottom'|'stretch'} vertical
  */
 const Item = ({
   children,
@@ -41,28 +32,30 @@ const Item = ({
   padding = 0,
   align,
   vertical,
-  className = '',
+  className = "",
   style,
 }) => {
-  const vars = {
-    '--gd-item-col': Math.max(1, Number(col) || 1),
-    '--gd-item-row': Math.max(1, Number(row) || 1),
-    '--gd-item-col-start': colStart ? Number(colStart) : 'auto',
-    '--gd-item-row-start': rowStart ? Number(rowStart) : 'auto',
-    '--gd-item-pad': toUnit(padding) || '0px',
-    '--gd-item-justify': align
-      ? (justifyMap[align] || align)
-      : 'var(--gd-item-justify-default)',
-    '--gd-item-align': vertical
-      ? (alignMap[vertical] || vertical)
-      : 'var(--gd-item-align-default)',
+  const resolvedStyle = {
+    "--gd-item-col": Math.max(1, Number(col) || 1),
+    "--gd-item-row": Math.max(1, Number(row) || 1),
+    "--gd-item-col-start":
+      colStart == null || colStart === "" ? "auto" : Number(colStart),
+    "--gd-item-row-start":
+      rowStart == null || rowStart === "" ? "auto" : Number(rowStart),
+    "--gd-item-pad": toUnit(padding) || "0px",
+    "--gd-item-justify": align
+      ? justifyMap[align] || align
+      : "var(--gd-item-justify-default)",
+    "--gd-item-align": vertical
+      ? alignMap[vertical] || vertical
+      : "var(--gd-item-align-default)",
     ...style,
   };
 
   return (
     <div
-      className={[styles.item, className].filter(Boolean).join(' ')}
-      style={vars}
+      className={[styles.item, className].filter(Boolean).join(" ")}
+      style={resolvedStyle}
     >
       {children}
     </div>
@@ -73,31 +66,11 @@ Item.__GRID_ITEM__ = true;
 
 /**
  * Grid
- *
- * Props
- * @param {number|string} width
- * @param {number|string} height
- * @param {number} columns
- * @param {number|string|Array} rows
- * @param {number|string} gap
- * @param {number|string} columnGap
- * @param {number|string} rowGap
- * @param {number|string} padding
- * @param {'left'|'center'|'right'|'stretch'} justify
- * @param {'top'|'middle'|'bottom'|'stretch'} align
- * @param {boolean} dense
- * @param {boolean} border
- * @param {string} borderColor
- * @param {number|string} borderWidth
- * @param {number|string} radius
- * @param {boolean} panel
- * @param {string} background
- * @param {string} shadow
- * @param {boolean} clip
+ * React 19 写法：直接从 props 接 ref
  */
-export const Grid = forwardRef(({
+export const Grid = ({
   children,
-  width = '100%',
+  width = "100%",
   height,
   columns = 2,
   rows,
@@ -105,8 +78,8 @@ export const Grid = forwardRef(({
   columnGap,
   rowGap,
   padding = 0,
-  justify = 'stretch',
-  align = 'stretch',
+  justify = "stretch",
+  align = "stretch",
   dense = false,
 
   border = false,
@@ -119,44 +92,45 @@ export const Grid = forwardRef(({
   shadow,
   clip = false,
 
-  className = '',
+  className = "",
   style,
-}, ref) => {
+  ref,
+}) => {
   const normalizedColumns = Math.max(1, Number(columns) || 1);
 
   const rowTemplate = Array.isArray(rows)
-    ? rows.map(v => toUnit(v) || 'auto').join(' ')
-    : (typeof rows === 'number'
-        ? `repeat(${Math.max(1, rows)}, minmax(0, 1fr))`
-        : rows || 'auto');
+    ? rows.map((v) => toUnit(v) || "auto").join(" ")
+    : typeof rows === "number"
+      ? `repeat(${Math.max(1, rows)}, minmax(0, 1fr))`
+      : rows || "auto";
 
-  const vars = {
-    '--gd-w': toUnit(width) || '100%',
-    '--gd-h': toUnit(height) || 'auto',
-    '--gd-columns': `repeat(${normalizedColumns}, minmax(0, 1fr))`,
-    '--gd-rows': rowTemplate,
-    '--gd-gap': toUnit(gap) || '0px',
-    '--gd-col-gap': toUnit(columnGap) || 'var(--gd-gap)',
-    '--gd-row-gap': toUnit(rowGap) || 'var(--gd-gap)',
-    '--gd-pad': toUnit(padding) || '0px',
+  const resolvedStyle = {
+    "--gd-w": toUnit(width) || "100%",
+    "--gd-h": toUnit(height) || "auto",
+    "--gd-columns": `repeat(${normalizedColumns}, minmax(0, 1fr))`,
+    "--gd-rows": rowTemplate,
 
-    '--gd-justify-items': justifyMap[justify] || justify,
-    '--gd-align-items': alignMap[align] || align,
+    "--gd-gap": toUnit(gap) || "0px",
+    "--gd-col-gap": toUnit(columnGap) || "var(--gd-gap)",
+    "--gd-row-gap": toUnit(rowGap) || "var(--gd-gap)",
+    "--gd-pad": toUnit(padding) || "0px",
 
-    '--gd-border-width': border ? (toUnit(borderWidth) || '1px') : '0px',
-    '--gd-border-color':
+    "--gd-justify-items": justifyMap[justify] || justify,
+    "--gd-align-items": alignMap[align] || align,
+
+    "--gd-border-width": border ? toUnit(borderWidth) || "1px" : "0px",
+    "--gd-border-color":
       borderColor ||
-      'var(--panel-border-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
-    '--gd-radius': toUnit(radius) || 'var(--radius-main, 16px)',
+      "rgba(var(--text-primary-rgb), 0.12)",
+    "--gd-radius": toUnit(radius) || "var(--radius-main, 16px)",
 
-    '--gd-bg': background || (panel ? 'var(--panel-bg, transparent)' : 'transparent'),
-    '--gd-shadow': shadow || (panel ? 'var(--panel-shadow, none)' : 'none'),
-    '--gd-backdrop': panel ? 'var(--panel-blur, blur(0px))' : 'blur(0px)',
-    '--gd-text-color': 'var(--text-primary, inherit)',
-    '--gd-overflow': clip ? 'hidden' : 'visible',
+    "--gd-bg": background || (panel ? "var(--panel-bg)" : "transparent"),
+    "--gd-shadow": shadow || (panel ? "var(--panel-shadow)" : "none"),
+    "--gd-backdrop": panel ? "var(--panel-blur)" : "none",
+    "--gd-overflow": clip ? "hidden" : "visible",
 
-    '--gd-item-justify-default': justifyMap[justify] || justify,
-    '--gd-item-align-default': alignMap[align] || align,
+    "--gd-item-justify-default": justifyMap[justify] || justify,
+    "--gd-item-align-default": alignMap[align] || align,
 
     ...style,
   };
@@ -164,26 +138,19 @@ export const Grid = forwardRef(({
   return (
     <div
       ref={ref}
-      className={[styles.grid, className].filter(Boolean).join(' ')}
-      style={vars}
-      data-dense={dense ? 'true' : 'false'}
+      className={[styles.grid, className].filter(Boolean).join(" ")}
+      style={resolvedStyle}
+      data-dense={dense ? "true" : "false"}
     >
       {Children.map(children, (child) => {
         if (child == null) return null;
-
-        if (!isValidElement(child)) {
-          return <Item>{child}</Item>;
-        }
-
-        if (child.type?.__GRID_ITEM__) {
-          return child;
-        }
-
+        if (!isValidElement(child)) return <Item>{child}</Item>;
+        if (child.type?.__GRID_ITEM__) return child;
         return <Item>{child}</Item>;
       })}
     </div>
   );
-});
+};
 
 Grid.Item = Item;
 

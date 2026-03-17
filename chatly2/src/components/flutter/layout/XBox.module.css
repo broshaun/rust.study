@@ -2,40 +2,38 @@
   display: flex;
   flex-direction: row;
   flex-wrap: var(--xb-wrap, nowrap);
-
-  align-items: var(--xb-align, center);
-  justify-content: var(--xb-justify, flex-start);
-
-  gap: var(--xb-gap, 0px);
+  box-sizing: border-box;
+  position: relative;
 
   width: var(--xb-w, 100%);
   height: var(--xb-h, auto);
-
   min-width: 0;
   min-height: 0;
 
   padding: var(--xb-pad, 0px);
-  box-sizing: border-box;
+  gap: var(--xb-gap, 0px);
 
-  color: var(--xb-text-color, inherit);
+  align-items: var(--xb-align, center);
+  justify-content: var(--xb-justify, flex-start);
+
+  /* 容器层风格 */
   background: var(--xb-bg, transparent);
-  box-shadow: var(--xb-shadow, none);
-
   border-style: solid;
   border-width: var(--xb-border-width, 0px);
   border-color: var(--xb-border-color, transparent);
-  border-radius: var(--xb-radius, var(--radius-main, 16px));
+  border-radius: var(--xb-radius, 0px);
+  box-shadow: var(--xb-shadow, none);
 
   overflow: var(--xb-overflow, visible);
 
-  backdrop-filter: var(--xb-backdrop, blur(0px));
-  -webkit-backdrop-filter: var(--xb-backdrop, blur(0px));
+  backdrop-filter: var(--xb-backdrop, none);
+  -webkit-backdrop-filter: var(--xb-backdrop, none);
 
   transition:
-    background var(--transition-speed, 0.3s),
-    border-color var(--transition-speed, 0.3s),
-    box-shadow var(--transition-speed, 0.3s),
-    color var(--transition-speed, 0.3s);
+    background var(--transition-speed, 0.3s) ease,
+    border-color var(--transition-speed, 0.3s) ease,
+    box-shadow var(--transition-speed, 0.3s) ease,
+    backdrop-filter var(--transition-speed, 0.3s) ease;
 }
 
 .segment {
@@ -52,14 +50,12 @@
   justify-content: var(--xb-seg-align, flex-start);
   align-items: var(--xb-seg-vertical, center);
 
+  /* 结构性分隔线 */
   border-right-style: solid;
   border-right-width: var(--xb-seg-divider-width, 0px);
   border-right-color: var(--xb-seg-divider-color, rgba(0, 0, 0, 0.08));
 
-  transition:
-    border-color var(--transition-speed, 0.3s),
-    background var(--transition-speed, 0.3s),
-    color var(--transition-speed, 0.3s);
+  transition: border-color var(--transition-speed, 0.3s) ease;
 }
 
 .segment:last-child {

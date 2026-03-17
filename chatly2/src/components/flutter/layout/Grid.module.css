@@ -1,10 +1,10 @@
 .grid {
   display: grid;
   box-sizing: border-box;
+  position: relative;
 
   width: var(--gd-w, 100%);
   height: var(--gd-h, auto);
-
   min-width: 0;
   min-height: 0;
 
@@ -18,28 +18,27 @@
   justify-items: var(--gd-justify-items, stretch);
   align-items: var(--gd-align-items, stretch);
 
-  color: var(--gd-text-color, inherit);
+  /* 容器层轻风格 */
   background: var(--gd-bg, transparent);
-  box-shadow: var(--gd-shadow, none);
-
   border-style: solid;
   border-width: var(--gd-border-width, 0px);
   border-color: var(--gd-border-color, transparent);
   border-radius: var(--gd-radius, var(--radius-main, 16px));
+  box-shadow: var(--gd-shadow, none);
 
   overflow: var(--gd-overflow, visible);
 
-  backdrop-filter: var(--gd-backdrop, blur(0px));
-  -webkit-backdrop-filter: var(--gd-backdrop, blur(0px));
+  backdrop-filter: var(--gd-backdrop, none);
+  -webkit-backdrop-filter: var(--gd-backdrop, none);
 
   transition:
-    background var(--transition-speed, 0.3s),
-    border-color var(--transition-speed, 0.3s),
-    box-shadow var(--transition-speed, 0.3s),
-    color var(--transition-speed, 0.3s);
+    background var(--transition-speed, 0.3s) ease,
+    border-color var(--transition-speed, 0.3s) ease,
+    box-shadow var(--transition-speed, 0.3s) ease,
+    backdrop-filter var(--transition-speed, 0.3s) ease;
 }
 
-.grid[data-dense='true'] {
+.grid[data-dense="true"] {
   grid-auto-flow: row dense;
 }
 

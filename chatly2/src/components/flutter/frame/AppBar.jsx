@@ -1,32 +1,32 @@
 import React from "react";
-import styles from './AppBar.module.css';
+import styles from "./AppBar.module.css";
 
 /**
- * AppBar - 材质适配导航栏
- * 职责：原生实现 Mac 风格布局，确保标题物理居中，且完美适配 7 套主题。
- * * @param {Object} props
- * @param {React.ReactNode} props.title - 标题内容
- * @param {React.ReactNode} props.leading - 左侧内容（如返回按钮、Mac 红绿灯避让）
- * @param {React.ReactNode} props.actions - 右侧内容（如功能图标）
- * @param {React.CSSProperties} props.style - 自定义覆盖样式
+ * AppBar - 通用主题适配导航栏
+ * 规则：
+ * 1. 只使用全局通用主题变量
+ * 2. 保持标题物理居中
+ * 3. 左右区域自适应，避免标题受内容偏移
+ * 4. 兼容 7 套主题，不写组件专属主题变量
  */
-export const AppBar = ({ title, leading, actions, style }) => {
+export const AppBar = ({
+  title,
+  leading,
+  actions,
+  style,
+  className = "",
+}) => {
   return (
-    <nav className={styles.appBar} style={style}>
-      {/* 左侧：内容靠左排列 */}
-      <div className={styles.leadingSection}>
-        {leading}
-      </div>
+    <nav className={`${styles.appBar} ${className}`} style={style}>
+      <div className={styles.leadingSection}>{leading}</div>
 
-      {/* 中间：标题物理绝对居中 */}
       <div className={styles.titleWrapper}>
-        <h1 className={styles.titleText}>{title}</h1>
+        <h1 className={styles.titleText} title={typeof title === "string" ? title : undefined}>
+          {title}
+        </h1>
       </div>
 
-      {/* 右侧：动作区靠右排列 */}
-      <div className={styles.actionsSection}>
-        {actions}
-      </div>
+      <div className={styles.actionsSection}>{actions}</div>
     </nav>
   );
 };
