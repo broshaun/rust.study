@@ -1,40 +1,13 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import styles from './Container.module.css';
 
 /**
- * Container - 主题感知容器
- *
- * 职责：
- * 1. 锁定空间
- * 2. 处理滚动
- * 3. 处理对齐
- * 4. 按需显示主题边框/背景/阴影
- *
- * 说明：
- * 当前 Container 默认是纵向布局（flex-direction: column）
- *
- * 所以：
- * - align   控制横向对齐（left / center / right / stretch）
- * - justify 控制纵向对齐（top / middle / bottom / between）
- *
- * Props
- * @param {React.ReactNode} children
- * @param {boolean} [verticalScroll=false] 是否开启纵向滚动
- * @param {boolean} [horizontalScroll=false] 是否开启横向滚动
- * @param {number|string} [width='100%'] 宽度
- * @param {number|string} [height='100%'] 高度
- * @param {number|string} [padding=0] 内边距
- * @param {number|string} [margin=0] 外边距
- * @param {'left'|'center'|'right'|'stretch'} [align='stretch']
- *        横向对齐（交叉轴）
- * @param {'top'|'middle'|'bottom'|'between'} [justify='top']
- *        纵向对齐（主轴）
- * @param {boolean} [bordered=true] 是否显示边框
- * @param {boolean} [surface=true] 是否启用主题面板背景/阴影/模糊
- * @param {string} [className='']
- * @param {React.CSSProperties} [style]
+ * Container - 主题感知容器 (React 19 适配版)
+ * * 核心变化：
+ * - 移除了 forwardRef，直接解构 ref。
+ * - 保持了直角风格的逻辑。
  */
-export const Container = forwardRef(({
+export const Container = ({
   children,
   verticalScroll = false,
   horizontalScroll = false,
@@ -47,12 +20,11 @@ export const Container = forwardRef(({
   bordered = true,
   surface = true,
   className = '',
-  style
-}, ref) => {
+  style,
+  ref, // ✅ React 19 直接从 props 中获取 ref
+}) => {
   const f = (v) => typeof v === 'number' ? `${v}px` : v;
 
-  // Container 默认是 column：
-  // align-items 负责横向，justify-content 负责纵向
   const alignMap = {
     left: 'flex-start',
     center: 'center',
@@ -79,7 +51,7 @@ export const Container = forwardRef(({
 
   return (
     <div
-      ref={ref}
+      ref={ref} // ✅ 直接绑定
       className={[styles.container, className].filter(Boolean).join(' ')}
       style={vars}
       data-v={verticalScroll ? 'true' : 'false'}
@@ -90,6 +62,6 @@ export const Container = forwardRef(({
       {children}
     </div>
   );
-});
+};
 
 export default Container;

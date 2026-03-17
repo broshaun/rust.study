@@ -1,10 +1,9 @@
 import { useCallback, Suspense, useMemo } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { ImageUpload } from 'components';
-import { IconCustomColor } from 'components/icon';
 import { useHttpClient2, useApiBase } from 'hooks/http';
 import { useLocalStorageState } from 'ahooks';
-import { Avatar, Container, XBox } from 'components/flutter';
+import { Avatar, Container, XBox, Icon } from 'components/flutter';
 
 export const Avatar2 = () => {
 
@@ -44,7 +43,7 @@ export const Avatar2 = () => {
             <XBox padding={20}>
 
                 <XBox.Segment>
-                    <IconCustomColor
+                    <Icon
                         name='chevron-left'
                         onClick={() => navigate('/chat/self/mylist/')}
                     />

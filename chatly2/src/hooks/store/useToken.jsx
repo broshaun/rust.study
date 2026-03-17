@@ -1,4 +1,4 @@
-import { useMemo } from ".pnpm/react@19.2.4/node_modules/react";
+import { useMemo } from "react";
 import { useLocalStorageState } from "ahooks";
 
 const TOKEN_KEY = "login_token";

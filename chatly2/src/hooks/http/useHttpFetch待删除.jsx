@@ -1,4 +1,4 @@
-import { useCallback } from ".pnpm/react@19.2.4/node_modules/react";
+import { useCallback } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 

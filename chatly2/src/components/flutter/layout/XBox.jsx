@@ -1,4 +1,4 @@
-import React, { forwardRef, Children, isValidElement } from "react";
+import React, { Children, isValidElement } from "react";
 import styles from './XBox.module.css';
 
 const toUnit = (v) => {
@@ -22,12 +22,6 @@ const justifyMap = {
 
 /**
  * XBox.Segment
- * 横向分区项
- *
- * 作用：
- * 1. 按 span 比例分配宽度
- * 2. 可覆盖父级的水平 / 垂直对齐
- * 3. 支持内边距和右分割线
  */
 const Segment = ({
   children,
@@ -62,13 +56,13 @@ const Segment = ({
   );
 };
 
+// 静态标识用于识别子组件
 Segment.__XBOX_SEGMENT__ = true;
 
 /**
- * XBox
- * 横向流 / 横向分区容器
+ * XBox - 横向容器 (React 19 适配版)
  */
-export const XBox = forwardRef(({
+export const XBox = ({
   children,
   width = '100%',
   height,
@@ -81,7 +75,7 @@ export const XBox = forwardRef(({
   border = false,
   borderColor,
   borderWidth = 1,
-  radius,
+  radius = 0, // ✅ 默认为 0，符合你的直角审美
 
   panel = false,
   background,
@@ -90,7 +84,8 @@ export const XBox = forwardRef(({
 
   className = '',
   style,
-}, ref) => {
+  ref, // ✅ React 19 直接接收 ref
+}) => {
   const vars = {
     '--xb-w': toUnit(width) || '100%',
     '--xb-h': toUnit(height) || 'auto',
@@ -104,7 +99,7 @@ export const XBox = forwardRef(({
     '--xb-border-color':
       borderColor ||
       'var(--panel-border-color, rgba(var(--text-primary-rgb, 0, 0, 0), 0.12))',
-    '--xb-radius': toUnit(radius) || 'var(--radius-main, 16px)',
+    '--xb-radius': toUnit(radius), // 直角风格
 
     '--xb-bg': background || (panel ? 'var(--panel-bg, transparent)' : 'transparent'),
     '--xb-shadow': shadow || (panel ? 'var(--panel-shadow, none)' : 'none'),
@@ -113,7 +108,6 @@ export const XBox = forwardRef(({
     '--xb-text-color': 'var(--text-primary, inherit)',
     '--xb-overflow': clip ? 'hidden' : 'visible',
 
-    /* Segment 默认继承父级 */
     '--xb-seg-align-default': justifyMap[justify] || justify,
     '--xb-seg-vertical-default': alignMap[align] || align,
 
@@ -129,20 +123,22 @@ export const XBox = forwardRef(({
       {Children.map(children, (child) => {
         if (child == null) return null;
 
+        // 如果不是有效的 React 元素或者是纯文本，包裹一层 Segment
         if (!isValidElement(child)) {
           return <Segment>{child}</Segment>;
         }
 
+        // 如果已经是 XBox.Segment 则直接返回
         if (child.type?.__XBOX_SEGMENT__) {
           return child;
         }
 
+        // 其他元素（如普通的 div 或按钮）自动包裹 Segment 实现比例分布
         return <Segment>{child}</Segment>;
       })}
     </div>
   );
-});
+};
 
 XBox.Segment = Segment;
-
 export default XBox;

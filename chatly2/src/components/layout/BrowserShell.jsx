@@ -1,25 +1,25 @@
-import { useEffect, useRef } from ".pnpm/react@19.2.4/node_modules/react";
+import { useEffect, useRef } from "react";
 import styles from "./BrowserShell.module.css";
 
 function isIOSDevice() {
   const ua = navigator.userAgent || "";
-  return (
-    /iPhone|iPad|iPod/i.test(ua) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-  );
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isIpadOS = navigator.maxTouchPoints > 1 && /Mac/.test(ua);
+  return isIOS || isIpadOS;
 }
 
 function getIOSSafeArea() {
-  const safeArea = { top: 0, bottom: 0, left: 0, right: 0 };
+  if (!isIOSDevice()) {
+    return { top: 0, right: 0, bottom: 0, left: 0 };
+  }
 
-  if (!isIOSDevice()) return safeArea;
-
-  const screenHeight = window.screen.height;
-  const screenWidth = window.screen.width;
-  const windowHeight = window.innerHeight;
-  const windowWidth = window.innerWidth;
+  const screenHeight = window.screen.height || 0;
+  const screenWidth = window.screen.width || 0;
+  const windowHeight = window.innerHeight || 0;
+  const windowWidth = window.innerWidth || 0;
 
   const isPortrait = screenHeight > screenWidth;
+  const safeArea = { top: 0, right: 0, bottom: 0, left: 0 };
 
   if (isPortrait) {
     if (screenHeight > windowHeight + 20) {
@@ -39,40 +39,26 @@ function getIOSSafeArea() {
     Math.hypot(screenWidth, screenHeight) / devicePixelRatio;
 
   if (screenDiagonal > 6.6) {
-    safeArea.top = 47;
+    safeArea.top = Math.max(safeArea.top, 47);
   }
 
   return safeArea;
 }
 
-function applySafeAreaVars(nextSafeArea, prevSafeAreaRef) {
-  const prev = prevSafeAreaRef.current;
-
-  if (
-    prev.top === nextSafeArea.top &&
-    prev.bottom === nextSafeArea.bottom &&
-    prev.left === nextSafeArea.left &&
-    prev.right === nextSafeArea.right
-  ) {
-    return;
-  }
-
+function setSafeAreaVars(safeArea) {
   const root = document.documentElement;
-
-  root.style.setProperty("--safe-area-top", `${nextSafeArea.top}px`);
-  root.style.setProperty("--safe-area-bottom", `${nextSafeArea.bottom}px`);
-  root.style.setProperty("--safe-area-left", `${nextSafeArea.left}px`);
-  root.style.setProperty("--safe-area-right", `${nextSafeArea.right}px`);
-
-  prevSafeAreaRef.current = nextSafeArea;
+  root.style.setProperty("--safe-area-top", `${safeArea.top}px`);
+  root.style.setProperty("--safe-area-right", `${safeArea.right}px`);
+  root.style.setProperty("--safe-area-bottom", `${safeArea.bottom}px`);
+  root.style.setProperty("--safe-area-left", `${safeArea.left}px`);
 }
 
 export default function BrowserShell({ children }) {
   const prevSafeAreaRef = useRef({
     top: -1,
+    right: -1,
     bottom: -1,
     left: -1,
-    right: -1,
   });
 
   useEffect(() => {
@@ -80,25 +66,34 @@ export default function BrowserShell({ children }) {
 
     const updateSafeArea = () => {
       const nextSafeArea = getIOSSafeArea();
-      applySafeAreaVars(nextSafeArea, prevSafeAreaRef);
+      const prevSafeArea = prevSafeAreaRef.current;
+
+      const changed =
+        prevSafeArea.top !== nextSafeArea.top ||
+        prevSafeArea.right !== nextSafeArea.right ||
+        prevSafeArea.bottom !== nextSafeArea.bottom ||
+        prevSafeArea.left !== nextSafeArea.left;
+
+      if (!changed) return;
+
+      setSafeAreaVars(nextSafeArea);
+      prevSafeAreaRef.current = nextSafeArea;
     };
 
-    const handleResize = () => {
+    const scheduleUpdate = () => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(updateSafeArea);
     };
 
-    updateSafeArea();
+    scheduleUpdate();
 
-    window.addEventListener("resize", handleResize, { passive: true });
-    window.addEventListener("orientationchange", handleResize, {
-      passive: true,
-    });
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("orientationchange", scheduleUpdate);
 
     return () => {
       cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleResize);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("orientationchange", scheduleUpdate);
     };
   }, []);
 

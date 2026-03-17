@@ -1,25 +1,45 @@
-import React, { createContext, useContext, useMemo, useRef, useState } from ".pnpm/react@19.2.4/node_modules/react";
+import React, { createContext, useContext, useMemo, useRef, useState } from "react";
 import styles from "./ChatMsg.module.css";
 
 const ChatMsgContext = createContext(null);
-export const useChatMsg = () => useContext(ChatMsgContext);
 
+/**
+ * 钩子：获取聊天窗口上下文
+ */
+export const useChatMsg = () => {
+  const context = useContext(ChatMsgContext);
+  if (!context) {
+    throw new Error("useChatMsg 必须在 ChatMsg 组件内使用");
+  }
+  return context;
+};
+
+/**
+ * ChatMsg - 聊天窗口主容器
+ */
 export const ChatMsg = ({
   children,
   width = "100%",
   height = "100%",
   style,
-  className = ""
+  className = "",
+  ref // ✅ React 19 直接解构 ref
 }) => {
   const contentRef = useRef(null);
 
   const api = useMemo(
     () => ({
       contentRef,
-      scrollToBottom: () => {
+      // 滚动到底部逻辑
+      scrollToBottom: (instant = false) => {
         const el = contentRef.current;
-        if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-      }
+        if (el) {
+          el.scrollTo({
+            top: el.scrollHeight,
+            behavior: instant ? "auto" : "smooth",
+          });
+        }
+      },
     }),
     []
   );
@@ -27,7 +47,8 @@ export const ChatMsg = ({
   return (
     <ChatMsgContext.Provider value={api}>
       <div
-        className={[styles.wrapper, className].filter(Boolean).join(" ")}
+        ref={ref}
+        className={`${styles.wrapper} ${className}`}
         style={{ width, height, ...style }}
       >
         {children}
@@ -36,6 +57,9 @@ export const ChatMsg = ({
   );
 };
 
+/**
+ * Meta - 聊天头部
+ */
 const Meta = ({ title, left, right }) => (
   <div className={styles.head}>
     <div className={styles.side}>{left}</div>
@@ -46,6 +70,9 @@ const Meta = ({ title, left, right }) => (
   </div>
 );
 
+/**
+ * Content - 消息内容区
+ */
 const Content = ({ children }) => {
   const { contentRef } = useChatMsg();
   return (
@@ -55,6 +82,9 @@ const Content = ({ children }) => {
   );
 };
 
+/**
+ * Send - 发送区域
+ */
 const Send = ({ onSend, placeholder = "输入消息..." }) => {
   const [val, setVal] = useState("");
   const { scrollToBottom } = useChatMsg();
@@ -64,7 +94,19 @@ const Send = ({ onSend, placeholder = "输入消息..." }) => {
     if (!text) return;
     onSend?.(text);
     setVal("");
-    setTimeout(scrollToBottom, 64);
+
+    // ✅ React 19 优化：在下一帧执行滚动，确保 DOM 已渲染新消息
+    requestAnimationFrame(() => {
+      scrollToBottom();
+    });
+  };
+
+  const handleInput = (e) => {
+    setVal(e.target.value);
+    // 自动高度调整逻辑
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 150)}px`;
   };
 
   return (
@@ -72,7 +114,7 @@ const Send = ({ onSend, placeholder = "输入消息..." }) => {
       <textarea
         value={val}
         rows={1}
-        onChange={(e) => setVal(e.target.value)}
+        onChange={handleInput}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -89,6 +131,9 @@ const Send = ({ onSend, placeholder = "输入消息..." }) => {
   );
 };
 
-Object.assign(ChatMsg, { Meta, Content, Send });
+// 静态组件挂载
+ChatMsg.Meta = Meta;
+ChatMsg.Content = Content;
+ChatMsg.Send = Send;
 
 export default ChatMsg;

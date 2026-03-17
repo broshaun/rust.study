@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from ".pnpm/react@19.2.4/node_modules/react";
+import { useMemo, useCallback } from "react";
 import { useLatest, useLocalStorageState } from "ahooks";
 import { useApiBase } from "./useApiBase";
 import { useHttpFetch } from "./useHttpFetch待删除";

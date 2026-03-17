@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from ".pnpm/react@19.2.4/node_modules/react";
+import { useEffect, useState, useCallback } from "react";
 
 const MOBILE_WIDTH = 480;
 

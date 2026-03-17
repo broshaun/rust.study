@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from ".pnpm/react@19.2.4/node_modules/react";
+import { useMemo, useCallback } from "react";
 import { fetch as fetcher } from "@tauri-apps/plugin-http";
 import { useApiBase } from "./useApiBase";
 import { useToken } from "hooks";

@@ -1,4 +1,4 @@
-import React, { useMemo } from ".pnpm/react@19.2.4/node_modules/react";
+import React, { useMemo } from "react";
 import styles from "./Avatar.module.css";
 
 /**

@@ -1,10 +1,9 @@
 import { useState, Suspense } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { InputText2 } from 'components';
-import { IconCustomColor } from 'components/icon';
 import { useHttpClient2 } from 'hooks/http';
 import { useRequest } from 'ahooks';
-import { XBox } from 'components/flutter';
+import { XBox,Icon } from 'components/flutter';
 
 
 
@@ -28,7 +27,7 @@ export const PushDeer = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         <XBox justify='left' padding={20}>
-            <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
+            <Icon name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
         </XBox>
         <XBox justify='center' padding={20}><h3>请输入PushKey</h3></XBox>
 

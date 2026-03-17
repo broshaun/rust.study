@@ -1,10 +1,9 @@
 import { useState, Suspense } from "react";
 import {  useNavigate, useLocation } from 'react-router';
 import { InputText2 } from 'components';
-import { IconCustomColor } from 'components/icon';
 import { useHttpClient2 } from 'hooks/http';
 import { useRequest } from 'ahooks';
-import { XBox } from 'components/flutter';
+import { XBox,Icon } from 'components/flutter';
 
 
 export const Nikename = () => {
@@ -30,7 +29,7 @@ export const Nikename = () => {
         <br />
         <XBox padding={10}>
             <XBox.Segment span={1} >
-                <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/') }} />
+                <Icon name='chevron-left' onClick={() => { navigate('/chat/self/mylist/') }} />
             </XBox.Segment>
             <XBox.Segment span={15} ><h3>修改的昵称：</h3></XBox.Segment>
         </XBox>
