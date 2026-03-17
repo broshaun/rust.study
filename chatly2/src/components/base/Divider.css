@@ -1,0 +1,133 @@
+/* 基础重置 */
+.ui.divider {
+  margin: 1rem 0;
+  line-height: 1;
+  height: 0;
+  font-size: 1em;
+  border: 0;
+  border-top: 1px solid rgba(34, 36, 38, 0.15);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* 垂直分隔线 */
+.ui.vertical.divider {
+  position: relative;
+  height: 1em;
+  margin: 0 0.5rem;
+  top: 0.1em;
+  display: inline-block;
+  width: 0;
+  border-left: 1px solid rgba(34, 36, 38, 0.15);
+  border-top: 0;
+  vertical-align: middle;
+}
+
+/* 段分隔（更大间距） */
+.ui.section.divider {
+  margin: 2rem 0;
+}
+
+/* 贴合（无间距） */
+.ui.fitted.divider {
+  margin: 0;
+}
+
+/* 禁用态 */
+.ui.disabled.divider {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 隐藏分隔线（仅保留间距） */
+.ui.hidden.divider {
+  border-color: transparent;
+}
+
+/* 反色样式（深色背景下） */
+.ui.inverted.divider {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.ui.inverted.vertical.divider {
+  border-left-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 虚线样式 */
+.ui.dashed.divider {
+  border-top-style: dashed;
+}
+.ui.dashed.vertical.divider {
+  border-left-style: dashed;
+}
+
+/* 加粗样式 */
+.ui.bold.divider {
+  border-top-width: 2px;
+}
+.ui.bold.vertical.divider {
+  border-left-width: 2px;
+}
+
+/* 清除浮动 */
+.ui.clearing.divider {
+  clear: both;
+}
+
+/* 带标签的分隔线基础样式 */
+.ui.divider > .divider-label {
+  position: relative;
+  display: inline-block;
+  padding: 0 1rem;
+  background-color: #ffffff;
+  font-size: 0.875em;
+  color: rgba(0, 0, 0, 0.87);
+  top: -0.75em;
+}
+
+/* 反色标签 */
+.ui.inverted.divider > .divider-label {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+/* 标签对齐方式 */
+.ui.divider > .divider-label.left {
+  float: left;
+  margin-left: -1rem;
+}
+.ui.divider > .divider-label.right {
+  float: right;
+  margin-right: -1rem;
+}
+.ui.divider > .divider-label.center {
+  display: block;
+  float: none;
+  text-align: center;
+  margin: 0 auto;
+  width: auto;
+}
+
+/* 垂直分隔线标签（特殊处理） */
+.ui.vertical.divider > .divider-label {
+  top: -0.5em;
+  left: -0.5rem;
+  padding: 0 0.5rem;
+  background-color: #ffffff;
+}
+.ui.inverted.vertical.divider > .divider-label {
+  background-color: transparent;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .ui.divider {
+    margin: 0.75rem 0;
+  }
+  .ui.section.divider {
+    margin: 1.5rem 0;
+  }
+  .ui.divider > .divider-label {
+    padding: 0 0.5rem;
+    font-size: 0.8em;
+  }
+}

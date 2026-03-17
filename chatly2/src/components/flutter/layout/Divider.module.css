@@ -1,0 +1,41 @@
+.divider {
+  /* 1. 基础物理形态 */
+  height: 1px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0; 
+  
+  /* 呼吸感控制 */
+  margin-top: var(--div-spacing);
+  margin-bottom: var(--div-spacing);
+  
+  /* 2. 主题适配视觉逻辑 */
+  /* 使用文字颜色的低透明度作为线条色，确保在任何背景（浅色/深色/毛玻璃）下都可见 */
+  background-color: rgba(var(--text-primary-rgb), 0.12);
+  
+  /* 模拟物理刻痕：上方暗线（由bg提供），下方亮线（由shadow提供） */
+  /* 在暗黑主题下（如赛博、金属），亮线提供精致的金属边缘感 */
+  box-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.05); 
+  
+  /* 平滑过度 */
+  transition: background var(--transition-speed) ease;
+}
+
+/* --- 3. 突破边界模式 (Bleed) --- */
+.bleed {
+  width: calc(100% + 32px); /* 补偿左右各 16px 的负边距 */
+  margin-left: -16px; 
+  margin-right: -16px;
+}
+
+/* --- 4. 渐隐模式 (Fade) --- */
+.fade {
+  /* 动态生成适配主题的渐变色 */
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(var(--text-primary-rgb), 0.2) 50%,
+    transparent 100%
+  );
+  box-shadow: none; 
+}

@@ -1,0 +1,35 @@
+.ybox {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  width: var(--yb-w, 100%);
+  height: var(--yb-h, auto);
+
+  min-width: 0;
+  min-height: 0;
+
+  gap: var(--yb-gap, 0px);
+  padding: var(--yb-pad, 0px);
+
+  justify-content: var(--yb-justify, flex-start);
+
+  /* 子项默认通过 Segment 的 align-self 控制横向对齐 */
+  align-items: stretch;
+}
+
+.ybox[data-scroll='true'] {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.segment {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  min-width: 0;
+  max-width: 100%;
+  flex-shrink: 0;
+
+}

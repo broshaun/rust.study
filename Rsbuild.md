@@ -1,9 +1,9 @@
 
-## Solid
+## Rsbuild
 
 ### 创建项目
 ```sh
-pnpm create rsbuild@latest
+  pnpm create rsbuild@latest
 
 Template created! To get started run:
 
@@ -30,15 +30,17 @@ For iOS development, run:
 
 ### 安装前端包
 ```sh
-pnpm add dexie  
-pnpm add @solidjs/router
+  pnpm add dexie dexie-react-hooks
+  # pnpm add react-router-dom@7
+  # pnpm remove react-router-dom
+  pnpm add react-router
+  pnpm add zustand ahooks
 ```
 
 
 ### 安装Tauri插件
 ```sh
-pnpm tauri add http
-pnpm tauri add dialog
-pnpm tauri add fs
-pnpm tauri add store
+  pnpm tauri add http
+  pnpm tauri add dialog
+  pnpm tauri add fs
 ```

@@ -1,0 +1,32 @@
+/* 仅保留基础重置，完全不修改视口相关配置 */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Tauri 基础要求 */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #fff;
+  color: #333;
+}
+
+/* Tauri 桌面端兜底，不影响原有布局 */
+#root {
+  min-width: 320px;
+  min-height: 480px;
+}
+
+/* 安全区工具类（给业务组件用） */
+.safe-top { padding-top: var(--safe-area-top, 0px) !important; }
+.safe-bottom { padding-bottom: var(--safe-area-bottom, 0px) !important; }

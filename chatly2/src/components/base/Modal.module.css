@@ -1,0 +1,123 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 15, 15, 0.35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 1000;
+  animation: fadeIn 0.35s ease forwards;
+}
+
+.box {
+  position: relative;
+  width: 320px;
+  max-width: 90%;
+  border-radius: 12px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
+  animation: popIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  overflow: hidden;
+}
+
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #444;
+  background: #f8f8f8;
+  padding: 8px 6px;
+  position: relative;
+}
+.title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.message {
+  font-size: 13px;
+  color: #6e6e73;
+  line-height: 1.4;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+/* 按钮自动同行 */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+/* 确定/取消样式完全一样 */
+.confirmBtn,
+.cancelBtn {
+  flex: 1;
+  max-width: 100px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.confirmBtn:hover,
+.cancelBtn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+.confirmBtn:active,
+.cancelBtn:active {
+  background: #e5e7eb;
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-color-scheme: dark) {
+  .overlay { background: rgba(0, 0, 0, 0.45); }
+  .box { background: #1c1c1e; border-color: #3a3a3c; }
+  .title { background: #2c2c2e; color: #ddd; }
+  .title::after { background: #3a3a3c; }
+  .message { color: #b0b0b5; }
+  .confirmBtn, .cancelBtn {
+    border-color: #3a3a3c;
+    background: #2c2c2e;
+    color: #b0b0b5;
+  }
+  .confirmBtn:hover, .cancelBtn:hover {
+    background: #3a3a3c;
+    border-color: #4a4a4c;
+    color: #d0d0d5;
+  }
+}
+
+@media (max-width: 480px) {
+  .box { width: 280px; border-radius: 10px; }
+  .title { font-size: 15px; padding: 6px 4px; }
+  .message { font-size: 12px; padding: 10px 12px; }
+  .confirmBtn, .cancelBtn { height: 30px; font-size: 12px; }
+  .actions { gap: 12px; padding: 0 12px 12px; }
+}

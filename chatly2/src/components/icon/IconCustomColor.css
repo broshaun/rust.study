@@ -1,0 +1,40 @@
+.svg-icon-custom-color {
+  display: inline-block;
+  isolation: isolate;
+  line-height: 0;
+}
+
+.svg-icon-custom-color img,
+.svg-icon-custom-color svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* gray */
+.icon-gray img,
+.icon-gray svg {
+  filter: invert(45%) sepia(9%) saturate(276%)
+          hue-rotate(179deg) brightness(94%) contrast(88%);
+}
+
+/* orange */
+.icon-orange img,
+.icon-orange svg {
+  filter: invert(70%) sepia(65%) saturate(450%)
+          hue-rotate(350deg) brightness(95%) contrast(98%);
+}
+
+/* green */
+.icon-green img,
+.icon-green svg {
+  filter: invert(42%) sepia(93%) saturate(1352%)
+          hue-rotate(89deg) brightness(91%) contrast(85%);
+}
+
+/* red */
+.icon-red img,
+.icon-red svg {
+  filter: invert(22%) sepia(91%) saturate(7273%)
+          hue-rotate(359deg) brightness(95%) contrast(90%);
+}
