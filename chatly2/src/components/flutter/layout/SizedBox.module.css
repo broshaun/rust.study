@@ -1,3 +1,4 @@
+/* SizedBox.module.css */
 .sizedBox {
   box-sizing: border-box;
   flex-shrink: 0;
@@ -11,13 +12,13 @@
   display: block;
 }
 
-/* 有内容时才作为容器参与布局 */
 .sizedBox:not(:empty) {
   display: flex;
   flex-direction: column;
+  align-items: var(--sb-align, stretch);
+  justify-content: var(--sb-justify, flex-start);
 }
 
-/* 空节点 → 纯占位 */
 .sizedBox:empty {
   display: block;
   width: var(--sb-w, 0px);

@@ -1,3 +1,4 @@
+/* Grid.module.css */
 .grid {
   display: grid;
   box-sizing: border-box;
@@ -5,6 +6,7 @@
 
   width: var(--gd-w, 100%);
   height: var(--gd-h, auto);
+
   min-width: 0;
   min-height: 0;
 
@@ -18,7 +20,6 @@
   justify-items: var(--gd-justify-items, stretch);
   align-items: var(--gd-align-items, stretch);
 
-  /* 容器层轻风格 */
   background: var(--gd-bg, transparent);
   border-style: solid;
   border-width: var(--gd-border-width, 0px);
@@ -56,6 +57,8 @@
   grid-column: var(--gd-item-col-start, auto) / span var(--gd-item-col, 1);
   grid-row: var(--gd-item-row-start, auto) / span var(--gd-item-row, 1);
 
-  justify-content: var(--gd-item-align, stretch);
-  align-items: var(--gd-item-justify, stretch);
+  justify-self: var(--gd-item-justify-self, stretch);
+  align-self: var(--gd-item-align-self, stretch);
+
+  align-items: var(--gd-item-content-align, stretch);
 }

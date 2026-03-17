@@ -20,8 +20,8 @@ export function LogOn() {
 
     const { src: avatarSrc } = useImage(avatar)
 
-    console.log('avatar',avatar)
-    console.log('avatarSrc',avatarSrc)
+    console.log('avatar', avatar)
+    console.log('avatarSrc', avatarSrc)
 
     const { setToken } = useToken()
     const [open, setOpen] = useState(false);
@@ -60,7 +60,7 @@ export function LogOn() {
             <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
         </Modal>
 
-        <XBox>
+        <XBox align="middle" justify="center" compact width="100%">
             <Avatar
                 src={avatarSrc}
                 size={60}

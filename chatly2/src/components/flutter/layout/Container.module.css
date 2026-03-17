@@ -1,25 +1,24 @@
+/* Container.module.css */
 .container {
   position: relative;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 
-  width: var(--cont-w, 100%);
-  height: var(--cont-h, auto);
+  width: var(--ct-w, 100%);
+  height: var(--ct-h, auto);
   min-width: 0;
   min-height: 0;
 
-  margin: var(--cont-mar, 0);
-  padding: var(--cont-pad, 0);
+  margin: var(--ct-mar, 0);
+  padding: var(--ct-pad, 0);
 
-  align-items: var(--cont-align, stretch);
-  justify-content: var(--cont-justify, flex-start);
+  justify-content: var(--ct-justify, flex-start);
+  align-items: var(--ct-align, stretch);
 
   overflow: hidden;
 
-  color: var(--text-primary);
   border-radius: var(--radius-main);
-
   background: transparent;
   border: none;
   box-shadow: none;
@@ -33,7 +32,6 @@
     backdrop-filter var(--transition-speed, 0.3s) ease;
 }
 
-/* 通用容器表面风格 */
 .container[data-surface="true"] {
   background: var(--panel-bg);
   backdrop-filter: var(--panel-blur);
@@ -41,34 +39,22 @@
   box-shadow: var(--panel-shadow);
 }
 
-/* 通用容器边框 */
 .container[data-border="true"] {
   border: var(--panel-border);
 }
 
-.container[data-border="false"] {
-  border: none;
-}
-
-/* 纵向滚动 */
 .container[data-v-scroll="true"] {
   overflow-y: auto;
 }
 
-/* 横向滚动 */
 .container[data-h-scroll="true"] {
   overflow-x: auto;
 }
 
-/* 双向滚动 */
 .container[data-v-scroll="true"][data-h-scroll="true"] {
   overflow: auto;
 }
 
-/* 横向滚动时不强制改布局，让内容布局由外部决定 */
-/* 如果你需要横向排列，请在外部 style/className 里显式指定 flex-direction: row */
-
-/* 滚动条 */
 .container {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--text-primary-rgb), 0.2) transparent;

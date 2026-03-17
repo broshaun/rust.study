@@ -1,3 +1,4 @@
+// Grid.jsx
 import React, { Children, isValidElement } from "react";
 import styles from "./Grid.module.css";
 
@@ -6,7 +7,7 @@ const toUnit = (value) => {
   return typeof value === "number" ? `${value}px` : value;
 };
 
-const alignMap = {
+const crossAlignMap = {
   top: "start",
   middle: "center",
   bottom: "end",
@@ -20,9 +21,6 @@ const justifyMap = {
   stretch: "stretch",
 };
 
-/**
- * Grid.Item
- */
 const Item = ({
   children,
   col = 1,
@@ -31,6 +29,7 @@ const Item = ({
   rowStart,
   padding = 0,
   align,
+  contentAlign,
   vertical,
   className = "",
   style,
@@ -43,12 +42,19 @@ const Item = ({
     "--gd-item-row-start":
       rowStart == null || rowStart === "" ? "auto" : Number(rowStart),
     "--gd-item-pad": toUnit(padding) || "0px",
-    "--gd-item-justify": align
+
+    /* item 自己在 grid cell 中的位置 */
+    "--gd-item-justify-self": align
       ? justifyMap[align] || align
-      : "var(--gd-item-justify-default)",
-    "--gd-item-align": vertical
-      ? alignMap[vertical] || vertical
-      : "var(--gd-item-align-default)",
+      : "var(--gd-item-justify-self-default)",
+    "--gd-item-align-self": vertical
+      ? crossAlignMap[vertical] || vertical
+      : "var(--gd-item-align-self-default)",
+
+    /* item 内部内容位置 */
+    "--gd-item-content-align": contentAlign
+      ? justifyMap[contentAlign] || contentAlign
+      : "var(--gd-item-content-align-default)",
     ...style,
   };
 
@@ -64,10 +70,6 @@ const Item = ({
 
 Item.__GRID_ITEM__ = true;
 
-/**
- * Grid
- * React 19 写法：直接从 props 接 ref
- */
 export const Grid = ({
   children,
   width = "100%",
@@ -78,6 +80,7 @@ export const Grid = ({
   columnGap,
   rowGap,
   padding = 0,
+
   justify = "stretch",
   align = "stretch",
   dense = false,
@@ -116,12 +119,10 @@ export const Grid = ({
     "--gd-pad": toUnit(padding) || "0px",
 
     "--gd-justify-items": justifyMap[justify] || justify,
-    "--gd-align-items": alignMap[align] || align,
+    "--gd-align-items": crossAlignMap[align] || align,
 
     "--gd-border-width": border ? toUnit(borderWidth) || "1px" : "0px",
-    "--gd-border-color":
-      borderColor ||
-      "rgba(var(--text-primary-rgb), 0.12)",
+    "--gd-border-color": borderColor || "rgba(var(--text-primary-rgb), 0.12)",
     "--gd-radius": toUnit(radius) || "var(--radius-main, 16px)",
 
     "--gd-bg": background || (panel ? "var(--panel-bg)" : "transparent"),
@@ -129,8 +130,9 @@ export const Grid = ({
     "--gd-backdrop": panel ? "var(--panel-blur)" : "none",
     "--gd-overflow": clip ? "hidden" : "visible",
 
-    "--gd-item-justify-default": justifyMap[justify] || justify,
-    "--gd-item-align-default": alignMap[align] || align,
+    "--gd-item-justify-self-default": "stretch",
+    "--gd-item-align-self-default": "stretch",
+    "--gd-item-content-align-default": "stretch",
 
     ...style,
   };
@@ -153,5 +155,4 @@ export const Grid = ({
 };
 
 Grid.Item = Item;
-
 export default Grid;

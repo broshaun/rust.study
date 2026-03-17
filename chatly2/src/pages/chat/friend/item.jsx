@@ -96,12 +96,13 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} scroll={true} height={winHeight-30} padding={10} >
-            <YBox.Segment  align="right" >
-                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend}/>
+        <YBox ref={containerRef} scroll={true} height={winHeight - 30} padding={10} >
+            <YBox.Segment contentAlign="right" >
+                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
             </YBox.Segment>
-            <Divider fade/>
             
+            <Divider spacing={8} />
+
             <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
                 {list.map((item) => {
                     return <Friend

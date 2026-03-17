@@ -1,5 +1,5 @@
 import React, { Children, isValidElement, useMemo, useRef, useLayoutEffect, useState, useEffect } from "react";
-import { IconItem } from '../icon';
+import { Icon } from 'components/flutter';
 import styles from './InputText2.module.css';
 
 const Left = ({ label, icon }) => null;
@@ -186,7 +186,7 @@ const InputText2 = ({
           {leftProps.label && <span className={styles.label}>{leftProps.label}</span>}
           {leftProps.icon && (
             <div className={styles.icon}>
-              <IconItem name={leftProps.icon} size={24} />
+              <Icon name={leftProps.icon} size={24} />
             </div>
           )}
         </div>
@@ -217,7 +217,7 @@ const InputText2 = ({
         >
           {rightProps.icon && (
             <div className={styles.icon} style={{ pointerEvents: 'none' }}>
-              <IconItem name={rightProps.icon} size={24} />
+              <Icon name={rightProps.icon} size={24} />
             </div>
           )}
           {rightProps.label && (

@@ -64,10 +64,10 @@ export function Chat() {
         <Outlet />
       </AppShell.Content>
 
-      <AppShell.Footer height={70}>
+      <AppShell.Footer height={65}>
         <XBox>
           {
-            visibleItems.map((item) => <XBox.Segment key={item.key}>{item.icon}</XBox.Segment>)
+            visibleItems.map((item) => <XBox.Segment contentAlign="center" key={item.key}>{item.icon}</XBox.Segment>)
           }
         </XBox>
 

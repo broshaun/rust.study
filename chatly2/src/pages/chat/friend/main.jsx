@@ -99,31 +99,31 @@ export const Mian = () => {
 
     return <XBox panel border padding={12} gap={8} >
 
-            <XBox.Segment divider>
+        <XBox.Segment divider>
 
-                <YBox ref={containerRef} scroll={true} height={winHeight - 26} padding={10} gap={8}>
-                    <YBox.Segment align="right" >
-                        <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend}/>
-                    </YBox.Segment>
-                    <Divider fade />
-                    <div ref={wrapperRef}>
-                        {list.map((item) => {
-                            // console.log('item',item)
-                            return <Friend
-                                key={item.data.id}
-                                data={item.data}
-                                onSelect={(value) => openMsgWindow(value)}
-                            />
-                        })}
-                    </div>
-                </YBox>
+            <YBox ref={containerRef} scroll={true} height={winHeight - 26} padding={10} gap={8}>
+                <YBox.Segment contentAlign="right" >
+                    <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+                </YBox.Segment>
+                <Divider fade />
+                <div ref={wrapperRef}>
+                    {list.map((item) => {
 
-            </XBox.Segment>
+                        return <Friend
+                            key={item.data.id}
+                            data={item.data}
+                            onSelect={(value) => openMsgWindow(value)}
+                        />
+                    })}
+                </div>
+            </YBox>
 
-            <XBox.Segment span={3} divider>
-                <Outlet />
-            </XBox.Segment>
-        </XBox>
+        </XBox.Segment>
+
+        <XBox.Segment span={3} divider>
+            <Outlet />
+        </XBox.Segment>
+    </XBox>
 
 
 }

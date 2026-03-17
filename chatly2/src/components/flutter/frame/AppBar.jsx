@@ -1,23 +1,23 @@
+// AppBar.jsx
 import React from "react";
 import styles from "./AppBar.module.css";
 
-/**
- * AppBar - 通用主题适配导航栏
- * 规则：
- * 1. 只使用全局通用主题变量
- * 2. 保持标题物理居中
- * 3. 左右区域自适应，避免标题受内容偏移
- * 4. 兼容 7 套主题，不写组件专属主题变量
- */
 export const AppBar = ({
   title,
   leading,
   actions,
   style,
   className = "",
+  height = 56,
 }) => {
   return (
-    <nav className={`${styles.appBar} ${className}`} style={style}>
+    <nav
+      className={[styles.appBar, className].filter(Boolean).join(" ")}
+      style={{
+        "--ab-h": typeof height === "number" ? `${height}px` : height,
+        ...style,
+      }}
+    >
       <div className={styles.leadingSection}>{leading}</div>
 
       <div className={styles.titleWrapper}>
@@ -30,3 +30,5 @@ export const AppBar = ({
     </nav>
   );
 };
+
+export default AppBar;
