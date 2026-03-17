@@ -34,7 +34,9 @@ For iOS development, run:
   # pnpm add react-router-dom@7
   # pnpm remove react-router-dom
   pnpm add react-router
-  pnpm add zustand ahooks
+  # pnpm add zustand ahooks
+  pnpm add @mantine/core @mantine/hooks
+  pnpm add @tanstack/query-core
 ```
 
 
@@ -43,4 +45,5 @@ For iOS development, run:
   pnpm tauri add http
   pnpm tauri add dialog
   pnpm tauri add fs
+  pnpm tauri add store
 ```

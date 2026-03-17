@@ -1,4 +1,4 @@
-import { create } from ".pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.4/node_modules/zustand";
+import { create } from "zustand";
 
 /**
  * 全局缓存池：存储 store 实例、元信息、监听标识

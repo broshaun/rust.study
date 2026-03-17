@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
-import { useRequest, useLocalStorageState, useVirtualList } from 'ahooks';
+import { useRequest, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Icon, YBox } from 'components/flutter';
-import { useHttpClient2 } from 'hooks/http';
-import { useApiBase } from 'hooks/http';
+import { useHttpClient2,useApiBase } from 'hooks/http';
+import { useLocalStorage } from 'hooks';
 
 export function Msg() {
 
@@ -17,7 +17,7 @@ export function Msg() {
     const uid = location.state?.uid;
     const displayName = location.state?.displayName;
 
-    const [selfAvatar] = useLocalStorageState('myAvatar');
+    const [selfAvatar] = useLocalStorage('myAvatar');
 
     const [msgs, setMsgs] = useState([]);
 

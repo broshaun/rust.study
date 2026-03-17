@@ -1,14 +1,16 @@
-
+import React, { useEffect, useRef } from "react";
+import { useNavigate, Outlet } from 'react-router';
 import { Chat } from "./main";
 import { RsFriend } from "./friend";
 import { RsDialog } from "./dialog";
 import { RsMyInfo } from "./myinfo";
 import { Msg } from "./dialog/msg";
+
 import { useHttpClient2 } from 'hooks/http';
-import { useRequest, useTimeout } from 'ahooks';
-import { db } from 'hooks/db';
 import { useToken } from "hooks/store"
-import { useNavigate, Outlet } from 'react-router';
+import { db } from 'hooks/db';
+
+import { useRequest } from 'ahooks';
 
 
 
@@ -57,11 +59,11 @@ function ChatGuard() {
     return 'ok';
   }, { pollingInterval: 2000, pollingWhenHidden: false });
 
-
-  useTimeout(() => {
-    console.log("登录到期，守护进程执行跳转");
-    navigate('/user/login/', { replace: true });
-  }, remainSeconds * 1000);
+  useEffect(() => {
+    if (remainSeconds > 0 && remainSeconds < 10) {
+      navigate('/user/login/', { replace: true });
+    }
+  }, [remainSeconds]);
 
   return <Outlet />
 }

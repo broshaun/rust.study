@@ -11,9 +11,13 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "@mantine/core": "^8.3.17",
+    "@mantine/hooks": "^8.3.17",
+    "@tanstack/query-core": "^5.90.20",
     "@tauri-apps/plugin-dialog": "~2",
     "@tauri-apps/plugin-fs": "~2",
     "@tauri-apps/plugin-http": "~2",
+    "@tauri-apps/plugin-store": "~2.4.2",
     "ahooks": "^3.9.6",
     "dexie": "^4.3.0",
     "dexie-react-hooks": "^4.2.0",

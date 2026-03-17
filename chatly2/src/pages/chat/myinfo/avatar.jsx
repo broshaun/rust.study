@@ -2,7 +2,7 @@ import { useCallback, Suspense, useMemo } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { ImageUpload } from 'components';
 import { useHttpClient2, useApiBase } from 'hooks/http';
-import { useLocalStorageState } from 'ahooks';
+import { useLocalStorage } from 'hooks';
 import { Avatar, Container, XBox, Icon } from 'components/flutter';
 
 export const Avatar2 = () => {
@@ -12,7 +12,7 @@ export const Avatar2 = () => {
 
     const { apiBase } = useApiBase();
 
-    const [avatar, setAvatar] = useLocalStorageState('myAvatar', { defaultValue: location.state?.avatar_url });
+    const [avatar, setAvatar] = useLocalStorage('myAvatar', { defaultValue: location.state?.avatar_url });
 
     const { http: httpFiles } = useHttpClient2('/files/img/');
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');

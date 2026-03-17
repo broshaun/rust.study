@@ -1,17 +1,18 @@
 import React, { useState } from "react";
-import { useLocalStorageState, useRequest } from 'ahooks';
-// import { useHttpClient } from 'hooks/http';
+import { useRequest } from 'ahooks';
 import { useHttpClient2 } from 'hooks/http';
 import { Modal, } from 'components';
 import { Button, TextField, Divider, XBox } from 'components/flutter';
 import { useNavigate } from 'react-router';
+import { useLocalStorage } from 'hooks';
 
 
 export const Agent = () => {
     const navigate = useNavigate();
-    const [apiBase, setApiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
+    const [apiBase, setApiBase] = useLocalStorage('apiBase', '')
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
+    
     const { http } = useHttpClient2('/rpc/chat/ping')
     const [isUpdate, setUpdate] = useState(false);
 
@@ -44,7 +45,7 @@ export const Agent = () => {
         </XBox>
 
 
-        <Divider spacing={20}/>
+        <Divider spacing={20} />
 
         <XBox padding={5}>
             <TextField

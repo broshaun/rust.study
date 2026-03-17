@@ -3,32 +3,31 @@ import { Modal } from "components";
 import React, { useState } from "react"
 import { useNavigate } from 'react-router';
 import { useWinSize, useToken } from 'hooks';
-import { useLocalStorageState, useRequest } from 'ahooks';
+import { useRequest } from 'ahooks';
 import { useHttpClient2, useImage } from 'hooks/http';
 import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
+import { useLocalStorage } from "hooks";
 
 
 export function LogOn() {
 
     const navigate = useNavigate();
-    const [account, setAccount] = useLocalStorageState('savedAccount')
-    const [avatar, setAvatar] = useLocalStorageState('myAvatar')
-
-
-    const [password, setPassword] = useState("")
-    const { http } = useHttpClient2('/rpc/chat/login/')
-
-    const { src: avatarSrc } = useImage(avatar)
-
-    console.log('avatar', avatar)
-    console.log('avatarSrc', avatarSrc)
-
-    const { setToken } = useToken()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
-    const { isMobile } = useWinSize()
+    const [account, setAccount] = useLocalStorage('savedAccount')
+    const [avatar, setAvatar] = useLocalStorage('myAvatar')
+    const [password, setPassword] = useState("")
 
+    const { http } = useHttpClient2('/rpc/chat/login/')
+    const { src: avatarSrc } = useImage(avatar)
+
+    // console.log('avatar', avatar)
+    // console.log('avatarSrc', avatarSrc)
+
+    const { setToken } = useToken()
+    const { isMobile } = useWinSize()
     const { data, runAsync: runLogin } = useRequest((account, password) => {
+
         if (!account || !password) {
             setMsg('请输入账号密码 ...')
             setOpen(true)
@@ -37,14 +36,14 @@ export function LogOn() {
 
         http.post('POST', { 'email': account, 'pass_word': password })
             .then((results) => {
-                if (!results) return;
                 const { code, message, data } = results
+                if (!results) return;
                 if (code === 200) {
-                    setToken(results.data?.login_token, results.data?.login_expired)
                     setAvatar(data?.user?.avatar_url)
+                    // setToken(results.data?.login_token, results.data?.login_expired)
+                    setToken(results.data?.login_token, 15)
 
                     isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
-
                 } else {
                     setMsg(message)
                     setOpen(true)
@@ -52,6 +51,9 @@ export function LogOn() {
             })
         return 'ok'
     }, { manual: true })
+
+
+
 
     return <React.Fragment>
         <Modal visible={open}>
