@@ -40,10 +40,9 @@ export function LogOn() {
                 if (!results) return;
                 if (code === 200) {
                     setAvatar(data?.user?.avatar_url)
-                    // setToken(results.data?.login_token, results.data?.login_expired)
-                    setToken(results.data?.login_token, 15)
-
+                    setToken(results.data?.login_token, results.data?.login_expired)
                     isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
+                    
                 } else {
                     setMsg(message)
                     setOpen(true)
