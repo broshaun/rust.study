@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
-// import { useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
@@ -88,17 +87,6 @@ export function Msg() {
         overscan: 10,
         useFlushSync: false,
     });
-
-
-
-    // useEffect(() => {
-
-    //     if (containerRef.current) {
-    //         containerRef.current.scrollTop = 0;
-    //     }
-
-    // }, [msgs.length]);
-
 
 
     return (
