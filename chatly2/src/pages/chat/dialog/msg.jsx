@@ -17,7 +17,7 @@ export function Msg() {
     const uid = location.state?.uid;
     const displayName = location.state?.displayName;
 
-    const [selfAvatar] = useLocalStorage('myAvatar');
+    const [selfAvatar] = useLocalStorage({key:'myAvatar'});
 
     const [msgs, setMsgs] = useState([]);
 

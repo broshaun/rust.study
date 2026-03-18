@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useRequest } from 'ahooks';
+import { useMutation } from '@tanstack/react-query'
 import { Modal } from "components";
 import { useHttpClient2 } from 'hooks/http';
 import { Button, TextField, Divider, Avatar, XBox } from 'components/flutter';
@@ -8,21 +8,18 @@ import { Button, TextField, Divider, Avatar, XBox } from 'components/flutter';
 export function Register() {
     const [account, setAccount] = useState('')
     const [password, setPassword] = useState("")
-    const { http, endpoint } = useHttpClient2('/rpc/chat/login/')
+    const { http } = useHttpClient2('/rpc/chat/register/')
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
 
-    const { data, runAsync: runLogin } = useRequest((account, password) => {
-        if (!account || !password) {
-            setMsg('请输入账号密码 ...')
-            setOpen(true)
-            return
-        }
 
-        http.post('POST', { 'email': account, 'pass_word': password })
-            .then((results) => {
-                if (!results) return;
-                const { code, message, data } = results
+    const { mutateAsync: runLogin } = useMutation(
+        {
+            mutationFn: async ({ account, password }) => {
+                if (!account || !password) throw new Error("请输入账号密码 ...");
+                const results = await http.requestBodyJson("PUT", { email: account, pass_word: password });
+                if (!results) throw new Error("注册失败");
+                const { code, message } = results;
                 if (code === 200) {
                     setMsg(message)
                     setOpen(true)
@@ -34,9 +31,14 @@ export function Register() {
                     setAccount('')
                     setPassword('')
                 }
-            })
-        return 'ok'
-    }, { manual: true })
+                return results;
+            },
+            onError: (error) => {
+                setMsg(error?.message || "注册失败");
+                setOpen(true);
+            }
+        }
+    );
 
 
 
@@ -88,7 +90,7 @@ export function Register() {
 
         <XBox padding={10}>
             <Button label='注册' width={250}
-                onPressed={() => { runLogin(account, password) }}
+                onPressed={() => { runLogin({account, password}) }}
             />
         </XBox>
 

@@ -36,7 +36,7 @@ For iOS development, run:
   pnpm add react-router
   # pnpm add zustand ahooks
   pnpm add @mantine/core @mantine/hooks
-  pnpm add @tanstack/query-core
+  pnpm add @tanstack/react-query
 ```
 
 

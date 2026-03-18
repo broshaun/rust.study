@@ -12,7 +12,7 @@ export const Avatar2 = () => {
 
     const { apiBase } = useApiBase();
 
-    const [avatar, setAvatar] = useLocalStorage('myAvatar', { defaultValue: location.state?.avatar_url });
+    const [avatar, setAvatar] = useLocalStorage({ key: 'myAvatar', defaultValue: location.state?.avatar_url });
 
     const { http: httpFiles } = useHttpClient2('/files/img/');
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');

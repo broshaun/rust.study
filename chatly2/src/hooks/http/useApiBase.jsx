@@ -6,7 +6,7 @@ import { useLocalStorage } from "hooks";
  * - 业务层只从这里拿 apiBase，不要重复 useLocalStorage("apiBase")
  */
 export function useApiBase() {
-  const [apiBase, setApiBase] = useLocalStorage("apiBase", "http://103.186.108.161:5015" );
+  const [apiBase, setApiBase] = useLocalStorage({ key: "apiBase", defaultValue: "http://103.186.108.161:5015" });
   return { apiBase: apiBase || "", setApiBase };
 }
 

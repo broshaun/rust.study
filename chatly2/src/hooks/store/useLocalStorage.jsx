@@ -3,7 +3,7 @@ import { LazyStore } from "@tauri-apps/plugin-store";
 
 const store = new LazyStore("settings.json");
 
-export function useLocalStorage(key, defaultValue) {
+export function useLocalStorage({ key, defaultValue }) {
   const getDefaultValue =
     typeof defaultValue === "function" ? defaultValue : () => defaultValue;
 

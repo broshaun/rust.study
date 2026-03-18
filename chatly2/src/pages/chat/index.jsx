@@ -1,16 +1,14 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
 import { Chat } from "./main";
 import { RsFriend } from "./friend";
 import { RsDialog } from "./dialog";
 import { RsMyInfo } from "./myinfo";
 import { Msg } from "./dialog/msg";
-
 import { useHttpClient2 } from 'hooks/http';
 import { useToken } from "hooks/store"
 import { db } from 'hooks/db';
-
-import { useRequest } from 'ahooks';
+import { useQuery } from '@tanstack/react-query'
 
 
 
@@ -42,11 +40,12 @@ function ChatGuard() {
   const { remainSeconds } = useToken()
   const { http: httpMsg } = useHttpClient2('/rpc/chat/msg/single/');
 
-
-  useRequest(() => {
-    httpMsg.post('POST').then((results) => {
-      if (!results) return;
+  useQuery({
+    queryKey: ['poll-message'],
+    queryFn: async () => {
+      const results = await httpMsg.post('POST')
       const { code, data } = results;
+      console.log('code, data ', code, data)
       if (data && code === 200) {
         db.table('message').put({ 'uid': data?.uid, 'msg': data?.msg, 'timestamp': data?.timestamp, 'signal': 'receive' });
         db.table('friends').where('uid').equals(data?.uid).modify((user) => {
@@ -55,9 +54,11 @@ function ChatGuard() {
           user.timestamp = data?.timestamp
         });
       }
-    });
-    return 'ok';
-  }, { pollingInterval: 2000, pollingWhenHidden: false });
+      return 'ok';
+    },
+    refetchInterval: 2000,
+    refetchIntervalInBackground: false,
+  })
 
   useEffect(() => {
     if (remainSeconds > 0 && remainSeconds < 10) {
