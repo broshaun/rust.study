@@ -6,8 +6,10 @@ import { useApiBase } from "hooks/http";
  */
 const formatDialogTime = (timestamp) => {
   if (!timestamp) return "";
+
   const safeTimeStr =
     typeof timestamp === "string" ? timestamp.replace(/-/g, "/") : timestamp;
+
   const t = new Date(safeTimeStr);
   if (isNaN(t.getTime())) return "";
 
@@ -24,11 +26,15 @@ const formatDialogTime = (timestamp) => {
       hour12: false,
     });
   }
+
   if (diffDays === 1) return "昨天";
+
   if (diffDays > 1 && diffDays <= 6) {
     return ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][t.getDay()];
   }
+
   if (isThisYear) return `${t.getMonth() + 1}月${t.getDate()}日`;
+
   return `${t.getFullYear()}年${t.getMonth() + 1}月`;
 };
 
@@ -103,45 +109,56 @@ export const DialogItem = memo(function DialogItem({
     >
       {/* 左侧头像 */}
       <div
-        onClick={handleAvatarClick}
         style={{
           position: "relative",
           width: 38,
           height: 38,
           flex: "0 0 auto",
           marginRight: 8,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "8px",
-          overflow: "hidden",
           background: "transparent",
         }}
+        onClick={handleAvatarClick}
       >
-        <img
-          src={avatarSrc}
-          alt="avatar"
+        {/* 头像本体容器：负责圆角裁剪 */}
+        <div
           style={{
             width: "100%",
             height: "100%",
-            objectFit: "cover",
-            display: "block",
+            borderRadius: "8px",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "transparent",
           }}
-        />
+        >
+          <img
+            src={avatarSrc}
+            alt="avatar"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        </div>
 
+        {/* 红点：放在外层，不会被裁掉 */}
         {showDot && (
           <span
             style={{
               position: "absolute",
-              top: 0,
-              right: 0,
-              width: 6,
-              height: 6,
+              top: -1,
+              right: -1,
+              width: 10,
+              height: 10,
               borderRadius: "50%",
               backgroundColor: "#ff3b30",
-              transform: "translate(25%, -25%)",
+              border: "2px solid var(--panel-bg, #fff)",
               pointerEvents: "none",
               zIndex: 2,
+              boxSizing: "border-box",
             }}
           />
         )}
@@ -233,6 +250,7 @@ export const DialogItem = memo(function DialogItem({
             opacity: 0.35,
             background: "transparent",
             flex: "0 0 auto",
+            userSelect: "none",
           }}
         >
           ✕

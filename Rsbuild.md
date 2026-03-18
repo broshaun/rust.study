@@ -46,5 +46,5 @@ For iOS development, run:
   pnpm tauri add http
   pnpm tauri add dialog
   pnpm tauri add fs
-  pnpm tauri add store
+  # pnpm tauri add store
 ```
