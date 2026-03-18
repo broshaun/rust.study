@@ -78,7 +78,7 @@ export const Find = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
 
-        <YBox align='center' verticalScroll={true} gap={10} padding={10}>
+        <YBox scroll={true} gap={10} padding={10}>
 
             <InputText2 placeholder="搜索好友" onChangeValue={handleEmailChange}>
                 <InputText2.Right icon='magnifying-glass-circle' onClick={() => run(debouncedKeyword)} />

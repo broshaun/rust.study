@@ -91,62 +91,62 @@ export function Detail() {
   return (
     <Suspense fallback={<div>加载中...</div>}>
       <YBox padding={20}>
-        <YBox.Segment padding={20} align="center">
-          <Avatar
-            size={75}
-            src={avatarSrc}
-            fit="cover"
-            variant="square"
-            roundedRadius={0}
-          />
-        </YBox.Segment>
 
-        <YBox.Segment padding={20} align="left">
-          <Heading level={4}>账户信息</Heading>
-        </YBox.Segment>
+        <Avatar
+          size={75}
+          src={avatarSrc}
+          fit="cover"
+          variant="square"
+          roundedRadius={0}
+        />
 
-        <Divider />
 
-        <YBox.Segment padding={20} align="left" width={500}>
-          <InfoTile icon="user" label="名称" value={friend?.nikename} />
-          <InfoTile icon="email" label="邮箱" value={friend?.email} />
-          <InfoTile
-            icon="edit"
-            label="备注"
-            value={friend?.remark}
-            onConfirm={(remark) => {
-              setFriend((p) => ({ ...p, remark }));
-              updRemark({ id: friend?.id, remark });
+
+        <Heading level={4}>账户信息</Heading>
+
+
+        <Divider fade/>
+
+
+        <InfoTile icon="user" label="名称" value={friend?.nikename} />
+        <InfoTile icon="email" label="邮箱" value={friend?.email} />
+        <InfoTile
+          icon="edit"
+          label="备注"
+          value={friend?.remark}
+          onConfirm={(remark) => {
+            setFriend((p) => ({ ...p, remark }));
+            updRemark({ id: friend?.id, remark });
+          }}
+        />
+
+
+
+        <XBox padding={20} gap={50}>
+          <Button
+            label="发起聊天"
+            onPressed={() => openMsgWindow(friend)}
+            style={{
+              color: '#fff',
+              background: '#4d4dff',
+              border: 'none',
             }}
           />
-        </YBox.Segment>
+          <Button
+            label="删除好友"
+            onPressed={() => {
+              delFid(friend?.id).then(() => {
+                navigate(isMobile ? '/chat/mobile/friend/' : '/chat/friend/');
+              });
+            }}
+            style={{
+              color: '#fff',
+              background: '#ff4d4f',
+              border: 'none',
+            }}
+          />
+        </XBox>
 
-        <YBox.Segment align="center">
-          <XBox padding={20} gap={50}>
-            <Button
-              label="发起聊天"
-              onPressed={() => openMsgWindow(friend)}
-              style={{
-                color: '#fff',
-                background: '#4d4dff',
-                border: 'none',
-              }}
-            />
-            <Button
-              label="删除好友"
-              onPressed={() => {
-                delFid(friend?.id).then(() => {
-                  navigate(isMobile ? '/chat/mobile/friend/' : '/chat/friend/');
-                });
-              }}
-              style={{
-                color: '#fff',
-                background: '#ff4d4f',
-                border: 'none',
-              }}
-            />
-          </XBox>
-        </YBox.Segment>
       </YBox>
     </Suspense>
   );

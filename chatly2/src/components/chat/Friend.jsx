@@ -3,6 +3,7 @@ import { useApiBase } from "hooks/http";
 
 const Friend = memo(function Friend({
   data,
+  virtualRow,
   onSelect,
   onAvatarClick,
   height = 50,
@@ -42,9 +43,16 @@ const Friend = memo(function Friend({
     <div
       onClick={handleSelect}
       style={{
+        // ✅ 虚拟列表核心定位
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        transform: `translateY(${virtualRow?.start || 0}px)`,
+
+        // ✅ 原本样式
         cursor: "pointer",
         height: wrapperHeight,
-        width: "100%",
         boxSizing: "border-box",
         padding: "2px 10px",
         display: "flex",

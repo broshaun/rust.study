@@ -1,7 +1,6 @@
-import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
-import { Outlet, useNavigate, useLocation } from 'react-router';
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { Outlet, useNavigate, } from 'react-router';
 import { useHttpClient2 } from 'hooks/http';
-import { useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
@@ -94,63 +93,39 @@ export const Mian = () => {
     }, [])
 
 
-    // const containerRef = useRef(null);
-    // const wrapperRef = useRef(null)
-    // const [list] = useVirtualList(friends, {
-    //     containerTarget: containerRef,
-    //     wrapperTarget: wrapperRef,
-    //     itemHeight: 74,
-    //     overscan: 10,
-    // });
-
-
     const parentRef = useRef(null);
     const rowVirtualizer = useVirtualizer({
         count: friends.length,
         getScrollElement: () => parentRef.current,
         estimateSize: () => 50,
         overscan: 5,
-        useFlushSync: false, // React19推荐
+        useFlushSync: false,
     });
 
 
-    return <XBox panel border padding={12} gap={8} >
-
-        <XBox.Segment divider>
-
+    return <XBox padding={12} gap={8} >
+        <XBox.Segment>
             <YBox ref={parentRef} scroll={true} height={winHeight - 26} padding={10} gap={8}>
-                <YBox.Segment contentAlign="right" >
-                    <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
-                </YBox.Segment>
+                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
                 <Divider fade />
 
-                <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative", width: "100%" }}>
+                <div style={{
+                    height: rowVirtualizer.getTotalSize(),
+                    position: "relative",
+                    width: "100%"
+                }}>
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                        // console.log('virtualRow', virtualRow)
                         const friend = friends[virtualRow.index];
-                        if (!friend) return null;
-                        // console.log('friend', friend)
-                        return <div key={friend.id ?? virtualRow.key}
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                width: "100%",
-                                transform: `translateY(${virtualRow.start}px)`,
-                            }}
-                        >
-                            <Friend data={friend} onSelect={(value) => { openMsgWindow(value) }} />
-                        </div>
-                    }
+                        if (!friend) return;
 
-                    )}
-                    {/* {list.map((item) => {
                         return <Friend
-                            key={item.data.id}
-                            data={item.data}
+                            key={friend.id}
+                            data={friend}
+                            virtualRow={virtualRow}
                             onSelect={(value) => { openMsgWindow(value) }}
                         />
-                    })} */}
+                    })}
+
                 </div>
             </YBox>
 

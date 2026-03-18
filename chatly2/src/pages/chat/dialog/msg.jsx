@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
-import { useVirtualList } from 'ahooks';
+// import { useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
@@ -9,6 +9,7 @@ import { Icon, YBox } from 'components/flutter';
 import { useHttpClient2, useApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 
 
@@ -80,49 +81,53 @@ export function Msg() {
 
 
     const containerRef = useRef(null);
-    const wrapperRef = useRef(null);
-
-    const [list] = useVirtualList(msgs, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 74,
-        overscan: 5,
+    const rowVirtualizer = useVirtualizer({
+        count: msgs.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => 74,
+        overscan: 10,
+        useFlushSync: false,
     });
 
 
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        if (containerRef.current) {
-            containerRef.current.scrollTop = 0;
-        }
+    //     if (containerRef.current) {
+    //         containerRef.current.scrollTop = 0;
+    //     }
 
-    }, [msgs.length]);
+    // }, [msgs.length]);
 
 
 
     return (
-        <ChatMsg>
+        <ChatMsg theme='light'>
             <ChatMsg.Meta
                 title={displayName}
                 left={isMobile ? <Icon name="chevron-left" onClick={() => navigate(f_url)} /> : <></>}
             />
             <ChatMsg.Content>
-                <YBox
-                    ref={containerRef}
-                    scroll={true}
-                    height={winHeight - 145}
-                    padding={10}
-                >
-                    <div ref={wrapperRef}>
-                        {list.map((item) => (
-                            <MsgItem
-                                key={item.data.id}
-                                data={item.data}
+                <YBox ref={containerRef} scroll={true} height={winHeight - 160} padding={10} >
+                    <div style={{
+                        height: rowVirtualizer.getTotalSize(),
+                        position: "relative",
+                        width: "100%"
+                    }}>
+
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const msg = msgs[virtualRow.index];
+                            if (!msg) return;
+
+                            return <MsgItem
+                                key={msg.id}
+                                data={msg}
                                 receiveAvatar={receiveAvatarSrc}
                                 sendAvatar={sendAvatarSrc}
+                                virtualRow={virtualRow}
                             />
-                        ))}
+                        })}
+
 
                     </div>
 

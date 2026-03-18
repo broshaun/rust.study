@@ -3,9 +3,6 @@ import styles from "./ChatMsg.module.css";
 
 const ChatMsgContext = createContext(null);
 
-/**
- * 钩子：获取聊天窗口上下文
- */
 export const useChatMsg = () => {
   const context = useContext(ChatMsgContext);
   if (!context) {
@@ -14,31 +11,28 @@ export const useChatMsg = () => {
   return context;
 };
 
-/**
- * ChatMsg - 聊天窗口主容器
- */
 export const ChatMsg = ({
   children,
   width = "100%",
   height = "100%",
   style,
   className = "",
-  ref // ✅ React 19 直接解构 ref
+  ref,
+  theme,
 }) => {
   const contentRef = useRef(null);
 
   const api = useMemo(
     () => ({
       contentRef,
-      // 滚动到底部逻辑
       scrollToBottom: (instant = false) => {
         const el = contentRef.current;
-        if (el) {
-          el.scrollTo({
-            top: el.scrollHeight,
-            behavior: instant ? "auto" : "smooth",
-          });
-        }
+        if (!el) return;
+
+        el.scrollTo({
+          top: el.scrollHeight,
+          behavior: instant ? "auto" : "smooth",
+        });
       },
     }),
     []
@@ -48,7 +42,8 @@ export const ChatMsg = ({
     <ChatMsgContext.Provider value={api}>
       <div
         ref={ref}
-        className={`${styles.wrapper} ${className}`}
+        data-theme={theme}
+        className={[styles.wrapper, className].filter(Boolean).join(" ")}
         style={{ width, height, ...style }}
       >
         {children}
@@ -57,24 +52,19 @@ export const ChatMsg = ({
   );
 };
 
-/**
- * Meta - 聊天头部
- */
-const Meta = ({ title, left, right }) => (
-  <div className={styles.head}>
-    <div className={styles.side}>{left}</div>
-    <div className={styles.title}>{title}</div>
-    <div className={styles.side} style={{ justifyContent: "flex-end" }}>
-      {right}
+const Meta = ({ title, left, right }) => {
+  return (
+    <div className={styles.head}>
+      <div className={styles.side}>{left}</div>
+      <div className={styles.title}>{title}</div>
+      <div className={styles.sideRight}>{right}</div>
     </div>
-  </div>
-);
+  );
+};
 
-/**
- * Content - 消息内容区
- */
 const Content = ({ children }) => {
   const { contentRef } = useChatMsg();
+
   return (
     <div ref={contentRef} className={styles.content}>
       {children}
@@ -82,39 +72,71 @@ const Content = ({ children }) => {
   );
 };
 
-/**
- * Send - 发送区域
- */
-const Send = ({ onSend, placeholder = "输入消息..." }) => {
+const Send = ({
+  onSend,
+  placeholder = "输入消息...",
+  disabled = false,
+  loading = false,
+  maxRows = 3,
+}) => {
   const [val, setVal] = useState("");
   const { scrollToBottom } = useChatMsg();
+  const textareaRef = useRef(null);
 
-  const handleSend = () => {
-    const text = val.trim();
-    if (!text) return;
-    onSend?.(text);
-    setVal("");
+  const getLineHeight = () => 20;
+  const getBaseHeight = () => 42;
 
-    // ✅ React 19 优化：在下一帧执行滚动，确保 DOM 已渲染新消息
-    requestAnimationFrame(() => {
-      scrollToBottom();
-    });
+  const resizeTextarea = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    const lineHeight = getLineHeight();
+    const maxHeight = lineHeight * maxRows + 22; // padding 近似补偿
+
+    el.style.height = `${getBaseHeight()}px`;
+    el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
   };
 
-  const handleInput = (e) => {
+  const resetTextarea = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = `${getBaseHeight()}px`;
+  };
+
+  const handleSend = async () => {
+    const text = val.trim();
+    if (!text || disabled || loading) return;
+
+    const maybePromise = onSend?.(text);
+
+    setVal("");
+    requestAnimationFrame(() => {
+      resetTextarea();
+      scrollToBottom();
+    });
+
+    if (maybePromise && typeof maybePromise.then === "function") {
+      try {
+        await maybePromise;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  const handleChange = (e) => {
     setVal(e.target.value);
-    // 自动高度调整逻辑
-    const el = e.target;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 150)}px`;
+    requestAnimationFrame(resizeTextarea);
   };
 
   return (
     <div className={styles.send}>
       <textarea
+        ref={textareaRef}
         value={val}
         rows={1}
-        onChange={handleInput}
+        disabled={disabled || loading}
+        onChange={handleChange}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -124,14 +146,19 @@ const Send = ({ onSend, placeholder = "输入消息..." }) => {
         placeholder={placeholder}
         className={styles.input}
       />
-      <button onClick={handleSend} className={styles.btn}>
-        发送
+
+      <button
+        type="button"
+        onClick={handleSend}
+        disabled={disabled || loading}
+        className={styles.btn}
+      >
+        {loading ? "发送中..." : "发送"}
       </button>
     </div>
   );
 };
 
-// 静态组件挂载
 ChatMsg.Meta = Meta;
 ChatMsg.Content = Content;
 ChatMsg.Send = Send;

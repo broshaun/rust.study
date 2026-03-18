@@ -3,9 +3,9 @@ import { Outlet, useNavigate } from 'react-router';
 import { db } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
-import { useVirtualList } from 'ahooks';
 import { YBox, XBox } from 'components/flutter';
 import { DialogItem } from 'components/chat';
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export const Mian = () => {
     const navigate = useNavigate()
@@ -28,9 +28,9 @@ export const Mian = () => {
         if (!select?.id) return;
         const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, displayName } })
+            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName } })
         })
-    }, [])
+    }, [navigate])
 
     // 关闭聊天
     const handleClear = useCallback((item) => {
@@ -45,24 +45,32 @@ export const Mian = () => {
 
 
     const containerRef = useRef(null);
-    const wrapperRef = useRef(null)
-    const [list] = useVirtualList(dialog, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 74,
+    const rowVirtualizer = useVirtualizer({
+        count: dialog.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => 50,
         overscan: 5,
+        useFlushSync: false,
     });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
         <XBox panel border padding={12} gap={8}>
-            <XBox.Segment divider>
+            <XBox.Segment>
                 <YBox ref={containerRef} scroll={true} height={winHeight - 26}>
-                    <div ref={wrapperRef}>
-                        {list.map((item) => {
+                    <div style={{
+                        height: rowVirtualizer.getTotalSize(),
+                        position: "relative",
+                        width: "100%"
+                    }}>
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const dg = dialog[virtualRow.index];
+                            if (!dg) return;
+
                             return <DialogItem
-                                key={item.data.id}
-                                data={item.data}
+                                key={dg.id}
+                                data={dg}
+                                virtualRow={virtualRow}
                                 onSelect={openMsgWindow}
                                 onClear={(p) => handleClear(p)}
                             />
@@ -70,7 +78,7 @@ export const Mian = () => {
                     </div>
                 </YBox>
             </XBox.Segment>
-            <XBox.Segment span={3} divider>
+            <XBox.Segment span={3}>
                 <Outlet />
             </XBox.Segment>
         </XBox>

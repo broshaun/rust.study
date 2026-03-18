@@ -3,34 +3,11 @@
   flex-direction: column;
   box-sizing: border-box;
 
-  width: var(--yb-w, 100%);
-  height: var(--yb-h, auto);
-
   min-width: 0;
   min-height: 0;
-
-  gap: var(--yb-gap, 0px);
-  padding: var(--yb-pad, 0px);
-
-  justify-content: var(--yb-justify, flex-start);
-  align-items: var(--yb-align, stretch);
 }
 
 .ybox[data-scroll="true"] {
   overflow-y: auto;
   overflow-x: hidden;
-}
-
-.segment {
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-
-  width: var(--yb-seg-width, 100%);
-  min-width: 0;
-  min-height: 0;
-  max-width: 100%;
-  flex-shrink: 0;
-
-  align-self: var(--yb-seg-align, var(--yb-seg-align-default, stretch));
 }

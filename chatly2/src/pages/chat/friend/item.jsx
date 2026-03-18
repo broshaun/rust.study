@@ -1,19 +1,16 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useHttpClient2 } from 'hooks/http';
 import { useWinSize } from 'hooks';
-import { useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
-import { Divider, Icon, YBox, XBox } from 'components/flutter';
+import { Divider, Icon, YBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
-
-
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export const Item = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [friends, setFriends] = useState([]);
     const [afriend, setAfriend] = useState(0);
     const { http } = useHttpClient2('/rpc/chat/friend/')
@@ -93,33 +90,31 @@ export const Item = () => {
     }, [])
 
 
-
-    const containerRef = useRef(null);
-    const wrapperRef = useRef(null)
-    const [list] = useVirtualList(friends, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 74,
+    const parentRef = useRef(null);
+    const rowVirtualizer = useVirtualizer({
+        count: friends.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 50,
         overscan: 5,
+        useFlushSync: false,
     });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} scroll={true} height={winHeight - 30} padding={10} >
-            <YBox.Segment contentAlign="right" >
-                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
-            </YBox.Segment>
+        <YBox ref={parentRef} scroll={true} height={winHeight - 30} padding={10} >
+            <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+            <Divider fade spacing={8} />
 
-            <Divider spacing={8} />
+            <div style={{
+                height: rowVirtualizer.getTotalSize(),
+                position: "relative",
+                width: "100%"
+            }}>
 
-            <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
-                {list.map((item) => {
-                    return <Friend
-                        key={item.data.id}
-                        data={item.data}
-                        onSelect={openMsgWindow}
-                    />
-
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const friend = friends[virtualRow.index];
+                    if (!friend) return;
+                    return <Friend key={friend.id} data={friend} virtualRow={virtualRow} onSelect={(value) => { openMsgWindow(value) }} />
                 })}
             </div>
         </YBox>
