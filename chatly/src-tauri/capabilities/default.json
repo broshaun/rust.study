@@ -3,12 +3,13 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": [
-    "*"
+    "main"
   ],
   "permissions": [
     "core:default",
-    "http:allow-fetch",
-    "core:webview:allow-create-webview-window",
+    "http:default",
+    "dialog:default",
+    "fs:default",
     {
       "identifier": "http:default",
       "allow": [
@@ -20,6 +21,6 @@
         }
       ]
     },
-    "fs:default"
+    "store:default"
   ]
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 /**
  * Text - 智能风格适配文本

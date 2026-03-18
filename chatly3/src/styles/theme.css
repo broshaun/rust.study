@@ -1,0 +1,100 @@
+/* --- 全局默认变量 --- */
+:root {
+  --radius-main: 16px;
+  --transition-speed: 0.3s;
+}
+
+/* 1. 极致毛玻璃 (Ultra Glass) */
+:root,[data-theme='glass'] {
+  --app-bg: fixed linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+  --panel-bg: rgba(255, 255, 255, 0.45); /* 提高白场，防止透底太杂 */
+  --panel-blur: blur(20px);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.4);
+  --panel-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  --text-primary: #0f172a;
+  --text-primary-rgb: 15, 23, 42;
+  --text-secondary: #475569;
+  --accent-color: #3b82f6;
+}
+
+/* 2. 乳胶温润 (Latex Soft) - 优化了色彩厚度 */
+[data-theme='light'] {
+  --app-bg: #f4f4f9; 
+  --panel-bg: rgba(255, 255, 255, 0.96); 
+  --panel-blur: blur(10px); 
+  --panel-border: 1px solid rgba(255, 255, 255, 1); 
+  /* 增加内阴影模拟边缘厚度 */
+  --panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 1);
+  --text-primary: #1c1c1e;
+  --text-primary-rgb: 28, 28, 30;
+  --text-secondary: #8e8e93;
+  --accent-color: #34c759;
+  --radius-main: 24px;
+}
+
+/* 3. 赛博医疗 (Cyber Pulse) - 增加了呼吸感 */
+[data-theme='cyber'] {
+  --app-bg: radial-gradient(circle at 50% 0%, #1a2a3a 0%, #050a0f 100%);
+  --panel-bg: rgba(13, 25, 41, 0.85);
+  --panel-blur: blur(15px);
+  --panel-border: 1px solid rgba(76, 201, 240, 0.5);
+  /* 发光投影 */
+  --panel-shadow: 0 0 20px rgba(76, 201, 240, 0.15), inset 0 0 10px rgba(76, 201, 240, 0.05);
+  --text-primary: #e0f7fa;
+  --text-primary-rgb: 224, 247, 250;
+  --text-secondary: #94a3b8;
+  --accent-color: #4cc9f0;
+}
+
+/* 4. 沙漠绿洲 (Oasis Luxury) - 增加了丝绒感 */
+[data-theme='oasis'] {
+  --app-bg: #ebe3d5;
+  --panel-bg: rgba(255, 251, 245, 0.7);
+  --panel-blur: blur(12px);
+  --panel-border: 1px solid rgba(181, 150, 93, 0.3);
+  --panel-shadow: 0 12px 24px rgba(101, 80, 40, 0.08);
+  --text-primary: #3d362d;
+  --text-primary-rgb: 61, 54, 45;
+  --text-secondary: #8a7e6e;
+  --accent-color: #1b4332;
+}
+
+/* 5. 液态玻璃 (Liquid Shine) - 强化高光 */
+ [data-theme='liquid'] {
+  --app-bg: linear-gradient(160deg, #dbeafe 0%, #f8fafc 100%);
+  --panel-bg: rgba(255, 255, 255, 0.35);
+  --panel-blur: blur(18px);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.7);
+  /* 双重内阴影模拟水滴感 */
+  --panel-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), inset 0 4px 8px rgba(255, 255, 255, 0.9), inset 0 -2px 6px rgba(0, 0, 0, 0.02);
+  --text-primary: #1e40af;
+  --text-primary-rgb: 30, 64, 175;
+  --text-secondary: #60a5fa;
+  --accent-color: #2563eb;
+}
+
+/* 6. 拉丝金属 (Titanium Dark) - 增加纹理深度 */
+[data-theme='brushed'] {
+  --app-bg: #121212;
+  --panel-bg: linear-gradient(145deg, #2a2d32, #1a1c1f);
+  --panel-blur: blur(0px);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.08);
+  --panel-shadow: 10px 10px 30px rgba(0, 0, 0, 0.5), inset 1px 1px 0px rgba(255, 255, 255, 0.05);
+  --text-primary: #f1f5f9;
+  --text-primary-rgb: 241, 245, 249;
+  --text-secondary: #64748b;
+  --accent-color: #ef4444;
+}
+
+/* 7. 哑光金属 (Matte Black Edition) */
+[data-theme='metal'] {
+  --app-bg: #0a0a0a;
+  --panel-bg: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
+  --panel-blur: blur(0px);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.1);
+  --panel-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  --text-primary: #e2e8f0;
+  --text-primary-rgb: 226, 232, 240;
+  --text-secondary: #94a3b8;
+  --accent-color: #60a5fa;
+}

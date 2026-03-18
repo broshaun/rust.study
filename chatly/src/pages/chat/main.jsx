@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Outlet, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react"
+import { Outlet, useNavigate } from "react-router";
 import { useWinSize, useDateTime } from 'hooks';
 import { AppShell, AppBar, PCShell, Icon, XBox, YBox } from 'components/flutter';
 import { liveQuery } from 'dexie';
@@ -64,10 +64,10 @@ export function Chat() {
         <Outlet />
       </AppShell.Content>
 
-      <AppShell.Footer height={70}>
+      <AppShell.Footer height={65}>
         <XBox>
           {
-            visibleItems.map((item) => <XBox.Segment key={item.key}>{item.icon}</XBox.Segment>)
+            visibleItems.map((item) => <XBox.Segment contentAlign="center" key={item.key}>{item.icon}</XBox.Segment>)
           }
         </XBox>
 

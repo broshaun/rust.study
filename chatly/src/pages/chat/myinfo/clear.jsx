@@ -1,5 +1,5 @@
-import React, { useState, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, Suspense } from "react";
+import { useNavigate } from 'react-router';
 import { Modal } from 'components';
 import { clearAllTables } from 'hooks/db';
 

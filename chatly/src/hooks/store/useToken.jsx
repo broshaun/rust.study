@@ -1,45 +1,69 @@
-import { useMemo } from "react";
-import { useLocalStorageState } from "ahooks";
+import { useCallback, useEffect, useState } from "react";
+import { useLocalStorage } from "@mantine/hooks";
 
 const TOKEN_KEY = "login_token";
 const EXPIRE_KEY = "login_expire";
 
 export function useToken() {
-  const [token, setTokenValue] = useLocalStorageState(TOKEN_KEY, {
-    defaultValue: "",
-  });
+  const [token, setTokenValue] = useLocalStorage({ key: TOKEN_KEY, defaultValue: "", getInitialValueInEffect: false, });
+  const [expireTime, setExpireTime] = useLocalStorage({ key: EXPIRE_KEY, defaultValue: 0 });
+  const [remainSeconds, setRemainSeconds] = useState(0);
 
-  const [expireTime, setExpireTime] = useLocalStorageState(EXPIRE_KEY, {
-    defaultValue: 0,
-  });
+  const calcRemain = useCallback((expire) => {
+    if (!expire) return 0;
+    return Math.max(0, Math.floor((Number(expire) - Date.now()) / 1000));
+  }, []);
 
   /**
    * 设置 token
    */
-  const setToken = (token, validSeconds = 0) => {
+  const setToken = useCallback((token, validSeconds = 0) => {
     if (!token) return;
 
-    const expire = Date.now() + validSeconds * 1000;
+    const expire = Date.now() + Number(validSeconds || 0) * 1000;
 
     setTokenValue(token);
     setExpireTime(expire);
-  };
+
+    // 关键优化：立即同步 remainSeconds
+    setRemainSeconds(calcRemain(expire));
+  }, [setTokenValue, setExpireTime, calcRemain]);
 
   /**
    * 删除 token
    */
-  const delToken = () => {
+  const delToken = useCallback(() => {
     setTokenValue("");
     setExpireTime(0);
-  };
+    setRemainSeconds(0);
+  }, [setTokenValue, setExpireTime]);
 
   /**
-   * 剩余有效秒数
+   * expireTime 变化时立即同步一次
    */
-  const remainSeconds = useMemo(() => {
-    if (!expireTime) return 0;
-    return Math.max(0, Math.floor((expireTime - Date.now()) / 1000));
-  }, [expireTime]);
+  useEffect(() => {
+    setRemainSeconds(calcRemain(expireTime));
+  }, [expireTime, calcRemain]);
+
+  /**
+   * 倒计时（核心）
+   */
+  useEffect(() => {
+    if (!expireTime) {
+      setRemainSeconds(0);
+      return;
+    }
+
+    const tick = () => {
+      const remain = calcRemain(expireTime);
+      setRemainSeconds(remain);
+    };
+
+    tick();
+
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [expireTime, calcRemain]);
 
   return {
     token: token || "",

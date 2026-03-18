@@ -1,4 +1,4 @@
-import React, { useEffect, Children, isValidElement } from 'react';
+import React, { useEffect, Children, isValidElement } from "react";
 import styles from './Modal.module.css';
 
 export default function Modal({ visible, children }) {

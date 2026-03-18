@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React from "react";
 import { IconSvg } from './IconSvg';
 import './IconItem.css';
 

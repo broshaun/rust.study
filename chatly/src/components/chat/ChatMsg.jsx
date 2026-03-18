@@ -2,24 +2,38 @@ import React, { createContext, useContext, useMemo, useRef, useState } from "rea
 import styles from "./ChatMsg.module.css";
 
 const ChatMsgContext = createContext(null);
-export const useChatMsg = () => useContext(ChatMsgContext);
+
+export const useChatMsg = () => {
+  const context = useContext(ChatMsgContext);
+  if (!context) {
+    throw new Error("useChatMsg 必须在 ChatMsg 组件内使用");
+  }
+  return context;
+};
 
 export const ChatMsg = ({
   children,
   width = "100%",
   height = "100%",
   style,
-  className = ""
+  className = "",
+  ref,
+  theme,
 }) => {
   const contentRef = useRef(null);
 
   const api = useMemo(
     () => ({
       contentRef,
-      scrollToBottom: () => {
+      scrollToBottom: (instant = false) => {
         const el = contentRef.current;
-        if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-      }
+        if (!el) return;
+
+        el.scrollTo({
+          top: el.scrollHeight,
+          behavior: instant ? "auto" : "smooth",
+        });
+      },
     }),
     []
   );
@@ -27,6 +41,8 @@ export const ChatMsg = ({
   return (
     <ChatMsgContext.Provider value={api}>
       <div
+        ref={ref}
+        data-theme={theme}
         className={[styles.wrapper, className].filter(Boolean).join(" ")}
         style={{ width, height, ...style }}
       >
@@ -36,18 +52,19 @@ export const ChatMsg = ({
   );
 };
 
-const Meta = ({ title, left, right }) => (
-  <div className={styles.head}>
-    <div className={styles.side}>{left}</div>
-    <div className={styles.title}>{title}</div>
-    <div className={styles.side} style={{ justifyContent: "flex-end" }}>
-      {right}
+const Meta = ({ title, left, right }) => {
+  return (
+    <div className={styles.head}>
+      <div className={styles.side}>{left}</div>
+      <div className={styles.title}>{title}</div>
+      <div className={styles.sideRight}>{right}</div>
     </div>
-  </div>
-);
+  );
+};
 
 const Content = ({ children }) => {
   const { contentRef } = useChatMsg();
+
   return (
     <div ref={contentRef} className={styles.content}>
       {children}
@@ -55,24 +72,71 @@ const Content = ({ children }) => {
   );
 };
 
-const Send = ({ onSend, placeholder = "输入消息..." }) => {
+const Send = ({
+  onSend,
+  placeholder = "输入消息...",
+  disabled = false,
+  loading = false,
+  maxRows = 3,
+}) => {
   const [val, setVal] = useState("");
   const { scrollToBottom } = useChatMsg();
+  const textareaRef = useRef(null);
 
-  const handleSend = () => {
+  const getLineHeight = () => 20;
+  const getBaseHeight = () => 42;
+
+  const resizeTextarea = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    const lineHeight = getLineHeight();
+    const maxHeight = lineHeight * maxRows + 22; // padding 近似补偿
+
+    el.style.height = `${getBaseHeight()}px`;
+    el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+  };
+
+  const resetTextarea = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = `${getBaseHeight()}px`;
+  };
+
+  const handleSend = async () => {
     const text = val.trim();
-    if (!text) return;
-    onSend?.(text);
+    if (!text || disabled || loading) return;
+
+    const maybePromise = onSend?.(text);
+
     setVal("");
-    setTimeout(scrollToBottom, 64);
+    requestAnimationFrame(() => {
+      resetTextarea();
+      scrollToBottom();
+    });
+
+    if (maybePromise && typeof maybePromise.then === "function") {
+      try {
+        await maybePromise;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  const handleChange = (e) => {
+    setVal(e.target.value);
+    requestAnimationFrame(resizeTextarea);
   };
 
   return (
     <div className={styles.send}>
       <textarea
+        ref={textareaRef}
         value={val}
         rows={1}
-        onChange={(e) => setVal(e.target.value)}
+        disabled={disabled || loading}
+        onChange={handleChange}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -82,13 +146,21 @@ const Send = ({ onSend, placeholder = "输入消息..." }) => {
         placeholder={placeholder}
         className={styles.input}
       />
-      <button onClick={handleSend} className={styles.btn}>
-        发送
+
+      <button
+        type="button"
+        onClick={handleSend}
+        disabled={disabled || loading}
+        className={styles.btn}
+      >
+        {loading ? "发送中..." : "发送"}
       </button>
     </div>
   );
 };
 
-Object.assign(ChatMsg, { Meta, Content, Send });
+ChatMsg.Meta = Meta;
+ChatMsg.Content = Content;
+ChatMsg.Send = Send;
 
 export default ChatMsg;

@@ -1,65 +1,123 @@
-import React, { Children, isValidElement } from 'react';
-import styles from './PCShell.module.css';
+import React, { Children, isValidElement, useMemo } from "react";
+import styles from "./PCShell.module.css";
 
 /**
- * PCShell - PC端沉浸式布局容器
- * 职责：管理 Header、Sidebar (Left) 和 Content 的空间分配。
+ * PCShell - PC 端沉浸式布局容器
+ * 职责：
+ * 1. 管理 Header / Left / Content 的空间分配
+ * 2. 保持结构骨架纯粹，不负责具体内容对齐
+ * 3. 兼容 React 19
  */
-export const PCShell = ({ children }) => {
-  const subComponents = Children.toArray(children).reduce((acc, child) => {
-    if (isValidElement(child)) {
-      if (child.type === PCShell.Header) acc.header = child;
-      if (child.type === PCShell.Content) acc.content = child;
-      if (child.type === PCShell.Left) acc.left = child;
-    }
-    return acc;
-  }, { header: null, content: null, left: null });
+export const PCShell = ({ children, className = "", style }) => {
+  const { header, content, left } = useMemo(() => {
+    const nodes = Children.toArray(children).filter(isValidElement);
 
-  const headerHeight = subComponents.header?.props.height || 64;
-  const sidebarWidth = subComponents.left?.props.width || 80;
+    let headerNode = null;
+    let contentNode = null;
+    let leftNode = null;
+
+    for (const node of nodes) {
+      if (node.type === PCShell.Header && !headerNode) {
+        headerNode = node;
+        continue;
+      }
+
+      if (node.type === PCShell.Content && !contentNode) {
+        contentNode = node;
+        continue;
+      }
+
+      if (node.type === PCShell.Left && !leftNode) {
+        leftNode = node;
+      }
+    }
+
+    return {
+      header: headerNode,
+      content: contentNode,
+      left: leftNode,
+    };
+  }, [children]);
+
+  const headerHeight = header?.props?.height ?? 64;
+  const sidebarWidth = left?.props?.width ?? 80;
+
+  const resolvedHeaderHeight =
+    typeof headerHeight === "number" ? `${headerHeight}px` : headerHeight;
+  const resolvedSidebarWidth =
+    typeof sidebarWidth === "number" ? `${sidebarWidth}px` : sidebarWidth;
 
   return (
-    <div className={styles.pcShell}>
-      {/* 1. Header 绝对定位或横向占满（透明背景） */}
-      {subComponents.header && (
-        <header 
-          className={styles.header} 
-          style={{ height: typeof headerHeight === 'number' ? `${headerHeight}px` : headerHeight }}
+    <div className={`${styles.pcShell} ${className}`.trim()} style={style}>
+      {header && (
+        <header
+          className={styles.header}
+          style={{ "--pc-shell-header-height": resolvedHeaderHeight }}
         >
-          {subComponents.header}
+          {header}
         </header>
       )}
 
       <div className={styles.bottomSection}>
-        {/* 2. Sidebar (Left) */}
-        {subComponents.left && (
-          <aside 
-            className={styles.sidebar} 
-            style={{ width: typeof sidebarWidth === 'number' ? `${sidebarWidth}px` : sidebarWidth }}
+        {left && (
+          <aside
+            className={styles.sidebar}
+            style={{ "--pc-shell-sidebar-width": resolvedSidebarWidth }}
           >
-            {subComponents.left}
+            {left}
           </aside>
         )}
 
-        {/* 3. Main Content */}
-        <main className={styles.content}>
-          {subComponents.content}
-        </main>
+        <main className={styles.content}>{content}</main>
       </div>
     </div>
   );
 };
 
-PCShell.Header = ({ children, height = 64, style }) => (
-  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', background: 'transparent', ...style }}>
-    {children}
-  </div>
-);
+PCShell.Header = function PCShellHeader({
+  children,
+  height = 64,
+  style,
+  className = "",
+}) {
+  return (
+    <div
+      className={`${styles.headerInner} ${className}`.trim()}
+      style={style}
+      data-height={height}
+    >
+      {children}
+    </div>
+  );
+};
 
-PCShell.Content = ({ children, style }) => (
-  <div style={{ width: '100%', height: '100%', ...style }}>{children}</div>
-);
+PCShell.Content = function PCShellContent({
+  children,
+  style,
+  className = "",
+}) {
+  return (
+    <div className={`${styles.contentInner} ${className}`.trim()} style={style}>
+      {children}
+    </div>
+  );
+};
 
-PCShell.Left = ({ children, width = 80, style }) => (
-  <div style={{ width: '100%', height: '100%', overflowY: 'auto', ...style }}>{children}</div>
-);
+PCShell.Left = function PCShellLeft({
+  children,
+  width = 80,
+  style,
+  className = "",
+}) {
+  return (
+    <div
+      className={`${styles.sidebarInner} ${className}`.trim()}
+      style={style}
+      data-width={width}
+    >
+      {children}
+    </div>
+  );
+};
+
+export default PCShell;

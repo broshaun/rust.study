@@ -1,8 +1,8 @@
-// @ts-check
+
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
-// Docs: https://rsbuild.rs/config/
+
 export default defineConfig({
   plugins: [pluginReact()],
   html: { template: './public/index.html' },
@@ -14,9 +14,6 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
-        target: 'http://103.186.108.161:5015',
-      },
       '/rpc': {
         target: 'http://103.186.108.161:5015',
       },
@@ -30,4 +27,3 @@ export default defineConfig({
     },
   }
 });
-

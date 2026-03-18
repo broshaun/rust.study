@@ -1,5 +1,4 @@
-import { Outlet } from 'react-router-dom';
-import { Container } from 'components/flutter';
+import { Outlet } from 'react-router';
 
 
 export const Settings = () => {

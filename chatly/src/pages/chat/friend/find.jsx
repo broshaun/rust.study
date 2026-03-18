@@ -1,69 +1,84 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense } from "react";
 import { InputText2, } from 'components';
 import { useHttpClient2 } from 'hooks/http';
-import { useRequest, useDebounce } from 'ahooks';
 import { UserInfoCard } from 'components/chat';
 import { Divider, YBox } from 'components/flutter';
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useDebouncedValue } from '@mantine/hooks';
 
 
 export const Find = () => {
     const { http } = useHttpClient2('/rpc/chat/friend/')
     const { endpoint } = useHttpClient2('/imgs');
     const [keyword, setKeyword] = useState();
-    const debouncedKeyword = useDebounce(keyword, { wait: 500 });
-
+    const [debouncedKeyword] = useDebouncedValue(keyword, 500);
 
     // 查找好友
-    const { data: findByUser, loading, runAsync: run } = useRequest(
-        async (email) => {
-            if (!email) return;
-            const results = await http.requestBodyJson('POST', { 'email': email });
-            if (!results) return;
-            const { code, message, data } = results
-            if (code === 200) return data;
-        }, { manual: true })
+    const { data: findByUser, isPending: loading, mutateAsync: run } = useMutation(
+        {
+            mutationFn: async (email) => {
+                if (!email) return;
+                const results = await http.requestBodyJson('POST', { 'email': email });
+                if (!results) return;
+                const { code, message, data } = results;
+                if (code === 200) return data;
+                return data;
+            },
+        }
+    );
 
     // 添加好友
-    const { runAsync: run2 } = useRequest(
-        async (user_id) => {
-            // console.log('添加好友', user_id)
-            if (!user_id) return;
-            const { code, message, data } = await http.requestBodyJson('PUT', { 'user_id': user_id })
-            console.log(code, message, data)
-            return 'ok'
-        }, { manual: true })
-
+    const { mutateAsync: addFriend } = useMutation(
+        {
+            mutationFn: async (user_id) => {
+                if (!user_id) return;
+                const { code, message, data } = await http.requestBodyJson('PUT', { 'user_id': user_id })
+                console.log(code, message, data)
+                return 'ok'
+            },
+        }
+    );
     const handleEmailChange = (value) => {
         setKeyword(value);
     };
 
     // 好友请求
-    const { loading: loading2, data: askFriends } = useRequest(
-        async () => {
-            try {
-                const { code, data } = await http.requestBodyJson('GET', { ask_state: 'await' })
-                if (code === 200) {
-                    return data?.detail || [];
+    const { data: askFriends, isPending: loading2 } = useQuery(
+        {
+            queryKey: ['ask-friends'],
+            queryFn: async () => {
+                try {
+                    const { code, data } = await http.requestBodyJson('GET', {
+                        ask_state: 'await',
+                    });
+
+                    if (code === 200) {
+                        return data?.detail || [];
+                    }
+                    return [];
+                } catch (error) {
+                    console.error(error);
+                    return [];
                 }
-            } catch {
-                console.error
-            }
-        }, { refreshDeps: [] })
-
-
+            },
+        });
 
     // 通过请求
-    const { runAsync: isPass } = useRequest(
-        async (id, ask_state) => {
-            await http.requestBodyJson('PATCH', { 'id': id, "ask_state": ask_state })
-            return 'ok'
-        }, { manual: true }
-    )
-
+    const { mutateAsync: isPass } = useMutation(
+        {
+            mutationFn: async (id, ask_state) => {
+                if (!id && ask_state) return;
+                await http.requestBodyJson('PATCH', {
+                    id, ask_state,
+                });
+                return 'ok';
+            },
+        }
+    );
 
     return <Suspense fallback={<div>加载中...</div>}>
 
-        <YBox align='center' verticalScroll={true} gap={10} padding={10}>
+        <YBox scroll={true} gap={10} padding={10}>
 
             <InputText2 placeholder="搜索好友" onChangeValue={handleEmailChange}>
                 <InputText2.Right icon='magnifying-glass-circle' onClick={() => run(debouncedKeyword)} />
@@ -76,7 +91,7 @@ export const Find = () => {
                     title='用户信息'
                     actionText='添加'
                     onAction={(type) => {
-                        if (type === 'accept') { run2(findByUser?.id) }
+                        if (type === 'accept') { addFriend(findByUser?.id) }
                     }}
                 >
                     <UserInfoCard.Avatar>

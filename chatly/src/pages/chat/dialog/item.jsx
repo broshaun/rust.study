@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useCallback, Suspense, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
+import { useNavigate } from 'react-router';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
-import { useVirtualList } from 'ahooks';
+// import { useVirtualList } from 'ahooks';
 import { useWinSize } from 'hooks';
 import { YBox } from 'components/flutter';
-
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export const Item = () => {
     const navigate = useNavigate()
@@ -29,7 +29,7 @@ export const Item = () => {
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
             navigate('/message/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName } })
         })
-    }, [])
+    }, [navigate])
 
     // 关闭聊天
     const handleClear = useCallback((item) => {
@@ -44,22 +44,30 @@ export const Item = () => {
 
 
     const containerRef = useRef(null);
-    const wrapperRef = useRef(null)
-    const [list] = useVirtualList(dialog, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 74,
+    const rowVirtualizer = useVirtualizer({
+        count: dialog.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => 50,
         overscan: 5,
+        useFlushSync: false,
     });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} scroll={true} height={winHeight-30} padding={10}>
-            <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
-                {list.map((item) => {
+        <YBox ref={containerRef} scroll={true} height={winHeight - 30} padding={10}>
+            <div style={{
+                height: rowVirtualizer.getTotalSize(),
+                position: "relative",
+                width: "100%"
+            }}>
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const dg = dialog[virtualRow.index];
+                    if (!dg) return;
+
                     return <DialogItem
-                        key={item.data.id}
-                        data={item.data}
+                        key={dg.id}
+                        data={dg}
+                        virtualRow={virtualRow}
                         onSelect={openMsgWindow}
                         onClear={(p) => handleClear(p)}
                     />

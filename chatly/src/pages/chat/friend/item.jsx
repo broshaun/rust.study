@@ -1,36 +1,40 @@
-import React, { useEffect, useState, useCallback, Suspense, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
+import { useNavigate } from 'react-router';
 import { useHttpClient2 } from 'hooks/http';
 import { useWinSize } from 'hooks';
-import { useRequest, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
-import { Divider, Icon, YBox, XBox } from 'components/flutter';
+import { Divider, Icon, YBox } from 'components/flutter';
 import { Friend } from 'components/chat';
-
+import { useMutation } from '@tanstack/react-query'
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export const Item = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [friends, setFriends] = useState([]);
     const [afriend, setAfriend] = useState(0);
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    const { winHeight, isMobile } = useWinSize()
+    const { winHeight } = useWinSize()
+
+
 
     const openMsgWindow = useCallback((select) => {
         navigate('/chat/mobile/detail/', { state: { select } });
-    }, [navigate, location.pathname]);
+    }, [navigate]);
 
-    const { runAsync: runGetFriend } = useRequest(
-        async () => {
-            http.requestBodyJson('GET', { ask_state: 'agree' }).then((results) => {
-                if (!results) return 0;
-                const { code, message, data } = results;
-                if (code !== 200) return 0;
+    const { mutateAsync: runGetFriend } = useMutation(
+        {
+            mutationFn: async () => {
+                const results = await http.requestBodyJson("GET");
+                if (!results) throw new Error("获取失败");
+                const { code, data, message } = results;
+                if (code !== 200) throw new Error(message);
+                return data;
+            },
+            onSuccess: (data) => {
                 const list = data?.detail || []
                 list.forEach(element => {
                     db.table('friends').get(element?.id).then((row) => {
-
                         if (row) {
                             db.table('friends').update(row?.id, {
                                 'uid': element?.user_id,
@@ -50,15 +54,17 @@ export const Item = () => {
                                 'nikename': element?.nikename,
                                 'ask_state': element?.ask_state,
                                 'signal': 'old',
-                                'dialog': 0
+                                'dialog': 0,
                             })
                         }
                     })
                 });
-                return 1;
-            })
-        }, { manual: true }
-    )
+            },
+            onError: (error) => {
+                console.log(error?.message);
+            },
+        }
+    );
 
     useEffect(() => {
         runGetFriend()
@@ -84,32 +90,31 @@ export const Item = () => {
     }, [])
 
 
-
-    const containerRef = useRef(null);
-    const wrapperRef = useRef(null)
-    const [list] = useVirtualList(friends, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 74,
+    const parentRef = useRef(null);
+    const rowVirtualizer = useVirtualizer({
+        count: friends.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 50,
         overscan: 5,
+        useFlushSync: false,
     });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} scroll={true} height={winHeight-30} padding={10} >
-            <YBox.Segment  align="right" >
-                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend}/>
-            </YBox.Segment>
-            <Divider fade/>
-            
-            <div ref={wrapperRef} style={{ width: '100%', minWidth: 0 }}>
-                {list.map((item) => {
-                    return <Friend
-                        key={item.data.id}
-                        data={item.data}
-                        onSelect={openMsgWindow}
-                    />
+        <YBox ref={parentRef} scroll={true} height={winHeight - 30} padding={10} >
+            <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+            <Divider fade spacing={8} />
 
+            <div style={{
+                height: rowVirtualizer.getTotalSize(),
+                position: "relative",
+                width: "100%"
+            }}>
+
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const friend = friends[virtualRow.index];
+                    if (!friend) return;
+                    return <Friend key={friend.id} data={friend} virtualRow={virtualRow} onSelect={(value) => { openMsgWindow(value) }} />
                 })}
             </div>
         </YBox>

@@ -1,36 +1,39 @@
-import React, { useState } from 'react';
-import { useLocalStorageState, useRequest } from 'ahooks';
-// import { useHttpClient } from 'hooks/http';
+import React, { useState } from "react";
 import { useHttpClient2 } from 'hooks/http';
 import { Modal, } from 'components';
 import { Button, TextField, Divider, XBox } from 'components/flutter';
-import { useNavigate } from 'react-router-dom';
-
+import { useNavigate } from 'react-router';
+import { useLocalStorage } from '@mantine/hooks';
+import { useMutation } from '@tanstack/react-query'
 
 export const Agent = () => {
     const navigate = useNavigate();
-    const [apiBase, setApiBase] = useLocalStorageState('apiBase', { defaultValue: '' })
+    const [apiBase, setApiBase] = useLocalStorage({ key: 'apiBase' })
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
+
     const { http } = useHttpClient2('/rpc/chat/ping')
     const [isUpdate, setUpdate] = useState(false);
 
-    const { runAsync: ping } = useRequest(() => {
-        http.post('GET').then((results) => {
-            console.log('results', results)
-            const { code, message, data } = results
-            setMsg(data)
-            return
-        }).catch((err) => {
-            console.error(err);
-            setMsg(err?.message || String(err) || 'Ping error');
-            throw err;
-        });
-        return 'ok'
-    }, { manual: true, refreshDeps: [http, apiBase] })
 
-
-
+    const { mutateAsync: ping } = useMutation(
+        {
+            mutationFn: async () => {
+                const results = await http.requestBodyJson("GET");
+                if (!results) throw new Error("Ping失败");
+                const { code, message } = results;
+                if (code !== 200) throw new Error(message);
+                return results;
+            },
+            onSuccess: (results) => {
+                const { data } = results;
+                setMsg(data)
+            },
+            onError: (error) => {
+                setMsg(error?.message || String(err) || 'Ping error');
+            },
+        }
+    );
 
 
     return <React.Fragment>
@@ -44,7 +47,7 @@ export const Agent = () => {
         </XBox>
 
 
-        <Divider spacing={20}/>
+        <Divider spacing={20} />
 
         <XBox padding={5}>
             <TextField

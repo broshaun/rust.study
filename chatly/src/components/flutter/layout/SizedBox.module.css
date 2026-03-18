@@ -1,30 +1,4 @@
 .sizedBox {
-  /* 1. 核心定位：锁定尺寸，防止在 Flex 容器中被压缩 */
-  flex-shrink: 0;
   box-sizing: border-box;
-
-  /* 使用 CSS 变量默认值逻辑：
-     如果有显式设置则用设置值，否则：宽度默认自适应(auto)，高度默认自适应(auto) */
-  width: var(--sb-w, auto);
-  height: var(--sb-h, auto);
-
-  /* 2. 容器表现：当内部有内容时，作为 Flex 容器并居中内容 */
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  /* 3. 溢出处理：允许 UI 装饰（如发光、投影）正常显示 */
-  overflow: visible;
-
-  /* 4. 主题适配：SizedBox 虽不带材质，但应继承文字色 */
-  color: inherit;
-}
-
-/* 优化：当没有子元素且未设置高度时，强制高度为 0，避免 inline-flex 产生默认行高 */
-.sizedBox:empty {
-  display: inline-block;
-  vertical-align: top;
-  height: var(--sb-h, 0px);
-  width: var(--sb-w, 0px);
+  flex-shrink: 0;
 }

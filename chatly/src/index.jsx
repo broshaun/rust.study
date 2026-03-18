@@ -1,16 +1,19 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React from "react";
+import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MantineProvider } from "@mantine/core";
 import App from './App';
-import { BrowserShell } from 'components';
-import "./styles/global.css";
-import './styles/theme.css';
 
+const container = document.getElementById('root');
+const root = createRoot(container);
+const queryClient = new QueryClient();
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <BrowserShell>
-      <App />
-    </BrowserShell>
+    <MantineProvider>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </MantineProvider>
   </React.StrictMode>,
 );

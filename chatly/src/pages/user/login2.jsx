@@ -1,57 +1,59 @@
 
 import { Modal } from "components";
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react"
+import { useNavigate } from 'react-router';
 import { useWinSize, useToken } from 'hooks';
-import { useLocalStorageState, useRequest } from 'ahooks';
 import { useHttpClient2, useImage } from 'hooks/http';
 import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
+import { useMutation } from '@tanstack/react-query'
+import { useLocalStorage } from "@mantine/hooks";
+
+
 
 
 export function LogOn() {
 
     const navigate = useNavigate();
-    const [account, setAccount] = useLocalStorageState('savedAccount')
-    const [avatar, setAvatar] = useLocalStorageState('myAvatar')
-
-
-    const [password, setPassword] = useState("")
-    const { http } = useHttpClient2('/rpc/chat/login/')
-
-    const { src: avatarSrc } = useImage(avatar)
-
-    console.log('avatar',avatar)
-    console.log('avatarSrc',avatarSrc)
-
-    const { setToken } = useToken()
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
+    const [account, setAccount] = useLocalStorage({ key: 'savedAccount' })
+    const [avatar, setAvatar] = useLocalStorage({ key: 'myAvatar' })
+    const [password, setPassword] = useState("")
+
+    const { http } = useHttpClient2('/rpc/chat/login/')
+    const { src: avatarSrc } = useImage(avatar)
+
+
+    const { setToken } = useToken()
     const { isMobile } = useWinSize()
 
-    const { data, runAsync: runLogin } = useRequest((account, password) => {
-        if (!account || !password) {
-            setMsg('请输入账号密码 ...')
-            setOpen(true)
-            return
-        }
-
-        http.post('POST', { 'email': account, 'pass_word': password })
-            .then((results) => {
-                if (!results) return;
-                const { code, message, data } = results
-                if (code === 200) {
-                    setToken(results.data?.login_token, results.data?.login_expired)
-                    setAvatar(data?.user?.avatar_url)
-
-                    isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/')
-
+    const { mutateAsync: login } = useMutation(
+        {
+            mutationFn: async ({ account, password }) => {
+                if (!account || !password) throw new Error("请输入账号密码 ...");
+                const results = await http.post("POST", { email: account, pass_word: password });
+                if (!results) throw new Error("登录失败，请稍后重试");
+                const { code, message } = results;
+                if (code !== 200) throw new Error(message || "登录失败");
+                return results;
+            },
+            onSuccess: (results) => {
+                const { data } = results;
+                setAvatar(data?.user?.avatar_url);
+                setToken(data?.login_token, data?.login_expired);
+                if (isMobile) {
+                    navigate("/chat/mobile/dialog/");
                 } else {
-                    setMsg(message)
-                    setOpen(true)
+                    navigate("/chat/dialog/");
                 }
-            })
-        return 'ok'
-    }, { manual: true })
+            },
+            onError: (error) => {
+                setMsg(error?.message || "登录失败，请稍后重试");
+                setOpen(true);
+            },
+        }
+    );
+
 
     return <React.Fragment>
         <Modal visible={open}>
@@ -60,7 +62,7 @@ export function LogOn() {
             <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
         </Modal>
 
-        <XBox>
+        <XBox align="middle" justify="center" compact width="100%">
             <Avatar
                 src={avatarSrc}
                 size={60}
@@ -92,13 +94,13 @@ export function LogOn() {
                 hintText="请输入密码"
                 obscureText={true}
                 value={password}
-                onChanged={(value) => setPassword(value)}
+                onChanged={(value) => { console.log('value', value), setPassword(value) }}
             />
         </XBox>
 
         <XBox padding={10}>
             <Button label='登录' width={250}
-                onPressed={() => { runLogin(account, password) }}
+                onPressed={() => { login({ account, password }) }}
             />
         </XBox>
 

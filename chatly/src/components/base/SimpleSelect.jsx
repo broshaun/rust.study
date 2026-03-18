@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from "react";
 import styles from './SimpleSelect.module.css';
 
 const DEFAULT_OPTIONS = [

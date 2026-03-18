@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, memo, useEffect } from 'react'
+import React, { useState, useCallback, useRef, memo, useEffect } from "react"
 import styles from './ImageUpload.module.css'
 
 const ImageUpload = memo(({

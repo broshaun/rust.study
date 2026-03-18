@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef, useMemo } from "react"
+import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
-import { useRequest, useLocalStorageState, useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Icon, YBox } from 'components/flutter';
-import { useHttpClient2 } from 'hooks/http';
-import { useApiBase } from 'hooks/http';
+import { useHttpClient2, useApiBase } from 'hooks/http';
+import { useLocalStorage } from '@mantine/hooks';
+import { useMutation } from '@tanstack/react-query';
+import { useVirtualizer } from "@tanstack/react-virtual";
+
+
 
 export function Msg() {
 
@@ -17,7 +20,7 @@ export function Msg() {
     const uid = location.state?.uid;
     const displayName = location.state?.displayName;
 
-    const [selfAvatar] = useLocalStorageState('myAvatar');
+    const [selfAvatar] = useLocalStorage({ key: 'myAvatar' });
 
     const [msgs, setMsgs] = useState([]);
 
@@ -42,7 +45,6 @@ export function Msg() {
     }, [isMobile]);
 
 
-
     useEffect(() => {
         const sub = liveQuery(
             () => db.table('message').where('uid').equals(uid).reverse().toArray()
@@ -55,90 +57,65 @@ export function Msg() {
     }, [uid]);
 
 
-
-    const { runAsync: fnSend } = useRequest((uid, msgText) => {
-
-        http.requestBodyJson('PUT', {
-            user_id: uid,
-            msg: msgText
-        }).then((results) => {
-
-            if (!results) return;
-
-            const { code } = results;
-
-            if (code === 200) {
-
-                db.table('message').put({
-                    uid: uid,
-                    msg: msgText,
-                    timestamp: getDateTimeStr(),
-                    signal: 'send'
-                });
-
-            }
-
-        });
-
-        return 'ok';
-
-    }, { manual: true });
-
+    const { mutateAsync: fnSend } = useMutation(
+        {
+            mutationFn: async ({ uid, msgText }) => {
+                http.requestBodyJson('PUT', { user_id: uid, msg: msgText })
+                    .then((results) => {
+                        if (!results) return;
+                        const { code } = results;
+                        if (code === 200) {
+                            db.table('message').put({
+                                uid: uid,
+                                msg: msgText,
+                                timestamp: getDateTimeStr(),
+                                signal: 'send'
+                            });
+                        }
+                    });
+                return 'ok';
+            },
+        }
+    );
 
 
     const containerRef = useRef(null);
-    const wrapperRef = useRef(null);
-
-    const [list] = useVirtualList(msgs, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 74,
-        overscan: 5,
+    const rowVirtualizer = useVirtualizer({
+        count: msgs.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => 74,
+        overscan: 10,
+        useFlushSync: false,
     });
 
 
-
-    useEffect(() => {
-
-        if (containerRef.current) {
-            containerRef.current.scrollTop = 0;
-        }
-
-    }, [msgs.length]);
-
-
-
     return (
-        <ChatMsg>
-
+        <ChatMsg theme='light'>
             <ChatMsg.Meta
                 title={displayName}
-                left={
-                    isMobile
-                        ? <Icon name="chevron-left" onClick={() => navigate(f_url)} />
-                        : <></>
-                }
+                left={isMobile ? <Icon name="chevron-left" onClick={() => navigate(f_url)} /> : <></>}
             />
-
             <ChatMsg.Content>
+                <YBox ref={containerRef} scroll={true} height={winHeight - 160} padding={10} >
+                    <div style={{
+                        height: rowVirtualizer.getTotalSize(),
+                        position: "relative",
+                        width: "100%"
+                    }}>
 
-                <YBox
-                    ref={containerRef}
-                    scroll={true}
-                    height={winHeight - 145}
-                    padding={10}
-                >
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const msg = msgs[virtualRow.index];
+                            if (!msg) return;
 
-                    <div ref={wrapperRef}>
-
-                        {list.map((item) => (
-                            <MsgItem
-                                key={item.data.id}
-                                data={item.data}
+                            return <MsgItem
+                                key={msg.id}
+                                data={msg}
                                 receiveAvatar={receiveAvatarSrc}
                                 sendAvatar={sendAvatarSrc}
+                                virtualRow={virtualRow}
                             />
-                        ))}
+                        })}
+
 
                     </div>
 
@@ -147,7 +124,7 @@ export function Msg() {
             </ChatMsg.Content>
 
             <ChatMsg.Send
-                onSend={(newMsg) => fnSend(uid, newMsg)}
+                onSend={(newMsg) => fnSend({ uid, msgText: newMsg })}
             />
 
         </ChatMsg>

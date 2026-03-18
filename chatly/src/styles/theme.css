@@ -5,7 +5,7 @@
 }
 
 /* 1. 极致毛玻璃 (Ultra Glass) */
-:root,[data-theme='glass'] {
+[data-theme='glass'] {
   --app-bg: fixed linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
   --panel-bg: rgba(255, 255, 255, 0.45); /* 提高白场，防止透底太杂 */
   --panel-blur: blur(20px);
@@ -33,7 +33,7 @@
 }
 
 /* 3. 赛博医疗 (Cyber Pulse) - 增加了呼吸感 */
-[data-theme='cyber'] {
+:root,[data-theme='cyber'] {
   --app-bg: radial-gradient(circle at 50% 0%, #1a2a3a 0%, #050a0f 100%);
   --panel-bg: rgba(13, 25, 41, 0.85);
   --panel-blur: blur(15px);

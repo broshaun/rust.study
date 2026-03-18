@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Outlet, useNavigate } from "react-router-dom";
+import React, { useState } from "react"
+import { Outlet, useNavigate } from "react-router";
 import { AppBar, AppShell, Drawer, Divider, Icon, XBox, YBox } from 'components/flutter';
 
 

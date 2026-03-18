@@ -1,10 +1,9 @@
-import { useState, Suspense } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, Suspense } from "react";
+import { useNavigate, useLocation } from 'react-router';
 import { InputText2 } from 'components';
-import { IconCustomColor } from 'components/icon';
 import { useHttpClient2 } from 'hooks/http';
-import { useRequest } from 'ahooks';
-import { XBox } from 'components/flutter';
+import { XBox, Icon } from 'components/flutter';
+import { useMutation } from '@tanstack/react-query';
 
 
 
@@ -14,21 +13,27 @@ export const PushDeer = () => {
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const [pushKey, setPushKey] = useState(location.state?.pushKey)
 
-
-    const { runAsync: update } = useRequest((push_key) => {
-        if (!push_key) return '请输入推送码'
-        apiLogin.post('PATCH', { push_key: push_key }).then((results) => {
-            if (!results) return;
-            const { code, message, data } = results
-            console.log('message', message)
-        })
-        return 'ok'
-    }, { manual: true })
+    const { mutateAsync: update, isPending: loading } = useMutation({
+        mutationFn: async (push_key) => {
+            if (!push_key) {
+                throw new Error('请输入推送码');
+            }
+            const results = await apiLogin.post('PATCH', { push_key });
+            if (!results) {
+                throw new Error('请求失败');
+            }
+            const { code, message } = results;
+            if (code !== 200) {
+                throw new Error(message || '更新失败');
+            }
+            return 'ok';
+        },
+    });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
         <XBox justify='left' padding={20}>
-            <IconCustomColor name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
+            <Icon name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
         </XBox>
         <XBox justify='center' padding={20}><h3>请输入PushKey</h3></XBox>
 
