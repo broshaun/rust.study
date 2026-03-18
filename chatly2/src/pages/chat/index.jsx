@@ -35,7 +35,6 @@ export const RsChat = [
 
 
 function ChatGuard() {
-
   const navigate = useNavigate();
   const { remainSeconds } = useToken()
   const { http: httpMsg } = useHttpClient2('/rpc/chat/msg/single/');
@@ -45,7 +44,6 @@ function ChatGuard() {
     queryFn: async () => {
       const results = await httpMsg.post('POST')
       const { code, data } = results;
-      console.log('code, data ', code, data)
       if (data && code === 200) {
         db.table('message').put({ 'uid': data?.uid, 'msg': data?.msg, 'timestamp': data?.timestamp, 'signal': 'receive' });
         db.table('friends').where('uid').equals(data?.uid).modify((user) => {
@@ -61,10 +59,11 @@ function ChatGuard() {
   })
 
   useEffect(() => {
+    // console.log('remainSeconds',remainSeconds)
     if (remainSeconds > 0 && remainSeconds < 10) {
       navigate('/user/login/', { replace: true });
     }
-  }, [remainSeconds]);
+  }, [remainSeconds])
 
   return <Outlet />
 }

@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
-import { useRequest, useVirtualList } from 'ahooks';
+import { useVirtualList } from 'ahooks';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Icon, YBox } from 'components/flutter';
-import { useHttpClient2,useApiBase } from 'hooks/http';
-import { useLocalStorage } from 'hooks';
+import { useHttpClient2, useApiBase } from 'hooks/http';
+import { useLocalStorage } from '@mantine/hooks';
+import { useMutation } from '@tanstack/react-query';
+
+
 
 export function Msg() {
 
@@ -17,7 +20,7 @@ export function Msg() {
     const uid = location.state?.uid;
     const displayName = location.state?.displayName;
 
-    const [selfAvatar] = useLocalStorage({key:'myAvatar'});
+    const [selfAvatar] = useLocalStorage({ key: 'myAvatar' });
 
     const [msgs, setMsgs] = useState([]);
 
@@ -42,7 +45,6 @@ export function Msg() {
     }, [isMobile]);
 
 
-
     useEffect(() => {
         const sub = liveQuery(
             () => db.table('message').where('uid').equals(uid).reverse().toArray()
@@ -55,35 +57,26 @@ export function Msg() {
     }, [uid]);
 
 
-
-    const { runAsync: fnSend } = useRequest((uid, msgText) => {
-
-        http.requestBodyJson('PUT', {
-            user_id: uid,
-            msg: msgText
-        }).then((results) => {
-
-            if (!results) return;
-
-            const { code } = results;
-
-            if (code === 200) {
-
-                db.table('message').put({
-                    uid: uid,
-                    msg: msgText,
-                    timestamp: getDateTimeStr(),
-                    signal: 'send'
-                });
-
-            }
-
-        });
-
-        return 'ok';
-
-    }, { manual: true });
-
+    const { mutateAsync: fnSend } = useMutation(
+        {
+            mutationFn: async ({ uid, msgText }) => {
+                http.requestBodyJson('PUT', { user_id: uid, msg: msgText })
+                    .then((results) => {
+                        if (!results) return;
+                        const { code } = results;
+                        if (code === 200) {
+                            db.table('message').put({
+                                uid: uid,
+                                msg: msgText,
+                                timestamp: getDateTimeStr(),
+                                signal: 'send'
+                            });
+                        }
+                    });
+                return 'ok';
+            },
+        }
+    );
 
 
     const containerRef = useRef(null);
@@ -110,27 +103,18 @@ export function Msg() {
 
     return (
         <ChatMsg>
-
             <ChatMsg.Meta
                 title={displayName}
-                left={
-                    isMobile
-                        ? <Icon name="chevron-left" onClick={() => navigate(f_url)} />
-                        : <></>
-                }
+                left={isMobile ? <Icon name="chevron-left" onClick={() => navigate(f_url)} /> : <></>}
             />
-
             <ChatMsg.Content>
-
                 <YBox
                     ref={containerRef}
                     scroll={true}
                     height={winHeight - 145}
                     padding={10}
                 >
-
                     <div ref={wrapperRef}>
-
                         {list.map((item) => (
                             <MsgItem
                                 key={item.data.id}
@@ -147,7 +131,7 @@ export function Msg() {
             </ChatMsg.Content>
 
             <ChatMsg.Send
-                onSend={(newMsg) => fnSend(uid, newMsg)}
+                onSend={(newMsg) => fnSend({ uid, msgText: newMsg })}
             />
 
         </ChatMsg>

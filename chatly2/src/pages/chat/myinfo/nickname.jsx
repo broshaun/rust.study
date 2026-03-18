@@ -1,9 +1,9 @@
 import { useState, Suspense } from "react";
-import {  useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { InputText2 } from 'components';
 import { useHttpClient2 } from 'hooks/http';
-import { useRequest } from 'ahooks';
-import { XBox,Icon } from 'components/flutter';
+import { XBox, Icon } from 'components/flutter';
+import { useMutation } from '@tanstack/react-query';
 
 
 export const Nikename = () => {
@@ -11,18 +11,25 @@ export const Nikename = () => {
     const location = useLocation();
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const [name, setName] = useState()
-    const { runAsync: update } = useRequest(
-        async (nikename) => {
-            try {
-                if (!nikename) return '请输入昵称'
-                const { code, message, data } = await apiLogin.post('PATCH', { nikename: nikename })
-                console.log('message', message)
-                return 'ok'
-            } catch {
-                console.error
-            }
-        }, { manual: true })
 
+
+
+    const { mutateAsync: update, isPending: loading } = useMutation({
+        mutationFn: async (nikename) => {
+            if (!nikename) {
+                throw new Error('请输入昵称');
+            }
+            const res = await apiLogin.post('PATCH', { nikename });
+            if (!res) {
+                throw new Error('请求失败');
+            }
+            const { code, message } = res;
+            if (code !== 200) {
+                throw new Error(message || '更新失败');
+            }
+            return 'ok';
+        },
+    });
 
 
     return <Suspense fallback={<div>加载中...</div>}>

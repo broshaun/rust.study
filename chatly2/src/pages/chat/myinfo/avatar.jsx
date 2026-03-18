@@ -2,7 +2,7 @@ import { useCallback, Suspense, useMemo } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { ImageUpload } from 'components';
 import { useHttpClient2, useApiBase } from 'hooks/http';
-import { useLocalStorage } from 'hooks';
+import { useLocalStorage } from '@mantine/hooks';
 import { Avatar, Container, XBox, Icon } from 'components/flutter';
 
 export const Avatar2 = () => {

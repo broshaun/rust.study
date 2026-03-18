@@ -5,7 +5,7 @@ const TOKEN_KEY = "login_token";
 const EXPIRE_KEY = "login_expire";
 
 export function useToken() {
-  const [token, setTokenValue] = useLocalStorage({ key: TOKEN_KEY, defaultValue: "" });
+  const [token, setTokenValue] = useLocalStorage({ key: TOKEN_KEY, defaultValue: "", getInitialValueInEffect: false, });
   const [expireTime, setExpireTime] = useLocalStorage({ key: EXPIRE_KEY, defaultValue: 0 });
   const [remainSeconds, setRemainSeconds] = useState(0);
 

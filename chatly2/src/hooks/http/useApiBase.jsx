@@ -1,4 +1,4 @@
-import { useLocalStorage } from "hooks";
+import { useLocalStorage } from "@mantine/hooks";
 
 /**
  * 全局 apiBase（统一入口）

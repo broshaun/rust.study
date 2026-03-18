@@ -31,12 +31,13 @@ For iOS development, run:
 ### 安装前端包
 ```sh
   pnpm add dexie dexie-react-hooks
-  # pnpm add react-router-dom@7
-  # pnpm remove react-router-dom
+  # pnpm add ahooks
+  # pnpm remove ahooks
   pnpm add react-router
-  # pnpm add zustand ahooks
+  pnpm add zustand
   pnpm add @mantine/core @mantine/hooks
   pnpm add @tanstack/react-query
+  pnpm add @tanstack/react-virtual
 ```
 
 

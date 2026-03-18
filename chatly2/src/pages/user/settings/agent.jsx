@@ -3,7 +3,7 @@ import { useHttpClient2 } from 'hooks/http';
 import { Modal, } from 'components';
 import { Button, TextField, Divider, XBox } from 'components/flutter';
 import { useNavigate } from 'react-router';
-import { useLocalStorage } from 'hooks';
+import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query'
 
 export const Agent = () => {

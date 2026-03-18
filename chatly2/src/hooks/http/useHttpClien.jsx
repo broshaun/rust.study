@@ -17,6 +17,8 @@ export function useHttpClient(baseUrl = "") {
   const { apiBase } = useApiBase();
   const { token } = useToken();
 
+  
+
   const endpoint = useMemo(() => {
     const origin = String(apiBase || "").replace(/\/+$/, "");
     const path = String(baseUrl || "").replace(/^\/+/, "");

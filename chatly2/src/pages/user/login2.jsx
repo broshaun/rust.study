@@ -2,10 +2,11 @@
 import { Modal } from "components";
 import React, { useState } from "react"
 import { useNavigate } from 'react-router';
-import { useWinSize, useToken, useLocalStorage } from 'hooks';
+import { useWinSize, useToken } from 'hooks';
 import { useHttpClient2, useImage } from 'hooks/http';
 import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query'
+import { useLocalStorage } from "@mantine/hooks";
 
 
 
