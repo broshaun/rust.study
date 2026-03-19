@@ -9,7 +9,7 @@ Template created! To get started run:
 
   cd chatly
   pnpm install
-  pnpm add -D @tauri-apps/cli@latest
+  pnpm add -D @tauri-apps/cli
   
   pnpm tauri init
   pnpm tauri android init
@@ -40,6 +40,8 @@ For iOS development, run:
   pnpm add @mantine/core @mantine/hooks
   pnpm add @tanstack/react-query
   pnpm add @tanstack/react-virtual
+  
+  pnpm add @tauri-apps/api
 ```
 
 
@@ -53,7 +55,8 @@ For iOS development, run:
 
 
 
-
+cargo install tauri-cli --version "^2.10" --locked
+cnpm install @tauri-apps/api@2.10.2
 
 
 // 使用
@@ -69,3 +72,19 @@ For iOS development, run:
 //  */
 //  远程地址示例http://103.186.108.161:5015/imgs/06e5b950405c65eadfe37d1a227fb170.jpg
 //  远程的文件名是md5.后缀名。判断图片的唯一性使用md5文件名
+
+
+
+4. 调试建议 (Debug)
+如果依然不显示，请使用以下方法定位问题：
+
+编译带控制台的版本：使用 npm run tauri build -- --debug 进行打包。这样运行生成的 .exe/.app 时可以右键打开 审查元素 (Inspect)。
+
+查看 Console 报错：
+
+如果是 404，说明路径没找对。
+
+如果是 CSP 或 Not allowed to load local resource，说明权限/安全配置有问题
+
+# 调试版本打包
+pnpm tauri build --debug

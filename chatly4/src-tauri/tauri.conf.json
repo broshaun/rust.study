@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "chatly2",
+  "productName": "chatly",
   "version": "0.1.0",
   "identifier": "com.chatly.dev",
   "build": {
@@ -12,22 +12,18 @@
   "app": {
     "windows": [
       {
-        "title": "Chatly",
-        "width": 1000,
-        "height": 700,
+        "title": "chatly",
+        "width": 800,
+        "height": 600,
         "resizable": true,
         "fullscreen": false
       }
     ],
     "security": {
-      
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: https://asset.localhost http://103.186.108.161:5015; connect-src 'self' ipc: http://103.186.108.161:5015",
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["**"]
-      }
+      "csp": "default-src 'self'; img-src 'self' http://* https://* data: blob:; script-src 'self'; connect-src 'self' http://* https://*; style-src 'self' 'unsafe-inline'"
     }
   },
+
   "bundle": {
     "active": true,
     "targets": "all",
@@ -38,6 +34,5 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-
   }
 }

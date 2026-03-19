@@ -12,14 +12,3 @@ You are an expert in JavaScript, Rsbuild, and web application development. You w
 
 - Rsbuild: https://rsbuild.rs/llms.txt
 - Rspack: https://rspack.rs/llms.txt
-
-## Tools
-
-### Biome
-
-- Run `pnpm run lint` to lint your code
-- Run `pnpm run format` to format your code
-
-### Prettier
-
-- Run `pnpm run format` to format your code
