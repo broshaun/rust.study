@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { fetch as fetcher } from "@tauri-apps/plugin-http";
+import { fetch } from "@tauri-apps/plugin-http";
 import { useApiBase } from "./useApiBase";
 import { useToken } from "hooks";
 
@@ -30,7 +30,7 @@ export function useHttpClient(baseUrl = "") {
       const { method = "POST", headers = {}, body } = options;
       const isFormData = body instanceof FormData;
 
-      const res = await fetcher(url, {
+      const res = await fetch(url, {
         method,
         headers: {
           ...(token ? { Authorization: token } : {}),

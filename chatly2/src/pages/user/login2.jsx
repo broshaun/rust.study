@@ -56,6 +56,8 @@ export function LogOn() {
 
 
     return <React.Fragment>
+
+        <div>{avatarSrc}</div>
         <Modal visible={open}>
             <Modal.Title>登录提示</Modal.Title>
             <Modal.Message>{msg}</Modal.Message>
@@ -94,7 +96,7 @@ export function LogOn() {
                 hintText="请输入密码"
                 obscureText={true}
                 value={password}
-                onChanged={(value) => { console.log('value', value), setPassword(value) }}
+                onChanged={(value) => { setPassword(value) }}
             />
         </XBox>
 

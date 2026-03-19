@@ -8,21 +8,19 @@
   "permissions": [
     "core:default",
     "http:allow-fetch",
+    "dialog:default",
+    "fs:default",
     "core:webview:allow-create-webview-window",
     {
       "identifier": "http:default",
       "allow": [
         {
-          "url": "http://192.168.2.2:5015/*"
+          "url": "http://192.168.2.2:5015"
         },
         {
-          "url": "http://103.186.108.161:5015/*"
+          "url": "http://103.186.108.161:5015"
         }
       ]
-    },
-    "fs:default"
+    }
   ]
 }
-
-
-

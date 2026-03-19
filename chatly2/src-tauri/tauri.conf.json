@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "chatly",
+  "productName": "chatly2",
   "version": "0.1.0",
   "identifier": "com.chatly.dev",
   "build": {
@@ -12,18 +12,17 @@
   "app": {
     "windows": [
       {
-        "title": "chatly",
-        "width": 800,
-        "height": 600,
+        "title": "Chatly",
+        "width": 1000,
+        "height": 700,
         "resizable": true,
         "fullscreen": false
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' http://* https://* data: blob:; script-src 'self'; connect-src 'self' http://* https://*; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; img-src 'self' http://* https://*; script-src 'self'"
     }
   },
-
   "bundle": {
     "active": true,
     "targets": "all",

@@ -7,9 +7,6 @@
   ],
   "permissions": [
     "core:default",
-    "http:default",
-    "dialog:default",
-    "fs:default",
     {
       "identifier": "http:default",
       "allow": [
@@ -21,6 +18,27 @@
         }
       ]
     },
-    "store:default"
+    "fs:allow-exists",
+    "fs:allow-read",
+    "fs:allow-write",
+    "fs:allow-create",
+    "fs:allow-mkdir",
+    "fs:allow-read-dir",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-copy-file",
+    "fs:allow-rename",
+    "fs:allow-remove",
+    "fs:allow-fstat",
+    "fs:allow-lstat",
+    "fs:allow-stat",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    }
   ]
 }
