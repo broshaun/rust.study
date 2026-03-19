@@ -3,69 +3,68 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { BaseDirectory, mkdir, writeFile, exists, readFile } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
 
-const IMAGE_DIR = "images";
-const DEFAULT_IMAGE = "/favicon.png";
-const DEFAULT_EXT = "jpg";
-
-// 验证是否 MD5 文件名
-const isMD5FileName = (fileName) => /^[a-fA-F0-9]{32}\.[a-zA-Z0-9]+$/.test(fileName);
-
-// 从 URL 提取文件名
-const getFileNameFromUrl = (url) => url?.split("/").filter(Boolean).pop();
-
-// 字节数组转 ObjectURL
-const bytesToObjectURL = (bytes, ext) =>
-  URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: `image/${ext}` }));
+const CACHE_DIR = "images";
+const DEFAULT_IMG = "/favicon.png";
+const MD5_REGEX = /^[a-fA-F0-9]{32}\.[a-z0-9]+$/i;
 
 export function useImage(url) {
-  const [state, setState] = useState({
-    src: DEFAULT_IMAGE,
-    loading: false,
-    error: null,
-    success: false,
-  });
+  const [state, setState] = useState({ src: DEFAULT_IMG, loading: false, error: null, success: false });
 
   useEffect(() => {
     if (!url) return;
+    
+    let isCancelled = false;
+    let objUrl = null;
 
-    let canceled = false;
-    const updateState = (updates) => !canceled && setState((prev) => ({ ...prev, ...updates }));
+    // 封装安全的状态更新函数，避免多处书写 if (!isCancelled)
+    const safeUpdate = (newState) => {
+      if (!isCancelled) setState(prev => ({ ...prev, ...newState }));
+    };
 
     (async () => {
-      updateState({ loading: true, error: null, success: false });
+      safeUpdate({ loading: true, error: null, success: false, src: DEFAULT_IMG });
 
       try {
-        const fileName = getFileNameFromUrl(url);
-        if (!isMD5FileName(fileName)) throw new Error(`文件名不合法（必须是MD5）：${fileName}`);
-
-        const [name, ext = DEFAULT_EXT] = fileName.split(".");
-        const filePath = await join(IMAGE_DIR, fileName);
-        const baseDirOption = { baseDir: BaseDirectory.AppData };
-
-        // 读取本地缓存
-        if (await exists(filePath, baseDirOption)) {
-          const bytes = await readFile(filePath, baseDirOption);
-          updateState({ src: bytesToObjectURL(bytes, ext), loading: false, success: true });
-          return;
+        const fileName = url.split("/").pop();
+        if (!fileName || !MD5_REGEX.test(fileName)) {
+          throw new Error("Invalid MD5 filename format");
         }
 
-        // 下载并缓存
-        const res = await fetch(url, { method: "GET", responseType: 2 });
-        if (!res.ok) throw new Error(`HTTP ${res.status}: 图片下载失败`);
-        const bytes = await res.bytes();
+        const path = await join(CACHE_DIR, fileName);
+        const opt = { baseDir: BaseDirectory.AppData };
+        let bytes;
 
-        await mkdir(IMAGE_DIR, { ...baseDirOption, recursive: true });
-        await writeFile(filePath, bytes, baseDirOption);
+        // 核心逻辑：先查缓存，无则下载
+        if (await exists(path, opt)) {
+          bytes = await readFile(path, opt);
+        } else {
+          const res = await fetch(url, { method: "GET", connectTimeout: 10000 });
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          
+          bytes = new Uint8Array(await res.arrayBuffer());
+          
+          // 确保目录存在 (recursive: true 能够安全应对多图片并发下载时的目录创建冲突)
+          if (!(await exists(CACHE_DIR, opt))) {
+            await mkdir(CACHE_DIR, { ...opt, recursive: true });
+          }
+          await writeFile(path, bytes, opt);
+        }
 
-        updateState({ src: bytesToObjectURL(bytes, ext), loading: false, success: true });
-      } catch (err) {
-        console.error("useImages加载/缓存失败:", err?.message || err);
-        updateState({ src: DEFAULT_IMAGE, loading: false, error: err?.message || "图片下载失败", success: false });
+        // 安全提取后缀名，生成 Blob URL
+        const ext = fileName.split('.').pop() || 'jpeg';
+        objUrl = URL.createObjectURL(new Blob([bytes], { type: `image/${ext}` }));
+        
+        safeUpdate({ src: objUrl, loading: false, success: true });
+
+      } catch (e) {
+        console.error("Image cache error:", e);
+        safeUpdate({ loading: false, error: e.message || "Unknown error", success: false });
       }
     })();
 
-    return () => {
-      canceled = true;
+    return () => { 
+      isCancelled = true; 
+      if (objUrl) URL.revokeObjectURL(objUrl); 
     };
   }, [url]);
 

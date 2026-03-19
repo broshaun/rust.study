@@ -7,9 +7,11 @@
   ],
   "permissions": [
     "core:default",
-    "fs:default",
     "http:default",
-    "core:webview:allow-create-webview-window",
+    "fs:default",
+    "fs:allow-appdata-read-recursive",
+    "fs:allow-appdata-write-recursive",
+    "fs:allow-appdata-meta-recursive",
     {
       "identifier": "fs:scope",
       "allow": [
