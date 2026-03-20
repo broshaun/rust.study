@@ -32,16 +32,15 @@ For iOS development, run:
 
 ### 安装前端包
 ```sh
-  pnpm add dexie dexie-react-hooks
+  pnpm add @tauri-apps/api
+  pnpm add react-router
   # pnpm add ahooks
   # pnpm remove ahooks
-  pnpm add react-router
+  pnpm add dexie dexie-react-hooks
   pnpm add zustand
-  pnpm add @mantine/core @mantine/hooks
+  pnpm add @mantine/hooks @mantine/core @tabler/icons-react
   pnpm add @tanstack/react-query
   pnpm add @tanstack/react-virtual
-  
-  pnpm add @tauri-apps/api
 ```
 
 
