@@ -13,12 +13,15 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   windows:
     runs-on: windows-latest
 
     env:
-      NODE_VERSION: "20"
+      NODE_VERSION: "24"
       WORKING_DIR: "chatly"
 
     defaults:
@@ -27,26 +30,36 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+          package_json_file: ${{ env.WORKING_DIR }}/package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/pnpm-lock.yaml
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: ${{ env.WORKING_DIR }}/pnpm-lock.yaml
-
-      # ✅ 关键修复
-      - name: Install pnpm globally
+      - name: Verify toolchain
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           set -euxo pipefail
-          npm install -g pnpm@9.12.3
+          node -v
+          npm -v
           pnpm -v
+          rustc -V
+          cargo -V
 
       - name: Install frontend dependencies
         working-directory: ${{ env.WORKING_DIR }}
@@ -63,7 +76,10 @@ jobs:
           projectPath: ${{ env.WORKING_DIR }}
           tagName: ${{ github.ref_name }}
           releaseName: "Chatly ${{ github.ref_name }}"
-          releaseBody: "Windows build for ${{ github.ref_name }}"
+          releaseBody: |
+            Windows build for ${{ github.ref_name }}
+
+            Please download the installer asset below.
           releaseDraft: false
           prerelease: false
           args: --target x86_64-pc-windows-msvc --bundles msi
