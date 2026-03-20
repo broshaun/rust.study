@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (No-Cache Clean Build)
+name: Tauri2 Android Build (Stable)
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
+          distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Setup Rust
@@ -41,65 +41,104 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Purge Old NDK & Install Correct One
+      - name: Purge old NDK and install required Android packages
+        shell: bash
         run: |
-          set -euo pipefail
-          echo "Purging all existing NDKs..."
+          set -euxo pipefail
+
+          echo "Purging old NDKs..."
           rm -rf "$ANDROID_SDK_ROOT/ndk" || true
           rm -rf "$ANDROID_SDK_ROOT/ndk-bundle" || true
 
-          sdkmanager "ndk;${{ env.NDK_VER }}" "build-tools;${{ env.BUILD_TOOLS_VER }}" "platforms;android-34"
+          yes | sdkmanager \
+            "ndk;${{ env.NDK_VER }}" \
+            "build-tools;${{ env.BUILD_TOOLS_VER }}" \
+            "platforms;android-34"
 
           NDK_PATH="$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VER }}"
-          echo "NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
-          echo "$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+          echo "NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
+          echo "$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-          cache-dependency-path: ${{ env.WORKING_DIR }}/pnpm-lock.yaml
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Install dependencies
+      - name: Enable Corepack and activate pnpm
+        shell: bash
         working-directory: ${{ env.WORKING_DIR }}
         run: |
+          set -euxo pipefail
+
+          corepack enable
+          corepack prepare pnpm@9.12.3 --activate
+
+          echo "node: $(node -v)"
+          echo "npm:  $(npm -v)"
+          echo "pnpm: $(pnpm -v)"
+
+      - name: Install frontend dependencies
+        shell: bash
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          set -euxo pipefail
+
           pnpm config set registry https://registry.npmmirror.com
           pnpm install --frozen-lockfile
-          pnpm add -D @tauri-apps/cli@^2
-          npm pkg set scripts.tauri="tauri"
 
-      - name: Clean & Build Android
+          # 确保 tauri cli 可用（若你 package.json 已有可删掉这一行）
+          pnpm add -D @tauri-apps/cli@^2
+
+      - name: Verify Tauri config
+        shell: bash
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          set -euo pipefail
+          set -euxo pipefail
 
-          if [ -d "src-tauri/gen/android" ]; then
-            echo "Detected existing Android project, cleaning it to prevent path bleeding..."
-            rm -rf src-tauri/gen/android
+          echo "Checking Tauri config..."
+          if [ -f "src-tauri/tauri.conf.json" ]; then
+            cat src-tauri/tauri.conf.json
           fi
 
-          echo "Initializing fresh Android project..."
-          npx tauri android init --ci
-
-          npx tauri android build --apk
+      - name: Clean and initialize Android project
+        shell: bash
+        working-directory: ${{ env.WORKING_DIR }}
         env:
           NDK_HOME: ${{ env.NDK_HOME }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+        run: |
+          set -euxo pipefail
+
+          if [ -d "src-tauri/gen/android" ]; then
+            echo "Detected existing Android project, removing it..."
+            rm -rf src-tauri/gen/android
+          fi
+
+          pnpm tauri android init --ci
+
+      - name: Build Android APK
+        shell: bash
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          NDK_HOME: ${{ env.NDK_HOME }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+        run: |
+          set -euxo pipefail
+
+          pnpm tauri android build --apk
 
       - name: Sign APK
         id: sign
+        shell: bash
         run: |
-          set -euo pipefail
+          set -euxo pipefail
 
-          APK_SRC=$(find ${{ env.WORKING_DIR }}/src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
-          if [ -z "$APK_SRC" ]; then echo "❌ APK NOT FOUND"; exit 1; fi
+          APK_SRC=$(find "${{ env.WORKING_DIR }}/src-tauri/gen/android" -type f -name "*.apk" | grep "release" | head -n 1)
+          if [ -z "$APK_SRC" ]; then
+            echo "❌ APK NOT FOUND"
+            exit 1
+          fi
 
           mkdir -p dist
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
@@ -116,7 +155,9 @@ jobs:
             --out "$SIGNED" \
             /tmp/aligned.apk
 
-          echo "signed_apk=$SIGNED" >> $GITHUB_OUTPUT
+          "$BT/apksigner" verify "$SIGNED"
+
+          echo "signed_apk=$SIGNED" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
