@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -35,18 +35,28 @@ jobs:
           targets: x86_64-pc-windows-msvc
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          package-manager-cache: false
+          cache: pnpm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/pnpm-lock.yaml
+
+      - name: Enable Corepack and activate pnpm
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          set -euxo pipefail
+          corepack enable
+          corepack prepare pnpm@9.12.3 --activate
+          node -v
+          npm -v
+          pnpm -v
 
       - name: Install frontend dependencies
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          npm config set registry https://registry.npmmirror.com
-          npm install
-          npm install -D @tauri-apps/cli@^2
-          npm pkg set scripts.tauri="tauri"
+          set -euxo pipefail
+          pnpm config set registry https://registry.npmmirror.com
+          pnpm install --frozen-lockfile
 
       - name: Build Windows app
         uses: tauri-apps/tauri-action@v0
@@ -56,7 +66,10 @@ jobs:
           projectPath: ${{ env.WORKING_DIR }}
           tagName: ${{ github.ref_name }}
           releaseName: "Chatly ${{ github.ref_name }}"
-          releaseBody: "Windows build for ${{ github.ref_name }}"
+          releaseBody: |
+            Windows build for ${{ github.ref_name }}
+
+            Please download the installer asset below.
           releaseDraft: false
           prerelease: false
-          args: --target x86_64-pc-windows-msvc
+          args: --target x86_64-pc-windows-msvc --bundles msi
