@@ -41,14 +41,11 @@ jobs:
           cache: pnpm
           cache-dependency-path: ${{ env.WORKING_DIR }}/pnpm-lock.yaml
 
-      - name: Enable Corepack and activate pnpm
-        working-directory: ${{ env.WORKING_DIR }}
+      # ✅ 关键修复
+      - name: Install pnpm globally
         run: |
           set -euxo pipefail
-          corepack enable
-          corepack prepare pnpm@9.12.3 --activate
-          node -v
-          npm -v
+          npm install -g pnpm@9.12.3
           pnpm -v
 
       - name: Install frontend dependencies
@@ -66,10 +63,7 @@ jobs:
           projectPath: ${{ env.WORKING_DIR }}
           tagName: ${{ github.ref_name }}
           releaseName: "Chatly ${{ github.ref_name }}"
-          releaseBody: |
-            Windows build for ${{ github.ref_name }}
-
-            Please download the installer asset below.
+          releaseBody: "Windows build for ${{ github.ref_name }}"
           releaseDraft: false
           prerelease: false
           args: --target x86_64-pc-windows-msvc --bundles msi
