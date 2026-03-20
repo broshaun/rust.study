@@ -44,10 +44,12 @@ jobs:
       - name: Purge Old NDK & Install Correct One
         run: |
           set -euo pipefail
+          # 💡 核心修复 1：物理删除系统所有 NDK，不给 Gradle 留任何漂移机会
           echo "Purging all existing NDKs..."
           rm -rf "$ANDROID_SDK_ROOT/ndk" || true
           rm -rf "$ANDROID_SDK_ROOT/ndk-bundle" || true
-
+          
+          # 安装指定的 26.1 版本
           sdkmanager "ndk;${{ env.NDK_VER }}" "build-tools;${{ env.BUILD_TOOLS_VER }}" "platforms;android-34"
 
           NDK_PATH="$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VER }}"
@@ -59,35 +61,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-          cache-dependency-path: ${{ env.WORKING_DIR }}/pnpm-lock.yaml
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          pnpm config set registry https://registry.npmmirror.com
-          pnpm install --frozen-lockfile
-          pnpm add -D @tauri-apps/cli@^2
+          npm config set registry https://registry.npmmirror.com
+          npm install
+          npm install -D @tauri-apps/cli@2
           npm pkg set scripts.tauri="tauri"
 
       - name: Clean & Build Android
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          set -euo pipefail
-
+          # 💡 核心修复 2：如果目录已存在（可能来自错误的缓存），先删掉重建
           if [ -d "src-tauri/gen/android" ]; then
             echo "Detected existing Android project, cleaning it to prevent path bleeding..."
             rm -rf src-tauri/gen/android
           fi
-
+          
           echo "Initializing fresh Android project..."
           npx tauri android init --ci
-
+          
+          # 执行编译
           npx tauri android build --apk
         env:
           NDK_HOME: ${{ env.NDK_HOME }}
@@ -96,14 +92,12 @@ jobs:
       - name: Sign APK
         id: sign
         run: |
-          set -euo pipefail
-
           APK_SRC=$(find ${{ env.WORKING_DIR }}/src-tauri/gen/android -name "*.apk" | grep "release" | head -n 1)
           if [ -z "$APK_SRC" ]; then echo "❌ APK NOT FOUND"; exit 1; fi
-
+          
           mkdir -p dist
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
-
+          
           BT="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VER }}"
           SIGNED="dist/chatly-${{ github.ref_name }}.apk"
 

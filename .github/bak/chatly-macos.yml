@@ -1,0 +1,62 @@
+name: Tauri2 macOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "macos-v*"
+
+concurrency:
+  group: mac-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+
+    env:
+      NODE_VERSION: "20"
+      WORKING_DIR: "chatly"
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      - name: Install frontend dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          npm config set registry https://registry.npmmirror.com
+          npm install
+          npm install -D @tauri-apps/cli@^2
+          npm pkg set scripts.tauri="tauri"
+
+      - name: Build macOS universal app + dmg
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ${{ env.WORKING_DIR }}
+          tagName: ${{ github.ref_name }}
+          releaseName: "Chatly ${{ github.ref_name }}"
+          releaseBody: "macOS universal build for ${{ github.ref_name }}"
+          releaseDraft: false
+          prerelease: false
+          args: --target universal-apple-darwin --bundles app,dmg
