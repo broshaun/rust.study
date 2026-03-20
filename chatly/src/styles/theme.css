@@ -18,7 +18,7 @@
 }
 
 /* 2. 乳胶温润 (Latex Soft) - 优化了色彩厚度 */
-[data-theme='light'] {
+:root,[data-theme='light'] {
   --app-bg: #f4f4f9; 
   --panel-bg: rgba(255, 255, 255, 0.96); 
   --panel-blur: blur(10px); 
@@ -33,7 +33,7 @@
 }
 
 /* 3. 赛博医疗 (Cyber Pulse) - 增加了呼吸感 */
-:root,[data-theme='cyber'] {
+[data-theme='cyber'] {
   --app-bg: radial-gradient(circle at 50% 0%, #1a2a3a 0%, #050a0f 100%);
   --panel-bg: rgba(13, 25, 41, 0.85);
   --panel-blur: blur(15px);

@@ -1,8 +1,4 @@
-import {
-  createMemoryRouter,
-  RouterProvider,
-  Navigate
-} from "react-router";
+import { createMemoryRouter, RouterProvider, Navigate } from "react-router";
 import Home2 from "pages/home";
 import { RsUser } from "pages/user";
 import { RsChat } from "pages/chat";

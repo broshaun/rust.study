@@ -1,22 +1,39 @@
-import React, { useEffect, useState, Suspense, useCallback, useRef } from "react";
+import React, { useEffect, Suspense, useCallback, useRef } from "react";
 import { Outlet, useNavigate } from 'react-router';
 import { db } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
-import { YBox, XBox } from 'components/flutter';
+import { YBox, XBox, Icon ,Divider} from 'components/flutter';
 import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useListState } from '@mantine/hooks';
+import { useHttpClient2 } from "hooks/http"
+import { Group } from '@mantine/core';
+
 
 export const Mian = () => {
     const navigate = useNavigate()
+
+    const [dialog, handlers] = useListState([]);
+
+    const { endpoint } = useHttpClient2('/imgs/')
     const { winHeight, isMobile } = useWinSize()
-    const [dialog, setDialog] = useState([])
+
+
+
+    const loadFriends = (rows) => {
+        const formattedData = rows.map((row) => ({
+            ...row, avatar_url: endpoint.join(row.avatar_url)
+        }));
+        handlers.setState(formattedData);
+    };
+
 
     useEffect(() => {
         const sub = liveQuery(
             () => db.table('friends').where('dialog').equals(1).toArray()
         ).subscribe({
-            next: rows => setDialog(rows),
+            next: rows => loadFriends(rows),
             error: console.error
         })
         return () => sub.unsubscribe()
@@ -58,6 +75,10 @@ export const Mian = () => {
         <XBox panel border padding={12} gap={8}>
             <XBox.Segment>
                 <YBox ref={containerRef} scroll={true} height={winHeight - 26}>
+                    <Group justify="flex-end">
+                        {/* <Icon name='magnifying-glass'  /> */}
+                    </Group>
+                    <Divider fade />
                     <div style={{
                         height: rowVirtualizer.getTotalSize(),
                         position: "relative",

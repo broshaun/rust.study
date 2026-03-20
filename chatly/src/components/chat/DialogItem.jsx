@@ -1,46 +1,30 @@
 import { memo, useMemo, useCallback } from "react";
 import { useApiBase } from "hooks/http";
+import { SafeAvatar } from "components/flutter"; // 请确保路径指向你的 SafeAvatar 组件
 
 /**
- * 时间格式化工具
+ * 时间格式化工具 (保持不变)
  */
 const formatDialogTime = (timestamp) => {
   if (!timestamp) return "";
-
-  const safeTimeStr =
-    typeof timestamp === "string" ? timestamp.replace(/-/g, "/") : timestamp;
-
+  const safeTimeStr = typeof timestamp === "string" ? timestamp.replace(/-/g, "/") : timestamp;
   const t = new Date(safeTimeStr);
   if (isNaN(t.getTime())) return "";
-
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const targetDay = new Date(t.getFullYear(), t.getMonth(), t.getDate());
   const diffDays = (today - targetDay) / (1000 * 60 * 60 * 24);
   const isThisYear = t.getFullYear() === now.getFullYear();
 
-  if (diffDays === 0) {
-    return t.toLocaleTimeString("zh-CN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  }
-
+  if (diffDays === 0) return t.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false });
   if (diffDays === 1) return "昨天";
-
-  if (diffDays > 1 && diffDays <= 6) {
-    return ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][t.getDay()];
-  }
-
+  if (diffDays > 1 && diffDays <= 6) return ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][t.getDay()];
   if (isThisYear) return `${t.getMonth() + 1}月${t.getDate()}日`;
-
   return `${t.getFullYear()}年${t.getMonth() + 1}月`;
 };
 
 /**
- * DialogItem
- * signal === 'news' 时显示红点
+ * DialogItem 组件
  */
 export const DialogItem = memo(function DialogItem({
   data,
@@ -59,7 +43,8 @@ export const DialogItem = memo(function DialogItem({
   const timeStr = formatDialogTime(data.timestamp);
   const showDot = data.signal === "news";
 
-  const avatarSrc = useMemo(() => {
+  // 拼接完整地址传给 SafeAvatar，让它内部处理缓存逻辑
+  const fullAvatarUrl = useMemo(() => {
     if (!data?.avatar_url) return "";
     const base = String(apiBase || "").replace(/\/+$/, "");
     const avatarPath = String(data.avatar_url).replace(/^\/+/, "");
@@ -74,7 +59,7 @@ export const DialogItem = memo(function DialogItem({
 
   const handleAvatarClick = useCallback(
     (e) => {
-      e.stopPropagation();
+      e.stopPropagation(); // 阻止触发条目点击
       onAvatarClick?.(data);
     },
     [data, onAvatarClick]
@@ -97,7 +82,6 @@ export const DialogItem = memo(function DialogItem({
         left: 0,
         width: "100%",
         transform: `translateY(${virtualRow?.start || 0}px)`,
-
         cursor: "pointer",
         height: wrapperHeight,
         boxSizing: "border-box",
@@ -107,57 +91,39 @@ export const DialogItem = memo(function DialogItem({
         background: "transparent",
       }}
     >
-      {/* 左侧头像 */}
+      {/* 左侧头像区 */}
       <div
         style={{
           position: "relative",
           width: 38,
           height: 38,
           flex: "0 0 auto",
-          marginRight: 8,
-          background: "transparent",
+          marginRight: 10,
         }}
-        onClick={handleAvatarClick}
       >
-        {/* 头像本体容器：负责圆角裁剪 */}
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            borderRadius: "8px",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "transparent",
-          }}
-        >
-          <img
-            src={avatarSrc}
-            alt="avatar"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
-        </div>
+        {/* ✅ 使用高性能 SafeAvatar */}
+        <SafeAvatar
+          url={fullAvatarUrl}
+          size={38}
+          radius={8}
+          cover={true}
+          onClick={handleAvatarClick}
+        />
 
-        {/* 红点：放在外层，不会被裁掉 */}
+        {/* 红点：定位在 SafeAvatar 之上 */}
         {showDot && (
           <span
             style={{
               position: "absolute",
-              top: -1,
-              right: -1,
+              top: -2,
+              right: -2,
               width: 10,
               height: 10,
               borderRadius: "50%",
               backgroundColor: "#ff3b30",
               border: "2px solid var(--panel-bg, #fff)",
               pointerEvents: "none",
-              zIndex: 2,
+              zIndex: 3, // 确保在 SafeAvatar 的图片层之上
               boxSizing: "border-box",
             }}
           />
@@ -169,39 +135,32 @@ export const DialogItem = memo(function DialogItem({
         style={{
           flex: 1,
           minWidth: 0,
-          height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
           gap: 1,
-          background: "transparent",
         }}
       >
         <span
           style={{
-            width: "100%",
             fontSize: "14px",
             fontWeight: showDot ? "600" : "500",
             color: "var(--text-primary)",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            lineHeight: "17px",
           }}
         >
           {name}
         </span>
-
         <span
           style={{
-            width: "100%",
             fontSize: "11px",
             color: showDot ? "var(--text-primary)" : "var(--text-secondary)",
             opacity: showDot ? 0.9 : 0.72,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            lineHeight: "13px",
           }}
         >
           {email}
@@ -212,44 +171,27 @@ export const DialogItem = memo(function DialogItem({
       <div
         style={{
           flex: "0 0 auto",
-          width: 48,
-          height: "100%",
-          marginLeft: 8,
+          width: 54,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
           alignItems: "flex-end",
-          gap: 2,
-          background: "transparent",
+          gap: 4,
         }}
       >
-        <span
-          style={{
-            width: "100%",
-            textAlign: "right",
-            fontSize: "10px",
-            color: "var(--text-secondary)",
-            opacity: 0.45,
-            lineHeight: "12px",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <span style={{ fontSize: "10px", color: "var(--text-secondary)", opacity: 0.45 }}>
           {timeStr}
         </span>
-
         <div
           onClick={handleClear}
           style={{
-            width: 14,
-            height: 14,
+            width: 16,
+            height: 16,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: "12px",
             color: "var(--text-secondary)",
             opacity: 0.35,
-            background: "transparent",
-            flex: "0 0 auto",
             userSelect: "none",
           }}
         >

@@ -3,21 +3,37 @@ import { useNavigate } from 'react-router';
 import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
-// import { useVirtualList } from 'ahooks';
-import { useWinSize } from 'hooks';
-import { YBox } from 'components/flutter';
+import { useWinSize, } from 'hooks';
+import { YBox,Divider } from 'components/flutter';
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useListState } from '@mantine/hooks';
+import { useHttpClient2 } from "hooks/http"
+import { Group } from '@mantine/core';
+
+
 
 export const Item = () => {
     const navigate = useNavigate()
-    const [dialog, setDialog] = useState([])
+
+    const [dialog, handlers] = useListState([]);
+    const { endpoint } = useHttpClient2('/imgs/')
+
     const { winHeight, isMobile } = useWinSize()
+
+    const loadFriends = (rows) => {
+        const formattedData = rows.map((row) => ({
+            ...row, avatar_url: endpoint.join(row.avatar_url)
+        }));
+        handlers.setState(formattedData);
+    };
+
+
 
     useEffect(() => {
         const sub = liveQuery(
             () => db.table('friends').where('dialog').equals(1).toArray()
         ).subscribe({
-            next: rows => setDialog(rows),
+            next: rows => loadFriends(rows),
         })
         return () => sub.unsubscribe()
     }, [])
@@ -54,7 +70,11 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={containerRef} scroll={true} height={winHeight - 30} padding={10}>
+        <YBox ref={containerRef} scroll={true} height={winHeight - 121} padding={10}>
+            <Group justify="flex-end">
+                {/* <Icon name='magnifying-glass'  /> */}
+            </Group>
+            <Divider fade />
             <div style={{
                 height: rowVirtualizer.getTotalSize(),
                 position: "relative",

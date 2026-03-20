@@ -5,7 +5,7 @@ import { db } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Icon, YBox } from 'components/flutter';
-import { useHttpClient2, useApiBase } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -21,20 +21,20 @@ export function Msg() {
     const displayName = location.state?.displayName;
 
     const [selfAvatar] = useLocalStorage({ key: 'myAvatar' });
-
     const [msgs, setMsgs] = useState([]);
 
-    const { apiBase } = useApiBase();
+    const { endpoint } = useHttpClient2('/imgs/')
 
     const receiveAvatarSrc = useMemo(() => {
-        if (!location.state?.avatar_url) return "";
-        return `${apiBase}/imgs/${location.state.avatar_url}`;
-    }, [apiBase, location.state?.avatar_url]);
+        return location.state?.avatar_url
+    }, [location.state?.avatar_url]);
 
     const sendAvatarSrc = useMemo(() => {
         if (!selfAvatar) return "";
-        return `${apiBase}/imgs/${selfAvatar}`;
-    }, [apiBase, selfAvatar]);
+        
+        return endpoint.join(selfAvatar)
+    }, [endpoint, selfAvatar]);
+
 
     const { http } = useHttpClient2('/rpc/chat/msg/single/');
     const { getDateTimeStr } = useDateTime();

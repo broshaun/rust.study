@@ -8,15 +8,28 @@ import { Divider, Icon, YBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useListState } from '@mantine/hooks';
+import { Group } from '@mantine/core';
+
+
 
 export const Item = () => {
     const navigate = useNavigate();
-    const [friends, setFriends] = useState([]);
+    const [friends, handlers] = useListState([]);
     const [afriend, setAfriend] = useState(0);
+
     const { http } = useHttpClient2('/rpc/chat/friend/')
+    const { endpoint } = useHttpClient2('/imgs/')
     const { winHeight } = useWinSize()
 
 
+
+    const loadFriends = (rows) => {
+        const formattedData = rows.map((row) => ({
+            ...row, avatar_url: endpoint.join(row.avatar_url)
+        }));
+        handlers.setState(formattedData);
+    };
 
     const openMsgWindow = useCallback((select) => {
         navigate('/chat/mobile/detail/', { state: { select } });
@@ -72,7 +85,7 @@ export const Item = () => {
         const sub = liveQuery(
             () => db.table('friends').where('ask_state').equals('agree').toArray()
         ).subscribe({
-            next: rows => setFriends(rows),
+            next: rows => loadFriends(rows),
             error: console.error
         })
 
@@ -101,8 +114,11 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <YBox ref={parentRef} scroll={true} height={winHeight - 30} padding={10} >
-            <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+
+        <YBox ref={parentRef} scroll={true} height={winHeight - 121} padding={10} >
+            <Group justify="flex-end">
+                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+            </Group>
             <Divider fade spacing={8} />
 
             <div style={{
@@ -118,7 +134,7 @@ export const Item = () => {
                 })}
             </div>
         </YBox>
-    </Suspense>
+    </Suspense >
 
 }
 

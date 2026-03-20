@@ -1,40 +1,42 @@
-import React, { Suspense, useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useWinSize } from 'hooks';
-import { useHttpClient2, useApiBase } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/http';
 import { db } from 'hooks/db';
-import { Avatar, Button, Divider, Heading, YBox, XBox } from 'components/flutter';
+import { SafeAvatar, Divider, Heading, YBox, XBox } from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
+import { Button, Center } from '@mantine/core';
 
 
-
+/**
+ * 好友详情页面
+ */
 export function Detail() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const select = location.state?.select;
-  const [friend, setFriend] = useState();
-  const { apiBase } = useApiBase();
+  const [friend, setFriend] = useState(location.state?.select);
 
   useEffect(() => {
-    setFriend(select);
-  }, [select]);
+    setFriend(location.state?.select)
+  }, [location.state?.select])
+
+
+  // console.log('friend', friend)
 
   const { http: http2 } = useHttpClient2('/rpc/chat/friend/');
   const { isMobile } = useWinSize();
 
-  const avatarSrc = useMemo(() => {
-    if (!friend?.avatar_url) return "";
-    return `${String(apiBase || "").replace(/\/+$/, "")}/imgs/${String(friend.avatar_url).replace(/^\/+/, "")}`;
-  }, [apiBase, friend?.avatar_url]);
+  // const avatarSrc = useMemo(() => {
+  //   return friend?.avatar_url || "";
+  // }, [friend?.avatar_url]);
 
 
+  // 删除好友逻辑
   const { mutateAsync: delFid } = useMutation({
     mutationFn: async (id) => {
-      if (!id) {
-        return;
-      }
+      if (!id) return;
       const results = await http2.requestBodyJson('DELETE', { id });
       if (!results) return;
       const row = await db.table('friends').get(id);
@@ -43,13 +45,11 @@ export function Detail() {
         db.table('message').where('uid').equals(row?.uid).delete(),
         db.table('friends').delete(id),
       ]);
-
       return 'ok';
     },
   });
 
-
-
+  // 更新备注逻辑
   const { mutateAsync: updRemark } = useMutation({
     mutationFn: async ({ id, remark }) => {
       if (!id) return;
@@ -60,54 +60,41 @@ export function Detail() {
     },
   });
 
-
+  // 发起聊天跳转
   function openMsgWindow(friend) {
     if (!friend?.id) return;
-
-    const displayName =
-      friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
-
+    const displayName = friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
     db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
 
-    if (isMobile) {
-      navigate('/message/', {
-        state: {
-          uid: friend.uid,
-          avatar_url: friend.avatar_url,
-          displayName,
-        },
-      });
-    } else {
-      navigate('/chat/dialog/msg/', {
-        state: {
-          uid: friend.uid,
-          avatar_url: friend.avatar_url,
-          displayName,
-        },
-      });
-    }
+    const targetPath = isMobile ? '/message/' : '/chat/dialog/msg/';
+    navigate(targetPath, {
+      state: {
+        uid: friend.uid,
+        avatar_url: friend.avatar_url,
+        displayName,
+      },
+    });
   }
 
   return (
-    <Suspense fallback={<div>加载中...</div>}>
+
       <YBox padding={20}>
 
-        <Avatar
-          size={75}
-          src={avatarSrc}
-          fit="cover"
-          variant="square"
-          roundedRadius={0}
-        />
+        <Center>
+          <SafeAvatar
+            url={friend?.avatar_url}
+            size={80}           // 稍微加大尺寸，显得大气
+            radius={8}          // 建议给一点圆角（如8px），比纯直角更有现代感
+            cover={true}        // 核心：保持比例裁剪，不变形
+            autoUpdate
+          />
+        </Center>
 
+        <Heading level={4} style={{ marginTop: 20 }}>账户信息</Heading>
 
+        <Divider fade />
 
-        <Heading level={4}>账户信息</Heading>
-
-
-        <Divider fade/>
-
-
+        {/* 信息展示区 */}
         <InfoTile icon="user" label="名称" value={friend?.nikename} />
         <InfoTile icon="email" label="邮箱" value={friend?.email} />
         <InfoTile
@@ -120,34 +107,32 @@ export function Detail() {
           }}
         />
 
+        {/* 操作按钮区 */}
+        <XBox padding={20} gap={20}>
 
+          <Button
+            variant="filled"
+            color="indigo"
+            radius="md"
+            onClick={() => openMsgWindow(friend)}
+          >
+            发起聊天
+          </Button>
 
-        <XBox padding={20} gap={50}>
           <Button
-            label="发起聊天"
-            onPressed={() => openMsgWindow(friend)}
-            style={{
-              color: '#fff',
-              background: '#4d4dff',
-              border: 'none',
+            variant="filled"
+            color="orange"
+            radius="md"
+            onClick={() => {
+              delFid(friend?.id).then(() => { navigate(isMobile ? '/chat/mobile/friend/' : '/chat/friend/'); })
             }}
-          />
-          <Button
-            label="删除好友"
-            onPressed={() => {
-              delFid(friend?.id).then(() => {
-                navigate(isMobile ? '/chat/mobile/friend/' : '/chat/friend/');
-              });
-            }}
-            style={{
-              color: '#fff',
-              background: '#ff4d4f',
-              border: 'none',
-            }}
-          />
+          >
+            删除好友
+          </Button>
+
         </XBox>
 
       </YBox>
-    </Suspense>
+
   );
 }

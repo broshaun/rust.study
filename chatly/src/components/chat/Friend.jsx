@@ -45,11 +45,9 @@ const Friend = memo(function Friend({
         cursor: "pointer",
         height: wrapperHeight,
         boxSizing: "border-box",
-        padding: "2px 12px", // 稍微加一点边距，更美观
+
         display: "flex",
         alignItems: "center",
-        // 增加一个轻微的底部边框或交互背景（可选）
-        borderBottom: "1px solid var(--mantine-color-gray-1)",
       }}
     >
       {/* ✅ 使用 SafeAvatar 替换原有的 div + img */}

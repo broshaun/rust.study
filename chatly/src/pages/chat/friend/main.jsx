@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Outlet, useNavigate, } from 'react-router';
-import { useHttpClient2, useImage } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/http';
 import { db } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
@@ -9,17 +9,18 @@ import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState } from '@mantine/hooks';
-
+import { Group } from '@mantine/core';
 
 
 export const Mian = () => {
     const navigate = useNavigate();
-    // const [friends, setFriends] = useState([]);
     const [friends, handlers] = useListState([]);
     const [afriend, setAfriend] = useState(0);
+
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    const { winHeight } = useWinSize()
     const { endpoint } = useHttpClient2('/imgs/')
+    const { winHeight } = useWinSize()
+
 
 
 
@@ -27,11 +28,11 @@ export const Mian = () => {
         const formattedData = rows.map((row) => ({
             ...row, avatar_url: endpoint.join(row.avatar_url)
         }));
-
         handlers.setState(formattedData);
     };
 
     const openMsgWindow = useCallback((select) => {
+        // console.log('select',select)
         navigate('/chat/friend/detail/', { state: { select } });
     }, [navigate]);
 
@@ -120,9 +121,14 @@ export const Mian = () => {
 
     return <XBox padding={12} gap={8} >
         <XBox.Segment>
+
             <YBox ref={parentRef} scroll={true} height={winHeight - 26} padding={10} gap={8}>
-                <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+                <Group justify="flex-end">
+                    <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+                </Group>
                 <Divider fade />
+
+
 
                 <div style={{
                     height: rowVirtualizer.getTotalSize(),
@@ -132,7 +138,6 @@ export const Mian = () => {
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                         const friend = friends[virtualRow.index];
                         if (!friend) return;
-
                         return <Friend
                             key={friend.id}
                             data={friend}

@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { useMutation } from '@tanstack/react-query'
 import { Modal } from "components";
 import { useHttpClient2 } from 'hooks/http';
-import { Button, TextField, Divider, Avatar, XBox } from 'components/flutter';
+import { Button, TextField, Divider, XBox } from 'components/flutter';
 
 
 export function Register() {
@@ -50,15 +50,6 @@ export function Register() {
             <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
         </Modal>
 
-        <XBox>
-            <Avatar
-                size={60}
-                shape="circle"
-                fit='cover'
-                borderColor="#e5e7eb"
-                hasShadow={true}
-            />
-        </XBox>
 
         <XBox padding={20}>
             <h3>注册账号</h3>

@@ -20,7 +20,6 @@ export { Drawer } from './frame/Drawer'
 export { Button } from './base/Button';
 export { TextField } from './base/TextField';
 export { Icon } from './base/Icon'
-export { Avatar } from './base/Avatar'
 export { Text } from './base/Text'
 export { Heading } from './base/Heading'
 export { SafeAvatar } from './base/SafeAvatar'

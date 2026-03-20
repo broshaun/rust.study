@@ -4,8 +4,9 @@ import { useWinSize } from 'hooks';
 import { useHttpClient2, useApiBase } from 'hooks/http';
 import { db } from 'hooks/db';
 import { useRequest } from 'ahooks';
-import { Avatar, Button, Divider, Heading, YBox, XBox } from 'components/flutter';
+import { Avatar, Divider, Heading, YBox, XBox } from 'components/flutter';
 import { InfoTile } from 'components/chat';
+import { Button } from '@mantine/core';
 
 export function Detail() {
   const navigate = useNavigate();
@@ -28,26 +29,23 @@ export function Detail() {
   }, [apiBase, friend?.avatar_url]);
 
   const { runAsync: delFid } = useRequest(
-    (id) => {
-      return http2.requestBodyJson('DELETE', { id }).then((results) => {
-        if (!results) return;
-        return db.table('friends').get(id).then((row) => {
-          return Promise.all([
-            db.table('message').where('uid').equals(row?.uid).delete(),
-            db.table('friends').delete(id),
-          ]);
-        });
-      });
+    async (id) => {
+      const results = await http2.requestBodyJson('DELETE', { id });
+      if (!results) return;
+      const row = await db.table('friends').get(id);
+      return await Promise.all([
+        db.table('message').where('uid').equals(row?.uid).delete(),
+        db.table('friends').delete(id),
+      ]);
     },
     { manual: true }
   );
 
   const { runAsync: updRemark } = useRequest(
-    (id, remark) => {
-      return http2.requestBodyJson('PATCH', { id, remark }).then((results) => {
-        if (!results) return;
-        return db.table('friends').update(id, { remark });
-      });
+    async (id, remark) => {
+      const results = await http2.requestBodyJson('PATCH', { id, remark });
+      if (!results) return;
+      return await db.table('friends').update(id, { remark });
     },
     { manual: true }
   );
@@ -114,7 +112,7 @@ export function Detail() {
 
         <YBox.Segment align="center">
           <XBox padding={20} gap={50}>
-            <Button
+            {/* <Button
               label="发起聊天"
               onPressed={() => openMsgWindow(friend)}
               style={{
@@ -122,7 +120,10 @@ export function Detail() {
                 color: '#fff',
                 border: 'none',
               }}
-            />
+            /> */}
+            <Button>发起聊天</Button>
+
+
             <Button
               label="删除好友"
               onPressed={() => {

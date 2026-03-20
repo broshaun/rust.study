@@ -1,28 +1,15 @@
 
 import { Modal } from "components";
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import { useNavigate } from 'react-router';
 import { useWinSize, useToken } from 'hooks';
-import { useHttpClient2, useImage } from 'hooks/http';
-import { Button, TextField, Divider, XBox, Avatar } from 'components/flutter';
+import { useHttpClient2 } from 'hooks/http';
+import { Button, TextField, Divider, XBox, SafeAvatar } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query'
 import { useLocalStorage } from "@mantine/hooks";
 
-// import { useCachedImage } from 'hooks/http/useImage2';
-
-
-
-
-
 
 export function LogOn() {
-
-    // const url = "http://103.186.108.161:5015/imgs/06e5b950405c65eadfe37d1a227fb170.jpg";
-    // const { src, loading, error } = useCachedImage(url);
-    // console.log('src',src)
-
-
-
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
@@ -31,16 +18,14 @@ export function LogOn() {
     const [password, setPassword] = useState("")
 
     const { http } = useHttpClient2('/rpc/chat/login/')
-
-
     const { endpoint } = useHttpClient2('/imgs/')
-    const { src: avatarSrc } = useImage(endpoint.join(avatar))
-    
-    console.log('avatarSrc', avatarSrc)
-
-
     const { setToken } = useToken()
     const { isMobile } = useWinSize()
+
+    const avatar_url = useMemo(() => {
+        return endpoint.join(avatar)
+    }, [endpoint, avatar])
+
 
     const { mutateAsync: login } = useMutation(
         {
@@ -72,10 +57,6 @@ export function LogOn() {
 
     return <React.Fragment>
 
-
-        <div>{avatarSrc}</div>
-
-
         <Modal visible={open}>
             <Modal.Title>登录提示</Modal.Title>
             <Modal.Message>{msg}</Modal.Message>
@@ -83,11 +64,12 @@ export function LogOn() {
         </Modal>
 
         <XBox align="middle" justify="center" compact width="100%">
-            <Avatar
-                src={avatarSrc}
-                size={60}
-                shape="circle"
-                fit='cover'
+            <SafeAvatar
+                url={avatar_url}
+                size={75}
+                radius={100}
+                cover={true}
+                autoUpdate
             />
         </XBox>
 

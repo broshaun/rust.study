@@ -1,63 +1,27 @@
 import React, { memo } from "react";
 import styles from './MsgItem.module.css';
+import { SafeAvatar } from "components/flutter"; // 确保路径正确
 
-// 圆角边框头像组件（非圆形，仅圆角）
-const Avatar = ({ src, size = 36, roundedRadius = 6, fit = 'cover' }) => {
-  return (
-    <div 
-      style={{
-        width: size,
-        height: size,
-        borderRadius: `${roundedRadius}px`, // 圆角边框（非圆形）
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(var(--text-primary-rgb), 0.1)', // 兜底背景色
-        border: '1px solid rgba(var(--text-primary-rgb), 0.08)', // 可选：加轻微边框更明显
-      }}
-    >
-      <img 
-        src={src || '默认头像地址'} 
-        alt="avatar"
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: fit,
-        }}
-        onError={(e) => {
-          e.target.src = '默认头像地址'; 
-        }}
-      />
-    </div>
-  );
-};
-
-// 补充 CSS 变量默认值（解决文字看不见问题）
-if (!getComputedStyle(document.documentElement).getPropertyValue('--accent-color')) {
-  document.documentElement.style.setProperty('--accent-color', '#0084ff');
-}
-if (!getComputedStyle(document.documentElement).getPropertyValue('--text-primary-rgb')) {
-  document.documentElement.style.setProperty('--text-primary-rgb', '51, 51, 51');
-}
-if (!getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')) {
-  document.documentElement.style.setProperty('--text-secondary', '#999999');
-}
-
+/**
+ * MsgItem - 聊天消息单项组件
+ * 已接入 SafeAvatar 高性能缓存方案
+ */
 export const MsgItem = memo(
   ({ data, receiveAvatar, sendAvatar, virtualRow }) => {
     if (!data) return null;
 
     const isSend = data.signal === "send";
+    // 根据发送/接收信号选择对应的头像地址
     const currentAvatarUrl = isSend ? sendAvatar : receiveAvatar;
 
-    // 虚拟列表样式
+    // 虚拟列表绝对定位样式
     const virtualStyle = virtualRow
       ? {
           position: 'absolute',
-          top: `${virtualRow.start}px`,
+          top: 0,
           left: 0,
           width: '100%',
+          transform: `translateY(${virtualRow.start}px)`, // 推荐使用 transform 性能更好
           height: `${virtualRow.size}px`,
           boxSizing: 'border-box',
         }
@@ -69,25 +33,31 @@ export const MsgItem = memo(
         style={virtualStyle}
       >
         <div className={`${styles.chatRow} ${isSend ? styles.sendRow : styles.receiveRow}`}>
+          {/* 头像区域 */}
           <div className={styles.avatar}>
-            {/* 头像圆角设为 6px（可根据需求调整），非圆形 */}
-            <Avatar
-              src={currentAvatarUrl}
-              size={36}
-              roundedRadius={6} // 圆角边框大小，对应你最初要求的 6px
+            <SafeAvatar
+              url={currentAvatarUrl}
+              size={36}          // 聊天气泡旁的标准尺寸
+              radius={6}         // 对应你要求的 6px 圆角（非圆形）
+              cover={true}       // 强制比例裁剪，防止用户上传的长方形头像变形
+              shadow="none"      // 聊天界面通常不需要阴影，保持简洁
+              border="1px solid rgba(var(--text-primary-rgb, 51, 51, 51), 0.08)"
             />
           </div>
 
+          {/* 消息气泡区域 */}
           <div className={styles.bubbleWrap}>
             <div className={`${styles.bubble} ${isSend ? styles.sendBubble : styles.receiveBubble}`}>
               {data.msg}
             </div>
+            {/* 时间显示 */}
             {data.timestamp && <div className={styles.time}>{data.timestamp}</div>}
           </div>
         </div>
       </div>
     );
   },
+  // 优化 memo 对比逻辑
   (prev, next) => {
     return (
       prev.receiveAvatar === next.receiveAvatar &&
@@ -96,7 +66,10 @@ export const MsgItem = memo(
       prev.data?.msg === next.data?.msg &&
       prev.data?.timestamp === next.data?.timestamp &&
       prev.data?.signal === next.data?.signal &&
-      prev.virtualRow?.index === next.virtualRow?.index
+      prev.virtualRow?.start === next.virtualRow?.start &&
+      prev.virtualRow?.size === next.virtualRow?.size
     );
   }
 );
+
+MsgItem.displayName = 'MsgItem';
