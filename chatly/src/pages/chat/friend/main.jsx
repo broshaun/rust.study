@@ -8,18 +8,28 @@ import { Divider, Icon, YBox, XBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useListState } from '@mantine/hooks';
 
 
 
 export const Mian = () => {
     const navigate = useNavigate();
-    const [friends, setFriends] = useState([]);
+    // const [friends, setFriends] = useState([]);
+    const [friends, handlers] = useListState([]);
     const [afriend, setAfriend] = useState(0);
     const { http } = useHttpClient2('/rpc/chat/friend/')
     const { winHeight } = useWinSize()
     const { endpoint } = useHttpClient2('/imgs/')
 
 
+
+    const loadFriends = (rows) => {
+        const formattedData = rows.map((row) => ({
+            ...row, avatar_url: endpoint.join(row.avatar_url)
+        }));
+
+        handlers.setState(formattedData);
+    };
 
     const openMsgWindow = useCallback((select) => {
         navigate('/chat/friend/detail/', { state: { select } });
@@ -80,16 +90,7 @@ export const Mian = () => {
         const sub = liveQuery(
             () => db.table('friends').where('ask_state').equals('agree').toArray()
         ).subscribe({
-            next: (rows) => {
-
-                setFriends(rows.map((row) => {
-
-                    return {
-                        ...row,
-                        avatar_url: endpoint.join(row.avatar_url)
-                    }
-                }))
-            },
+            next: (rows) => loadFriends(rows),
             error: console.error
         })
 

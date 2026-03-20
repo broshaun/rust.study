@@ -23,5 +23,5 @@ export { Icon } from './base/Icon'
 export { Avatar } from './base/Avatar'
 export { Text } from './base/Text'
 export { Heading } from './base/Heading'
-
+export { SafeAvatar } from './base/SafeAvatar'
 // default

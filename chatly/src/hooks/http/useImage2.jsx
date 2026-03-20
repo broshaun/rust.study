@@ -1,94 +1,72 @@
-// src/hooks/useCachedImage.jsx
 import { useState, useEffect } from "react";
 import { fetch } from "@tauri-apps/plugin-http";
 import { BaseDirectory, mkdir, writeFile, exists, readFile } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
 
-const IMAGE_DIR = "images"; // 缓存目录（AppData 下）
-const DEFAULT_IMAGE = "/favicon.png";
-const DEFAULT_EXT = "jpg";
+const CACHE_DIR = "images";
+const DEFAULT_IMG = "/favicon.png";
+const MD5_REGEX = /^[a-fA-F0-9]{32}\.[a-z0-9]+$/i;
 
-// 验证 MD5 文件名
-const isMD5FileName = (fileName) =>
-  /^[a-fA-F0-9]{32}\.[a-zA-Z0-9]+$/.test(fileName);
-
-// 从 URL 提取文件名
-const getFileNameFromUrl = (url) =>
-  url?.split("/").filter(Boolean).pop();
-
-// 字节数组转 Object URL
-const bytesToObjectURL = (bytes, ext) =>
-  URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: `image/${ext}` }));
-
-/**
- * useCachedImage Hook
- * 下载图片到 AppData，可动态生成 Object URL 显示
- */
-export function useCachedImage(url) {
-  const [src, setSrc] = useState(DEFAULT_IMAGE);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+export function useImage(url) {
+  const [state, setState] = useState({ src: DEFAULT_IMG, loading: false, error: null, success: false });
 
   useEffect(() => {
     if (!url) return;
-    let canceled = false;
+    
+    let isCancelled = false;
+    let objUrl = null;
 
-    async function loadImage() {
-      setLoading(true);
-      setError(null);
-      setSuccess(false);
+    // 封装安全的状态更新函数，避免多处书写 if (!isCancelled)
+    const safeUpdate = (newState) => {
+      if (!isCancelled) setState(prev => ({ ...prev, ...newState }));
+    };
+
+    (async () => {
+      safeUpdate({ loading: true, error: null, success: false, src: DEFAULT_IMG });
 
       try {
-        const fileName = getFileNameFromUrl(url);
-        if (!isMD5FileName(fileName))
-          throw new Error(`文件名不合法（必须是MD5）：${fileName}`);
-        const [name, ext = DEFAULT_EXT] = fileName.split(".");
-
-        // 拼接 AppData 下完整路径
-        const filePath = await join(IMAGE_DIR, fileName);
-
-        // 创建缓存目录
-        const dirPath = await join(IMAGE_DIR);
-        const dirExists = await exists(dirPath, { baseDir: BaseDirectory.AppData });
-        if (!dirExists) {
-          await mkdir(dirPath, { baseDir: BaseDirectory.AppData, recursive: true });
+        const fileName = url.split("/").pop();
+        if (!fileName || !MD5_REGEX.test(fileName)) {
+          throw new Error("Invalid MD5 filename format");
         }
 
+        const path = await join(CACHE_DIR, fileName);
+        const opt = { baseDir: BaseDirectory.AppData };
         let bytes;
-        // 1️⃣ 读取缓存
-        if (await exists(filePath, { baseDir: BaseDirectory.AppData })) {
-          bytes = await readFile(filePath, { baseDir: BaseDirectory.AppData });
+
+        // 核心逻辑：先查缓存，无则下载
+        if (await exists(path, opt)) {
+          bytes = await readFile(path, opt);
         } else {
-          // 2️⃣ 下载图片
-          const res = await fetch(url, { method: "GET", responseType: 2 });
-          if (!res.ok) throw new Error(`HTTP ${res.status}: 图片下载失败`);
-          bytes = await res.bytes();
-
-          // 3️⃣ 写入缓存
-          await writeFile(filePath, bytes, { baseDir: BaseDirectory.AppData });
+          const res = await fetch(url, { method: "GET", connectTimeout: 10000 });
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          
+          bytes = new Uint8Array(await res.arrayBuffer());
+          
+          // 确保目录存在 (recursive: true 能够安全应对多图片并发下载时的目录创建冲突)
+          if (!(await exists(CACHE_DIR, opt))) {
+            await mkdir(CACHE_DIR, { ...opt, recursive: true });
+          }
+          await writeFile(path, bytes, opt);
         }
 
-        // 4️⃣ 每次渲染生成 Object URL
-        const objectURL = bytesToObjectURL(bytes, ext);
-        if (!canceled) setSrc(objectURL);
-        if (!canceled) setSuccess(true);
+        // 安全提取后缀名，生成 Blob URL
+        const ext = fileName.split('.').pop() || 'jpeg';
+        objUrl = URL.createObjectURL(new Blob([bytes], { type: `image/${ext}` }));
+        
+        safeUpdate({ src: objUrl, loading: false, success: true });
 
-      } catch (err) {
-        console.error("useCachedImage加载/缓存失败:", err);
-        if (!canceled) {
-          setSrc(DEFAULT_IMAGE);
-          setError(err?.message || "图片加载失败");
-          setSuccess(false);
-        }
-      } finally {
-        if (!canceled) setLoading(false);
+      } catch (e) {
+        console.error("Image cache error:", e);
+        safeUpdate({ loading: false, error: e.message || "Unknown error", success: false });
       }
-    }
+    })();
 
-    loadImage();
-    return () => { canceled = true; };
+    return () => { 
+      isCancelled = true; 
+      if (objUrl) URL.revokeObjectURL(objUrl); 
+    };
   }, [url]);
 
-  return { src, loading, error, success };
+  return state;
 }
