@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useWinSize } from 'hooks';
 import { useHttpClient2 } from 'hooks/http';
-import { db } from 'hooks/db';
+import { useUserDB} from 'hooks/db';
 import { SafeAvatar, Divider, Heading, YBox, XBox } from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Center } from '@mantine/core';
+import { useLocalStorage } from '@mantine/hooks';
 
 
 /**
@@ -16,7 +17,10 @@ export function Detail() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [account] = useLocalStorage({ key: 'savedAccount' })
   const [friend, setFriend] = useState(location.state?.select);
+
+  const { db, userId, isReady } = useUserDB(account);
 
   useEffect(() => {
     setFriend(location.state?.select)

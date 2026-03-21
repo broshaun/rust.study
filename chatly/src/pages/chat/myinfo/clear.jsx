@@ -1,7 +1,8 @@
 import React, { useState, Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { Modal } from 'components';
-import { clearAllTables } from 'hooks/db';
+import { deleteUserDB} from 'hooks/db';
+
 
 
 export const ClearLogs = () => {
@@ -12,7 +13,7 @@ export const ClearLogs = () => {
     const clear = (click) => {
 
         if (click) {
-            clearAllTables().then(console.log('记录清空'))
+            deleteUserDB().then(console.log('记录清空'))
             navigate('/chat/self/mylist/');
         } else {
             navigate('/chat/self/mylist/')

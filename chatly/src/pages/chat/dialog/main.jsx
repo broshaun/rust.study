@@ -1,12 +1,12 @@
 import React, { useEffect, Suspense, useCallback, useRef } from "react";
 import { Outlet, useNavigate } from 'react-router';
-import { db } from 'hooks/db';
+import { useUserDB} from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
 import { YBox, XBox, Icon ,Divider} from 'components/flutter';
 import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useListState } from '@mantine/hooks';
+import { useListState,useLocalStorage } from '@mantine/hooks';
 import { useHttpClient2 } from "hooks/http"
 import { Group } from '@mantine/core';
 
@@ -15,9 +15,11 @@ export const Mian = () => {
     const navigate = useNavigate()
 
     const [dialog, handlers] = useListState([]);
+    const [account] = useLocalStorage({ key: 'savedAccount' })
 
     const { endpoint } = useHttpClient2('/imgs/')
     const { winHeight, isMobile } = useWinSize()
+    const { db, userId, isReady } = useUserDB(account);
 
 
 
@@ -30,6 +32,7 @@ export const Mian = () => {
 
 
     useEffect(() => {
+        if (!db) return;
         const sub = liveQuery(
             () => db.table('friends').where('dialog').equals(1).toArray()
         ).subscribe({
@@ -37,7 +40,7 @@ export const Mian = () => {
             error: console.error
         })
         return () => sub.unsubscribe()
-    }, [])
+    }, [db])
 
 
     // 打开聊天

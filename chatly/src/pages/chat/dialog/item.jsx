@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { db } from 'hooks/db';
+import { useUserDB} from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useWinSize, } from 'hooks';
 import { YBox,Divider } from 'components/flutter';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useListState } from '@mantine/hooks';
+import { useListState,useLocalStorage } from '@mantine/hooks';
 import { useHttpClient2 } from "hooks/http"
 import { Group } from '@mantine/core';
 
@@ -16,9 +16,11 @@ export const Item = () => {
     const navigate = useNavigate()
 
     const [dialog, handlers] = useListState([]);
-    const { endpoint } = useHttpClient2('/imgs/')
+    const [account] = useLocalStorage({ key: 'savedAccount' })
 
+    const { endpoint } = useHttpClient2('/imgs/')
     const { winHeight, isMobile } = useWinSize()
+    const { db, userId, isReady } = useUserDB(account);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
@@ -30,13 +32,14 @@ export const Item = () => {
 
 
     useEffect(() => {
+        if (!db) return;
         const sub = liveQuery(
             () => db.table('friends').where('dialog').equals(1).toArray()
         ).subscribe({
             next: rows => loadFriends(rows),
         })
         return () => sub.unsubscribe()
-    }, [])
+    }, [db])
 
     // 打开聊天
     const openMsgWindow = useCallback((select) => {

@@ -7,8 +7,9 @@ import { RsMyInfo } from "./myinfo";
 import { Msg } from "./dialog/msg";
 import { useHttpClient2 } from 'hooks/http';
 import { useToken } from "hooks/store"
-import { db } from 'hooks/db';
+import { useUserDB} from 'hooks/db';
 import { useQuery } from '@tanstack/react-query'
+import { useLocalStorage } from '@mantine/hooks';
 
 
 
@@ -36,8 +37,12 @@ export const RsChat = [
 
 function ChatGuard() {
   const navigate = useNavigate();
+
+  const [account] = useLocalStorage({ key: 'savedAccount' })
+
   const { remainSeconds } = useToken()
   const { http: httpMsg } = useHttpClient2('/rpc/chat/msg/single/');
+  const { db, userId, isReady } = useUserDB(account);
 
   useQuery({
     queryKey: ['poll-message'],

@@ -3,15 +3,19 @@ import { Outlet, useNavigate } from "react-router";
 import { useWinSize, useDateTime } from 'hooks';
 import { AppShell, AppBar, PCShell, Icon, XBox, YBox } from 'components/flutter';
 import { liveQuery } from 'dexie';
-import { db } from 'hooks/db';
-
+import { useUserDB } from 'hooks/db';
+import { useLocalStorage } from "@mantine/hooks";
 
 export function Chat() {
   const navigate = useNavigate();
+
+  const [title, setTitle] = useState()
+  const [dot, setDot] = useState(false)
+  const [account] = useLocalStorage({ key: 'savedAccount' })
+
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
-  const [title, setTitle ] = useState()
-  const [dot, setDot] = useState(false)
+  const { db, userId, isReady } = useUserDB(account);
 
   const items = useMemo(() => {
     return [
@@ -23,13 +27,14 @@ export function Chat() {
 
 
   useEffect(() => {
+    if (!db) return;
     const sub = liveQuery(
       () => db.table('message').count()
     ).subscribe({
       next: (count) => setDot(count > 0)
     })
     return () => sub.unsubscribe()
-  }, [])
+  }, [db])
 
 
 

@@ -2,13 +2,13 @@ import React, { useEffect, useState, useCallback, Suspense, useRef } from "react
 import { useNavigate } from 'react-router';
 import { useHttpClient2 } from 'hooks/http';
 import { useWinSize } from 'hooks';
-import { db } from 'hooks/db';
+import { useUserDB} from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { Divider, Icon, YBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useListState } from '@mantine/hooks';
+import { useListState,useLocalStorage } from '@mantine/hooks';
 import { Group } from '@mantine/core';
 
 
@@ -17,10 +17,12 @@ export const Item = () => {
     const navigate = useNavigate();
     const [friends, handlers] = useListState([]);
     const [afriend, setAfriend] = useState(0);
+    const [account] = useLocalStorage({ key: 'savedAccount' })
 
     const { http } = useHttpClient2('/rpc/chat/friend/')
     const { endpoint } = useHttpClient2('/imgs/')
     const { winHeight } = useWinSize()
+    const { db, userId, isReady } = useUserDB(account);
 
 
 
@@ -80,6 +82,7 @@ export const Item = () => {
     );
 
     useEffect(() => {
+        if (!db) return;
         runGetFriend()
 
         const sub = liveQuery(
@@ -100,7 +103,7 @@ export const Item = () => {
             sub.unsubscribe()
             sub2.unsubscribe()
         }
-    }, [])
+    }, [db])
 
 
     const parentRef = useRef(null);

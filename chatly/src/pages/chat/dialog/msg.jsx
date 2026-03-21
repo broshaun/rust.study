@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
-import { db } from 'hooks/db';
+import { useUserDB} from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Icon, YBox } from 'components/flutter';
@@ -20,10 +20,12 @@ export function Msg() {
     const uid = location.state?.uid;
     const displayName = location.state?.displayName;
 
+    const [account] = useLocalStorage({ key: 'savedAccount' })
     const [selfAvatar] = useLocalStorage({ key: 'myAvatar' });
     const [msgs, setMsgs] = useState([]);
 
     const { endpoint } = useHttpClient2('/imgs/')
+    const { db, userId, isReady } = useUserDB(account);
 
     const receiveAvatarSrc = useMemo(() => {
         return location.state?.avatar_url
@@ -46,6 +48,7 @@ export function Msg() {
 
 
     useEffect(() => {
+        if (!db) return;
         const sub = liveQuery(
             () => db.table('message').where('uid').equals(uid).reverse().toArray()
         ).subscribe({
@@ -54,7 +57,7 @@ export function Msg() {
         });
 
         return () => sub.unsubscribe();
-    }, [uid]);
+    }, [uid,db]);
 
 
     const { mutateAsync: fnSend } = useMutation(
