@@ -1,14 +1,14 @@
 import React, { useEffect, Suspense, useCallback, useRef } from "react";
 import { Outlet, useNavigate } from 'react-router';
-import { useUserDB} from 'hooks/db';
+import { useUserDB } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
-import { YBox, XBox, Icon ,Divider} from 'components/flutter';
+import { YBox, XBox, Icon, Divider } from 'components/flutter';
 import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useListState,useLocalStorage } from '@mantine/hooks';
+import { useListState, useLocalStorage } from '@mantine/hooks';
 import { useHttpClient2 } from "hooks/http"
-import { Group } from '@mantine/core';
+import { Group, ScrollArea } from '@mantine/core';
 
 
 export const Mian = () => {
@@ -50,7 +50,7 @@ export const Mian = () => {
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
             navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName } })
         })
-    }, [navigate])
+    }, [navigate, db])
 
     // 关闭聊天
     const handleClear = useCallback((item) => {
@@ -61,7 +61,7 @@ export const Mian = () => {
             })
             navigate('/chat/dialog/')
         }
-    }, [])
+    }, [db])
 
 
     const containerRef = useRef(null);
@@ -77,7 +77,8 @@ export const Mian = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         <XBox panel border padding={12} gap={8}>
             <XBox.Segment>
-                <YBox ref={containerRef} scroll={true} height={winHeight - 26}>
+                {/* <YBox ref={containerRef} scroll={true} height={winHeight - 26}> */}
+                <ScrollArea viewportRef={containerRef} h={winHeight - 26} style={{ width: '100%' }}>
                     <Group justify="flex-end">
                         {/* <Icon name='magnifying-glass'  /> */}
                     </Group>
@@ -100,7 +101,8 @@ export const Mian = () => {
                             />
                         })}
                     </div>
-                </YBox>
+                </ScrollArea>
+                {/* </YBox> */}
             </XBox.Segment>
             <XBox.Segment span={3}>
                 <Outlet />

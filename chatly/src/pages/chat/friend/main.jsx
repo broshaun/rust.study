@@ -129,8 +129,8 @@ export const Mian = () => {
 
 
 
-            <YBox ref={parentRef} scroll={true} height={winHeight - 26} padding={10} gap={8}>
-                {/* <ScrollArea ref={parentRef} h={winHeight - 26} style={{ width: '100%' }}> */}
+            {/* <YBox ref={parentRef} scroll={true} height={winHeight - 26} padding={10} gap={8}> */}
+                <ScrollArea ref={parentRef} h={winHeight - 26} style={{ width: '100%' }}>
                     <Group justify="flex-end">
                         <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
                     </Group>
@@ -155,8 +155,8 @@ export const Mian = () => {
                         })}
 
                     </div>
-                {/* </ScrollArea> */}
-            </YBox>
+                </ScrollArea>
+            {/* </YBox> */}
 
         </XBox.Segment>
 

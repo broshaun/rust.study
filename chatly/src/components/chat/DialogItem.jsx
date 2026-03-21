@@ -32,7 +32,7 @@ export const DialogItem = memo(function DialogItem({
   onSelect,
   onClear,
   onAvatarClick,
-  height = 50,
+  height = 58,
 }) {
   const { apiBase } = useApiBase();
 

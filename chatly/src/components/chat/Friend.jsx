@@ -1,15 +1,13 @@
 import { memo, useCallback } from "react";
-import { SafeAvatar } from "components/flutter"; // 确保路径正确
+import { SafeAvatar } from "components/flutter";
 
 const Friend = memo(function Friend({
   data,
   virtualRow,
   onSelect,
   onAvatarClick,
-  height = 50,
+  height = 58,
 }) {
-  // console.log('data?.avatar_url', data?.avatar_url);
-
   if (!data) return null;
 
   const name = data.remark || data.nikename || data.email || "未知好友";
@@ -21,11 +19,9 @@ const Friend = memo(function Friend({
     onSelect?.(data);
   }, [data, onSelect]);
 
-  // 头像点击事件
   const handleAvatarClick = useCallback(
     (e) => {
-      // 如果 SafeAvatar 内部没处理 stopPropagation，可以在这里处理
-      if (e?.stopPropagation) e.stopPropagation();
+      e?.stopPropagation?.();
       onAvatarClick?.(data);
     },
     [data, onAvatarClick]
@@ -35,68 +31,74 @@ const Friend = memo(function Friend({
     <div
       onClick={handleSelect}
       style={{
-        // ✅ 虚拟列表核心定位保持不变
         position: "absolute",
         top: 0,
         left: 0,
         width: "100%",
         transform: `translateY(${virtualRow?.start || 0}px)`,
-
-        cursor: "pointer",
         height: wrapperHeight,
         boxSizing: "border-box",
-
-        display: "flex",
-        alignItems: "center",
+        cursor: "pointer",
       }}
     >
-      {/* ✅ 使用 SafeAvatar 替换原有的 div + img */}
-      <SafeAvatar
-        url={data?.avatar_url}
-        size={38}
-        radius={8}        // 对应你原有的 8px 圆角
-        shadow="xs"       // 加上微弱阴影提升质感
-        border="1px solid var(--mantine-color-gray-2)"
-        onClick={handleAvatarClick}
-      />
-
-      {/* 信息区域 */}
       <div
         style={{
-          flex: 1,
-          minWidth: 0,
+          height: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          marginLeft: 12, // 代替原来的 marginRight
-          gap: 2,
+          alignItems: "center",
+          padding: "0 4px",
+          borderRadius: 10,
+          boxSizing: "border-box",
         }}
       >
-        <span
-          style={{
-            fontSize: 14,
-            fontWeight: 500,
-            color: "var(--text-primary)",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {name}
-        </span>
+        <SafeAvatar
+          url={data?.avatar_url}
+          size={38}
+          radius={8}
+          shadow="xs"
+          border="1px solid var(--mantine-color-gray-2)"
+          onClick={handleAvatarClick}
+        />
 
-        <span
+        <div
           style={{
-            fontSize: 11,
-            color: "var(--text-secondary)",
-            opacity: 0.72,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            marginLeft: 12,
+            gap: 2,
           }}
         >
-          {email}
-        </span>
+          <span
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--text-primary)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              lineHeight: 1.2,
+            }}
+          >
+            {name}
+          </span>
+
+          <span
+            style={{
+              fontSize: 11,
+              color: "var(--text-secondary)",
+              opacity: 0.72,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              lineHeight: 1.2,
+            }}
+          >
+            {email}
+          </span>
+        </div>
       </div>
     </div>
   );

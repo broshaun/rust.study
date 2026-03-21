@@ -2,14 +2,14 @@ import React, { useEffect, useState, useCallback, Suspense, useRef } from "react
 import { useNavigate } from 'react-router';
 import { useHttpClient2 } from 'hooks/http';
 import { useWinSize } from 'hooks';
-import { useUserDB} from 'hooks/db';
+import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { Divider, Icon, YBox } from 'components/flutter';
 import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useListState,useLocalStorage } from '@mantine/hooks';
-import { Group } from '@mantine/core';
+import { useListState, useLocalStorage } from '@mantine/hooks';
+import { Group, ScrollArea } from '@mantine/core';
 
 
 
@@ -118,7 +118,8 @@ export const Item = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
 
-        <YBox ref={parentRef} scroll={true} height={winHeight - 121} padding={10} >
+        {/* <YBox ref={parentRef} scroll={true} height={winHeight - 121} padding={10} > */}
+        <ScrollArea viewportRef={parentRef} h={winHeight - 26} style={{ width: '100%'}}>
             <Group justify="flex-end">
                 <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
             </Group>
@@ -127,7 +128,8 @@ export const Item = () => {
             <div style={{
                 height: rowVirtualizer.getTotalSize(),
                 position: "relative",
-                width: "100%"
+                width: "100%",
+                padding: '8px 12px',
             }}>
 
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -136,7 +138,8 @@ export const Item = () => {
                     return <Friend key={friend.id} data={friend} virtualRow={virtualRow} onSelect={(value) => { openMsgWindow(value) }} />
                 })}
             </div>
-        </YBox>
+        </ScrollArea>
+        {/* </YBox> */}
     </Suspense >
 
 }

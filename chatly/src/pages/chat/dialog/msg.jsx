@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
-import { useUserDB} from 'hooks/db';
+import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Icon, YBox } from 'components/flutter';
@@ -9,6 +9,7 @@ import { useHttpClient2 } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { ScrollArea } from "@mantine/core";
 
 
 
@@ -33,7 +34,7 @@ export function Msg() {
 
     const sendAvatarSrc = useMemo(() => {
         if (!selfAvatar) return "";
-        
+
         return endpoint.join(selfAvatar)
     }, [endpoint, selfAvatar]);
 
@@ -57,7 +58,7 @@ export function Msg() {
         });
 
         return () => sub.unsubscribe();
-    }, [uid,db]);
+    }, [uid, db]);
 
 
     const { mutateAsync: fnSend } = useMutation(
@@ -99,7 +100,8 @@ export function Msg() {
                 left={isMobile ? <Icon name="chevron-left" onClick={() => navigate(f_url)} /> : <></>}
             />
             <ChatMsg.Content>
-                <YBox ref={containerRef} scroll={true} height={winHeight - 160} padding={10} >
+                {/* <YBox ref={containerRef} scroll={true} height={winHeight - 160} padding={10} > */}
+                <ScrollArea viewportRef={containerRef} h={winHeight - 160} style={{ width: '100%' }}>
                     <div style={{
                         height: rowVirtualizer.getTotalSize(),
                         position: "relative",
@@ -121,8 +123,8 @@ export function Msg() {
 
 
                     </div>
-
-                </YBox>
+                </ScrollArea>
+                {/* </YBox> */}
 
             </ChatMsg.Content>
 
