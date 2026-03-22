@@ -3,12 +3,12 @@ import { Outlet, useNavigate } from 'react-router';
 import { useUserDB } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
-import { YBox, XBox, Icon, Divider } from 'components/flutter';
+import { Icon, Divider } from 'components/flutter';
 import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { useHttpClient2 } from "hooks/http"
-import { Group, ScrollArea } from '@mantine/core';
+import { Grid, ScrollArea, Box } from '@mantine/core';
 
 
 export const Mian = () => {
@@ -75,39 +75,38 @@ export const Mian = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <XBox panel border padding={12} gap={8}>
-            <XBox.Segment>
-                {/* <YBox ref={containerRef} scroll={true} height={winHeight - 26}> */}
-                <ScrollArea viewportRef={containerRef} h={winHeight - 26} style={{ width: '100%' }}>
-                    <Group justify="flex-end">
-                        {/* <Icon name='magnifying-glass'  /> */}
-                    </Group>
-                    <Divider fade />
-                    <div style={{
-                        height: rowVirtualizer.getTotalSize(),
-                        position: "relative",
-                        width: "100%"
-                    }}>
-                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                            const dg = dialog[virtualRow.index];
-                            if (!dg) return;
-
-                            return <DialogItem
-                                key={dg.id}
-                                data={dg}
-                                virtualRow={virtualRow}
-                                onSelect={openMsgWindow}
-                                onClear={(p) => handleClear(p)}
-                            />
-                        })}
-                    </div>
+        <Grid>
+            <Grid.Col span={4}>
+                <Icon name="magnifying-glass" />
+                <Divider fade />
+                <ScrollArea viewportRef={containerRef} h={winHeight - 75} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
+                    <Box px={12}>
+                        <Box style={{
+                            height: rowVirtualizer.getTotalSize(),
+                            position: "relative",
+                            width: "100%",
+                            boxSizing: 'border-box',
+                        }}>
+                            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                                const dg = dialog[virtualRow.index];
+                                if (!dg) return null;
+                                return <DialogItem
+                                    key={dg.id}
+                                    data={dg}
+                                    virtualRow={virtualRow}
+                                    onSelect={openMsgWindow}
+                                    onClear={(p) => handleClear(p)}
+                                />
+                            })}
+                        </Box>
+                    </Box>
                 </ScrollArea>
-                {/* </YBox> */}
-            </XBox.Segment>
-            <XBox.Segment span={3}>
+            </Grid.Col>
+            <Grid.Col span={8}>
                 <Outlet />
-            </XBox.Segment>
-        </XBox>
+            </Grid.Col>
+        </Grid>
+
     </Suspense>
 
 

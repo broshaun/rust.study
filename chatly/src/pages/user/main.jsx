@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { Outlet, useNavigate } from "react-router";
 import { AppBar, AppShell, Drawer, Divider, Icon, XBox, YBox } from 'components/flutter';
+import { Stack } from "@mantine/core";
 
 
 
@@ -25,7 +26,7 @@ export function User() {
       </XBox>
       <Divider fade={true} />
 
-      <YBox padding={10} gap={20}>
+      <Stack padding={10} gap={20}>
         {drawerMenu.filter(i => i.display !== false).map((item) =>
           <Icon
             key={item.key}
@@ -35,7 +36,7 @@ export function User() {
             labelPos='right'
           />
         )}
-      </YBox>
+      </Stack>
     </Drawer>
 
     <AppShell>

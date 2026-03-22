@@ -1,4 +1,3 @@
-// AppBar.jsx
 import React from "react";
 import styles from "./AppBar.module.css";
 
@@ -9,25 +8,62 @@ export const AppBar = ({
   style,
   className = "",
   height = 56,
+
+  withBorder = false,
+  withShadow = false,
+  transparent = false,
+
+  background,
+  titleAlign = "center", // center | left
+  px = 16,
+
+  as = "nav",
+  ...rest
 }) => {
+  const Component = as;
+
+  const rootClassName = [
+    styles.appBar,
+    withBorder ? styles.withBorder : "",
+    withShadow ? styles.withShadow : "",
+    transparent ? styles.transparent : "",
+    titleAlign === "left" ? styles.leftTitle : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <nav
-      className={[styles.appBar, className].filter(Boolean).join(" ")}
+    <Component
+      className={rootClassName}
       style={{
         "--ab-h": typeof height === "number" ? `${height}px` : height,
+        "--ab-px": typeof px === "number" ? `${px}px` : px,
+        ...(background ? { "--ab-bg": background } : {}),
         ...style,
       }}
+      {...rest}
     >
-      <div className={styles.leadingSection}>{leading}</div>
-
-      <div className={styles.titleWrapper}>
-        <h1 className={styles.titleText} title={typeof title === "string" ? title : undefined}>
-          {title}
-        </h1>
+      <div className={styles.leadingSection}>
+        {leading}
       </div>
 
-      <div className={styles.actionsSection}>{actions}</div>
-    </nav>
+      <div className={styles.titleWrapper}>
+        {typeof title === "string" ? (
+          <h1 className={styles.titleText} title={title}>
+            {title}
+          </h1>
+        ) : (
+          <div className={styles.titleNode}>
+            {title}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.actionsSection}>
+        {actions}
+      </div>
+    </Component>
   );
 };
 

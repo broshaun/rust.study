@@ -6,6 +6,8 @@ export { Container } from './layout/Container'
 export { SizedBox } from './layout/SizedBox'
 export { Divider } from './layout/Divider'
 
+export {Right,Left }from './layout/align'
+
 
 // frame 骨架
 export { AppShell } from './frame/AppShell'
@@ -19,7 +21,7 @@ export { Drawer } from './frame/Drawer'
 // base
 export { Button } from './base/Button';
 export { TextField } from './base/TextField';
-export { Icon } from './base/Icon'
+export { IconSvg as Icon } from './base/IconSvg'
 export { Text } from './base/Text'
 export { Heading } from './base/Heading'
 export { SafeAvatar } from './base/SafeAvatar'

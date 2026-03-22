@@ -4,11 +4,11 @@ import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useWinSize, } from 'hooks';
-import { YBox, Divider } from 'components/flutter';
+import {  Divider } from 'components/flutter';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { useHttpClient2 } from "hooks/http"
-import { Group,ScrollArea } from '@mantine/core';
+import { Group, ScrollArea, Grid, Box } from '@mantine/core';
 
 
 
@@ -73,32 +73,31 @@ export const Item = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        {/* <YBox ref={containerRef} scroll={true} height={winHeight - 121} padding={10}> */}
-        <ScrollArea viewportRef={containerRef} h={winHeight - 26} style={{ width: '100%' }}>
-            <Group justify="flex-end">
-                {/* <Icon name='magnifying-glass'  /> */}
-            </Group>
-            <Divider fade />
-            <div style={{
-                height: rowVirtualizer.getTotalSize(),
-                position: "relative",
-                width: "100%"
-            }}>
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const dg = dialog[virtualRow.index];
-                    if (!dg) return;
-
-                    return <DialogItem
-                        key={dg.id}
-                        data={dg}
-                        virtualRow={virtualRow}
-                        onSelect={openMsgWindow}
-                        onClear={(p) => handleClear(p)}
-                    />
-                })}
-            </div>
+        {/* <Icon name='magnifying-glass' /> */}
+        <Divider fade />
+       <ScrollArea viewportRef={containerRef} h={winHeight - 100} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
+            <Box px={12}>
+                <Box style={{
+                    height: rowVirtualizer.getTotalSize(),
+                    position: "relative",
+                    width: "100%",
+                    boxSizing: 'border-box',
+                }}>
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                        const dg = dialog[virtualRow.index];
+                        if (!dg) return null;
+                        return <DialogItem
+                            key={dg.id}
+                            data={dg}
+                            virtualRow={virtualRow}
+                            onSelect={openMsgWindow}
+                            onClear={(p) => handleClear(p)}
+                        />
+                    })}
+                </Box>
+            </Box>
         </ScrollArea>
 
-        {/* </YBox> */}
+
     </Suspense>
 }

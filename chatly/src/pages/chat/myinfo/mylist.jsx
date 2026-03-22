@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { List } from 'components';
 import { useHttpClient2 } from 'hooks/http';
-import { YBox } from 'components/flutter';
 import { useQuery } from '@tanstack/react-query';
+import { Stack } from "@mantine/core";
 
 
 
@@ -26,7 +26,7 @@ export const MyList = () => {
 
     return <Suspense>
 
-        <YBox verticalScroll={true}>
+        <Stack>
             <List>
                 <List.Items icon='user-circle' onClick={() => { navigate('/chat/self/image/', { 'state': apiInfo }); }}>头像</List.Items>
                 <List.Items icon='email' onClick={() => { }}>{apiInfo?.email}</List.Items>
@@ -35,7 +35,7 @@ export const MyList = () => {
                 <List.Items icon='trash' onClick={() => { navigate('/chat/self/clear/') }}>清空聊天记录</List.Items>
                 <List.Items icon='arrow-left' onClick={() => { navigate('/chat/self/lgout/') }}>退出当前登录</List.Items>
             </List>
-        </YBox>
+        </Stack>
 
     </Suspense>
 }

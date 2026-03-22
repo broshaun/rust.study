@@ -4,12 +4,12 @@ import { useDateTime, useWinSize } from 'hooks';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
-import { Icon, YBox } from 'components/flutter';
+import { Icon } from 'components/flutter';
 import { useHttpClient2 } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ScrollArea } from "@mantine/core";
+import { ScrollArea, Box } from "@mantine/core";
 
 
 
@@ -100,31 +100,32 @@ export function Msg() {
                 left={isMobile ? <Icon name="chevron-left" onClick={() => navigate(f_url)} /> : <></>}
             />
             <ChatMsg.Content>
-                {/* <YBox ref={containerRef} scroll={true} height={winHeight - 160} padding={10} > */}
-                <ScrollArea viewportRef={containerRef} h={winHeight - 160} style={{ width: '100%' }}>
-                    <div style={{
-                        height: rowVirtualizer.getTotalSize(),
-                        position: "relative",
-                        width: "100%"
-                    }}>
 
-                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                            const msg = msgs[virtualRow.index];
-                            if (!msg) return;
+                <ScrollArea viewportRef={containerRef} h={winHeight - 128} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
+                    <Box px={12}>
+                        <Box style={{
+                            height: rowVirtualizer.getTotalSize(),
+                            position: "relative",
+                            width: "100%",
+                            boxSizing: 'border-box',
+                        }}>
 
-                            return <MsgItem
-                                key={msg.id}
-                                data={msg}
-                                receiveAvatar={receiveAvatarSrc}
-                                sendAvatar={sendAvatarSrc}
-                                virtualRow={virtualRow}
-                            />
-                        })}
+                            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                                const msg = msgs[virtualRow.index];
+                                if (!msg) return null;
 
+                                return <MsgItem
+                                    key={msg.id}
+                                    data={msg}
+                                    receiveAvatar={receiveAvatarSrc}
+                                    sendAvatar={sendAvatarSrc}
+                                    virtualRow={virtualRow}
+                                />
+                            })}
 
-                    </div>
+                        </Box>
+                    </Box>
                 </ScrollArea>
-                {/* </YBox> */}
 
             </ChatMsg.Content>
 

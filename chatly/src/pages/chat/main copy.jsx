@@ -1,13 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
 import { useWinSize, useDateTime } from 'hooks';
-import { AppBar, PCShell, Icon, XBox, YBox } from 'components/flutter';
+import { AppShell, AppBar, PCShell, Icon, XBox, YBox } from 'components/flutter';
 import { liveQuery } from 'dexie';
 import { useUserDB } from 'hooks/db';
 import { useLocalStorage } from "@mantine/hooks";
-import { AppShell, Stack, Group, Center } from "@mantine/core";
-
-
 
 export function Chat() {
   const navigate = useNavigate();
@@ -43,44 +40,44 @@ export function Chat() {
 
   const visibleItems = items; // 如果有 display: false 的需求，在此过滤
 
-
+  
   // --- PC 端布局 ---
   if (!isMobile) {
     return (
-      <AppShell navbar={{ width: 60 }}      >
-        <AppShell.Navbar >
-          <Stack gap={10} p={10} align="center">
+      <PCShell>
+        <PCShell.Left width={80}>
+          <YBox gap={10} padding={25}>
             {
               visibleItems.map((item) => <div key={item.key}>{item.icon}</div>)
             }
-          </Stack>
-        </AppShell.Navbar>
-        <AppShell.Main>
+          </YBox>
+        </PCShell.Left>
+        <PCShell.Content>
           <Outlet />
-        </AppShell.Main>
-      </AppShell>
+        </PCShell.Content>
+      </PCShell>
     );
   }
 
   // --- 移动端布局 ---
   return (
-    <AppShell
-      padding={0}
-      header={{ height: 56 }}
-      footer={{ height: 60 }}
-    >
+    <AppShell>
       <AppShell.Header>
         <AppBar title={title} />
       </AppShell.Header>
-      <AppShell.Main>
+
+      <AppShell.Content>
+
         <Outlet />
-      </AppShell.Main>
-      <AppShell.Footer>
-        <Group h="100%" grow gap={0}>
+      </AppShell.Content>
+
+      <AppShell.Footer height={65}>
+        <XBox>
           {
-            visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
+            visibleItems.map((item) => <XBox.Segment contentAlign="center" key={item.key}>{item.icon}</XBox.Segment>)
           }
-        </Group>
+        </XBox>
+
       </AppShell.Footer>
     </AppShell>
   );

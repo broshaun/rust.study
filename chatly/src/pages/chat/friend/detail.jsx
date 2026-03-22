@@ -3,10 +3,10 @@ import { useNavigate, useLocation } from "react-router";
 import { useWinSize } from 'hooks';
 import { useHttpClient2 } from 'hooks/http';
 import { useUserDB} from 'hooks/db';
-import { SafeAvatar, Divider, Heading, YBox, XBox } from 'components/flutter';
+import { SafeAvatar, Divider, Heading} from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Center } from '@mantine/core';
+import { Button, Center,Stack,Group } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
 
 
@@ -82,7 +82,7 @@ export function Detail() {
 
   return (
 
-      <YBox padding={20}>
+      <Stack padding={20}>
 
         <Center>
           <SafeAvatar
@@ -112,7 +112,7 @@ export function Detail() {
         />
 
         {/* 操作按钮区 */}
-        <XBox padding={20} gap={20}>
+        <Group padding={20} gap={20}>
 
           <Button
             variant="filled"
@@ -134,9 +134,9 @@ export function Detail() {
             删除好友
           </Button>
 
-        </XBox>
+        </Group>
 
-      </YBox>
+      </Stack>
 
   );
 }
