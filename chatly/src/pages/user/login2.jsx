@@ -4,9 +4,10 @@ import React, { useMemo, useState } from "react"
 import { useNavigate } from 'react-router';
 import { useWinSize, useToken } from 'hooks';
 import { useHttpClient2 } from 'hooks/http';
-import { Button, TextField, Divider, XBox, SafeAvatar } from 'components/flutter';
+import { TextField, Divider, XBox, SafeAvatar } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query'
 import { useLocalStorage } from "@mantine/hooks";
+import { Button, Stack, Center, Title } from "@mantine/core";
 
 
 export function LogOn() {
@@ -56,56 +57,55 @@ export function LogOn() {
 
 
     return <React.Fragment>
+        <Stack>
+            <Modal visible={open}>
+                <Modal.Title>登录提示</Modal.Title>
+                <Modal.Message>{msg}</Modal.Message>
+                <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
+            </Modal>
 
-        <Modal visible={open}>
-            <Modal.Title>登录提示</Modal.Title>
-            <Modal.Message>{msg}</Modal.Message>
-            <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
-        </Modal>
+            <Center>
+                <SafeAvatar
+                    url={avatar_url}
+                    size={75}
+                    radius={100}
+                    cover={true}
+                    autoUpdate
+                />
+            </Center>
 
-        <XBox align="middle" justify="center" compact width="100%">
-            <SafeAvatar
-                url={avatar_url}
-                size={75}
-                radius={100}
-                cover={true}
-                autoUpdate
-            />
-        </XBox>
+            <Center>
+                <Title order={4}>登录界面</Title>
+            </Center>
 
-        <XBox padding={20}>
-            <h3>登录界面</h3>
-        </XBox>
+            <Divider fade={true} thickness={1} opacity={0.3} />
 
-        <Divider fade={true} thickness={1} opacity={0.3} />
+            <Center>
+                <TextField
+                    label="账号"
+                    maxWidth={250}
+                    hintText="请输入账号"
+                    value={account}
+                    onChanged={(value) => setAccount(value)}
+                />
+            </Center>
 
-        <XBox padding={5}>
-            <TextField
-                label="账号"
-                maxWidth={250}
-                hintText="请输入账号"
-                value={account}
-                onChanged={(value) => setAccount(value)}
-            />
-        </XBox>
+            <Center>
+                <TextField
+                    label="密码"
+                    maxWidth={250}
+                    hintText="请输入密码"
+                    obscureText={true}
+                    value={password}
+                    onChanged={(value) => { setPassword(value) }}
+                />
+            </Center>
 
-        <XBox padding={5}>
-            <TextField
-                label="密码"
-                maxWidth={250}
-                hintText="请输入密码"
-                obscureText={true}
-                value={password}
-                onChanged={(value) => { setPassword(value) }}
-            />
-        </XBox>
+            <Center>
+                <Button h={42} w={250} onClick={() => { login({ account, password }) }} >登录</Button>
+            </Center>
 
-        <XBox padding={10}>
-            <Button label='登录' width={250}
-                onPressed={() => { login({ account, password }) }}
-            />
-        </XBox>
-
+        </Stack>
     </React.Fragment>
 }
 

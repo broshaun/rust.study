@@ -1,7 +1,8 @@
 import React, { useState } from "react"
 import { Outlet, useNavigate } from "react-router";
-import { AppBar, AppShell, Drawer, Divider, Icon, XBox, YBox } from 'components/flutter';
-import { Stack } from "@mantine/core";
+import { AppBar, Divider, Icon } from 'components/flutter';
+import { Stack, Drawer, Title, AppShell } from "@mantine/core";
+import { useDisclosure } from '@mantine/hooks';
 
 
 
@@ -13,20 +14,17 @@ export function User() {
     { key: 'settings', display: true, icon: { name: 'cog-6-tooth', label: '设置' }, onTap: () => { navigate('/user/settings/setlist/') } },
   ];
 
-  const [open, setOpen] = useState(false);
+  const [opened, { open, close }] = useDisclosure(false);
   const handleItemClick = (item) => {
     if (!item) return;
     item.onTap();
-    setOpen(false);
+    close()
   };
   return <React.Fragment>
-    <Drawer isOpen={open} onClose={() => setOpen(false)} width={120}>
-      <XBox padding={20}>
-        <h3>导航</h3>
-      </XBox>
+    <Drawer opened={opened} onClose={close} size={120} withCloseButton={false}>
+      <Title order={4} mb="md">导航</Title>
       <Divider fade={true} />
-
-      <Stack padding={10} gap={20}>
+      <Stack padding={10} gap={10}>
         {drawerMenu.filter(i => i.display !== false).map((item) =>
           <Icon
             key={item.key}
@@ -39,13 +37,16 @@ export function User() {
       </Stack>
     </Drawer>
 
-    <AppShell>
+    <AppShell
+      padding={0}
+      header={{ height: 56 }}
+    >
       <AppShell.Header>
-        <AppBar leading={<Icon name="menu" onClick={() => setOpen(true)} />} />
+        <AppBar leading={<Icon name="menu" onClick={open} />} />
       </AppShell.Header>
-      <AppShell.Content>
+      <AppShell.Main>
         <Outlet />
-      </AppShell.Content>
+      </AppShell.Main>
     </AppShell>
   </React.Fragment>
 };

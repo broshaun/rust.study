@@ -2,7 +2,8 @@ import React, { useState } from "react"
 import { useMutation } from '@tanstack/react-query'
 import { Modal } from "components";
 import { useHttpClient2 } from 'hooks/http';
-import { Button, TextField, Divider, XBox } from 'components/flutter';
+import { TextField, Divider } from 'components/flutter';
+import { Button, Stack, Center, Title } from "@mantine/core";
 
 
 export function Register() {
@@ -44,47 +45,44 @@ export function Register() {
 
 
     return <React.Fragment>
-        <Modal visible={open}>
-            <Modal.Title>注册提示</Modal.Title>
-            <Modal.Message>{msg}</Modal.Message>
-            <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
-        </Modal>
+        <Stack>
+            <Modal visible={open}>
+                <Modal.Title>注册提示</Modal.Title>
+                <Modal.Message>{msg}</Modal.Message>
+                <Modal.Confirm onClick={() => setOpen(false)}>确定</Modal.Confirm>
+            </Modal>
 
+            <Center>
+                <Title order={3}>注册账号</Title>
+            </Center>
+            <Divider fade={true} thickness={1} opacity={0.3} />
 
-        <XBox padding={20}>
-            <h3>注册账号</h3>
-        </XBox>
+            <Center>
+                <TextField
+                    label="账号"
+                    maxWidth={250}
+                    hintText="请输入账号"
+                    value={account}
+                    onChanged={(value) => setAccount(value)}
+                />
 
-        <Divider fade={true} thickness={1} opacity={0.3} />
+            </Center>
 
-        <XBox padding={5}>
-            <TextField
-                label="账号"
-                maxWidth={250}
-                hintText="请输入账号"
-                value={account}
-                onChanged={(value) => setAccount(value)}
-            />
+            <Center>
+                <TextField
+                    label="密码"
+                    maxWidth={250}
+                    hintText="请输入密码"
+                    obscureText={true}
+                    value={password}
+                    onChanged={(value) => setPassword(value)}
+                />
+            </Center>
 
-        </XBox>
-
-        <XBox padding={5}>
-            <TextField
-                label="密码"
-                maxWidth={250}
-                hintText="请输入密码"
-                obscureText={true}
-                value={password}
-                onChanged={(value) => setPassword(value)}
-            />
-        </XBox>
-
-        <XBox padding={10}>
-            <Button label='注册' width={250}
-                onPressed={() => { runLogin({account, password}) }}
-            />
-        </XBox>
-
+            <Center>
+                <Button h={42} w={250} onClick={() => { runLogin({ account, password }) }} >注册</Button>
+            </Center>
+        </Stack>
     </React.Fragment >
 }
 

@@ -1,20 +1,39 @@
 import React from "react";
-import { createRoot } from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ReactDOM from "react-dom/client";
+
+import "@mantine/core/styles.css";
+
 import { MantineProvider } from "@mantine/core";
-import '@mantine/core/styles.css';
-import App from './App';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const container = document.getElementById('root');
-const root = createRoot(container);
-const queryClient = new QueryClient();
+import App from "./App";
+import { theme } from "./theme";
 
-root.render(
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 60 * 1000,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <MantineProvider>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider theme={theme} defaultColorScheme="auto">
         <App />
-      </QueryClientProvider>
-    </MantineProvider>
-  </React.StrictMode>,
+      </MantineProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );

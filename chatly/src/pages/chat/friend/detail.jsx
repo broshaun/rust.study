@@ -6,8 +6,9 @@ import { useUserDB} from 'hooks/db';
 import { SafeAvatar, Divider, Heading} from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Center,Stack,Group } from '@mantine/core';
+import { Button, Center,Stack,Group,Title } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
+
 
 
 /**
@@ -82,7 +83,7 @@ export function Detail() {
 
   return (
 
-      <Stack padding={20}>
+      <Stack p={20}>
 
         <Center>
           <SafeAvatar
@@ -94,7 +95,7 @@ export function Detail() {
           />
         </Center>
 
-        <Heading level={4} style={{ marginTop: 20 }}>账户信息</Heading>
+        <Title order={5}>账户信息</Title>
 
         <Divider fade />
 
@@ -111,9 +112,7 @@ export function Detail() {
           }}
         />
 
-        {/* 操作按钮区 */}
-        <Group padding={20} gap={20}>
-
+        <Group p={10} gap={40} justify="center">
           <Button
             variant="filled"
             color="indigo"
