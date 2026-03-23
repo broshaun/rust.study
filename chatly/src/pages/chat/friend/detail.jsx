@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useWinSize } from 'hooks';
 import { useHttpClient2 } from 'hooks/http';
-import { useUserDB} from 'hooks/db';
-import { SafeAvatar, Divider, Heading} from 'components/flutter';
+import { useUserDB } from 'hooks/db';
+import { SafeAvatar, Divider } from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Center,Stack,Group,Title } from '@mantine/core';
+import { Button, Center, Stack, Group, Title, Paper } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
 
 
@@ -81,61 +81,55 @@ export function Detail() {
     });
   }
 
-  return (
-
-      <Stack p={20}>
-
-        <Center>
-          <SafeAvatar
-            url={friend?.avatar_url}
-            size={80}           // 稍微加大尺寸，显得大气
-            radius={8}          // 建议给一点圆角（如8px），比纯直角更有现代感
-            cover={true}        // 核心：保持比例裁剪，不变形
-            autoUpdate
-          />
-        </Center>
-
-        <Title order={5}>账户信息</Title>
-
-        <Divider fade />
-
-        {/* 信息展示区 */}
-        <InfoTile icon="user" label="名称" value={friend?.nikename} />
-        <InfoTile icon="email" label="邮箱" value={friend?.email} />
-        <InfoTile
-          icon="edit"
-          label="备注"
-          value={friend?.remark}
-          onConfirm={(remark) => {
-            setFriend((p) => ({ ...p, remark }));
-            updRemark({ id: friend?.id, remark });
-          }}
+  return <Paper p={0} radius={0}>
+    <Stack p={20} >
+      <Center>
+        <SafeAvatar
+          url={friend?.avatar_url}
+          size={80}           // 稍微加大尺寸，显得大气
+          radius={8}          // 建议给一点圆角（如8px），比纯直角更有现代感
+          cover={true}        // 核心：保持比例裁剪，不变形
+          autoUpdate
         />
+      </Center>
 
-        <Group p={10} gap={40} justify="center">
-          <Button
-            variant="filled"
-            color="indigo"
-            radius="md"
-            onClick={() => openMsgWindow(friend)}
-          >
-            发起聊天
-          </Button>
+      <Title order={5}>账户信息</Title>
 
-          <Button
-            variant="filled"
-            color="orange"
-            radius="md"
-            onClick={() => {
-              delFid(friend?.id).then(() => { navigate(isMobile ? '/chat/mobile/friend/' : '/chat/friend/'); })
-            }}
-          >
-            删除好友
-          </Button>
+      <Divider fade />
 
-        </Group>
+      <InfoTile icon="IconId" label="名称" value={friend?.nikename} />
+      <InfoTile icon="mail" label="邮箱" value={friend?.email} />
+      <InfoTile
+        icon="IconUserEdit"
+        label="备注"
+        value={friend?.remark}
+        onConfirm={(remark) => {
+          setFriend((p) => ({ ...p, remark }));
+          updRemark({ id: friend?.id, remark });
+        }}
+      />
 
-      </Stack>
+      <Group p={10} gap={25} justify="center" wrap="nowrap">
+        <Button
+          variant="filled"
+          color="indigo"
+          radius="md"
+          onClick={() => openMsgWindow(friend)}
+        >
+          发起聊天
+        </Button>
 
-  );
+        <Button
+          variant="filled"
+          color="orange"
+          radius="md"
+          onClick={() => {
+            delFid(friend?.id).then(() => { navigate(isMobile ? '/chat/mobile/friend/' : '/chat/friend/'); })
+          }}
+        >
+          删除好友
+        </Button>
+      </Group>
+    </Stack>
+  </Paper>
 }

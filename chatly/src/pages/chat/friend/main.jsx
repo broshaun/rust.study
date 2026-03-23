@@ -10,7 +10,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { Group } from '@mantine/core';
-import { Grid, ScrollArea, Box } from '@mantine/core';
+import { Grid, ScrollArea, Box, Paper } from '@mantine/core';
 
 
 export const Mian = () => {
@@ -128,36 +128,41 @@ export const Mian = () => {
 
         <Grid>
             <Grid.Col span={4}>
-                <ScrollArea ref={parentRef} h={winHeight - 26} style={{ width: '100%' }}>
-                    <Group justify="flex-end">
-                        <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
-                    </Group>
-                    <Divider fade />
+                <Paper p={0} radius={0}>
+                    <ScrollArea ref={parentRef} h={winHeight} style={{ width: '100%' }}>
+                        <Group justify="flex-end">
+                            <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+                        </Group>
+                        <Divider fade />
 
-                    <Box px={12}>
-                        <Box style={{
-                            height: rowVirtualizer.getTotalSize(),
-                            position: "relative",
-                            width: "100%",
-                            boxSizing: 'border-box',
-                        }}>
-                            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                                const friend = friends[virtualRow.index];
-                                if (!friend) return;
-                                return <Friend
-                                    key={friend.id}
-                                    data={friend}
-                                    virtualRow={virtualRow}
-                                    onSelect={(value) => { openMsgWindow(value) }}
-                                />
-                            })}
+                        <Box px={12}>
+                            <Box style={{
+                                height: rowVirtualizer.getTotalSize(),
+                                position: "relative",
+                                width: "100%",
+                                boxSizing: 'border-box',
+                            }}>
+                                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                                    const friend = friends[virtualRow.index];
+                                    if (!friend) return;
+                                    return <Friend
+                                        key={friend.id}
+                                        data={friend}
+                                        virtualRow={virtualRow}
+                                        onSelect={(value) => { openMsgWindow(value) }}
+                                    />
+                                })}
 
+                            </Box>
                         </Box>
-                    </Box>
-                </ScrollArea>
+
+                    </ScrollArea>
+                </Paper>
             </Grid.Col>
             <Grid.Col span={8}>
-                <Outlet />
+         
+                    <Outlet />
+
             </Grid.Col>
         </Grid>
 

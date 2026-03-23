@@ -4,7 +4,7 @@ import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useWinSize, } from 'hooks';
-import {  Divider } from 'components/flutter';
+import { YBox, Divider } from 'components/flutter';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { useHttpClient2 } from "hooks/http"
@@ -74,14 +74,13 @@ export const Item = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
         {/* <Icon name='magnifying-glass' /> */}
-        <Divider fade />
+        {/* <Divider fade /> */}
        <ScrollArea viewportRef={containerRef} h={winHeight - 100} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
             <Box px={12}>
                 <Box style={{
                     height: rowVirtualizer.getTotalSize(),
                     position: "relative",
                     width: "100%",
-                    boxSizing: 'border-box',
                 }}>
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                         const dg = dialog[virtualRow.index];

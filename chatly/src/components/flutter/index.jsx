@@ -2,7 +2,6 @@
 // layout 布局
 export { XBox } from './layout/XBox'
 export { YBox } from './layout/YBox'
-export { Container } from './layout/Container'
 export { SizedBox } from './layout/SizedBox'
 export { Divider } from './layout/Divider'
 
@@ -23,6 +22,5 @@ export { Button } from './base/Button';
 export { TextField } from './base/TextField';
 export { IconSvg as Icon } from './base/IconSvg'
 export { Text } from './base/Text'
-export { Heading } from './base/Heading'
 export { SafeAvatar } from './base/SafeAvatar'
-// default
+export { IconTabler } from './base/IconTabler'

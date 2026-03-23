@@ -8,7 +8,7 @@ import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { useHttpClient2 } from "hooks/http"
-import { Grid, ScrollArea, Box } from '@mantine/core';
+import { Grid, ScrollArea, Box, Paper } from '@mantine/core';
 
 
 export const Mian = () => {
@@ -75,32 +75,37 @@ export const Mian = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
+
         <Grid>
             <Grid.Col span={4}>
-                <Icon name="magnifying-glass" />
-                <Divider fade />
-                <ScrollArea viewportRef={containerRef} h={winHeight - 75} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
-                    <Box px={12}>
-                        <Box style={{
-                            height: rowVirtualizer.getTotalSize(),
-                            position: "relative",
-                            width: "100%",
-                            boxSizing: 'border-box',
-                        }}>
-                            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                                const dg = dialog[virtualRow.index];
-                                if (!dg) return null;
-                                return <DialogItem
-                                    key={dg.id}
-                                    data={dg}
-                                    virtualRow={virtualRow}
-                                    onSelect={openMsgWindow}
-                                    onClear={(p) => handleClear(p)}
-                                />
-                            })}
+                <Paper p={0} radius={0}>
+
+                {/* <Icon name="magnifying-glass" /> */}
+                {/* <Divider fade /> */}
+                
+                    <ScrollArea viewportRef={containerRef} h={winHeight} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
+                        <Box px={12}>
+                            <Box style={{
+                                height: rowVirtualizer.getTotalSize(),
+                                position: "relative",
+                                width: "100%",
+
+                            }}>
+                                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                                    const dg = dialog[virtualRow.index];
+                                    if (!dg) return null;
+                                    return <DialogItem
+                                        key={dg.id}
+                                        data={dg}
+                                        virtualRow={virtualRow}
+                                        onSelect={openMsgWindow}
+                                        onClear={(p) => handleClear(p)}
+                                    />
+                                })}
+                            </Box>
                         </Box>
-                    </Box>
-                </ScrollArea>
+                    </ScrollArea>
+                </Paper>
             </Grid.Col>
             <Grid.Col span={8}>
                 <Outlet />

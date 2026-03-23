@@ -104,3 +104,17 @@ export function useImage(url) {
 
   return state;
 }
+
+
+
+
+// Tauri2应用环境
+// 使用 @tauri-apps/plugin-http @tauri-apps/plugin-fs
+// 使用javascript编程语言代码实现：
+// 1.访问远程图片，远程地址示例：http://103.186.108.161:5015/imgs/06e5b950405c65eadfe37d1a227fb170.jpg 
+// 2.得到的远程的文件名是 md5.jpg
+// 3.正则判断图片名称是否符合 MD5 文件名，是就继续，否则直接返回默认图片
+// 4.继续后，查找本地文件，就是MD5名称，是否有同名的，有则直接访问，无则下载图片到本地
+// 5.最后返回 ObjectURL 可以用于img src 访问的路径
+// 使用示例：
+// const {src,loading,error,success} = useImage(url)

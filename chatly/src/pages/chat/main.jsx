@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
 import { useWinSize, useDateTime } from 'hooks';
-import { AppBar, PCShell, Icon, XBox, YBox } from 'components/flutter';
+import { AppBar, Icon, IconTabler } from 'components/flutter';
 import { liveQuery } from 'dexie';
 import { useUserDB } from 'hooks/db';
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Stack, Group, Center } from "@mantine/core";
+import { IconMessage, IconUsers, IconUser } from "@tabler/icons-react";
 
 
 
@@ -22,9 +23,9 @@ export function Chat() {
 
   const items = useMemo(() => {
     return [
-      { key: 'news', icon: <Icon name="chat-bubble-bottom-center-text" label='消息' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); setDot(false) }} dot={dot} /> },
-      { key: 'friend', icon: <Icon name="users_oline" label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },
-      { key: 'self', icon: <Icon name="user-oouline" label='我的' onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} /> },
+      { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); setDot(false); }} dot={dot} /> },
+      { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },
+      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, dot]);
 
@@ -47,9 +48,9 @@ export function Chat() {
   // --- PC 端布局 ---
   if (!isMobile) {
     return (
-      <AppShell navbar={{ width: 60 }}      >
+      <AppShell navbar={{ width: 65 }}      >
         <AppShell.Navbar >
-          <Stack gap={10} p={10} align="center">
+          <Stack gap={25} p={25} align="center">
             {
               visibleItems.map((item) => <div key={item.key}>{item.icon}</div>)
             }
@@ -66,8 +67,8 @@ export function Chat() {
   return (
     <AppShell
       padding={0}
-      header={{ height: 56 }}
-      footer={{ height: 60 }}
+      header={{ height: 55 }}
+      footer={{ height: 55 }}
     >
       <AppShell.Header>
         <AppBar title={title} />
@@ -76,7 +77,7 @@ export function Chat() {
         <Outlet />
       </AppShell.Main>
       <AppShell.Footer>
-        <Group h="100%" grow gap={0}>
+        <Group h="100%" grow gap={1} >
           {
             visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
           }

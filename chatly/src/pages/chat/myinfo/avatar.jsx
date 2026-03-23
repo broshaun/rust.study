@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router';
 import { ImageUpload } from 'components';
 import { useHttpClient2 } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
-import { Container, Icon, SafeAvatar } from 'components/flutter';
+import { Icon, SafeAvatar, SizedBox } from 'components/flutter';
 import { Grid, Group } from "@mantine/core";
 
 
@@ -47,6 +47,7 @@ export const Avatar2 = () => {
     return (
         <Suspense fallback={<div>加载中...</div>}>
 
+
             <Grid p={10}>
                 <Grid.Col span={4} >
                     <Icon
@@ -65,15 +66,15 @@ export const Avatar2 = () => {
                 </Grid.Col>
             </Grid>
 
-            <Container padding={10}>
-                <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    <SafeAvatar
-                        url={avatarSrc}
-                        size={320}
-                        radius={12}
-                    />
-                </div>
-            </Container>
+
+            <SizedBox height={50}/>
+            <div style={{ padding: 10, display: 'flex', justifyContent: 'center' }}>
+                <SafeAvatar
+                    url={avatarSrc}
+                    size={320}
+                    radius={12}
+                />
+            </div>
 
             <Group p={20} justify="center">
                 <span style={{ fontSize: 12, color: 'var(--text-secondary)', opacity: 0.6 }}>

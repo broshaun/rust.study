@@ -1,185 +1,70 @@
-import React, { useEffect, useState } from "react";
-import { Text, Icon, XBox } from "components/flutter";
+import React, { useEffect, useState, memo } from "react";
+import * as TablerIcons from "@tabler/icons-react";
 
 /**
- * InfoTile - 信息行（支持编辑）
- * 对外新增:
- *  - tone: "light" | "dark"
+ * InfoTile - 极致精简商务版
+ * 核心：70px标签、Slate 700配色、Flex居中对齐
  */
-export const InfoTile = ({
-  icon,
-  label,
-  value,
-  onConfirm,
-  tone = "light"
-}) => {
+export const InfoTile = memo(({ icon, label, value, onConfirm, tone = "light", style }) => {
+  const [editing, setEditing] = useState(false);
+  const [temp, setTemp] = useState(value || "");
   const editable = typeof onConfirm === "function";
 
-  const [editing, setEditing] = useState(false);
-  const [tempValue, setTempValue] = useState(value || "");
+  useEffect(() => setTemp(value || ""), [value]);
 
-  useEffect(() => {
-    setTempValue(value || "");
-  }, [value]);
-
-  const startEdit = () => {
-    if (!editable) return;
-    setTempValue(value || "");
-    setEditing(true);
+  const isDark = tone === "dark";
+  const clr = {
+    lbl: isDark ? "#909296" : "#5c5f66",
+    val: isDark ? "#e8e8e8" : "#212529",
+    border: isDark ? "#2c2e33" : "#f1f3f5",
+    btn: "#334155" // 专业石墨蓝
   };
 
-  const confirm = () => {
-    setEditing(false);
-    onConfirm?.(tempValue);
-  };
+  const Icon = TablerIcons[icon?.startsWith("Icon") ? icon : `Icon${icon?.charAt(0).toUpperCase()}${icon?.slice(1)}`] || TablerIcons.IconInfoCircle;
 
-  const cancel = () => {
-    setTempValue(value || "");
-    setEditing(false);
-  };
+  const confirm = () => { onConfirm?.(temp); setEditing(false); };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") confirm();
-    if (e.key === "Escape") cancel();
-  };
-
-  const palette =
-    tone === "dark"
-      ? {
-          editBg: "#1f1f1f",
-          valueColor: "#e8e8e8",
-          inputBg: "#2a2a2a",
-          inputColor: "#f5f5f5",
-          inputBorder: "#4a4a4a",
-          buttonBg: "#f5f5f5",
-          buttonColor: "#1f1f1f"
-        }
-      : {
-          editBg: "#ffffff",
-          valueColor: "#222222",
-          inputBg: "#ffffff",
-          inputColor: "#222222",
-          inputBorder: "#d9d9d9",
-          buttonBg: "#222222",
-          buttonColor: "#ffffff"
-        };
+  // 公共居中样式
+  const centerStyle = { display: "flex", alignItems: "center" };
 
   return (
-    <XBox
-      alignment="center"
-      style={{
-        width: "100%",
-        position: "relative",
-        minHeight: 32
-      }}
-    >
-      {!editing && (
-        <>
-          {/* 左侧：图标 + 标题 */}
-          <div
-            onClick={startEdit}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              cursor: editable ? "pointer" : "default",
-              flexShrink: 0
-            }}
-          >
-            <Icon
-              name={icon}
-              label={label}
-              labelPos="right"
-              size={18}
-            />
+    <div style={{ ...centerStyle, width: "100%", minHeight: 32, padding: "2px 0", borderBottom: `1px solid ${clr.border}`, position: "relative", ...style }}>
+      {!editing ? (
+        <div onClick={() => editable && setEditing(true)} style={{ ...centerStyle, width: "100%", cursor: editable ? "pointer" : "default" }}>
+          {/* 左侧：70px 标签 */}
+          <div style={{ ...centerStyle, width: 70, flexShrink: 0 }}>
+            <Icon size={14} stroke={2.2} color={clr.lbl} />
+            <span style={{ fontSize: 12, color: clr.lbl, fontWeight: 500, marginLeft: 4, lineHeight: 1 }}>{label}</span>
           </div>
-
-          {/* 右侧：值 */}
-          <XBox
-            alignment="center"
-            style={{
-              flex: 1,
-              minWidth: 0,
-              marginLeft: 8
-            }}
-          >
-            <Text
-              size={14}
-              weight={500}
-              style={{
-                lineHeight: "24px",
-                flex: 1,
-                minWidth: 0,
-                color: palette.valueColor
-              }}
-              ellipsis
-            >
+          {/* 右侧：Value (极致贴近且居中) */}
+          <div style={{ ...centerStyle, flex: 1, paddingLeft: 2, overflow: "hidden" }}>
+            <span style={{ fontSize: 13, color: clr.val, fontWeight: 600, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {value || "-"}
-            </Text>
-          </XBox>
-        </>
-      )}
-
-      {/* 编辑态：输入框覆盖整行，包含标题区域 */}
-      {editing && (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: "50%",
-            transform: "translateY(-50%)",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            zIndex: 2,
-            background: palette.editBg
-          }}
-        >
+            </span>
+          </div>
+          {editable && <TablerIcons.IconChevronRight size={12} color={clr.lbl} style={{ opacity: 0.3, marginLeft: "auto" }} />}
+        </div>
+      ) : (
+        <div style={{ ...centerStyle, position: "absolute", inset: 0, gap: 4, background: isDark ? "#1a1a1a" : "#fff", zIndex: 5 }}>
           <input
-            value={tempValue}
-            onChange={(e) => setTempValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={cancel}
             autoFocus
-            style={{
-              flex: 1,
-              minWidth: 0,
-              height: 28,
-              padding: "0 8px",
-              border: `1px solid ${palette.inputBorder}`,
-              borderRadius: 6,
-              outline: "none",
-              fontSize: 13,
-              boxSizing: "border-box",
-              background: palette.inputBg,
-              color: palette.inputColor
-            }}
+            value={temp}
+            onChange={e => setTemp(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && confirm()}
+            onBlur={() => setTimeout(() => setEditing(false), 200)}
+            style={{ flex: 1, height: 26, border: `1px solid ${isDark ? "#373a40" : "#dee2e6"}`, borderRadius: 3, padding: "0 8px", fontSize: 13, outline: "none", background: "transparent", color: clr.val }}
           />
-
           <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
             onClick={confirm}
-            style={{
-              height: 28,
-              padding: "0 10px",
-              border: "none",
-              borderRadius: 6,
-              background: palette.buttonBg,
-              color: palette.buttonColor,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-              fontSize: 13,
-              fontWeight: 500
-            }}
+            onMouseDown={e => e.preventDefault()}
+            style={{ ...centerStyle, justifyContent: "center", height: 26, padding: "0 10px", backgroundColor: clr.btn, color: "#fff", border: "none", borderRadius: 3, fontSize: 11, fontWeight: 600, cursor: "pointer" }}
           >
             确认
           </button>
         </div>
       )}
-    </XBox>
+    </div>
   );
-};
+});
 
 export default InfoTile;

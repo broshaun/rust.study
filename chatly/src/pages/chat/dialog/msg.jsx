@@ -3,14 +3,14 @@ import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
-import { MsgItem, ChatMsg } from 'components/chat';
+import { MsgItem, ChatMsg, EmojiPicker } from 'components/chat';
 import { Icon } from 'components/flutter';
 import { useHttpClient2 } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ScrollArea, Box } from "@mantine/core";
-
+import { ScrollArea, Box, Paper } from "@mantine/core";
+import { IconChevronLeft } from '@tabler/icons-react';
 
 
 export function Msg() {
@@ -93,15 +93,14 @@ export function Msg() {
     });
 
 
-    return (
-        <ChatMsg theme='light'>
+    return <Paper p={0} radius={0}>
+        <ChatMsg >
             <ChatMsg.Meta
                 title={displayName}
-                left={isMobile ? <Icon name="chevron-left" onClick={() => navigate(f_url)} /> : <></>}
+                left={isMobile ? <IconChevronLeft size={22} stroke={1.5} onClick={() => navigate(f_url)} />:<a/>}
             />
             <ChatMsg.Content>
-
-                <ScrollArea viewportRef={containerRef} h={winHeight - 128} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
+                <ScrollArea viewportRef={containerRef} h={winHeight - 125} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
                     <Box px={12}>
                         <Box style={{
                             height: rowVirtualizer.getTotalSize(),
@@ -126,13 +125,8 @@ export function Msg() {
                         </Box>
                     </Box>
                 </ScrollArea>
-
             </ChatMsg.Content>
-
-            <ChatMsg.Send
-                onSend={(newMsg) => fnSend({ uid, msgText: newMsg })}
-            />
-
+            <ChatMsg.Send onSend={(newMsg) => fnSend({ uid, msgText: newMsg })} />
         </ChatMsg>
-    );
+    </Paper>
 }

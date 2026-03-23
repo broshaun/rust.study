@@ -2,6 +2,6 @@ export { UserInfoCard } from './UserInfoCard'
 export { MsgItem } from './MsgItem'
 export { default as ChatMsg } from './ChatMsg'
 export { DialogItem } from './DialogItem'
-export { default as Friend } from './Friend' 
+export { default as Friend } from './Friend'
 export { InfoTile } from './InfoTile'
-export { default as List } from './List';
+export { EmojiPicker } from "./EmojiPicker"
