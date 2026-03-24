@@ -15,7 +15,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/rpc': {
-        target: 'http://103.186.108.161:5015',
+        // target: 'http://103.186.108.161:5015',
+        target: 'http://192.168.2.2:5015',
       },
       '/imgs': {
         target: 'http://103.186.108.161:5015',

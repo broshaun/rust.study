@@ -7,7 +7,7 @@ import { RsMyInfo } from "./myinfo";
 import { Msg } from "./dialog/msg";
 import { useHttpClient2 } from 'hooks/http';
 import { useToken } from "hooks/store"
-import { useUserDB} from 'hooks/db';
+import { useUserDB } from 'hooks/db';
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -49,13 +49,26 @@ function ChatGuard() {
     queryFn: async () => {
       const results = await httpMsg.post('POST')
       const { code, data } = results;
-      if (data && code === 200) {
-        db.table('message').put({ 'uid': data?.uid, 'msg': data?.msg, 'timestamp': data?.timestamp, 'signal': 'receive' });
-        db.table('friends').where('uid').equals(data?.uid).modify((user) => {
-          user.signal = 'news';
-          user.dialog = 1;
-          user.timestamp = data?.timestamp
-        });
+      if (code === 200 && Array.isArray(data) && data.length > 0) {
+        // console.log('data....',data)
+        await db.transaction('rw', db.message, db.friends, async () => {
+          for (const item of data) {
+            await db.message.put({
+              uid: item.uid,
+              msg: item.msg,
+              timestamp: item.timestamp,
+              signal: 'receive',
+            })
+            await db.friends
+              .where('uid')
+              .equals(item.uid)
+              .modify((user) => {
+                user.signal = 'news'
+                user.dialog = 1
+                user.timestamp = item.timestamp
+              })
+          }
+        })
       }
       return 'ok';
     },
