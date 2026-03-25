@@ -23,21 +23,14 @@ export const Avatar2 = () => {
         if (!avatar) return "";
         return joinPath(avatar)
     }, [avatar]);
-
-    console.log('avatarSrc',avatarSrc)
-
-
     /**
      * 上传并更新头像
      */
     const uploadFile = useCallback((file) => {
         if (!file) return;
         httpFiles.uploadFiles(file).then((results) => {
-            console.log('results2012',results)
-
             if (!results?.data) return;
             apiLogin.post('PATCH', { avatar_url: results.data });
-            
             setAvatar(results.data);
         });
     }, [httpFiles, apiLogin, setAvatar]);
