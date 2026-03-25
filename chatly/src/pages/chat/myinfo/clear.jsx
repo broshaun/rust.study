@@ -2,16 +2,18 @@ import React, { useState, Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { Modal } from 'components';
 import { deleteUserDB} from 'hooks/db';
+import { clearAllImageCache } from "hooks/http";
 
 
 
 export const ClearLogs = () => {
     const navigate = useNavigate();
     const [open, setOpen] = useState(true);
+ 
 
 
-    const clear = (click) => {
-
+    const clear = async (click) => {
+        await clearAllImageCache();
         if (click) {
             deleteUserDB().then(console.log('记录清空'))
             navigate('/chat/self/mylist/');
@@ -19,6 +21,7 @@ export const ClearLogs = () => {
             navigate('/chat/self/mylist/')
         }
         setOpen(false)
+        
     }
 
 

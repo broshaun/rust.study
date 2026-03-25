@@ -3,11 +3,10 @@ import { Outlet, useNavigate } from 'react-router';
 import { useUserDB } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
-import { Icon, Divider } from 'components/flutter';
 import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { useHttpClient2 } from "hooks/http"
+import { useHttpClient2,useImgApiBase } from "hooks/http"
 import { Grid, ScrollArea, Box, Paper } from '@mantine/core';
 
 
@@ -17,7 +16,9 @@ export const Mian = () => {
     const [dialog, handlers] = useListState([]);
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
-    const { endpoint } = useHttpClient2('/imgs/')
+    // const { endpoint } = useHttpClient2('/imgs/')
+    const { joinPath } = useImgApiBase('avatar')
+
     const { winHeight, isMobile } = useWinSize()
     const { db, userId, isReady } = useUserDB(account);
 
@@ -25,7 +26,8 @@ export const Mian = () => {
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
-            ...row, avatar_url: endpoint.join(row.avatar_url)
+            ...row, avatar_url: joinPath(row.avatar_url)
+            // avatar_url: endpoint.join(row.avatar_url)
         }));
         handlers.setState(formattedData);
     };

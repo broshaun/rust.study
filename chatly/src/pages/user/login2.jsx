@@ -3,7 +3,7 @@ import { Modal } from "components";
 import React, { useMemo, useState } from "react"
 import { useNavigate } from 'react-router';
 import { useWinSize, useToken } from 'hooks';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2,useImgApiBase } from 'hooks/http';
 import { TextField, Divider, XBox, SafeAvatar } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query'
 import { useLocalStorage } from "@mantine/hooks";
@@ -19,13 +19,14 @@ export function LogOn() {
     const [password, setPassword] = useState("")
 
     const { http } = useHttpClient2('/rpc/chat/login/')
-    const { endpoint } = useHttpClient2('/imgs/')
+    // const { endpoint } = useHttpClient2('/imgs/')
+    const { joinPath } = useImgApiBase('avatar')
     const { setToken } = useToken()
     const { isMobile } = useWinSize()
 
     const avatar_url = useMemo(() => {
-        return endpoint.join(avatar)
-    }, [endpoint, avatar])
+        return joinPath(avatar)
+    }, [avatar])
 
 
     const { mutateAsync: login } = useMutation(

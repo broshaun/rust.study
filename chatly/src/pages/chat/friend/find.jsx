@@ -1,6 +1,6 @@
 import React, { useState, Suspense } from "react";
 import { InputText2, } from 'components';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2,useImgApiBase } from 'hooks/http';
 import { UserInfoCard } from 'components/chat';
 import { Divider, SafeAvatar } from 'components/flutter';
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -10,7 +10,8 @@ import { ScrollArea,Stack } from "@mantine/core";
 
 export const Find = () => {
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    const { endpoint } = useHttpClient2('/imgs');
+    // const { endpoint } = useHttpClient2('/imgs');
+    const { joinPath } = useImgApiBase('avatar')
     const [keyword, setKeyword] = useState();
     const [debouncedKeyword] = useDebouncedValue(keyword, 500);
 
@@ -80,8 +81,6 @@ export const Find = () => {
     );
 
 
-    // console.log('endpoint.join(user?.avatar_url)', endpoint.join(user?.avatar_url))
-
     return <Suspense fallback={<div>加载中...</div>}>
 
         <ScrollArea h="100%" type="auto">
@@ -102,8 +101,7 @@ export const Find = () => {
                         }}
                     >
                         <UserInfoCard.Avatar>
-                            {/* <img src={`${endpoint}/${findByUser?.avatar_url}`} /> */}
-                            <SafeAvatar size={60} stretch={true} url={endpoint.join(findByUser?.avatar_url)} />
+                            <SafeAvatar size={60} stretch={true} url={joinPath(findByUser?.avatar_url)} />
                         </UserInfoCard.Avatar>
                         <UserInfoCard.Info>{findByUser}</UserInfoCard.Info>
                     </UserInfoCard>
@@ -111,7 +109,6 @@ export const Find = () => {
                 }
 
                 {!loading2 && askFriends.map(user => {
-                    // console.log('endpoint.join(user?.avatar_url)',endpoint.join(user?.avatar_url))
                     return <UserInfoCard
                         background="#FFF9E8"
                         title="好友请求"
@@ -128,8 +125,7 @@ export const Find = () => {
                         }}
                     >
                         <UserInfoCard.Avatar>
-                            <SafeAvatar size={60} stretch={true} url={endpoint.join(user?.avatar_url)} />
-                            {/* <img src={endpoint.join(user?.avatar_url)} /> */}
+                            <SafeAvatar size={60} stretch={true} url={joinPath(user?.avatar_url)} />
                         </UserInfoCard.Avatar>
                         <UserInfoCard.Info>{user}</UserInfoCard.Info>
                     </UserInfoCard>

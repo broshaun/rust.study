@@ -7,7 +7,7 @@ import { useWinSize, } from 'hooks';
 import { YBox, Divider } from 'components/flutter';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { useHttpClient2 } from "hooks/http"
+import { useHttpClient2, useImgApiBase } from "hooks/http"
 import { Group, ScrollArea, Grid, Box } from '@mantine/core';
 
 
@@ -18,13 +18,16 @@ export const Item = () => {
     const [dialog, handlers] = useListState([]);
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
-    const { endpoint } = useHttpClient2('/imgs/')
+    // const { endpoint } = useHttpClient2('/imgs/')
+    const { joinPath } = useImgApiBase('avatar')
+
     const { winHeight, isMobile } = useWinSize()
     const { db, userId, isReady } = useUserDB(account);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
-            ...row, avatar_url: endpoint.join(row.avatar_url)
+            ...row, avatar_url: joinPath(row.avatar_url)
+            // avatar_url: endpoint.join(row.avatar_url)
         }));
         handlers.setState(formattedData);
     };
@@ -75,7 +78,7 @@ export const Item = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         {/* <Icon name='magnifying-glass' /> */}
         {/* <Divider fade /> */}
-       <ScrollArea viewportRef={containerRef} h={winHeight - 100} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
+        <ScrollArea viewportRef={containerRef} h={winHeight - 100} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
             <Box px={12}>
                 <Box style={{
                     height: rowVirtualizer.getTotalSize(),

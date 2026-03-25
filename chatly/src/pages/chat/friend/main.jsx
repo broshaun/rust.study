@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { Outlet, useNavigate, } from 'react-router';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useUserDB } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
@@ -9,8 +9,7 @@ import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { Group } from '@mantine/core';
-import { Grid, ScrollArea, Box, Paper } from '@mantine/core';
+import { Grid, ScrollArea, Box, Paper, Group } from '@mantine/core';
 
 
 export const Mian = () => {
@@ -20,7 +19,8 @@ export const Mian = () => {
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    const { endpoint } = useHttpClient2('/imgs/')
+    // const { endpoint } = useHttpClient2('/imgs/')
+    const { joinPath } = useImgApiBase('avatar')
     const { winHeight } = useWinSize()
 
     const { db, userId, isReady } = useUserDB(account);
@@ -29,9 +29,15 @@ export const Mian = () => {
 
 
     const loadFriends = (rows) => {
-        const formattedData = rows.map((row) => ({
-            ...row, avatar_url: endpoint.join(row.avatar_url)
-        }));
+
+        const formattedData = rows.map((row) => {
+
+            // console.log('joinPath(row.avatar_url)', joinPath(row.avatar_url))
+            return {
+                ...row, avatar_url: joinPath(row.avatar_url)
+                // avatar_url: endpoint.join(row.avatar_url)
+            }
+        });
         handlers.setState(formattedData);
     };
 
@@ -84,9 +90,6 @@ export const Mian = () => {
             },
         }
     );
-
-
-
 
 
     useEffect(() => {
@@ -160,8 +163,8 @@ export const Mian = () => {
                 </Paper>
             </Grid.Col>
             <Grid.Col span={8}>
-         
-                    <Outlet />
+
+                <Outlet />
 
             </Grid.Col>
         </Grid>

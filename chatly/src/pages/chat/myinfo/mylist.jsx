@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { useHttpClient2 } from 'hooks/http';
 import { useQuery } from '@tanstack/react-query';
-import {  Stack, Divider, NavLink } from '@mantine/core';
+import { Stack, Divider, NavLink } from '@mantine/core';
 import {
     IconUserCircle,
     IconMail,
@@ -18,7 +18,7 @@ export const MyList = () => {
     const navigate = useNavigate();
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
 
-    const { data: apiInfo = {}, isPending: loading, error } = useQuery(
+    const { data: apiInfo = {}, isPending: loading, error, refetch } = useQuery(
         {
             queryKey: ['api-info'],
             queryFn: async () => {
@@ -26,6 +26,7 @@ export const MyList = () => {
                 if (!res || res.code !== 200) {
                     throw new Error(res?.message || '获取失败');
                 }
+                console.log('res.data++', res.data)
                 return res.data;
             },
         });
@@ -52,21 +53,21 @@ export const MyList = () => {
                 label={`昵称：${apiInfo?.nikename}`}
                 leftSection={<IconId size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/chat/self/name/", { state: apiInfo })}
+                onClick={() => { navigate("/chat/self/name/", { state: apiInfo }); refetch(); }}
             />
             <Divider ml={45} my={0} color="gray.2" />
             <NavLink py={15} px={25}
                 label="设置手机提醒"
                 leftSection={<IconDeviceMobileMessage size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/chat/self/pushdeer/", { state: apiInfo })}
+                onClick={() => { navigate("/chat/self/pushdeer/", { state: apiInfo }); refetch(); }}
             />
             <Divider ml={45} my={0} color="gray.2" />
             <NavLink py={15} px={25}
                 label="清空聊天记录"
                 leftSection={<IconTrash size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/chat/self/clear/")}   
+                onClick={() => navigate("/chat/self/clear/")}
             />
             <Divider ml={45} my={0} color="gray.2" />
             <NavLink py={15} px={25}

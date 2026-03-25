@@ -4,7 +4,7 @@ import { useDateTime, useWinSize } from 'hooks';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { MsgItem, ChatMsg } from 'components/chat';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2,useImgApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -24,7 +24,8 @@ export function Msg() {
     const [selfAvatar] = useLocalStorage({ key: 'myAvatar' });
     const [msgs, setMsgs] = useState([]);
 
-    const { endpoint } = useHttpClient2('/imgs/')
+    // const { endpoint } = useHttpClient2('/imgs/')
+    const { joinPath } = useImgApiBase('avatar')
     const { db, userId, isReady } = useUserDB(account);
 
     const receiveAvatarSrc = useMemo(() => {
@@ -33,9 +34,8 @@ export function Msg() {
 
     const sendAvatarSrc = useMemo(() => {
         if (!selfAvatar) return "";
-
-        return endpoint.join(selfAvatar)
-    }, [endpoint, selfAvatar]);
+        return joinPath(selfAvatar)
+    }, [selfAvatar]);
 
 
     const { http } = useHttpClient2('/rpc/chat/msg/single/');

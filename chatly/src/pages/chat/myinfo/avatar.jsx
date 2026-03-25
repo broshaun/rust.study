@@ -1,7 +1,7 @@
 import { useCallback, Suspense, useMemo } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { ImageUpload } from 'components';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { Icon, SafeAvatar, SizedBox } from 'components/flutter';
 import { Grid, Group } from "@mantine/core";
@@ -23,13 +23,17 @@ export const Avatar2 = () => {
     const { http: httpFiles } = useHttpClient2('/files/img/');
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const { endpoint } = useHttpClient2('/imgs/')
+    const { joinPath } = useImgApiBase('avatar')
 
     // 拼接完整的 API 地址
     const avatarSrc = useMemo(() => {
         if (!avatar) return "";
-        return endpoint.join(avatar)
-    }, [endpoint, avatar]);
+        // return endpoint.join(avatar)
+        return joinPath(avatar)
+    }, [avatar]);
 
+
+    console.log('avatarSrc',avatarSrc)
 
     /**
      * 上传并更新头像
@@ -67,12 +71,13 @@ export const Avatar2 = () => {
             </Grid>
 
 
-            <SizedBox height={50}/>
+            <SizedBox height={50} />
             <div style={{ padding: 10, display: 'flex', justifyContent: 'center' }}>
                 <SafeAvatar
                     url={avatarSrc}
                     size={320}
                     radius={12}
+                    autoUpdate 
                 />
             </div>
 

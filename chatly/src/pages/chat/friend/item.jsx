@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2,useImgApiBase } from 'hooks/http';
 import { useWinSize } from 'hooks';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
@@ -20,7 +20,8 @@ export const Item = () => {
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    const { endpoint } = useHttpClient2('/imgs/')
+    // const { endpoint } = useHttpClient2('/imgs/')
+    const { joinPath } = useImgApiBase('avatar')
     const { winHeight } = useWinSize()
     const { db, userId, isReady } = useUserDB(account);
 
@@ -28,7 +29,8 @@ export const Item = () => {
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
-            ...row, avatar_url: endpoint.join(row.avatar_url)
+            ...row,  avatar_url: joinPath(row.avatar_url)
+            // avatar_url: endpoint.join(row.avatar_url)
         }));
         handlers.setState(formattedData);
     };
