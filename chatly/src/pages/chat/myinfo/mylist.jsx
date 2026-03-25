@@ -17,7 +17,6 @@ import {
 export const MyList = () => {
     const navigate = useNavigate();
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
-
     const { data: apiInfo = {}, isPending: loading, error, refetch } = useQuery(
         {
             queryKey: ['api-info'],
@@ -26,12 +25,10 @@ export const MyList = () => {
                 if (!res || res.code !== 200) {
                     throw new Error(res?.message || '获取失败');
                 }
-                console.log('res.data++', res.data)
                 return res.data;
             },
+            staleTime: 10,
         });
-
-
 
 
     return (

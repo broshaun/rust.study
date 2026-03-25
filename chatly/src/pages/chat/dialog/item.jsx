@@ -19,7 +19,7 @@ export const Item = () => {
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
     // const { endpoint } = useHttpClient2('/imgs/')
-    const { joinPath } = useImgApiBase('avatar')
+    const { joinPath } = useImgApiBase('/avatar/')
 
     const { winHeight, isMobile } = useWinSize()
     const { db, userId, isReady } = useUserDB(account);

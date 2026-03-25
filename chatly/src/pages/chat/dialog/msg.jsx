@@ -25,7 +25,7 @@ export function Msg() {
     const [msgs, setMsgs] = useState([]);
 
     // const { endpoint } = useHttpClient2('/imgs/')
-    const { joinPath } = useImgApiBase('avatar')
+    const { joinPath } = useImgApiBase('/avatar/')
     const { db, userId, isReady } = useUserDB(account);
 
     const receiveAvatarSrc = useMemo(() => {

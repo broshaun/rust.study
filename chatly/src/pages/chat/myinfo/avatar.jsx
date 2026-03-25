@@ -13,45 +13,37 @@ import { Grid, Group } from "@mantine/core";
 export const Avatar2 = () => {
     const navigate = useNavigate();
     const location = useLocation();
-
     // 持久化存储当前的头像路径
-    const [avatar, setAvatar] = useLocalStorage({
-        key: 'myAvatar',
-        defaultValue: location.state?.avatar_url
-    });
-
-    const { http: httpFiles } = useHttpClient2('/files/img/');
+    const [avatar, setAvatar] = useLocalStorage({ key: 'myAvatar', defaultValue: location.state?.avatar_url });
+    const { http: httpFiles } = useHttpClient2('/files/avatar/');
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
-    const { endpoint } = useHttpClient2('/imgs/')
     const { joinPath } = useImgApiBase('avatar')
-
     // 拼接完整的 API 地址
     const avatarSrc = useMemo(() => {
         if (!avatar) return "";
-        // return endpoint.join(avatar)
         return joinPath(avatar)
     }, [avatar]);
 
-
     console.log('avatarSrc',avatarSrc)
+
 
     /**
      * 上传并更新头像
      */
     const uploadFile = useCallback((file) => {
         if (!file) return;
-
         httpFiles.uploadFiles(file).then((results) => {
+            console.log('results2012',results)
+
             if (!results?.data) return;
             apiLogin.post('PATCH', { avatar_url: results.data });
+            
             setAvatar(results.data);
         });
     }, [httpFiles, apiLogin, setAvatar]);
 
     return (
         <Suspense fallback={<div>加载中...</div>}>
-
-
             <Grid p={10}>
                 <Grid.Col span={4} >
                     <Icon
