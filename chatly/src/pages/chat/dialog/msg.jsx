@@ -1,41 +1,68 @@
-import React, { useState, useEffect, useRef, useMemo } from "react"
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { useDateTime, useWinSize } from 'hooks';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
-import { MsgItem, ChatMsg } from 'components/chat';
-import { useHttpClient2,useImgApiBase } from 'hooks/http';
+import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ScrollArea, Box, Paper } from "@mantine/core";
-import { IconChevronLeft } from '@tabler/icons-react';
+import { ScrollArea, Box, Paper, ActionIcon } from "@mantine/core";
+import { IconChevronLeft, IconPhoto } from '@tabler/icons-react';
+import { MsgItem, MsgImgs, ChatMsg } from 'components/chat';
+import { ImageUpload } from "components/flutter";
 
+
+export const parseMsgContent = (msg) => {
+    if (typeof msg !== 'string') return { type: 'text', content: '' };
+    if (msg.startsWith('[image]')) {
+        return { type: 'image', content: msg.slice(7) };
+    }
+    return { type: 'text', content: msg };
+};
 
 export function Msg() {
-
     const location = useLocation();
     const navigate = useNavigate();
-
     const uid = location.state?.uid;
     const displayName = location.state?.displayName;
-
     const [account] = useLocalStorage({ key: 'savedAccount' })
     const [selfAvatar] = useLocalStorage({ key: 'myAvatar' });
     const [msgs, setMsgs] = useState([]);
+    const [sendText, setSendText] = useState('');
+    const [usable, setUsable] = useState(false)
 
-    // const { endpoint } = useHttpClient2('/imgs/')
+    const uploadRef = useRef(null);
+
+
+
+    const { http: httpFiles30 } = useHttpClient2('/files/img30/');
+    const { joinPath: img30path } = useImgApiBase('/img30/')
+
+
+
     const { joinPath } = useImgApiBase('/avatar/')
     const { db, userId, isReady } = useUserDB(account);
-
     const receiveAvatarSrc = useMemo(() => {
         return location.state?.avatar_url
     }, [location.state?.avatar_url]);
-
     const sendAvatarSrc = useMemo(() => {
         if (!selfAvatar) return "";
         return joinPath(selfAvatar)
     }, [selfAvatar]);
+
+
+    /**
+     * 上传缓存30天图片
+     */
+    const uploadFile = useCallback(async (file) => {
+        if (!file) return;
+        const { code, data } = await httpFiles30.uploadFiles(file);
+        if (code === 200 && data) {
+            return data;
+        }
+        return;
+    }, [httpFiles30]);
 
 
     const { http } = useHttpClient2('/rpc/chat/msg/single/');
@@ -45,7 +72,6 @@ export function Msg() {
     const f_url = useMemo(() => {
         return isMobile ? '/chat/mobile/dialog/' : '/chat/dialog/';
     }, [isMobile]);
-
 
     useEffect(() => {
         if (!db) return;
@@ -60,7 +86,7 @@ export function Msg() {
     }, [uid, db]);
 
 
-    const { mutateAsync: fnSend } = useMutation(
+    const { mutateAsync: fnSendMsg } = useMutation(
         {
             mutationFn: async ({ uid, msgText }) => {
                 http.requestBodyJson('PUT', { user_id: uid, msg: msgText })
@@ -76,6 +102,7 @@ export function Msg() {
                             });
                         }
                     });
+
                 return 'ok';
             },
         }
@@ -91,12 +118,25 @@ export function Msg() {
         useFlushSync: false,
     });
 
+    const senddd = async () => {
+        if (sendText) {
+            await fnSendMsg({ uid, msgText: sendText })
+        }
+        if (uploadRef.current?.file) {
+            const imgFile = await uploadFile(uploadRef.current.file)
+            await fnSendMsg({ uid, msgText: `[image]${img30path(imgFile)}` })
+        }
+        setSendText(() => "")
+        uploadRef.current?.clear();
+        return 'ok'
+    }
+
 
     return <Paper p={0} radius={0}>
         <ChatMsg >
             <ChatMsg.Meta
                 title={displayName}
-                left={isMobile ? <IconChevronLeft size={22} stroke={1.5} onClick={() => navigate(f_url)} />:<a/>}
+                left={isMobile ? <IconChevronLeft size={22} stroke={1.5} onClick={() => navigate(f_url)} /> : <a />}
             />
             <ChatMsg.Content>
                 <ScrollArea viewportRef={containerRef} h={winHeight - 125} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
@@ -111,21 +151,70 @@ export function Msg() {
                             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                                 const msg = msgs[virtualRow.index];
                                 if (!msg) return null;
+                                const { type, content } = parseMsgContent(msg?.msg);
 
-                                return <MsgItem
-                                    key={msg.id}
-                                    data={msg}
-                                    receiveAvatar={receiveAvatarSrc}
-                                    sendAvatar={sendAvatarSrc}
-                                    virtualRow={virtualRow}
-                                />
+                                if (type === 'image') {
+                                    if (msg.signal === 'receive') {
+                                        return <MsgImgs
+                                            key={msg.id}
+                                            avatar={receiveAvatarSrc}
+                                            imgUrl={content}
+                                            timestamp={msg.timestamp}
+                                            position={'left'}
+                                            virtualRow={virtualRow}
+                                        />
+                                    } else if (msg.signal === 'send') {
+                                        return <MsgImgs
+                                            key={msg.id}
+                                            avatar={sendAvatarSrc}
+                                            imgUrl={content}
+                                            timestamp={msg.timestamp}
+                                            position={'right'}
+                                            virtualRow={virtualRow}
+                                        />
+                                    }
+                                } else if (type === 'text') {
+                                    if (msg.signal === 'receive') {
+                                        return <MsgItem
+                                            key={msg.id}
+                                            avatar={receiveAvatarSrc}
+                                            msg={content}
+                                            timestamp={msg.timestamp}
+                                            position={'left'}
+                                            virtualRow={virtualRow}
+                                        />
+                                    } else if (msg.signal === 'send') {
+                                        return <MsgItem
+                                            key={msg.id}
+                                            avatar={sendAvatarSrc}
+                                            msg={content}
+                                            timestamp={msg.timestamp}
+                                            position={'right'}
+                                            virtualRow={virtualRow}
+                                        />
+                                    }
+                                }
+
                             })}
 
                         </Box>
                     </Box>
                 </ScrollArea>
             </ChatMsg.Content>
-            <ChatMsg.Send onSend={(newMsg) => fnSend({ uid, msgText: newMsg })} />
+
+            <ChatMsg.Send button={'发送'} usable={usable} onClick={() => senddd()} >
+
+                <ChatMsg.Tool onClose={() => { uploadRef.current?.clear(); setUsable(false); }} onOpen={() => setUsable(true)} >
+                    <ImageUpload ref={uploadRef} size={32} onDirtyChange={(b) => setUsable(p => b || p)}>
+                        <ActionIcon variant="subtle" color="gray" title="发送图片">
+                            <IconPhoto />
+                        </ActionIcon>
+                    </ImageUpload>
+                </ChatMsg.Tool>
+
+                <ChatMsg.SendText onChange={(text) => { setSendText(text); if (text) { setUsable(true) } else { setUsable(false) }; }} />
+
+            </ChatMsg.Send>
         </ChatMsg>
     </Paper>
 }
