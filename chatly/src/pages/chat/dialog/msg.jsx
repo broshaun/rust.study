@@ -8,7 +8,7 @@ import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ScrollArea, Box, Paper, ActionIcon } from "@mantine/core";
-import { IconChevronLeft, IconPhoto } from '@tabler/icons-react';
+import { IconChevronLeft, IconPhoto, IconPhone } from '@tabler/icons-react';
 import { MsgItem, MsgImgs, ChatMsg } from 'components/chat';
 import { ImageUpload } from "components/flutter";
 
@@ -210,6 +210,10 @@ export function Msg() {
                             <IconPhoto />
                         </ActionIcon>
                     </ImageUpload>
+
+                    <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={()=>{navigate('/chat/dialog/rtc')}}>
+                            <IconPhone />
+                        </ActionIcon>
                 </ChatMsg.Tool>
 
                 <ChatMsg.SendText onChange={(text) => { setSendText(text); if (text) { setUsable(true) } else { setUsable(false) }; }} />

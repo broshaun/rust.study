@@ -28,3 +28,4 @@ export function useImgApiBase(path = "") {
   const joinPath = (subPath = "") => safeJoin(base, path, subPath);
   return { imgBase: base, setImgBase, joinPath };
 }
+

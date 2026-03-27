@@ -41,6 +41,8 @@ For iOS development, run:
   pnpm add @mantine/hooks @mantine/core @tabler/icons-react
   pnpm add @tanstack/react-query
   pnpm add @tanstack/react-virtual
+
+  # pnpm add @rsbuild/plugin-basic-ssl -D
 ```
 
 

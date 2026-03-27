@@ -7,6 +7,8 @@
   ],
   "permissions": [
     "core:default",
+    "core:webview:allow-set-webview-zoom", 
+    "core:event:default",
     "fs:default",
     "fs:allow-appdata-read-recursive",
     "fs:allow-appdata-write-recursive",

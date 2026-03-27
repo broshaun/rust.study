@@ -11,4 +11,8 @@ export default defineConfig({
   source: {
     tsconfigPath: './jsconfig.json',
   },
+  server: {
+    host: '0.0.0.0',
+    port: 3000,
+  },
 });
