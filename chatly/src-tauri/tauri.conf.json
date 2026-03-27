@@ -20,7 +20,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' tauri://localhost",
+      "csp": "default-src 'self' tauri://localhost; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' tauri://localhost blob: data:; connect-src 'self' ipc: ipc://localhost http://ipc.localhost;",
       "assetProtocol": {
         "enable": true,
         "scope": [
