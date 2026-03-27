@@ -1,69 +1,125 @@
 import React, { useEffect, useState, memo } from "react";
 import * as TablerIcons from "@tabler/icons-react";
+import { 
+  Group, 
+  Text, 
+  TextInput, 
+  UnstyledButton, 
+  Box, 
+  Button, 
+  ActionIcon,
+  rem 
+} from '@mantine/core';
 
 /**
- * InfoTile - 极致精简商务版
- * 核心：70px标签、Slate 700配色、Flex居中对齐
+ * InfoTile - Mantine 商务版
+ * 适配自动主题、70px固定标签宽、Slate风格
  */
-export const InfoTile = memo(({ icon, label, value, onConfirm, tone = "light", style }) => {
+export const InfoTile = memo(({ icon, label, value, onConfirm, style }) => {
   const [editing, setEditing] = useState(false);
   const [temp, setTemp] = useState(value || "");
   const editable = typeof onConfirm === "function";
 
   useEffect(() => setTemp(value || ""), [value]);
 
-  const isDark = tone === "dark";
-  const clr = {
-    lbl: isDark ? "#909296" : "#5c5f66",
-    val: isDark ? "#e8e8e8" : "#212529",
-    border: isDark ? "#2c2e33" : "#f1f3f5",
-    btn: "#334155" // 专业石墨蓝
+  // 动态获取图标
+  const IconComponent = TablerIcons[icon?.startsWith("Icon") ? icon : `Icon${icon?.charAt(0).toUpperCase()}${icon?.slice(1)}`] || TablerIcons.IconInfoCircle;
+
+  const handleConfirm = () => {
+    onConfirm?.(temp);
+    setEditing(false);
   };
 
-  const Icon = TablerIcons[icon?.startsWith("Icon") ? icon : `Icon${icon?.charAt(0).toUpperCase()}${icon?.slice(1)}`] || TablerIcons.IconInfoCircle;
-
-  const confirm = () => { onConfirm?.(temp); setEditing(false); };
-
-  // 公共居中样式
-  const centerStyle = { display: "flex", alignItems: "center" };
-
   return (
-    <div style={{ ...centerStyle, width: "100%", minHeight: 32, padding: "2px 0", borderBottom: `1px solid ${clr.border}`, position: "relative", ...style }}>
+    <Box 
+      py={4} 
+      style={{ 
+        borderBottom: `1px solid var(--mantine-color-default-border)`,
+        position: 'relative',
+        minHeight: rem(36),
+        ...style 
+      }}
+    >
       {!editing ? (
-        <div onClick={() => editable && setEditing(true)} style={{ ...centerStyle, width: "100%", cursor: editable ? "pointer" : "default" }}>
-          {/* 左侧：70px 标签 */}
-          <div style={{ ...centerStyle, width: 70, flexShrink: 0 }}>
-            <Icon size={14} stroke={2.2} color={clr.lbl} />
-            <span style={{ fontSize: 12, color: clr.lbl, fontWeight: 500, marginLeft: 4, lineHeight: 1 }}>{label}</span>
-          </div>
-          {/* 右侧：Value (极致贴近且居中) */}
-          <div style={{ ...centerStyle, flex: 1, paddingLeft: 2, overflow: "hidden" }}>
-            <span style={{ fontSize: 13, color: clr.val, fontWeight: 600, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <UnstyledButton
+          onClick={() => editable && setEditing(true)}
+          w="100%"
+          style={{ cursor: editable ? "pointer" : "default" }}
+        >
+          <Group gap={8} wrap="nowrap" align="center">
+            {/* 左侧：固定 70px 标签区 */}
+            <Group gap={4} w={70} wrap="nowrap" style={{ flexShrink: 0 }}>
+              <IconComponent 
+                size={14} 
+                stroke={2.2} 
+                color="var(--mantine-color-dimmed)" 
+              />
+              <Text 
+                size="xs" 
+                c="dimmed" 
+                fw={500} 
+                lh={1}
+              >
+                {label}
+              </Text>
+            </Group>
+
+            {/* 右侧：Value 内容区 */}
+            <Text 
+              size="sm" 
+              fw={600} 
+              lh={1} 
+              truncate="end" 
+              style={{ flex: 1 }}
+            >
               {value || "-"}
-            </span>
-          </div>
-          {editable && <TablerIcons.IconChevronRight size={12} color={clr.lbl} style={{ opacity: 0.3, marginLeft: "auto" }} />}
-        </div>
+            </Text>
+
+            {/* 编辑箭头指示 */}
+            {editable && (
+              <TablerIcons.IconChevronRight 
+                size={12} 
+                style={{ opacity: 0.3, color: 'var(--mantine-color-dimmed)' }} 
+              />
+            )}
+          </Group>
+        </UnstyledButton>
       ) : (
-        <div style={{ ...centerStyle, position: "absolute", inset: 0, gap: 4, background: isDark ? "#1a1a1a" : "#fff", zIndex: 5 }}>
-          <input
+        /* 编辑状态：绝对定位覆盖 */
+        <Group 
+          gap={4} 
+          wrap="nowrap"
+          p={0}
+          style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            zIndex: 5, 
+            backgroundColor: 'var(--mantine-color-body)' 
+          }}
+        >
+          <TextInput
             autoFocus
+            size="xs"
+            variant="filled"
             value={temp}
-            onChange={e => setTemp(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && confirm()}
+            onChange={(e) => setTemp(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
             onBlur={() => setTimeout(() => setEditing(false), 200)}
-            style={{ flex: 1, height: 26, border: `1px solid ${isDark ? "#373a40" : "#dee2e6"}`, borderRadius: 3, padding: "0 8px", fontSize: 13, outline: "none", background: "transparent", color: clr.val }}
+            style={{ flex: 1 }}
+            styles={{ input: { height: rem(28), minHeight: rem(28) } }}
           />
-          <button
-            onClick={confirm}
-            onMouseDown={e => e.preventDefault()}
-            style={{ ...centerStyle, justifyContent: "center", height: 26, padding: "0 10px", backgroundColor: clr.btn, color: "#fff", border: "none", borderRadius: 3, fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+          <Button
+            size="compact-xs"
+            color="slate" // 如果你定义了 slate 主题，或者用 blue/dark
+            bg="#334155"  // 保持你要求的专业石墨蓝
+            onClick={handleConfirm}
+            onMouseDown={(e) => e.preventDefault()}
           >
             确认
-          </button>
-        </div>
+          </Button>
+        </Group>
       )}
-    </div>
+    </Box>
   );
 });
 

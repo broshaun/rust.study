@@ -48,7 +48,7 @@ export function Chat() {
   // --- PC 端布局 ---
   if (!isMobile) {
     return (
-      <AppShell navbar={{ width: 65 }}      >
+      <AppShell navbar={{ width: 65 }}>
         <AppShell.Navbar >
           <Stack gap={25} p={25} align="center">
             {

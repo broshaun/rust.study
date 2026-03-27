@@ -7,7 +7,7 @@ import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ScrollArea, Box, Paper, ActionIcon } from "@mantine/core";
+import { ScrollArea, Box, ActionIcon } from "@mantine/core";
 import { IconChevronLeft, IconPhoto, IconPhone } from '@tabler/icons-react';
 import { MsgItem, MsgImgs, ChatMsg } from 'components/chat';
 import { ImageUpload } from "components/flutter";
@@ -113,8 +113,8 @@ export function Msg() {
     const rowVirtualizer = useVirtualizer({
         count: msgs.length,
         getScrollElement: () => containerRef.current,
-        estimateSize: () => 74,
-        overscan: 10,
+        estimateSize: () => 75,
+        overscan: 5,
         useFlushSync: false,
     });
 
@@ -132,93 +132,92 @@ export function Msg() {
     }
 
 
-    return <Paper p={0} radius={0}>
-        <ChatMsg >
-            <ChatMsg.Meta
-                title={displayName}
-                left={isMobile ? <IconChevronLeft size={22} stroke={1.5} onClick={() => navigate(f_url)} /> : <a />}
-            />
-            <ChatMsg.Content>
-                <ScrollArea viewportRef={containerRef} h={winHeight - 125} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
-                    <Box px={12}>
-                        <Box style={{
-                            height: rowVirtualizer.getTotalSize(),
-                            position: "relative",
-                            width: "100%",
-                            boxSizing: 'border-box',
-                        }}>
+    return <ChatMsg >
+        <ChatMsg.Meta
+            title={displayName}
+            left={isMobile ? <IconChevronLeft size={22} stroke={1.5} onClick={() => navigate(f_url)} /> : <a />}
+        />
+        <ChatMsg.Content>
+            <ScrollArea viewportRef={containerRef} h={isMobile ? winHeight - 103 : winHeight - 130} >
+                <Box px={12}>
+                    <Box style={{
+                        height: rowVirtualizer.getTotalSize(),
+                        position: "relative",
+                        width: "100%",
+                        boxSizing: 'border-box',
+                    }}>
 
-                            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                                const msg = msgs[virtualRow.index];
-                                if (!msg) return null;
-                                const { type, content } = parseMsgContent(msg?.msg);
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const msg = msgs[virtualRow.index];
+                            if (!msg) return null;
+                            const { type, content } = parseMsgContent(msg?.msg);
 
-                                if (type === 'image') {
-                                    if (msg.signal === 'receive') {
-                                        return <MsgImgs
-                                            key={msg.id}
-                                            avatar={receiveAvatarSrc}
-                                            imgUrl={content}
-                                            timestamp={msg.timestamp}
-                                            position={'left'}
-                                            virtualRow={virtualRow}
-                                        />
-                                    } else if (msg.signal === 'send') {
-                                        return <MsgImgs
-                                            key={msg.id}
-                                            avatar={sendAvatarSrc}
-                                            imgUrl={content}
-                                            timestamp={msg.timestamp}
-                                            position={'right'}
-                                            virtualRow={virtualRow}
-                                        />
-                                    }
-                                } else if (type === 'text') {
-                                    if (msg.signal === 'receive') {
-                                        return <MsgItem
-                                            key={msg.id}
-                                            avatar={receiveAvatarSrc}
-                                            msg={content}
-                                            timestamp={msg.timestamp}
-                                            position={'left'}
-                                            virtualRow={virtualRow}
-                                        />
-                                    } else if (msg.signal === 'send') {
-                                        return <MsgItem
-                                            key={msg.id}
-                                            avatar={sendAvatarSrc}
-                                            msg={content}
-                                            timestamp={msg.timestamp}
-                                            position={'right'}
-                                            virtualRow={virtualRow}
-                                        />
-                                    }
+                            if (type === 'image') {
+                                if (msg.signal === 'receive') {
+                                    return <MsgImgs
+                                        key={msg.id}
+                                        avatar={receiveAvatarSrc}
+                                        imgUrl={content}
+                                        timestamp={msg.timestamp}
+                                        position={'left'}
+                                        virtualRow={virtualRow}
+                                    />
+                                } else if (msg.signal === 'send') {
+                                    return <MsgImgs
+                                        key={msg.id}
+                                        avatar={sendAvatarSrc}
+                                        imgUrl={content}
+                                        timestamp={msg.timestamp}
+                                        position={'right'}
+                                        virtualRow={virtualRow}
+                                    />
                                 }
+                            } else if (type === 'text') {
+                                if (msg.signal === 'receive') {
+                                    return <MsgItem
+                                        key={msg.id}
+                                        avatar={receiveAvatarSrc}
+                                        msg={content}
+                                        timestamp={msg.timestamp}
+                                        position={'left'}
+                                        virtualRow={virtualRow}
+                                    />
+                                } else if (msg.signal === 'send') {
+                                    return <MsgItem
+                                        key={msg.id}
+                                        avatar={sendAvatarSrc}
+                                        msg={content}
+                                        timestamp={msg.timestamp}
+                                        position={'right'}
+                                        virtualRow={virtualRow}
+                                    />
+                                }
+                            }
 
-                            })}
+                        })}
 
-                        </Box>
                     </Box>
-                </ScrollArea>
-            </ChatMsg.Content>
+                </Box>
+            </ScrollArea>
+        </ChatMsg.Content>
 
-            <ChatMsg.Send button={'发送'} usable={usable} onClick={() => senddd()} >
+        <ChatMsg.Send button={'发送'} usable={usable} onClick={() => senddd()} >
 
-                <ChatMsg.Tool onClose={() => { uploadRef.current?.clear(); setUsable(false); }} onOpen={() => setUsable(true)} >
-                    <ImageUpload ref={uploadRef} size={32} onDirtyChange={(b) => setUsable(p => b || p)}>
-                        <ActionIcon variant="subtle" color="gray" title="发送图片">
-                            <IconPhoto />
-                        </ActionIcon>
-                    </ImageUpload>
+            <ChatMsg.Tool onClose={() => { uploadRef.current?.clear(); setUsable(false); }} onOpen={() => setUsable(true)} >
+                <ImageUpload ref={uploadRef} size={32} onDirtyChange={(b) => setUsable(p => b || p)}>
+                    <ActionIcon variant="subtle" color="gray" title="发送图片">
+                        <IconPhoto />
+                    </ActionIcon>
+                </ImageUpload>
 
-                    <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={()=>{navigate('/chat/dialog/rtc')}}>
-                            <IconPhone />
-                        </ActionIcon>
-                </ChatMsg.Tool>
+                <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/dialog/rtc') }}>
+                    <IconPhone />
+                </ActionIcon>
+            </ChatMsg.Tool>
 
-                <ChatMsg.SendText onChange={(text) => { setSendText(text); if (text) { setUsable(true) } else { setUsable(false) }; }} />
+            <ChatMsg.SendText onChange={(text) => { setSendText(text); if (text) { setUsable(true) } else { setUsable(false) }; }} />
 
-            </ChatMsg.Send>
-        </ChatMsg>
-    </Paper>
+        </ChatMsg.Send>
+    </ChatMsg>
+
 }

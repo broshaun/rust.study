@@ -1,51 +1,41 @@
 import React, { useEffect, useState, useCallback, useRef, Suspense } from "react";
-import { Outlet, useNavigate, } from 'react-router';
+import { Outlet, useNavigate, useOutlet } from 'react-router';
 import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useUserDB } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
-import { Divider, Icon } from 'components/flutter';
+import { Divider, Icon, Right } from 'components/flutter';
 import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { Grid, ScrollArea, Box, Paper, Group } from '@mantine/core';
+import { Grid, ScrollArea, Box, Paper, Center, Paper } from '@mantine/core';
 
 
 export const Mian = () => {
     const navigate = useNavigate();
+    const outlet = useOutlet();
     const [friends, handlers] = useListState([]);
     const [afriend, setAfriend] = useState(0);
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    // const { endpoint } = useHttpClient2('/imgs/')
     const { joinPath } = useImgApiBase('avatar')
     const { winHeight } = useWinSize()
-
     const { db, userId, isReady } = useUserDB(account);
 
-
-
-
     const loadFriends = (rows) => {
-
         const formattedData = rows.map((row) => {
-
-            // console.log('joinPath(row.avatar_url)', joinPath(row.avatar_url))
             return {
                 ...row, avatar_url: joinPath(row.avatar_url)
-                // avatar_url: endpoint.join(row.avatar_url)
             }
         });
         handlers.setState(formattedData);
     };
 
     const openMsgWindow = useCallback((select) => {
-        // console.log('select',select)
         navigate('/chat/friend/detail/', { state: { select } });
     }, [navigate]);
-
 
     const { mutateAsync: runGetFriend } = useMutation(
         {
@@ -127,24 +117,20 @@ export const Mian = () => {
     });
 
 
-    return <Suspense fallback={<div>加载中...</div>}>
+    return (
 
-        <Grid>
+        <Grid gutter={0} >
+
             <Grid.Col span={4}>
-                <Paper p={0} radius={0}>
-                    <ScrollArea ref={parentRef} h={winHeight} style={{ width: '100%' }}>
-                        <Group justify="flex-end">
+                <Paper p={0} radius={5} withBorder m="md">
+                    <ScrollArea ref={parentRef} h={winHeight - 34} >
+                        <Right>
                             <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
-                        </Group>
+                        </Right>
                         <Divider fade />
 
                         <Box px={12}>
-                            <Box style={{
-                                height: rowVirtualizer.getTotalSize(),
-                                position: "relative",
-                                width: "100%",
-                                boxSizing: 'border-box',
-                            }}>
+                            <Box style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
                                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                                     const friend = friends[virtualRow.index];
                                     if (!friend) return;
@@ -161,15 +147,24 @@ export const Mian = () => {
 
                     </ScrollArea>
                 </Paper>
+
+
             </Grid.Col>
             <Grid.Col span={8}>
-
-                <Outlet />
+                {outlet ? (
+                    <Paper p={0} radius={5} withBorder m="md" shadow="sm">
+                        <Outlet />
+                    </Paper>
+                ) : (
+                    <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                        <span style={{ color: 'var(--mantine-color-dimmed)' }}>请选择联系人</span>
+                    </Box>
+                )}
 
             </Grid.Col>
         </Grid>
 
-    </Suspense>
+    )
 }
 
 

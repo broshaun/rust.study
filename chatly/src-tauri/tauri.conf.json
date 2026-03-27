@@ -5,6 +5,7 @@
   "identifier": "com.chatly.dev",
   "build": {
     "frontendDist": "../dist",
+    "devUrl": "http://localhost:3000",
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build"
   },

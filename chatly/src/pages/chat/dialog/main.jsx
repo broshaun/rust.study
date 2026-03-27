@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, useCallback, useRef } from "react";
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useNavigate, useOutlet } from 'react-router';
 import { useUserDB } from 'hooks/db';
 import { useWinSize } from 'hooks';
 import { liveQuery } from 'dexie';
@@ -10,14 +10,15 @@ import { useImgApiBase } from "hooks/http"
 import { Grid, ScrollArea, Box, Paper } from '@mantine/core';
 
 
+
 export const Mian = () => {
     const navigate = useNavigate()
+    const outlet = useOutlet();
 
     const [dialog, handlers] = useListState([]);
     const [account] = useLocalStorage({ key: 'savedAccount' })
-
+    
     const { joinPath } = useImgApiBase('/avatar/')
-
     const { winHeight, isMobile } = useWinSize()
     const { db, userId, isReady } = useUserDB(account);
 
@@ -76,14 +77,14 @@ export const Mian = () => {
 
     return <Suspense fallback={<div>加载中...</div>}>
 
-        <Grid>
+        <Grid gutter={0} >
             <Grid.Col span={4}>
-                <Paper p={0} radius={0}>
+                <Paper p={0} radius={5} withBorder m="md">
 
-                {/* <Icon name="magnifying-glass" /> */}
-                {/* <Divider fade /> */}
-                
-                    <ScrollArea viewportRef={containerRef} h={winHeight} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
+                    {/* <Icon name="magnifying-glass" /> */}
+                    {/* <Divider fade /> */}
+
+                    <ScrollArea viewportRef={containerRef} h={winHeight - 34} >
                         <Box px={12}>
                             <Box style={{
                                 height: rowVirtualizer.getTotalSize(),
@@ -107,8 +108,17 @@ export const Mian = () => {
                     </ScrollArea>
                 </Paper>
             </Grid.Col>
-            <Grid.Col span={8}>
-                <Outlet />
+            <Grid.Col span={8} >
+                {outlet ? (
+                    <Paper p={0} radius={5} withBorder m="md" >
+                        <Outlet/>
+                    </Paper>
+                ) : (
+                    <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                        <span style={{ color: 'var(--mantine-color-dimmed)' }}>请选择聊天人</span>
+                    </Box>
+                )}
+
             </Grid.Col>
         </Grid>
 

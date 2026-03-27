@@ -6,7 +6,7 @@ import { useUserDB } from 'hooks/db';
 import { SafeAvatar, Divider } from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Center, Stack, Group, Title, Paper } from '@mantine/core';
+import { Button, Center, Stack, Group, Title } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
 
 
@@ -81,8 +81,7 @@ export function Detail() {
     });
   }
 
-  return <Paper p={0} radius={0}>
-    <Stack p={20} >
+  return  <Stack p={20} >
       <Center>
         <SafeAvatar
           url={friend?.avatar_url}
@@ -131,5 +130,5 @@ export function Detail() {
         </Button>
       </Group>
     </Stack>
-  </Paper>
+
 }
