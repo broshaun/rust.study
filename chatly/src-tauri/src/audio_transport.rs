@@ -1,3 +1,4 @@
+use crate::quic_transport::QuicTransportState;
 use serde::Serialize;
 use std::{
     collections::HashMap,
@@ -33,6 +34,20 @@ pub enum AudioDownlinkMessage {
     Error { session_id: Option<u64>, message: String },
 }
 
+pub async fn broadcast_audio_packet(
+    state: AudioTransportState,
+    payload: Vec<u8>,
+) {
+    let sessions = state.sessions.read().await;
+
+    for (session_id, downlink) in sessions.iter() {
+        let _ = downlink.send(AudioDownlinkMessage::AudioChunk {
+            session_id: *session_id,
+            payload: payload.clone(),
+        });
+    }
+}
+
 #[tauri::command]
 pub async fn open_audio_transport(
     downlink: Channel<AudioDownlinkMessage>,
@@ -57,23 +72,18 @@ pub async fn push_audio_uplink(
     session_id: u64,
     payload: Vec<u8>,
     state: State<'_, AudioTransportState>,
+    quic_state: State<'_, QuicTransportState>,
 ) -> Result<(), String> {
-    let sessions = state.sessions.read().await;
+    let exists = {
+        let sessions = state.sessions.read().await;
+        sessions.contains_key(&session_id)
+    };
 
-    let downlink = sessions
-        .get(&session_id)
-        .cloned()
-        .ok_or_else(|| format!("session {} not found", session_id))?;
+    if !exists {
+        return Err(format!("session {} not found", session_id));
+    }
 
-    // 当前先做本地回环
-    downlink
-        .send(AudioDownlinkMessage::AudioChunk {
-            session_id,
-            payload,
-        })
-        .map_err(|e| e.to_string())?;
-
-    Ok(())
+    quic_state.send_datagram(payload).await
 }
 
 #[tauri::command]

@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useAudioTransport } from "hooks/voice/useAudioTransport";
 import { useMicPcmCapture, useRemotePcmPlayback } from "hooks/voice/usePcmAudio";
 
@@ -37,6 +38,14 @@ export function MicCapturePlayer() {
     sampleRate: 48000,
   });
 
+  const [quicStatus, setQuicStatus] = useState("未初始化");
+  const [bindAddr, setBindAddr] = useState("0.0.0.0:5000");
+  const [remoteAddr, setRemoteAddr] = useState("127.0.0.1:5001");
+  const [serverName, setServerName] = useState("localhost");
+  const [nodeStarted, setNodeStarted] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [busyAction, setBusyAction] = useState("");
+
   useEffect(() => {
     const unsubscribe = subscribe(async (message) => {
       try {
@@ -60,32 +69,204 @@ export function MicCapturePlayer() {
     return unsubscribe;
   }, [subscribe, playChunk]);
 
-  const handleStart = async () => {
+  const handleStartNode = async () => {
     try {
-      resetPlayback();
+      setBusyAction("start-node");
+      setQuicStatus(`正在启动节点: ${bindAddr}`);
+
+      await invoke("quic_init_node", {
+        bindAddr,
+      });
+
+      // 每个节点都要打开本地 transport，才能播放对方声音
       await openTransport();
-      await startCapture();
+      resetPlayback();
+
+      setNodeStarted(true);
+      setQuicStatus(`节点已启动: ${bindAddr}`);
     } catch (error) {
-      console.error("handleStart failed:", error);
+      console.error("quic_init_node failed:", error);
+      setNodeStarted(false);
+      setQuicStatus(`节点启动失败: ${error?.message || String(error)}`);
+    } finally {
+      setBusyAction("");
     }
   };
 
-  const handleStop = async () => {
-    await stopCapture();
-    await closeTransport();
-    await stopPlayback();
+  const handleConnect = async () => {
+    try {
+      if (!nodeStarted) {
+        window.alert("请先启动节点。");
+        return;
+      }
+
+      setBusyAction("connect");
+      setQuicStatus(`正在连接远端 ${remoteAddr} ...`);
+
+      await invoke("quic_connect", {
+        remoteAddr,
+        serverName,
+      });
+
+      setConnected(true);
+      setQuicStatus(`已连接到 ${remoteAddr}`);
+    } catch (error) {
+      console.error("quic_connect failed:", error);
+      setConnected(false);
+      setQuicStatus(`连接失败: ${error?.message || String(error)}`);
+    } finally {
+      setBusyAction("");
+    }
   };
 
-  return (
-    <div style={{ padding: "20px", textAlign: "center" }}>
-      <h3>PCM 音频采集与播放</h3>
+  const handleCloseNode = async () => {
+    try {
+      setBusyAction("close");
+      setQuicStatus("正在关闭节点...");
 
-      <button
-        onClick={isCapturing ? handleStop : handleStart}
-        style={{ padding: "10px 20px", cursor: "pointer" }}
+      if (isCapturing) {
+        await stopCapture();
+      }
+
+      await closeTransport();
+      await stopPlayback();
+      await invoke("quic_close");
+
+      setNodeStarted(false);
+      setConnected(false);
+      setQuicStatus("节点已关闭");
+    } catch (error) {
+      console.error("quic_close failed:", error);
+      setQuicStatus(`关闭失败: ${error?.message || String(error)}`);
+    } finally {
+      setBusyAction("");
+    }
+  };
+
+  const handleStartTalk = async () => {
+    try {
+      if (!nodeStarted) {
+        window.alert("请先启动节点。");
+        return;
+      }
+
+      await startCapture();
+    } catch (error) {
+      console.error("handleStartTalk failed:", error);
+    }
+  };
+
+  const handleStopTalk = async () => {
+    await stopCapture();
+  };
+
+  const canStartNode = !busyAction && !nodeStarted;
+  const canConnect = !busyAction && nodeStarted && !connected;
+  const canCloseNode = !busyAction && nodeStarted;
+  const canStartTalk = !busyAction && nodeStarted && !isCapturing;
+
+  return (
+    <div style={{ padding: "20px", textAlign: "center", maxWidth: "760px", margin: "0 auto" }}>
+      <h3>双向语音通话（像电话一样）</h3>
+
+      <div
+        style={{
+          marginBottom: "16px",
+          padding: "12px",
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          textAlign: "left",
+        }}
       >
-        {isCapturing ? "🔴 停止采集" : "🎤 开始采集"}
-      </button>
+        <p><strong>节点状态：</strong>{nodeStarted ? "已启动" : "未启动"}</p>
+        <p><strong>连接状态：</strong>{connected ? "已连接" : "未连接"}</p>
+      </div>
+
+      <div style={{ textAlign: "left", marginBottom: "16px" }}>
+        <div style={{ marginBottom: "10px" }}>
+          <label style={{ display: "block", marginBottom: "4px" }}>本地绑定地址</label>
+          <input
+            value={bindAddr}
+            onChange={(e) => setBindAddr(e.target.value)}
+            style={{ width: "100%", padding: "8px" }}
+            placeholder="例如：0.0.0.0:5000"
+            disabled={nodeStarted || !!busyAction}
+          />
+        </div>
+
+        <div style={{ marginBottom: "10px" }}>
+          <label style={{ display: "block", marginBottom: "4px" }}>远端地址</label>
+          <input
+            value={remoteAddr}
+            onChange={(e) => setRemoteAddr(e.target.value)}
+            style={{ width: "100%", padding: "8px" }}
+            placeholder="例如：127.0.0.1:5001"
+            disabled={!nodeStarted || !!busyAction}
+          />
+        </div>
+
+        <div style={{ marginBottom: "10px" }}>
+          <label style={{ display: "block", marginBottom: "4px" }}>Server Name</label>
+          <input
+            value={serverName}
+            onChange={(e) => setServerName(e.target.value)}
+            style={{ width: "100%", padding: "8px" }}
+            placeholder="例如：localhost"
+            disabled={!nodeStarted || !!busyAction}
+          />
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          marginBottom: "16px",
+        }}
+      >
+        <button
+          onClick={handleStartNode}
+          disabled={!canStartNode}
+          style={{ padding: "10px 16px", cursor: canStartNode ? "pointer" : "not-allowed" }}
+        >
+          启动节点
+        </button>
+
+        <button
+          onClick={handleConnect}
+          disabled={!canConnect}
+          style={{ padding: "10px 16px", cursor: canConnect ? "pointer" : "not-allowed" }}
+        >
+          连接远端
+        </button>
+
+        <button
+          onClick={handleCloseNode}
+          disabled={!canCloseNode}
+          style={{ padding: "10px 16px", cursor: canCloseNode ? "pointer" : "not-allowed" }}
+        >
+          关闭节点
+        </button>
+      </div>
+
+      <div style={{ marginBottom: "16px" }}>
+        <button
+          onClick={isCapturing ? handleStopTalk : handleStartTalk}
+          disabled={isCapturing ? false : !canStartTalk}
+          style={{
+            padding: "10px 20px",
+            cursor: isCapturing || canStartTalk ? "pointer" : "not-allowed",
+          }}
+        >
+          {isCapturing ? "🔴 停止讲话" : "🎤 开始讲话"}
+        </button>
+      </div>
+
+      <p style={{ color: "#666" }}>
+        QUIC 状态: {quicStatus}
+      </p>
 
       <p style={{ color: isCapturing ? "green" : "#666" }}>
         采集状态: {captureStatus}

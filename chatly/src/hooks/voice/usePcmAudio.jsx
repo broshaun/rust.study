@@ -71,7 +71,9 @@ export function useMicPcmCapture({ onChunk, sampleRate = 48000 } = {}) {
       }
 
       const sourceNode = audioContext.createMediaStreamSource(stream);
-      const processorNode = audioContext.createScriptProcessor(1024, 1, 1);
+
+      // ScriptProcessorNode 只能用特定 buffer size
+      const processorNode = audioContext.createScriptProcessor(512, 1, 1);
 
       const muteGain = audioContext.createGain();
       muteGain.gain.value = 0;
@@ -83,16 +85,22 @@ export function useMicPcmCapture({ onChunk, sampleRate = 48000 } = {}) {
           float32Frame.set(input);
 
           const int16Frame = float32ToInt16(float32Frame);
-          const payload = int16ToUint8(int16Frame);
 
-          setSentFrameCount((prev) => prev + 1);
+          // 把 512 拆成两个 256，减小每个 datagram 大小
+          const chunkSize = 256;
 
-          if (onChunk) {
-            await onChunk(payload, {
-              float32Frame,
-              int16Frame,
-              sampleRate: audioContext.sampleRate,
-            });
+          for (let i = 0; i < int16Frame.length; i += chunkSize) {
+            const subFrame = int16Frame.slice(i, i + chunkSize);
+            const payload = int16ToUint8(subFrame);
+
+            setSentFrameCount((prev) => prev + 1);
+
+            if (onChunk) {
+              await onChunk(payload, {
+                int16Frame: subFrame,
+                sampleRate: audioContext.sampleRate,
+              });
+            }
           }
         } catch (error) {
           console.error("PCM capture chunk error:", error);
@@ -195,7 +203,7 @@ export function useRemotePcmPlayback({ sampleRate = 48000 } = {}) {
     }
 
     if (nextPlayTimeRef.current === 0) {
-      nextPlayTimeRef.current = audioContextRef.current.currentTime;
+      nextPlayTimeRef.current = audioContextRef.current.currentTime + 0.05;
     }
 
     return audioContextRef.current;
@@ -219,7 +227,7 @@ export function useRemotePcmPlayback({ sampleRate = 48000 } = {}) {
         source.connect(context.destination);
 
         const now = context.currentTime;
-        const startAt = Math.max(now, nextPlayTimeRef.current);
+        const startAt = Math.max(now + 0.01, nextPlayTimeRef.current);
 
         source.start(startAt);
         nextPlayTimeRef.current = startAt + audioBuffer.duration;
@@ -252,7 +260,7 @@ export function useRemotePcmPlayback({ sampleRate = 48000 } = {}) {
 
   const resetPlayback = useCallback(() => {
     nextPlayTimeRef.current = audioContextRef.current
-      ? audioContextRef.current.currentTime
+      ? audioContextRef.current.currentTime + 0.05
       : 0;
     setPlayedFrameCount(0);
     setPlaybackStatus("已重置");
