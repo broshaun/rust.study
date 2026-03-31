@@ -3,6 +3,7 @@ import { Msg } from "./msg";
 import { Mobile } from "./mobile";
 import { Item } from "./item";
 import { PcmVoicePage } from "./PcmVoicePage.jsx";
+import { P2PPcmVoicePage } from "./P2PPcmVoicePage";
 
 
 
@@ -11,7 +12,7 @@ export const RsDialog = [
         path: "dialog", element: <Mian />,
         children: [
             { path: "msg", element: <Msg /> },
-            { path: "rtc", element: <PcmVoicePage /> }
+            { path: "rtc", element: <P2PPcmVoicePage /> }
         ],
     },
     {

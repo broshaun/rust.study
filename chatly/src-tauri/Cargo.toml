@@ -1,43 +1,37 @@
-[package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
-edition = "2021"
-rust-version = "1.77.2"
-
-[lib]
-name = "app_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
-
-[build-dependencies]
-tauri-build = { version = "2.5.6", features = [] }
-
 [dependencies]
-# 基础序列化
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
+anyhow = "1.0"
 
-# 异步运行时 (需要增加 io-util 和 net 以支持 QUIC 读写)
-tokio = { version = "1", features = ["sync", "rt-multi-thread", "macros", "io-util", "net"] }
+tokio = { version = "1", features = ["full"] }
 bytes = "1"
+futures = "0.3"
 
-# QUIC 核心
 quinn = "0.11"
-# rustls 需要 ring 支持，用于生成和验证加密证书
 rustls = { version = "0.23", features = ["ring"] }
-# rcgen 用于生成自签名证书，0.13 是目前较稳的版本，与 rustls 0.23 配合较好
 rcgen = "0.13"
 
-# Tauri 核心与插件
+libp2p = { version = "0.53", features = [
+  "tcp",
+  "noise",
+  "yamux",
+  "tokio",
+  "macros",
+  "identify",
+  "ping",
+  "relay",
+  "dcutr",
+  "mdns",
+  "request-response",
+  "autonat",
+  "upnp",
+  "dns",
+  "websocket"
+] }
+
 tauri = { version = "2.10.3", features = ["protocol-asset"] }
 tauri-plugin-log = "2"
 tauri-plugin-http = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
-
-# 错误处理扩展（建议添加，方便处理 Result 到 String 的转换）
-anyhow = "1.0"
