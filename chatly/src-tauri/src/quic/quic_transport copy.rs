@@ -1,5 +1,4 @@
-use bytes::Bytes;
-use quinn::{ClientConfig, Connection, Endpoint, ServerConfig};
+use quinn::{ClientConfig, Connection, Endpoint, SendStream, ServerConfig};
 use rcgen::generate_simple_self_signed;
 use rustls::pki_types::{CertificateDer, PrivatePkcs8KeyDer, UnixTime};
 use std::{net::SocketAddr, sync::Arc};
@@ -10,8 +9,8 @@ use tokio::sync::RwLock;
 pub struct QuicInner {
     pub endpoint: Option<Endpoint>,
     pub connection: Option<Connection>,
+    pub send_stream: Option<SendStream>,
     pub server_task: Option<JoinHandle<()>>,
-    pub recv_task: Option<JoinHandle<()>>,
 }
 
 #[derive(Clone, Default)]
@@ -25,11 +24,6 @@ impl QuicState {
         self.inner.clone()
     }
 
-    pub async fn set_downlink_channel(&self, channel: Channel<Vec<u8>>) {
-        let mut ch = self.downlink_channel.write().await;
-        *ch = Some(channel);
-    }
-
     pub async fn init_node(&self, bind_addr: SocketAddr) -> Result<Endpoint, String> {
         let server_config = build_server_config()?;
         let client_config = build_client_config()?;
@@ -39,32 +33,21 @@ impl QuicState {
 
         endpoint.set_default_client_config(client_config);
 
-        {
-            let inner = self.inner.read().await;
-            if inner.endpoint.is_some() {
-                return Err("QUIC endpoint already initialized".to_string());
-            }
+        let mut inner = self.inner.write().await;
+
+        if inner.endpoint.is_some() {
+            return Err("QUIC endpoint already initialized".to_string());
         }
 
-        self.start_accept_loop(endpoint.clone()).await;
-
-        let mut inner = self.inner.write().await;
         inner.endpoint = Some(endpoint.clone());
 
         Ok(endpoint)
     }
 
     pub async fn set_connection(&self, connection: Connection) {
-        {
-            let mut inner = self.inner.write().await;
-            inner.connection = Some(connection.clone());
-
-            if let Some(task) = inner.recv_task.take() {
-                task.abort();
-            }
-        }
-
-        self.start_recv_loop(connection).await;
+        let mut inner = self.inner.write().await;
+        inner.connection = Some(connection);
+        inner.send_stream = None;
     }
 
     pub async fn connect(
@@ -92,75 +75,37 @@ impl QuicState {
     }
 
     pub async fn send_bytes(&self, payload: Vec<u8>) -> Result<(), String> {
-        let conn = {
-            let inner = self.inner.read().await;
-            inner
-                .connection
-                .as_ref()
-                .cloned()
-                .ok_or_else(|| "QUIC connection not established".to_string())?
-        };
-
-        let max = conn
-            .max_datagram_size()
-            .ok_or_else(|| "peer does not support QUIC datagrams".to_string())?
-            as usize;
-
-        if payload.len() > max {
-            return Err(format!(
-                "payload too large for datagram: {} > {}",
-                payload.len(),
-                max
-            ));
-        }
-
-        conn.send_datagram(Bytes::from(payload))
-            .map_err(|e| e.to_string())
-    }
-
-    async fn start_accept_loop(&self, endpoint: Endpoint) {
-        let state = self.clone();
-
-        let task = tauri::async_runtime::spawn(async move {
-            while let Some(incoming) = endpoint.accept().await {
-                match incoming.await {
-                    Ok(connection) => {
-                        state.set_connection(connection).await;
-                    }
-                    Err(_) => break,
-                }
-            }
-        });
-
         let mut inner = self.inner.write().await;
-        if let Some(old) = inner.server_task.take() {
-            old.abort();
+
+        let conn = inner
+            .connection
+            .as_ref()
+            .cloned()
+            .ok_or_else(|| "QUIC connection not established".to_string())?;
+
+        if inner.send_stream.is_none() {
+            let stream = conn.open_uni().await.map_err(|e| e.to_string())?;
+            inner.send_stream = Some(stream);
         }
-        inner.server_task = Some(task);
-    }
 
-    async fn start_recv_loop(&self, connection: Connection) {
-        let state = self.clone();
+        let stream = inner
+            .send_stream
+            .as_mut()
+            .ok_or_else(|| "send stream not available".to_string())?;
 
-        let task = tauri::async_runtime::spawn(async move {
-            loop {
-                match connection.read_datagram().await {
-                    Ok(bytes) => {
-                        let ch = state.downlink_channel.read().await;
-                        if let Some(channel) = ch.as_ref() {
-                            let _ = channel.send(bytes.to_vec());
-                        }
-                    }
-                    Err(_) => break,
-                }
-            }
-        });
+        let len = payload.len() as u32;
 
-        let mut inner = self.inner.write().await;
-        if let Some(old) = inner.recv_task.take() {
-            old.abort();
-        }
-        inner.recv_task = Some(task);
+        stream
+            .write_all(&len.to_be_bytes())
+            .await
+            .map_err(|e| e.to_string())?;
+
+        stream
+            .write_all(&payload)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
     pub async fn close(&self) {
@@ -170,8 +115,8 @@ impl QuicState {
             task.abort();
         }
 
-        if let Some(task) = inner.recv_task.take() {
-            task.abort();
+        if let Some(mut send_stream) = inner.send_stream.take() {
+            let _ = send_stream.finish();
         }
 
         if let Some(conn) = inner.connection.take() {

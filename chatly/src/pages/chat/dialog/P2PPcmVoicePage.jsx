@@ -1,39 +1,55 @@
 import React from "react";
-import { useP2PPcmVoice } from "hooks/voice/useP2PPcmVoice";
+import { useQuicPcmVoice } from "hooks/voice/useQuicPcmVoice";
 
-export function P2PPcmVoicePage({ useJitterBuffer = true }) {
-  const v = useP2PPcmVoice({ useJitterBuffer });
+export function PcmVoicePage({ useJitterBuffer = true }) {
+  const v = useQuicPcmVoice({ useJitterBuffer });
 
   return (
-    <div style={{ maxWidth: 800, margin: "40px auto", fontFamily: "sans-serif", color: "#333" }}>
+    <div style={{ maxWidth: 980, margin: "40px auto", fontFamily: "sans-serif", color: "#333" }}>
       <div style={{ background: "#fff", padding: 24, borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
-        <h2 style={{ marginTop: 0 }}>P2P 语音控制台</h2>
+        <h2 style={{ marginTop: 0 }}>QUIC 语音控制台</h2>
 
-        {/* 状态栏 */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
-          <Box label="网络状态" value={v.p2pStatus} color={v.connected ? "#059669" : "#6b7280"} />
+          <Box label="网络状态" value={v.quicStatus} color={v.connected ? "#059669" : "#6b7280"} />
           <Box label="麦克风" value={v.captureStatus} color={v.isCapturing ? "#2563eb" : "#6b7280"} />
-          <Box label="连接状态" value={v.connected ? "已连接" : "未连接"} color={v.connected ? "#059669" : "#6b7280"} />
+          <Box label="播放器" value={v.playbackStatus} color="#6b7280" />
         </div>
 
-        {/* 配置区 */}
         <div style={{ background: "#f9fafb", padding: 16, borderRadius: 12, marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
             <Input
-              label="远端 PeerId / Multiaddr"
-              value={v.remotePeerId}
-              onChange={e => v.setRemotePeerId(e.target.value)}
+              label="本地地址"
+              value={v.bindAddr}
+              onChange={(e) => v.setBindAddr(e.target.value)}
+              placeholder="0.0.0.0:0"
+            />
+            <Input
+              label="远端地址"
+              value={v.remoteAddr}
+              onChange={(e) => v.setRemoteAddr(e.target.value)}
+              placeholder="127.0.0.1:5000"
+            />
+            <Input
+              label="Server Name"
+              value={v.serverName}
+              onChange={(e) => v.setServerName(e.target.value)}
+              placeholder="localhost"
             />
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <Button onClick={v.initNode} disabled={!v.canInit} primary>启动节点</Button>
-            <Button onClick={v.connectRemote} disabled={!v.canConnect}>建立连接</Button>
-            <Button onClick={v.closeNode} danger>重置关闭</Button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Button onClick={v.initNode} disabled={!v.canInit} primary>
+              启动节点
+            </Button>
+            <Button onClick={v.connectRemote} disabled={!v.canConnect}>
+              建立连接
+            </Button>
+            <Button onClick={v.closeNode} danger>
+              重置关闭
+            </Button>
           </div>
         </div>
 
-        {/* 通话区 */}
         <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
           <LargeButton onClick={v.startCapture} disabled={!v.canStartTalk} color="#2563eb">
             开始讲话
@@ -43,23 +59,44 @@ export function P2PPcmVoicePage({ useJitterBuffer = true }) {
           </LargeButton>
         </div>
 
-        {/* 数据监控 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, borderTop: "1px solid #eee", paddingTop: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, borderTop: "1px solid #eee", paddingTop: 20, marginBottom: 20 }}>
           <Metric label="已发送" value={v.metrics.sent} />
           <Metric label="已接收" value={v.metrics.recv} />
           <Metric label="已播放" value={v.metrics.played} />
           <Metric label="缓冲中" value={v.metrics.buffered} />
         </div>
 
+        <div style={{ borderTop: "1px solid #eee", paddingTop: 20 }}>
+          <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8 }}>运行日志</div>
+          <div
+            style={{
+              background: "#0f172a",
+              color: "#e2e8f0",
+              borderRadius: 12,
+              padding: 12,
+              minHeight: 180,
+              maxHeight: 260,
+              overflowY: "auto",
+              fontFamily: "monospace",
+              fontSize: 12,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {v.logs.length > 0 ? v.logs.join("\n") : "暂无日志"}
+          </div>
+        </div>
+
         {v.lastError && (
-          <div style={{
-            marginTop: 20,
-            padding: 12,
-            background: "#fff1f2",
-            color: "#b91c1c",
-            borderRadius: 8,
-            fontSize: 13
-          }}>
+          <div
+            style={{
+              marginTop: 20,
+              padding: 12,
+              background: "#fff1f2",
+              color: "#b91c1c",
+              borderRadius: 8,
+              fontSize: 13,
+            }}
+          >
             错误提示: {v.lastError.message || String(v.lastError)}
           </div>
         )}
@@ -71,7 +108,7 @@ export function P2PPcmVoicePage({ useJitterBuffer = true }) {
 const Box = ({ label, value, color }) => (
   <div style={{ padding: 12, border: "1px solid #eee", borderRadius: 10 }}>
     <div style={{ fontSize: 12, color: "#999", marginBottom: 4 }}>{label}</div>
-    <div style={{ fontWeight: "bold", color }}>{value}</div>
+    <div style={{ fontWeight: "bold", color, wordBreak: "break-all" }}>{value || "-"}</div>
   </div>
 );
 
@@ -92,7 +129,7 @@ const Input = ({ label, ...props }) => (
         padding: "8px",
         borderRadius: 6,
         border: "1px solid #ddd",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
       }}
     />
   </div>
@@ -110,7 +147,7 @@ const Button = ({ children, primary, danger, disabled, ...props }) => (
       cursor: disabled ? "not-allowed" : "pointer",
       background: primary ? "#111827" : danger ? "#fee2e2" : "#eee",
       color: primary ? "#fff" : danger ? "#b91c1c" : "#333",
-      opacity: disabled ? 0.5 : 1
+      opacity: disabled ? 0.5 : 1,
     }}
   >
     {children}
@@ -131,7 +168,7 @@ const LargeButton = ({ children, color, disabled, ...props }) => (
       background: color,
       cursor: disabled ? "not-allowed" : "pointer",
       opacity: disabled ? 0.4 : 1,
-      fontSize: 16
+      fontSize: 16,
     }}
   >
     {children}

@@ -4,7 +4,7 @@ mod p2p;
 use quic::quic_commands::{quic_close, quic_connect, quic_init, quic_send};
 use quic::quic_transport::QuicState;
 
-use p2p::p2p_commands::{p2p_close, p2p_connect, p2p_init, p2p_send};
+use p2p::p2p_commands::{p2p_close, p2p_connect, p2p_init, p2p_ping, p2p_send};
 use p2p::p2p_transport::P2PState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -35,6 +35,7 @@ pub fn run() {
             p2p_init,
             p2p_connect,
             p2p_send,
+            p2p_ping,
             p2p_close,
         ])
         .run(tauri::generate_context!())
