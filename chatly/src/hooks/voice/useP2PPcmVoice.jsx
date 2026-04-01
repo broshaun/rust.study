@@ -1,16 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-
-function extractPeerIdFromMultiaddr(addr) {
-  if (!addr) return "";
-  const parts = String(addr).split("/").filter(Boolean);
-  const p2pIndex = parts.findIndex((p) => p === "p2p");
-  if (p2pIndex >= 0 && parts[p2pIndex + 1]) {
-    return parts[p2pIndex + 1];
-  }
-  return "";
-}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,17 +9,18 @@ function sleep(ms) {
 export function useP2PPcmVoice(options = {}) {
   const {
     sampleRate = 48000,
-    processorBufferSize = 1024,
-    frameSamples = 960,
+    processorBufferSize = 2048,
+    frameSamples = 960, // 20ms @ 48kHz
     initialRemoteAddr = "",
     useJitterBuffer = true,
-    minBufferFrames = 2,
-    maxBufferFrames = 6,
+    minBufferFrames = 4,
+    maxBufferFrames = 10,
   } = options;
 
   const streamRef = useRef(null);
   const captureContextRef = useRef(null);
   const playbackContextRef = useRef(null);
+
   const playbackQueueRef = useRef([]);
   const nextPlayTimeRef = useRef(0);
   const drainingRef = useRef(false);
@@ -38,14 +29,8 @@ export function useP2PPcmVoice(options = {}) {
   const sendQueueRef = useRef([]);
   const sendingRef = useRef(false);
 
-  const [peerId, setPeerId] = useState("");
-  const [listenAddr, setListenAddr] = useState("");
-  const [quicAddr, setQuicAddr] = useState("");
-  const [tcpAddr, setTcpAddr] = useState("");
-
-  const [remoteAddr, setRemoteAddr] = useState(initialRemoteAddr);
-  const [remoteQuicAddr, setRemoteQuicAddr] = useState("");
-  const [remoteTcpAddr, setRemoteTcpAddr] = useState("");
+  const [localAddrJson, setLocalAddrJson] = useState("");
+  const [remoteAddrJson, setRemoteAddrJson] = useState(initialRemoteAddr);
 
   const [p2pStatus, setP2pStatus] = useState("未初始化");
   const [captureStatus, setCaptureStatus] = useState("未开始");
@@ -61,21 +46,15 @@ export function useP2PPcmVoice(options = {}) {
     recv: 0,
     played: 0,
     buffered: 0,
+    lastSeq: 0,
+    lastTimestampMs: 0,
   });
   const [lastError, setLastError] = useState(null);
-
-  const remotePeerId = useMemo(() => {
-    return (
-      extractPeerIdFromMultiaddr(remoteQuicAddr) ||
-      extractPeerIdFromMultiaddr(remoteTcpAddr) ||
-      extractPeerIdFromMultiaddr(remoteAddr)
-    );
-  }, [remoteAddr, remoteQuicAddr, remoteTcpAddr]);
 
   const appendLog = useCallback((text) => {
     setLogs((prev) => {
       const next = [...prev, `[${new Date().toLocaleTimeString()}] ${text}`];
-      return next.slice(-200);
+      return next.slice(-300);
     });
   }, []);
 
@@ -86,6 +65,31 @@ export function useP2PPcmVoice(options = {}) {
     return out;
   };
 
+  const resetPlayback = useCallback(() => {
+    playbackQueueRef.current = [];
+    nextPlayTimeRef.current = 0;
+    setPlaybackStatus("等待音频");
+    setMetrics((prev) => ({
+      ...prev,
+      buffered: 0,
+    }));
+  }, []);
+
+  const decodePayloadToFloat32 = useCallback((bytes) => {
+    const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    const int16 = new Int16Array(
+      uint8.buffer,
+      uint8.byteOffset,
+      Math.floor(uint8.byteLength / 2)
+    );
+
+    const float32 = new Float32Array(int16.length);
+    for (let i = 0; i < int16.length; i++) {
+      float32[i] = int16[i] / 0x8000;
+    }
+    return float32;
+  }, []);
+
   const playNext = useCallback(async () => {
     if (drainingRef.current) return;
     if (playbackQueueRef.current.length < (useJitterBuffer ? minBufferFrames : 1)) return;
@@ -94,7 +98,10 @@ export function useP2PPcmVoice(options = {}) {
 
     try {
       if (!playbackContextRef.current) {
-        playbackContextRef.current = new AudioContext({ sampleRate });
+        playbackContextRef.current = new AudioContext({
+          sampleRate,
+          latencyHint: "interactive",
+        });
       }
 
       const ctx = playbackContextRef.current;
@@ -106,16 +113,10 @@ export function useP2PPcmVoice(options = {}) {
 
       while (playbackQueueRef.current.length > 0) {
         const bytes = playbackQueueRef.current.shift();
-        const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-        const int16 = new Int16Array(
-          uint8.buffer,
-          uint8.byteOffset,
-          Math.floor(uint8.byteLength / 2)
-        );
-        const float32 = new Float32Array(int16.length);
+        const float32 = decodePayloadToFloat32(bytes);
 
-        for (let i = 0; i < int16.length; i++) {
-          float32[i] = int16[i] / 0x8000;
+        if (float32.length === 0) {
+          continue;
         }
 
         const audioBuffer = ctx.createBuffer(1, float32.length, sampleRate);
@@ -126,12 +127,14 @@ export function useP2PPcmVoice(options = {}) {
         source.connect(ctx.destination);
 
         const now = ctx.currentTime;
+
+        // 更稳的调度：减少频繁抢播导致的毛刺
         if (
           nextPlayTimeRef.current === 0 ||
-          nextPlayTimeRef.current < now ||
-          nextPlayTimeRef.current - now > 0.12
+          nextPlayTimeRef.current < now - 0.02 ||
+          nextPlayTimeRef.current - now > 0.2
         ) {
-          nextPlayTimeRef.current = now + 0.01;
+          nextPlayTimeRef.current = now + 0.03;
         }
 
         source.start(nextPlayTimeRef.current);
@@ -154,11 +157,11 @@ export function useP2PPcmVoice(options = {}) {
     } finally {
       drainingRef.current = false;
     }
-  }, [appendLog, minBufferFrames, sampleRate, useJitterBuffer]);
+  }, [appendLog, decodePayloadToFloat32, minBufferFrames, sampleRate, useJitterBuffer]);
 
   const flushSendQueue = useCallback(async () => {
     if (sendingRef.current) return;
-    if (!remotePeerId) return;
+    if (!connected) return;
 
     sendingRef.current = true;
 
@@ -167,7 +170,6 @@ export function useP2PPcmVoice(options = {}) {
         const packet = sendQueueRef.current.shift();
 
         await invoke("p2p_send", {
-          peerId: remotePeerId,
           data: packet,
         });
 
@@ -185,34 +187,43 @@ export function useP2PPcmVoice(options = {}) {
         queueMicrotask(() => flushSendQueue());
       }
     }
-  }, [appendLog, remotePeerId]);
+  }, [appendLog, connected]);
 
   useEffect(() => {
-    let unlistenLog;
-    let unlistenData;
-    let unlistenPing;
+    let offLog;
+    let offData;
+    let offPacket;
+    let offReady;
+    let offConnected;
+    let offClosed;
 
     const bindEvents = async () => {
-      unlistenLog = await listen("p2p-log", (event) => {
+      offLog = await listen("p2p-log", (event) => {
         const msg = String(event.payload ?? "");
         appendLog(msg);
-
-        if (msg.includes("listening:")) {
-          setP2pStatus("节点已启动");
-          setNodeStarted(true);
-        }
-
-        if (msg.includes("connected:")) {
-          setConnected(true);
-          setP2pStatus("已连接");
-        }
       });
 
-      unlistenPing = await listen("p2p-ping", (event) => {
-        appendLog(`ping: ${String(event.payload ?? "")}`);
+      offReady = await listen("p2p-ready", () => {
+        setNodeStarted(true);
+        setP2pStatus("节点已启动");
       });
 
-      unlistenData = await listen("p2p-data", (event) => {
+      offConnected = await listen("p2p-connected", () => {
+        setConnected(true);
+        setP2pStatus("已连接");
+        appendLog("连接已建立");
+      });
+
+      offClosed = await listen("p2p-closed", () => {
+        setConnected(false);
+        setNodeStarted(false);
+        setIsCapturing(false);
+        setP2pStatus("已关闭");
+        resetPlayback();
+        appendLog("连接已关闭");
+      });
+
+      offData = await listen("p2p-data", (event) => {
         const payload = event.payload;
         let bytes;
 
@@ -226,8 +237,12 @@ export function useP2PPcmVoice(options = {}) {
 
         playbackQueueRef.current.push(bytes);
 
+        // 队列太长时，丢老包，保持实时性
         if (playbackQueueRef.current.length > maxBufferFrames) {
-          playbackQueueRef.current.splice(0, playbackQueueRef.current.length - maxBufferFrames);
+          playbackQueueRef.current.splice(
+            0,
+            playbackQueueRef.current.length - maxBufferFrames
+          );
           nextPlayTimeRef.current = 0;
         }
 
@@ -239,16 +254,28 @@ export function useP2PPcmVoice(options = {}) {
 
         playNext();
       });
+
+      offPacket = await listen("p2p-packet", (event) => {
+        const pkt = event.payload || {};
+        setMetrics((prev) => ({
+          ...prev,
+          lastSeq: Number(pkt.seq || 0),
+          lastTimestampMs: Number(pkt.timestamp_ms || 0),
+        }));
+      });
     };
 
     bindEvents();
 
     return () => {
-      if (unlistenLog) unlistenLog();
-      if (unlistenPing) unlistenPing();
-      if (unlistenData) unlistenData();
+      if (offLog) offLog();
+      if (offData) offData();
+      if (offPacket) offPacket();
+      if (offReady) offReady();
+      if (offConnected) offConnected();
+      if (offClosed) offClosed();
     };
-  }, [appendLog, maxBufferFrames, playNext]);
+  }, [appendLog, maxBufferFrames, playNext, resetPlayback]);
 
   const initNode = async () => {
     try {
@@ -257,17 +284,13 @@ export function useP2PPcmVoice(options = {}) {
 
       const res = await invoke("p2p_init");
 
-      setPeerId(res.peer_id || "");
-      setListenAddr(res.preferred_addr || "");
-      setQuicAddr(res.quic_addr || "");
-      setTcpAddr(res.tcp_addr || "");
+      const addr = res?.local_addr_json || "";
+      setLocalAddrJson(addr);
       setNodeStarted(true);
-      setP2pStatus((res.preferred_addr || res.quic_addr || res.tcp_addr) ? "节点已启动" : "已启动，等待地址");
+      setP2pStatus(addr ? "节点已启动" : "已启动，等待地址");
 
-      appendLog(`peerId: ${res.peer_id || ""}`);
-      appendLog(`preferredAddr: ${res.preferred_addr || ""}`);
-      appendLog(`quicAddr: ${res.quic_addr || ""}`);
-      appendLog(`tcpAddr: ${res.tcp_addr || ""}`);
+      appendLog("本地节点初始化完成");
+      appendLog(`localAddrJson: ${addr}`);
     } catch (e) {
       setP2pStatus("启动失败");
       setLastError(e);
@@ -275,35 +298,25 @@ export function useP2PPcmVoice(options = {}) {
     }
   };
 
-  const pingRemote = useCallback(async () => {
-    if (!remotePeerId) {
-      throw new Error("远端 PeerId 解析失败");
+  const refreshLocalAddr = useCallback(async () => {
+    try {
+      const addr = await invoke("p2p_get_local_addr");
+      setLocalAddrJson(addr || "");
+      appendLog("已刷新本地地址");
+      return addr;
+    } catch (e) {
+      setLastError(e);
+      appendLog(`获取本地地址失败: ${e?.message || String(e)}`);
+      throw e;
     }
-
-    const res = await invoke("p2p_ping", { peerId: remotePeerId });
-    appendLog(`manual ping result: ${res}`);
-    return res;
-  }, [appendLog, remotePeerId]);
+  }, [appendLog]);
 
   const connectRemote = async () => {
     try {
-      let qAddr = remoteQuicAddr;
-      let tAddr = remoteTcpAddr;
+      const addr = String(remoteAddrJson || "").trim();
 
-      if (!qAddr && !tAddr && remoteAddr) {
-        if (remoteAddr.includes("/quic-v1")) {
-          qAddr = remoteAddr;
-        } else if (remoteAddr.includes("/tcp/")) {
-          tAddr = remoteAddr;
-        }
-      }
-
-      if (!qAddr && !tAddr) {
-        throw new Error("请先填写远端连接地址");
-      }
-
-      if (!remotePeerId) {
-        throw new Error("远端 PeerId 解析失败");
+      if (!addr) {
+        throw new Error("请先填写远端地址 JSON");
       }
 
       setP2pStatus("连接中...");
@@ -311,37 +324,15 @@ export function useP2PPcmVoice(options = {}) {
       setLastError(null);
 
       await invoke("p2p_connect", {
-        quicAddr: qAddr || null,
-        tcpAddr: tAddr || null,
+        remoteAddrJson: addr,
       });
 
-      appendLog(`发起连接: quic=${qAddr || "-"} tcp=${tAddr || "-"}`);
+      appendLog("已发起连接请求");
+      setP2pStatus("连接已发起，等待建立");
 
-      let ok = false;
-
+      // 等事件，不再 ping
       for (let i = 0; i < 20; i++) {
-        try {
-          const pong = await invoke("p2p_ping", { peerId: remotePeerId });
-          appendLog(`ping attempt ${i + 1}: ${pong}`);
-
-          if (String(pong).toLowerCase().includes("pong")) {
-            ok = true;
-            break;
-          }
-        } catch {
-          appendLog(`ping attempt ${i + 1} failed`);
-        }
-
-        await sleep(300);
-      }
-
-      if (ok) {
-        setConnected(true);
-        setP2pStatus("已连接");
-      } else {
-        setConnected(false);
-        setP2pStatus("连接失败");
-        throw new Error("连接已发起，但 ping 未成功");
+        await sleep(150);
       }
     } catch (e) {
       setConnected(false);
@@ -351,32 +342,69 @@ export function useP2PPcmVoice(options = {}) {
     }
   };
 
+  const checkAudioInput = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter((d) => d.kind === "audioinput");
+
+      appendLog(`音频输入设备数量: ${audioInputs.length}`);
+      audioInputs.forEach((d, i) => {
+        appendLog(`mic[${i}]: ${d.label || "(无标签，可能还未授权)"}`);
+      });
+
+      return audioInputs;
+    } catch (e) {
+      setLastError(e);
+      appendLog(`检查音频设备失败: ${e?.message || String(e)}`);
+      throw e;
+    }
+  }, [appendLog]);
+
   const startCapture = async () => {
     try {
       if (!nodeStarted) throw new Error("请先启动节点");
       if (!connected) throw new Error("请先建立连接");
-      if (!remotePeerId) throw new Error("远端 PeerId 解析失败");
 
-      setCaptureStatus("开启麦克风...");
+      setCaptureStatus("检查麦克风...");
       setLastError(null);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate,
-          sampleSize: 16,
-          latency: 0.02,
-        },
-        video: false,
-      });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter((d) => d.kind === "audioinput");
+
+      appendLog(`检测到音频输入设备数量: ${audioInputs.length}`);
+
+      if (audioInputs.length === 0) {
+        throw new Error("未检测到任何麦克风设备，请检查系统麦克风和权限");
+      }
+
+      let stream;
+      try {
+        // 先用相对宽松的约束，优先拿到稳定输入
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+          },
+          video: false,
+        });
+      } catch (e1) {
+        appendLog(`宽松采集失败，尝试最小约束: ${e1?.message || String(e1)}`);
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: false,
+        });
+      }
 
       const ctx = new AudioContext({
         sampleRate,
         latencyHint: "interactive",
       });
+
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
 
       const source = ctx.createMediaStreamSource(stream);
       const processor = ctx.createScriptProcessor(processorBufferSize, 1, 1);
@@ -394,11 +422,18 @@ export function useP2PPcmVoice(options = {}) {
 
         let merged = concatInt16(captureCarryRef.current, current);
 
+        // 20ms 组帧
         while (merged.length >= frameSamples) {
-          const frame = merged.slice(0, frameSamples);
+          const frame20ms = merged.slice(0, frameSamples);
           merged = merged.slice(frameSamples);
-          const bytes = Array.from(new Uint8Array(frame.buffer));
-          sendQueueRef.current.push(bytes);
+
+          // 拆成两个 10ms 小包发送，避免 datagram 超限
+          const half = frame20ms.length / 2;
+          const frameA = frame20ms.slice(0, half);
+          const frameB = frame20ms.slice(half);
+
+          sendQueueRef.current.push(Array.from(new Uint8Array(frameA.buffer)));
+          sendQueueRef.current.push(Array.from(new Uint8Array(frameB.buffer)));
         }
 
         captureCarryRef.current = merged;
@@ -415,8 +450,9 @@ export function useP2PPcmVoice(options = {}) {
 
       setIsCapturing(true);
       setCaptureStatus("正在采集/推送");
-      appendLog("麦克风增强已开启: echoCancellation / noiseSuppression / autoGainControl");
-      appendLog(`开始讲话，发送到: ${remotePeerId}`);
+      appendLog("麦克风已开启");
+      appendLog("已启用 AEC/降噪/自动增益（如系统支持）");
+      appendLog("20ms 采集，10ms 分包发送");
     } catch (e) {
       setCaptureStatus("采集失败");
       setLastError(e);
@@ -452,46 +488,33 @@ export function useP2PPcmVoice(options = {}) {
   const closeNode = useCallback(async () => {
     try {
       await stopCapture();
-      await invoke("p2p_close", { peerId: remotePeerId || peerId });
+      await invoke("p2p_close");
 
       setConnected(false);
       setNodeStarted(false);
-      setPeerId("");
-      setListenAddr("");
-      setQuicAddr("");
-      setTcpAddr("");
+      setLocalAddrJson("");
       setP2pStatus("已关闭");
-      playbackQueueRef.current = [];
-      nextPlayTimeRef.current = 0;
+      resetPlayback();
       appendLog("节点已关闭");
     } catch (e) {
       setLastError(e);
       appendLog(`关闭失败: ${e?.message || String(e)}`);
     }
-  }, [appendLog, peerId, remotePeerId, stopCapture]);
+  }, [appendLog, resetPlayback, stopCapture]);
 
-  const copyListenAddr = useCallback(async () => {
-    if (!listenAddr) {
-      throw new Error("请先启动节点并等待监听地址生成");
+  const copyLocalAddr = useCallback(async () => {
+    if (!localAddrJson) {
+      throw new Error("请先启动节点并等待地址生成");
     }
 
-    await navigator.clipboard.writeText(listenAddr);
-    appendLog("已复制连接地址");
-  }, [appendLog, listenAddr]);
+    await navigator.clipboard.writeText(localAddrJson);
+    appendLog("已复制本地地址 JSON");
+  }, [appendLog, localAddrJson]);
 
   return {
-    peerId,
-    listenAddr,
-    quicAddr,
-    tcpAddr,
-
-    remoteAddr,
-    setRemoteAddr,
-    remoteQuicAddr,
-    setRemoteQuicAddr,
-    remoteTcpAddr,
-    setRemoteTcpAddr,
-    remotePeerId,
+    localAddrJson,
+    remoteAddrJson,
+    setRemoteAddrJson,
 
     p2pStatus,
     captureStatus,
@@ -505,18 +528,18 @@ export function useP2PPcmVoice(options = {}) {
     isCapturing,
 
     canInit: !nodeStarted,
-    canConnect: nodeStarted && (!!remoteAddr || !!remoteQuicAddr || !!remoteTcpAddr),
-    canStartTalk: nodeStarted && connected && !!remotePeerId && !isCapturing,
+    canConnect: nodeStarted && !!remoteAddrJson.trim(),
+    canStartTalk: nodeStarted && connected && !isCapturing,
     canStopTalk: isCapturing,
-    canCopyAddr: !!listenAddr,
-    canPing: nodeStarted && !!remotePeerId,
+    canCopyAddr: !!localAddrJson,
 
     initNode,
+    refreshLocalAddr,
+    checkAudioInput,
     connectRemote,
-    pingRemote,
     startCapture,
     stopCapture,
     closeNode,
-    copyListenAddr,
+    copyLocalAddr,
   };
 }

@@ -29,23 +29,7 @@ quinn = "0.11"
 rustls = { version = "0.23", features = ["ring"] }
 rcgen = "0.13"
 
-libp2p = { version = "=0.56.0", features = [
-  "tcp",
-  "quic",
-  "noise",
-  "yamux",
-  "tokio",
-  "macros",
-  "relay",
-  "dcutr",
-  "mdns",
-  "autonat",
-  "upnp",
-  "dns",
-  "websocket"
-] }
-
-libp2p-stream = "=0.4.0-alpha"
+iroh = "0.97"
 
 tauri = { version = "2.10.3", features = ["protocol-asset"] }
 tauri-plugin-log = "2"

@@ -1,65 +1,133 @@
-use std::{collections::{HashMap, HashSet}, sync::Arc};
-
-use futures::{AsyncReadExt, AsyncWriteExt, StreamExt};
-use libp2p::{
-    identity,
-    multiaddr::Protocol,
-    noise,
-    swarm::SwarmEvent,
-    tcp, yamux,
-    Multiaddr, PeerId, Stream, StreamProtocol, Transport,
+use std::sync::{
+    atomic::{AtomicU32, Ordering},
+    Arc,
 };
-use libp2p_stream as stream;
+
+use bytes::Bytes;
+use iroh::{
+    endpoint::{presets, Connection},
+    Endpoint, EndpointAddr,
+};
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::Mutex;
 
-const VOICE_PROTOCOL: &str = "/zoey/voice/1";
-const PING_PROTOCOL: &str = "/zoey/ping/1";
+/// 单独的 ALPN，后续如果你要加 control stream，可以再加一个 control ALPN。
+const VOICE_ALPN: &[u8] = b"/zoey/voice/1";
 
-#[derive(Default, Clone)]
-pub struct ListenAddrs {
-    pub quic: Option<Multiaddr>,
-    pub tcp: Option<Multiaddr>,
+/// 语音包类型。先只保留 Audio，后面可扩展 Fec / ComfortNoise / Dtmf 等。
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum VoicePayloadType {
+    Audio = 0,
 }
 
-enum P2PCommand {
-    Dial {
-        peer: PeerId,
-        addrs: Vec<Multiaddr>,
-    },
-    Close,
+impl TryFrom<u8> for VoicePayloadType {
+    type Error = String;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Audio),
+            _ => Err(format!("unknown payload type: {}", value)),
+        }
+    }
+}
+
+/// 语音 datagram 包头：
+/// - seq: 递增序号，后续前端或 Rust jitter buffer 可用来重排/统计丢包
+/// - timestamp_ms: 发送时刻，后续可据此丢弃过期包
+/// - payload_type: 先固定 Audio
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VoicePacket {
+    pub seq: u32,
+    pub timestamp_ms: u64,
+    pub payload_type: VoicePayloadType,
+    pub payload: Vec<u8>,
+}
+
+impl VoicePacket {
+    /// 自定义极小包头编码：
+    /// 4 bytes seq
+    /// 8 bytes timestamp_ms
+    /// 1 byte payload_type
+    /// N bytes payload
+    pub fn encode(&self) -> Vec<u8> {
+        let mut out = Vec::with_capacity(13 + self.payload.len());
+        out.extend_from_slice(&self.seq.to_be_bytes());
+        out.extend_from_slice(&self.timestamp_ms.to_be_bytes());
+        out.push(self.payload_type as u8);
+        out.extend_from_slice(&self.payload);
+        out
+    }
+
+    pub fn decode(buf: &[u8]) -> Result<Self, String> {
+        if buf.len() < 13 {
+            return Err(format!("voice packet too short: {}", buf.len()));
+        }
+
+        let seq = u32::from_be_bytes([buf[0], buf[1], buf[2], buf[3]]);
+        let timestamp_ms = u64::from_be_bytes([
+            buf[4], buf[5], buf[6], buf[7], buf[8], buf[9], buf[10], buf[11],
+        ]);
+        let payload_type = VoicePayloadType::try_from(buf[12])?;
+        let payload = buf[13..].to_vec();
+
+        Ok(Self {
+            seq,
+            timestamp_ms,
+            payload_type,
+            payload,
+        })
+    }
 }
 
 pub struct P2PState {
-    pub keypair: identity::Keypair,
-    pub peer_id: PeerId,
-    pub listen_addrs: Arc<Mutex<ListenAddrs>>,
+    pub endpoint: Arc<Mutex<Option<Endpoint>>>,
+    pub connection: Arc<Mutex<Option<Connection>>>,
+    pub local_addr_json: Arc<Mutex<Option<String>>>,
     pub app: Arc<Mutex<Option<AppHandle>>>,
     pub started: Arc<Mutex<bool>>,
-    pub cmd_tx: Arc<Mutex<Option<mpsc::UnboundedSender<P2PCommand>>>>,
-    pub stream_control: Arc<Mutex<Option<stream::Control>>>,
-    pub peer_writers: Arc<Mutex<HashMap<PeerId, mpsc::UnboundedSender<Vec<u8>>>>>,
+    pub accept_task: Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>,
+    pub recv_task: Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>,
+    pub send_seq: Arc<AtomicU32>,
 }
 
 impl Default for P2PState {
     fn default() -> Self {
-        let keypair = identity::Keypair::generate_ed25519();
-        let peer_id = PeerId::from(keypair.public());
-
         Self {
-            keypair,
-            peer_id,
-            listen_addrs: Arc::new(Mutex::new(ListenAddrs::default())),
+            endpoint: Arc::new(Mutex::new(None)),
+            connection: Arc::new(Mutex::new(None)),
+            local_addr_json: Arc::new(Mutex::new(None)),
             app: Arc::new(Mutex::new(None)),
             started: Arc::new(Mutex::new(false)),
-            cmd_tx: Arc::new(Mutex::new(None)),
-            stream_control: Arc::new(Mutex::new(None)),
-            peer_writers: Arc::new(Mutex::new(HashMap::new())),
+            accept_task: Arc::new(Mutex::new(None)),
+            recv_task: Arc::new(Mutex::new(None)),
+            send_seq: Arc::new(AtomicU32::new(1)),
+        }
+    }
+}
+
+impl Clone for P2PState {
+    fn clone(&self) -> Self {
+        Self {
+            endpoint: self.endpoint.clone(),
+            connection: self.connection.clone(),
+            local_addr_json: self.local_addr_json.clone(),
+            app: self.app.clone(),
+            started: self.started.clone(),
+            accept_task: self.accept_task.clone(),
+            recv_task: self.recv_task.clone(),
+            send_seq: self.send_seq.clone(),
         }
     }
 }
 
 impl P2PState {
+    /// 初始化本地 Iroh endpoint。
+    /// 这一步会：
+    /// 1. 创建 endpoint
+    /// 2. 导出可分享给对端的 EndpointAddr JSON
+    /// 3. 启动 accept loop
     pub async fn init(&self, app: AppHandle) -> Result<(), String> {
         {
             let started = self.started.lock().await;
@@ -73,386 +141,290 @@ impl P2PState {
             *app_guard = Some(app);
         }
 
-        let mut swarm = libp2p::SwarmBuilder::with_existing_identity(self.keypair.clone())
-            .with_tokio()
-            .with_tcp(
-                tcp::Config::default(),
-                noise::Config::new,
-                yamux::Config::default,
-            )
-            .map_err(|e| e.to_string())?
-            .with_quic()
-            .with_behaviour(|_| stream::Behaviour::new())
-            .map_err(|e| e.to_string())?
-            .build();
+        // Iroh 的 Endpoint 是主入口。
+        // 只接受配置的 ALPN。
+        let endpoint = Endpoint::builder(presets::N0)
+            .alpns(vec![VOICE_ALPN.to_vec()])
+            .bind()
+            .await
+            .map_err(|e| format!("bind endpoint failed: {e}"))?;
 
-        let mut control = swarm.behaviour().new_control();
+        // 文档建议：如果希望 EndpointAddr 足够可拨号，先 online 再 addr。
+        endpoint.online().await;
 
-        let mut voice_incoming = control
-            .accept(StreamProtocol::new(VOICE_PROTOCOL))
-            .map_err(|e| e.to_string())?;
-
-        let mut ping_incoming = control
-            .accept(StreamProtocol::new(PING_PROTOCOL))
-            .map_err(|e| e.to_string())?;
-
-        swarm
-            .listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse().unwrap())
-            .map_err(|e| e.to_string())?;
-
-        swarm
-            .listen_on("/ip4/0.0.0.0/tcp/0".parse().unwrap())
-            .map_err(|e| e.to_string())?;
+        let addr = endpoint.addr();
+        let addr_json =
+            serde_json::to_string_pretty(&addr).map_err(|e| format!("addr json failed: {e}"))?;
 
         {
-            let mut c = self.stream_control.lock().await;
-            *c = Some(control.clone());
+            let mut guard = self.local_addr_json.lock().await;
+            *guard = Some(addr_json.clone());
         }
-
-        let (tx, mut rx) = mpsc::unbounded_channel::<P2PCommand>();
 
         {
-            let mut guard = self.cmd_tx.lock().await;
-            *guard = Some(tx);
+            let mut guard = self.endpoint.lock().await;
+            *guard = Some(endpoint.clone());
         }
+
+        self.start_accept_loop(endpoint).await;
 
         {
             let mut started = self.started.lock().await;
             *started = true;
         }
 
-        let app_for_swarm = self.app.clone();
-        let listen_addrs = self.listen_addrs.clone();
-
-        tauri::async_runtime::spawn(async move {
-            let mut fallback_addrs: HashMap<PeerId, Vec<Multiaddr>> = HashMap::new();
-            let mut connected_peers: HashSet<PeerId> = HashSet::new();
-
-            loop {
-                tokio::select! {
-                    cmd = rx.recv() => {
-                        match cmd {
-                            Some(P2PCommand::Dial { peer, mut addrs }) => {
-                                if addrs.is_empty() {
-                                    emit_log_arc(&app_for_swarm, "dial skipped: no addresses".to_string()).await;
-                                    continue;
-                                }
-
-                                for addr in &addrs {
-                                    swarm.add_peer_address(peer, addr.clone());
-                                }
-
-                                let first = addrs.remove(0);
-                                fallback_addrs.insert(peer, addrs);
-
-                                match swarm.dial(first.clone()) {
-                                    Ok(_) => {
-                                        emit_log_arc(
-                                            &app_for_swarm,
-                                            format!("dialing primary: {} (peer={})", first, peer),
-                                        ).await;
-                                    }
-                                    Err(e) => {
-                                        emit_log_arc(
-                                            &app_for_swarm,
-                                            format!("primary dial error [{}]: {}", peer, e),
-                                        ).await;
-
-                                        if let Some(rest) = fallback_addrs.get_mut(&peer) {
-                                            if let Some(next) = rest.first().cloned() {
-                                                rest.remove(0);
-                                                match swarm.dial(next.clone()) {
-                                                    Ok(_) => {
-                                                        emit_log_arc(
-                                                            &app_for_swarm,
-                                                            format!("dialing fallback: {} (peer={})", next, peer),
-                                                        ).await;
-                                                    }
-                                                    Err(e) => {
-                                                        emit_log_arc(
-                                                            &app_for_swarm,
-                                                            format!("fallback dial error [{}]: {}", peer, e),
-                                                        ).await;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            Some(P2PCommand::Close) | None => {
-                                emit_log_arc(&app_for_swarm, "shutdown".to_string()).await;
-                                break;
-                            }
-                        }
-                    }
-
-                    event = swarm.select_next_some() => {
-                        match event {
-                            SwarmEvent::NewListenAddr { address, .. } => {
-                                {
-                                    let mut addrs = listen_addrs.lock().await;
-
-                                    if is_quic_addr(&address) {
-                                        addrs.quic = Some(address.clone());
-                                    } else if is_tcp_addr(&address) {
-                                        addrs.tcp = Some(address.clone());
-                                    }
-                                }
-
-                                emit_log_arc(&app_for_swarm, format!("listening: {}", address)).await;
-                            }
-
-                            SwarmEvent::ConnectionEstablished { peer_id, .. } => {
-                                connected_peers.insert(peer_id);
-                                fallback_addrs.remove(&peer_id);
-                                emit_log_arc(&app_for_swarm, format!("connected: {}", peer_id)).await;
-                            }
-
-                            SwarmEvent::OutgoingConnectionError { peer_id, error, .. } => {
-                                if let Some(peer) = peer_id {
-                                    if connected_peers.contains(&peer) {
-                                        emit_log_arc(
-                                            &app_for_swarm,
-                                            format!("outgoing error [{}]: {}", peer, error),
-                                        ).await;
-                                        continue;
-                                    }
-
-                                    let mut dialed_fallback = false;
-
-                                    if let Some(rest) = fallback_addrs.get_mut(&peer) {
-                                        if let Some(next) = rest.first().cloned() {
-                                            rest.remove(0);
-
-                                            match swarm.dial(next.clone()) {
-                                                Ok(_) => {
-                                                    dialed_fallback = true;
-                                                    emit_log_arc(
-                                                        &app_for_swarm,
-                                                        format!("dialing fallback: {} (peer={})", next, peer),
-                                                    ).await;
-                                                }
-                                                Err(e) => {
-                                                    emit_log_arc(
-                                                        &app_for_swarm,
-                                                        format!("fallback dial error [{}]: {}", peer, e),
-                                                    ).await;
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if !dialed_fallback {
-                                        emit_log_arc(
-                                            &app_for_swarm,
-                                            format!("outgoing error [{}]: {}", peer, error),
-                                        ).await;
-                                    }
-                                } else {
-                                    emit_log_arc(
-                                        &app_for_swarm,
-                                        format!("outgoing error [-]: {}", error),
-                                    ).await;
-                                }
-                            }
-
-                            SwarmEvent::IncomingConnectionError { error, .. } => {
-                                emit_log_arc(&app_for_swarm, format!("incoming error: {}", error)).await;
-                            }
-
-                            _ => {}
-                        }
-                    }
-                }
-            }
-        });
-
-        let app_for_voice = self.app.clone();
-        tauri::async_runtime::spawn(async move {
-            while let Some((peer, stream)) = voice_incoming.next().await {
-                let app = app_for_voice.clone();
-                tauri::async_runtime::spawn(async move {
-                    handle_voice_stream(peer, stream, app).await;
-                });
-            }
-        });
-
-        let app_for_ping = self.app.clone();
-        tauri::async_runtime::spawn(async move {
-            while let Some((peer, mut stream)) = ping_incoming.next().await {
-                let app = app_for_ping.clone();
-                tauri::async_runtime::spawn(async move {
-                    match read_frame(&mut stream).await {
-                        Ok(Some(data)) => {
-                            emit_log_arc(&app, format!("ping from {}: {} bytes", peer, data.len())).await;
-
-                            if data == b"ping".to_vec() {
-                                let _ = write_frame(&mut stream, b"pong").await;
-                            }
-                        }
-                        Ok(None) => {}
-                        Err(e) => {
-                            emit_log_arc(&app, format!("ping read error [{}]: {}", peer, e)).await;
-                        }
-                    }
-                });
-            }
-        });
+        emit_log_arc(
+            &self.app,
+            format!("iroh ready: id={} local_addr_json prepared", addr.id),
+        )
+        .await;
+        emit_event_arc(&self.app, "p2p-ready", true).await;
+        emit_event_arc(&self.app, "p2p-local-addr", addr_json).await;
 
         Ok(())
     }
 
-    pub async fn dial(&self, peer: PeerId, addrs: Vec<Multiaddr>) -> Result<(), String> {
-        let tx = self
-            .cmd_tx
+    /// 给 UI 直接取本地地址 JSON。
+    pub async fn get_local_addr_json(&self) -> Result<String, String> {
+        self.local_addr_json
+            .lock()
+            .await
+            .clone()
+            .ok_or_else(|| "local addr not initialized".to_string())
+    }
+
+    /// 通过对端导出的 EndpointAddr JSON 建连。
+    pub async fn dial(&self, addr_json: String) -> Result<(), String> {
+        let endpoint = self
+            .endpoint
             .lock()
             .await
             .clone()
             .ok_or_else(|| "p2p not initialized".to_string())?;
 
-        tx.send(P2PCommand::Dial { peer, addrs })
-            .map_err(|_| "failed to send dial command".to_string())
+        let remote_addr: EndpointAddr =
+            serde_json::from_str(&addr_json).map_err(|e| format!("invalid addr json: {e}"))?;
+
+        emit_log_arc(
+            &self.app,
+            format!("dialing remote endpoint: {}", remote_addr.id),
+        )
+        .await;
+
+        let conn = endpoint
+            .connect(remote_addr, VOICE_ALPN)
+            .await
+            .map_err(|e| format!("connect failed: {e}"))?;
+
+        emit_log_arc(
+            &self.app,
+            format!("connected (outgoing): {}", conn.remote_id()),
+        )
+        .await;
+
+        self.set_connection(conn).await
     }
 
-    pub async fn send(&self, peer: PeerId, data: Vec<u8>) -> Result<(), String> {
-        let tx = {
-            let mut writers = self.peer_writers.lock().await;
-
-            if let Some(tx) = writers.get(&peer) {
-                tx.clone()
-            } else {
-                let mut control = self
-                    .stream_control
-                    .lock()
-                    .await
-                    .clone()
-                    .ok_or_else(|| "stream control not initialized".to_string())?;
-
-                let (tx, mut rx) = mpsc::unbounded_channel::<Vec<u8>>();
-                writers.insert(peer, tx.clone());
-
-                let app = self.app.clone();
-                let writers_ref = self.peer_writers.clone();
-
-                tauri::async_runtime::spawn(async move {
-                    let mut stream = match control
-                        .open_stream(peer, StreamProtocol::new(VOICE_PROTOCOL))
-                        .await
-                    {
-                        Ok(stream) => {
-                            emit_log_arc(&app, format!("voice stream opened: {}", peer)).await;
-                            stream
-                        }
-                        Err(e) => {
-                            emit_log_arc(&app, format!("open voice stream error [{}]: {}", peer, e)).await;
-                            let mut writers = writers_ref.lock().await;
-                            writers.remove(&peer);
-                            return;
-                        }
-                    };
-
-                    while let Some(buf) = rx.recv().await {
-                        if let Err(e) = write_frame(&mut stream, &buf).await {
-                            emit_log_arc(&app, format!("voice write error [{}]: {}", peer, e)).await;
-                            break;
-                        }
-                    }
-
-                    let mut writers = writers_ref.lock().await;
-                    writers.remove(&peer);
-                });
-
-                tx
-            }
-        };
-
-        tx.send(data)
-            .map_err(|_| "failed to queue outgoing voice packet".to_string())
-    }
-
-    pub async fn ping_peer(&self, peer: PeerId) -> Result<String, String> {
-        let mut control = self
-            .stream_control
+    /// 发送原始音频帧。
+    /// 这里会自动封装成 VoicePacket，再走 datagram 发出。
+    pub async fn send(&self, audio_payload: Vec<u8>) -> Result<(), String> {
+        let conn = self
+            .connection
             .lock()
             .await
             .clone()
-            .ok_or_else(|| "stream control not initialized".to_string())?;
+            .ok_or_else(|| "connection not established".to_string())?;
 
-        let mut stream = control
-            .open_stream(peer, StreamProtocol::new(PING_PROTOCOL))
-            .await
-            .map_err(|e| e.to_string())?;
+        let seq = self.send_seq.fetch_add(1, Ordering::Relaxed);
+        let timestamp_ms = now_ms();
 
-        write_frame(&mut stream, b"ping").await?;
+        let pkt = VoicePacket {
+            seq,
+            timestamp_ms,
+            payload_type: VoicePayloadType::Audio,
+            payload: audio_payload,
+        };
 
-        let data = read_frame(&mut stream).await?
-            .ok_or_else(|| "ping response eof".to_string())?;
+        let encoded = pkt.encode();
 
-        let text = String::from_utf8_lossy(&data).to_string();
+        let max = conn
+            .max_datagram_size()
+            .ok_or_else(|| "peer does not support QUIC datagrams".to_string())?;
 
-        emit_log_arc(&self.app, format!("manual ping [{}]: {}", peer, text)).await;
-        emit_event_arc(&self.app, "p2p-ping", text.clone()).await;
+        if encoded.len() > max {
+            return Err(format!(
+                "voice packet too large for datagram: {} > {}",
+                encoded.len(),
+                max
+            ));
+        }
 
-        Ok(text)
+        conn.send_datagram(Bytes::from(encoded))
+            .map_err(|e| format!("send datagram failed: {e}"))
     }
 
     pub async fn close(&self) -> Result<(), String> {
-        if let Some(tx) = self.cmd_tx.lock().await.take() {
-            let _ = tx.send(P2PCommand::Close);
+        {
+            let mut guard = self.accept_task.lock().await;
+            if let Some(task) = guard.take() {
+                task.abort();
+            }
         }
+
+        {
+            let mut guard = self.recv_task.lock().await;
+            if let Some(task) = guard.take() {
+                task.abort();
+            }
+        }
+
+        {
+            let mut guard = self.connection.lock().await;
+            if let Some(conn) = guard.take() {
+                conn.close(0u32.into(), b"closed");
+            }
+        }
+
+        {
+            let mut guard = self.endpoint.lock().await;
+            if let Some(endpoint) = guard.take() {
+                endpoint.close().await;
+            }
+        }
+
+        {
+            let mut guard = self.local_addr_json.lock().await;
+            *guard = None;
+        }
+
+        self.send_seq.store(1, Ordering::Relaxed);
 
         {
             let mut started = self.started.lock().await;
             *started = false;
         }
 
-        {
-            let mut addrs = self.listen_addrs.lock().await;
-            *addrs = ListenAddrs::default();
-        }
-
-        {
-            let mut writers = self.peer_writers.lock().await;
-            writers.clear();
-        }
-
-        {
-            let mut control = self.stream_control.lock().await;
-            *control = None;
-        }
+        emit_log_arc(&self.app, "p2p closed".to_string()).await;
+        emit_event_arc(&self.app, "p2p-closed", true).await;
 
         Ok(())
     }
-}
 
-fn is_quic_addr(addr: &Multiaddr) -> bool {
-    addr.iter().any(|p| matches!(p, Protocol::QuicV1))
-}
-
-fn is_tcp_addr(addr: &Multiaddr) -> bool {
-    addr.iter().any(|p| matches!(p, Protocol::Tcp(_)))
-}
-
-async fn handle_voice_stream(
-    peer: PeerId,
-    mut stream: Stream,
-    app: Arc<Mutex<Option<AppHandle>>>,
-) {
-    loop {
-        match read_frame(&mut stream).await {
-            Ok(Some(data)) => {
-                emit_log_arc(&app, format!("voice frame from {}: {} bytes", peer, data.len())).await;
-                emit_event_arc(&app, "p2p-data", data).await;
-            }
-            Ok(None) => break,
-            Err(e) => {
-                emit_log_arc(&app, format!("voice read error [{}]: {}", peer, e)).await;
-                break;
+    async fn set_connection(&self, conn: Connection) -> Result<(), String> {
+        // 停掉旧接收循环
+        {
+            let mut recv_guard = self.recv_task.lock().await;
+            if let Some(task) = recv_guard.take() {
+                task.abort();
             }
         }
+
+        // 替换旧连接
+        {
+            let mut conn_guard = self.connection.lock().await;
+            if let Some(old) = conn_guard.replace(conn.clone()) {
+                old.close(0u32.into(), b"replaced");
+            }
+        }
+
+        emit_event_arc(
+            &self.app,
+            "p2p-connected",
+            conn.remote_id().to_string(),
+        )
+        .await;
+
+        emit_log_arc(
+            &self.app,
+            format!("active connection set: {}", conn.remote_id()),
+        )
+        .await;
+
+        self.start_recv_loop(conn).await;
+        Ok(())
     }
+
+    async fn start_accept_loop(&self, endpoint: Endpoint) {
+        let state = self.clone();
+
+        let task = tauri::async_runtime::spawn(async move {
+            loop {
+                let Some(incoming) = endpoint.accept().await else {
+                    emit_log_arc(&state.app, "accept loop ended".to_string()).await;
+                    break;
+                };
+
+                match incoming.await {
+                    Ok(conn) => {
+                        emit_log_arc(
+                            &state.app,
+                            format!("connected (incoming): {}", conn.remote_id()),
+                        )
+                        .await;
+
+                        if let Err(e) = state.set_connection(conn).await {
+                            emit_log_arc(&state.app, format!("set_connection error: {}", e)).await;
+                        }
+                    }
+                    Err(e) => {
+                        emit_log_arc(&state.app, format!("incoming connection error: {}", e)).await;
+                    }
+                }
+            }
+        });
+
+        let mut guard = self.accept_task.lock().await;
+        if let Some(old) = guard.take() {
+            old.abort();
+        }
+        *guard = Some(task);
+    }
+
+    async fn start_recv_loop(&self, conn: Connection) {
+        let state = self.clone();
+
+        let task = tauri::async_runtime::spawn(async move {
+            loop {
+                match conn.read_datagram().await {
+                    Ok(bytes) => match VoicePacket::decode(&bytes) {
+                        Ok(pkt) => {
+                            // 兼容你原来的前端事件：直接把 payload 发出去
+                            emit_event_arc(&state.app, "p2p-data", pkt.payload.clone()).await;
+
+                            // 增加一个更适合调试语音质量的事件
+                            emit_event_arc(&state.app, "p2p-packet", pkt).await;
+                        }
+                        Err(e) => {
+                            emit_log_arc(&state.app, format!("decode voice packet error: {}", e)).await;
+                        }
+                    },
+                    Err(e) => {
+                        emit_log_arc(
+                            &state.app,
+                            format!("datagram receive error [{}]: {}", conn.remote_id(), e),
+                        )
+                        .await;
+                        break;
+                    }
+                }
+            }
+        });
+
+        let mut guard = self.recv_task.lock().await;
+        if let Some(old) = guard.take() {
+            old.abort();
+        }
+        *guard = Some(task);
+    }
+}
+
+fn now_ms() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
 }
 
 async fn emit_log_arc(app: &Arc<Mutex<Option<AppHandle>>>, msg: String) {
@@ -466,27 +438,4 @@ where
     if let Some(app) = app.lock().await.clone() {
         let _ = app.emit(event, payload);
     }
-}
-
-async fn write_frame(stream: &mut Stream, data: &[u8]) -> Result<(), String> {
-    let len = (data.len() as u32).to_be_bytes();
-    stream.write_all(&len).await.map_err(|e| e.to_string())?;
-    stream.write_all(data).await.map_err(|e| e.to_string())?;
-    stream.flush().await.map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-async fn read_frame(stream: &mut Stream) -> Result<Option<Vec<u8>>, String> {
-    let mut len_buf = [0u8; 4];
-
-    match stream.read_exact(&mut len_buf).await {
-        Ok(_) => {}
-        Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
-        Err(e) => return Err(e.to_string()),
-    }
-
-    let len = u32::from_be_bytes(len_buf) as usize;
-    let mut data = vec![0u8; len];
-    stream.read_exact(&mut data).await.map_err(|e| e.to_string())?;
-    Ok(Some(data))
 }
