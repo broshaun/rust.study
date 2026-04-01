@@ -1,187 +1,377 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import {
+  Container,
+  Paper,
+  Title,
+  SimpleGrid,
+  Text,
+  Button,
+  Group,
+  Box,
+  ScrollArea,
+  Divider,
+  Alert,
+  Badge,
+  Modal,
+  ActionIcon,
+} from "@mantine/core";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { useP2PPcmVoice } from "hooks/voice/useP2PPcmVoice";
+import { useNavigate } from "react-router";
 
 export function P2PPcmVoicePage({ useJitterBuffer = true }) {
   const v = useP2PPcmVoice({ useJitterBuffer });
 
+  const [parsedRemoteAddr, setParsedRemoteAddr] = useState(null);
+  const [pasteError, setPasteError] = useState("");
+  const [openedModal, setOpenedModal] = useState(null);
+  const navigate = useNavigate();
+
+  const localRows = useMemo(() => {
+    if (!v.localAddrJson) return [];
+    try {
+      return flattenObjectToRows(JSON.parse(v.localAddrJson));
+    } catch {
+      return [];
+    }
+  }, [v.localAddrJson]);
+
+  const remoteRows = useMemo(() => {
+    if (!parsedRemoteAddr) return [];
+    return flattenObjectToRows(parsedRemoteAddr);
+  }, [parsedRemoteAddr]);
+
+  const handlePasteFromClipboard = async () => {
+    try {
+      setPasteError("");
+      setParsedRemoteAddr(null);
+
+      const text = await navigator.clipboard.readText();
+
+      if (!text || !text.trim()) {
+        setPasteError("剪贴板为空");
+        return;
+      }
+
+      v.setRemoteAddrJson(text);
+
+      try {
+        setParsedRemoteAddr(JSON.parse(text));
+      } catch {
+        setPasteError("不是有效 JSON");
+      }
+    } catch {
+      setPasteError("无法读取剪贴板");
+    }
+  };
+
+  const handleBack = () => {
+    navigate("/chat/dialog");
+  };
+
   return (
-    <div style={{ maxWidth: 980, margin: "40px auto", fontFamily: "sans-serif", color: "#333" }}>
-      <div style={{ background: "#fff", padding: 24, borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
-        <h2 style={{ marginTop: 0 }}>P2P 语音控制台（Iroh）</h2>
+    <Container size="lg" py={{ base: 8, sm: 12 }}>
+      <Paper shadow="xs" radius="lg" p={{ base: "sm", sm: "md" }} withBorder>
+        <Group justify="space-between" align="center" mb="sm" wrap="nowrap">
+          <ActionIcon variant="light" size="md" radius="xl" onClick={handleBack}>
+            <IconArrowLeft size={18} />
+          </ActionIcon>
 
-        {/* 状态 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
-          <Box label="网络状态" value={v.p2pStatus} color={v.connected ? "#059669" : "#6b7280"} />
-          <Box label="麦克风" value={v.captureStatus} color={v.isCapturing ? "#2563eb" : "#6b7280"} />
-          <Box label="播放器" value={v.playbackStatus} color="#6b7280" />
-        </div>
+          <Title order={4} ta="center" style={{ flex: 1 }}>
+            P2P 控制台
+          </Title>
 
-        {/* 地址区 */}
-        <div style={{ background: "#f9fafb", padding: 16, borderRadius: 12, marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-            <Textarea
-              label="本地地址（复制给对方）"
-              value={v.localAddrJson}
-              readOnly
-            />
-            <Textarea
-              label="远端地址（粘贴对方 JSON）"
-              value={v.remoteAddrJson}
-              onChange={(e) => v.setRemoteAddrJson(e.target.value)}
-              placeholder="粘贴对方的 localAddrJson"
-            />
-          </div>
+          <Box w={36} />
+        </Group>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Button onClick={v.initNode} disabled={!v.canInit} primary>
-              启动节点
+        <SimpleGrid
+          cols={{ base: 1, xs: 3 }}
+          spacing="xs"
+          verticalSpacing="xs"
+          mb="sm"
+        >
+          <StatusBox label="网络" value={v.p2pStatus} active={v.connected} />
+          <StatusBox label="麦克风" value={v.captureStatus} active={v.isCapturing} />
+          <StatusBox label="播放" value={v.playbackStatus} />
+        </SimpleGrid>
+
+        <Paper withBorder p="xs" radius="md" mb="sm" bg="gray.0">
+          <Group gap="xs" wrap="wrap">
+            <Button size="xs" radius="md" onClick={v.initNode} disabled={!v.canInit}>
+              启动
             </Button>
 
-            <Button onClick={v.copyLocalAddr} disabled={!v.canCopyAddr}>
-              复制本地地址
+            <Button
+              size="xs"
+              radius="md"
+              onClick={v.connectRemote}
+              disabled={!v.canConnect}
+              color="green"
+            >
+              连接
             </Button>
 
-            <Button onClick={v.connectRemote} disabled={!v.canConnect}>
-              建立连接
+            <Button
+              size="xs"
+              radius="md"
+              onClick={v.closeNode}
+              color="red"
+              variant="light"
+            >
+              重置
             </Button>
 
-            <Button onClick={v.closeNode} danger>
-              重置关闭
+            <Button
+              size="xs"
+              radius="md"
+              onClick={v.startCapture}
+              disabled={!v.canStartTalk}
+            >
+              讲话
             </Button>
-          </div>
-        </div>
 
-        {/* 语音控制 */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-          <LargeButton onClick={v.startCapture} disabled={!v.canStartTalk} color="#2563eb">
-            开始讲话
-          </LargeButton>
-          <LargeButton onClick={v.stopCapture} disabled={!v.canStopTalk} color="#dc2626">
-            停止
-          </LargeButton>
-        </div>
+            <Button
+              size="xs"
+              radius="md"
+              onClick={v.stopCapture}
+              disabled={!v.canStopTalk}
+              color="red"
+            >
+              停止
+            </Button>
+          </Group>
+        </Paper>
 
-        {/* 指标 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, borderTop: "1px solid #eee", paddingTop: 20, marginBottom: 20 }}>
-          <Metric label="已发送" value={v.metrics.sent} />
-          <Metric label="已接收" value={v.metrics.recv} />
-          <Metric label="已播放" value={v.metrics.played} />
-          <Metric label="缓冲中" value={v.metrics.buffered} />
-          <Metric label="Seq" value={v.metrics.lastSeq} />
-          <Metric label="时间戳" value={v.metrics.lastTimestampMs} />
-        </div>
+        {pasteError && (
+          <Alert color="red" mb="sm" p="xs" radius="md">
+            {pasteError}
+          </Alert>
+        )}
 
-        {/* 日志 */}
-        <div style={{ borderTop: "1px solid #eee", paddingTop: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8 }}>运行日志</div>
-          <div
+        <SimpleGrid
+          cols={{ base: 1, sm: 2 }}
+          spacing="sm"
+          verticalSpacing="sm"
+          mb="sm"
+        >
+          <AddressCard
+            title="本地地址"
+            active={localRows.length > 0}
+            onCopy={v.copyLocalAddr}
+            onView={() => setOpenedModal("local")}
+          />
+
+          <AddressCard
+            title="远端地址"
+            active={remoteRows.length > 0}
+            onPaste={handlePasteFromClipboard}
+            onView={() => setOpenedModal("remote")}
+          />
+        </SimpleGrid>
+
+        <Divider mb="xs" />
+        <SimpleGrid
+          cols={{ base: 2, xs: 3, sm: 6 }}
+          spacing="xs"
+          verticalSpacing="xs"
+          mb="sm"
+        >
+          <Metric label="发送" value={v.metrics.sent} />
+          <Metric label="接收" value={v.metrics.recv} />
+          <Metric label="播放" value={v.metrics.played} />
+          <Metric label="缓冲" value={v.metrics.buffered} />
+          <Metric label="时间" value={v.callDurationSeconds} suffix="s" />
+          <Metric label="延迟" value={v.metrics.avgTransitMs} suffix="ms" />
+        </SimpleGrid>
+
+        <Divider mb="xs" />
+        <Text fw={600} size="sm" mb={6}>
+          运行日志
+        </Text>
+
+        <ScrollArea h={150}>
+          <Box
+            p="xs"
             style={{
               background: "#0f172a",
               color: "#e2e8f0",
-              borderRadius: 12,
-              padding: 12,
-              minHeight: 180,
-              maxHeight: 260,
-              overflowY: "auto",
+              fontSize: 11,
               fontFamily: "monospace",
-              fontSize: 12,
+              borderRadius: 8,
               whiteSpace: "pre-wrap",
+              lineHeight: 1.45,
             }}
           >
-            {v.logs.length > 0 ? v.logs.join("\n") : "暂无日志"}
-          </div>
-        </div>
+            {v.logs?.length ? v.logs.join("\n") : "暂无日志"}
+          </Box>
+        </ScrollArea>
 
         {v.lastError && (
-          <div
-            style={{
-              marginTop: 20,
-              padding: 12,
-              background: "#fff1f2",
-              color: "#b91c1c",
-              borderRadius: 8,
-              fontSize: 13,
-            }}
-          >
+          <Alert color="red" mt="sm" p="xs" radius="md">
             错误提示: {v.lastError.message || String(v.lastError)}
-          </div>
+          </Alert>
         )}
-      </div>
-    </div>
+      </Paper>
+
+      <Modal
+        opened={openedModal === "local"}
+        onClose={() => setOpenedModal(null)}
+        title={
+          <Text fw={700} ta="center" w="100%">
+            本地地址
+          </Text>
+        }
+        size="xl"
+        radius="lg"
+        centered
+      >
+        <JsonViewer json={v.localAddrJson} />
+      </Modal>
+
+      <Modal
+        opened={openedModal === "remote"}
+        onClose={() => setOpenedModal(null)}
+        title={
+          <Text fw={700} ta="center" w="100%">
+            远端地址
+          </Text>
+        }
+        size="xl"
+        radius="lg"
+        centered
+      >
+        <JsonViewer json={v.remoteAddrJson} />
+      </Modal>
+    </Container>
   );
 }
 
-/* ---------- UI 组件 ---------- */
+function AddressCard({ title, active, onCopy, onPaste, onView }) {
+  return (
+    <Paper withBorder radius="md" p="sm" bg="white">
+      <Group justify="space-between" align="center" wrap="wrap" gap="xs">
+        <Group gap={8} wrap="nowrap">
+          <Text size="sm" fw={600}>
+            {title}
+          </Text>
 
-const Box = ({ label, value, color }) => (
-  <div style={{ padding: 12, border: "1px solid #eee", borderRadius: 10 }}>
-    <div style={{ fontSize: 12, color: "#999", marginBottom: 4 }}>{label}</div>
-    <div style={{ fontWeight: "bold", color, wordBreak: "break-all" }}>{value || "-"}</div>
-  </div>
-);
+          <Badge size="sm" variant="light" color={active ? "green" : "gray"}>
+            {active ? "就绪" : "未就绪"}
+          </Badge>
+        </Group>
 
-const Metric = ({ label, value }) => (
-  <div>
-    <div style={{ fontSize: 11, color: "#999" }}>{label}</div>
-    <div style={{ fontSize: 20, fontWeight: "bold" }}>{value}</div>
-  </div>
-);
+        <Group gap={6} wrap="wrap" justify="flex-end">
+          {onCopy && (
+            <Button size="xs" radius="md" variant="light" onClick={onCopy}>
+              复制
+            </Button>
+          )}
 
-const Textarea = ({ label, ...props }) => (
-  <div>
-    <div style={{ fontSize: 12, fontWeight: "bold", marginBottom: 4 }}>{label}</div>
-    <textarea
-      {...props}
-      style={{
-        width: "100%",
-        height: 120,
-        padding: "8px",
-        borderRadius: 6,
-        border: "1px solid #ddd",
-        boxSizing: "border-box",
-        fontFamily: "monospace",
-        fontSize: 12,
-      }}
-    />
-  </div>
-);
+          {onPaste && (
+            <Button size="xs" radius="md" variant="light" onClick={onPaste}>
+              粘贴
+            </Button>
+          )}
 
-const Button = ({ children, primary, danger, disabled, ...props }) => (
-  <button
-    {...props}
-    disabled={disabled}
-    style={{
-      padding: "8px 16px",
-      borderRadius: 8,
-      border: "none",
-      fontWeight: "bold",
-      cursor: disabled ? "not-allowed" : "pointer",
-      background: primary ? "#111827" : danger ? "#fee2e2" : "#eee",
-      color: primary ? "#fff" : danger ? "#b91c1c" : "#333",
-      opacity: disabled ? 0.5 : 1,
-    }}
-  >
-    {children}
-  </button>
-);
+          <Button
+            size="xs"
+            radius="md"
+            variant="light"
+            onClick={onView}
+            disabled={!active}
+          >
+            查看
+          </Button>
+        </Group>
+      </Group>
+    </Paper>
+  );
+}
 
-const LargeButton = ({ children, color, disabled, ...props }) => (
-  <button
-    {...props}
-    disabled={disabled}
-    style={{
-      flex: 1,
-      padding: "14px",
-      borderRadius: 12,
-      border: "none",
-      color: "#fff",
-      fontWeight: "bold",
-      background: color,
-      cursor: disabled ? "not-allowed" : "pointer",
-      opacity: disabled ? 0.4 : 1,
-      fontSize: 16,
-    }}
-  >
-    {children}
-  </button>
-);
+function JsonViewer({ json }) {
+  let displayText = "暂无数据";
+
+  if (json && json.trim()) {
+    try {
+      displayText = JSON.stringify(JSON.parse(json), null, 2);
+    } catch {
+      displayText = json;
+    }
+  }
+
+  return (
+    <ScrollArea h={420} type="always" offsetScrollbars>
+      <Box
+        p="md"
+        style={{
+          background: "#0f172a",
+          color: "#e2e8f0",
+          fontSize: 12,
+          fontFamily: "monospace",
+          borderRadius: 8,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+          lineHeight: 1.5,
+        }}
+      >
+        {displayText}
+      </Box>
+    </ScrollArea>
+  );
+}
+
+function StatusBox({ label, value, active }) {
+  return (
+    <Paper withBorder radius="md" p="xs">
+      <Text size="10px" c="dimmed" mb={2}>
+        {label}
+      </Text>
+      <Badge size="sm" variant="light" color={active ? "green" : "gray"}>
+        {value || "-"}
+      </Badge>
+    </Paper>
+  );
+}
+
+function Metric({ label, value, suffix = "" }) {
+  const hasValue = value !== undefined && value !== null && value !== "";
+
+  return (
+    <Paper withBorder radius="md" p="xs">
+      <Text size="10px" c="dimmed" mb={2}>
+        {label}
+      </Text>
+      <Text size="sm" fw={600}>
+        {hasValue ? `${value}${value === 0 ? "" : suffix}` : "-"}
+      </Text>
+    </Paper>
+  );
+}
+
+function flattenObjectToRows(obj, parent = "") {
+  const rows = [];
+
+  for (const [k, v] of Object.entries(obj)) {
+    const key = parent ? `${parent}.${k}` : k;
+
+    if (Array.isArray(v)) {
+      if (v.length === 0) {
+        rows.push({ key, value: "[]" });
+      } else {
+        v.forEach((item, index) => {
+          if (typeof item === "object" && item !== null) {
+            rows.push(...flattenObjectToRows(item, `${key}[${index}]`));
+          } else {
+            rows.push({ key: `${key}[${index}]`, value: String(item) });
+          }
+        });
+      }
+    } else if (typeof v === "object" && v !== null) {
+      rows.push(...flattenObjectToRows(v, key));
+    } else {
+      rows.push({ key, value: String(v) });
+    }
+  }
+
+  return rows;
+}

@@ -9,7 +9,7 @@ import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { Group, ScrollArea, Grid, Box } from '@mantine/core';
+import { Group, ScrollArea, Box } from '@mantine/core';
 
 
 
@@ -30,7 +30,6 @@ export const Item = () => {
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
             ...row,  avatar_url: joinPath(row.avatar_url)
-            // avatar_url: endpoint.join(row.avatar_url)
         }));
         handlers.setState(formattedData);
     };

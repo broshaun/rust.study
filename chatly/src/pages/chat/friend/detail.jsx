@@ -27,15 +27,8 @@ export function Detail() {
     setFriend(location.state?.select)
   }, [location.state?.select])
 
-
-  // console.log('friend', friend)
-
   const { http: http2 } = useHttpClient2('/rpc/chat/friend/');
   const { isMobile } = useWinSize();
-
-  // const avatarSrc = useMemo(() => {
-  //   return friend?.avatar_url || "";
-  // }, [friend?.avatar_url]);
 
 
   // 删除好友逻辑

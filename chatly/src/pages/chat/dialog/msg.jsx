@@ -7,10 +7,16 @@ import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ScrollArea, Box, ActionIcon } from "@mantine/core";
-import { IconChevronLeft, IconPhoto, IconPhone } from '@tabler/icons-react';
+import { ScrollArea, Box } from "@mantine/core";
+import { IconChevronLeft } from '@tabler/icons-react';
 import { MsgItem, MsgImgs, ChatMsg } from 'components/chat';
+import { useNavigate, Outlet, useOutlet } from 'react-router';
+import { IconPhone } from '@tabler/icons-react';
+import { ActionIcon } from "@mantine/core";
 import { ImageUpload } from "components/flutter";
+import { IconPhoto } from '@tabler/icons-react';
+import { ActionIcon } from "@mantine/core";
+
 
 
 export const parseMsgContent = (msg) => {
@@ -24,6 +30,7 @@ export const parseMsgContent = (msg) => {
 export function Msg() {
     const location = useLocation();
     const navigate = useNavigate();
+    const outlet = useOutlet();
     const uid = location.state?.uid;
     const displayName = location.state?.displayName;
     const [account] = useLocalStorage({ key: 'savedAccount' })
@@ -138,7 +145,7 @@ export function Msg() {
             left={isMobile ? <IconChevronLeft size={22} stroke={1.5} onClick={() => navigate(f_url)} /> : <a />}
         />
         <ChatMsg.Content>
-            <ScrollArea viewportRef={containerRef} h={isMobile ? winHeight - 103 : winHeight - 130} >
+            <ScrollArea viewportRef={containerRef} h={winHeight - 130} >
                 <Box px={12}>
                     <Box style={{
                         height: rowVirtualizer.getTotalSize(),
@@ -202,21 +209,24 @@ export function Msg() {
         </ChatMsg.Content>
 
         <ChatMsg.Send button={'发送'} usable={usable} onClick={() => senddd()} >
-
             <ChatMsg.Tool onClose={() => { uploadRef.current?.clear(); setUsable(false); }} onOpen={() => setUsable(true)} >
-                <ImageUpload ref={uploadRef} size={32} onDirtyChange={(b) => setUsable(p => b || p)}>
-                    <ActionIcon variant="subtle" color="gray" title="发送图片">
-                        <IconPhoto />
-                    </ActionIcon>
-                </ImageUpload>
+
+                        <ImageUpload ref={uploadRef} size={32} onDirtyChange={(b) => setUsable(p => b || p)}>
+                                <ActionIcon variant="subtle" color="gray" title="发送图片">
+                                    <IconPhoto />
+                                </ActionIcon>
+                            </ImageUpload>
+                        
 
                 <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/dialog/rtc') }}>
                     <IconPhone />
                 </ActionIcon>
+
+
+
+
             </ChatMsg.Tool>
-
             <ChatMsg.SendText onChange={(text) => { setSendText(text); if (text) { setUsable(true) } else { setUsable(false) }; }} />
-
         </ChatMsg.Send>
     </ChatMsg>
 

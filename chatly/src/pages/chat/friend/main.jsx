@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, Suspense } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useOutlet } from 'react-router';
 import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useUserDB } from 'hooks/db';
@@ -9,7 +9,7 @@ import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { Grid, ScrollArea, Box, Paper, Center, Paper } from '@mantine/core';
+import { Grid, ScrollArea, Box, Paper, Paper } from '@mantine/core';
 
 
 export const Mian = () => {

@@ -38,7 +38,7 @@ export function useP2PPcmVoice(options = {}) {
     lateDropMs = 250,
     initialRemoteAddr = "",
 
-    enableVad = true,
+    enableVad = false,
     vadRmsThreshold = 0.012,
     vadHangoverFrames = 6,
     vadAttackFrames = 1,
@@ -72,6 +72,8 @@ export function useP2PPcmVoice(options = {}) {
   const vadSilenceStreakRef = useRef(0);
   const vadOpenRef = useRef(true);
 
+  const callStartedAtRef = useRef(0);
+
   const [localAddrJson, setLocalAddrJson] = useState("");
   const [remoteAddrJson, setRemoteAddrJson] = useState(initialRemoteAddr);
 
@@ -82,10 +84,28 @@ export function useP2PPcmVoice(options = {}) {
   const [initialized, setInitialized] = useState(false);
   const [connected, setConnected] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [callDurationSeconds, setCallDurationSeconds] = useState(0);
 
   const [logs, setLogs] = useState([]);
   const [lastError, setLastError] = useState(null);
   const [metrics, setMetrics] = useState({
+    sent: 0,
+    recv: 0,
+    played: 0,
+    buffered: 0,
+    lastSeq: 0,
+    lastTimestampMs: 0,
+    lost: 0,
+    outOfOrder: 0,
+    lateDropped: 0,
+    avgTransitMs: 0,
+    vadDropped: 0,
+    paceDropped: 0,
+    queueDepth: 0,
+  });
+
+  // 批量更新 metrics，降低高频 re-render
+  const metricsCacheRef = useRef({
     sent: 0,
     recv: 0,
     played: 0,
@@ -108,6 +128,11 @@ export function useP2PPcmVoice(options = {}) {
     });
   }, []);
 
+  const resetCallDuration = useCallback(() => {
+    callStartedAtRef.current = 0;
+    setCallDurationSeconds(0);
+  }, []);
+
   const resetJitterState = useCallback(() => {
     packetBufferRef.current.clear();
     playbackQueueRef.current = [];
@@ -124,8 +149,8 @@ export function useP2PPcmVoice(options = {}) {
     sendQueueRef.current = [];
     sendLoopRunningRef.current = false;
 
-    setMetrics((prev) => ({
-      ...prev,
+    const resetMetrics = {
+      ...metricsCacheRef.current,
       buffered: 0,
       lastSeq: 0,
       lastTimestampMs: 0,
@@ -136,12 +161,43 @@ export function useP2PPcmVoice(options = {}) {
       vadDropped: 0,
       paceDropped: 0,
       queueDepth: 0,
-    }));
+    };
+
+    metricsCacheRef.current = resetMetrics;
+    setMetrics(resetMetrics);
+  }, []);
+
+  useEffect(() => {
+    if (!connected) {
+      setCallDurationSeconds(0);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      if (callStartedAtRef.current > 0) {
+        setCallDurationSeconds(
+          Math.floor((Date.now() - callStartedAtRef.current) / 1000)
+        );
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [connected]);
+
+  // 100ms 批量刷新一次 metrics 到 UI
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMetrics({ ...metricsCacheRef.current });
+    }, 100);
+
+    return () => clearInterval(timer);
   }, []);
 
   const playNext = useCallback(async () => {
     if (drainingRef.current) return;
-    if (playbackQueueRef.current.length < (useJitterBuffer ? minBufferFrames : 1)) return;
+
+    const requiredFrames = useJitterBuffer ? minBufferFrames : 1;
+    if (playbackQueueRef.current.length < requiredFrames) return;
 
     drainingRef.current = true;
 
@@ -160,6 +216,8 @@ export function useP2PPcmVoice(options = {}) {
 
       setPlaybackStatus("播放中");
 
+      let playedInc = 0;
+
       while (playbackQueueRef.current.length > 0) {
         const bytes = playbackQueueRef.current.shift();
         const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -168,17 +226,10 @@ export function useP2PPcmVoice(options = {}) {
           uint8.byteOffset,
           Math.floor(uint8.byteLength / 2)
         );
-        const float32 = new Float32Array(int16.length);
 
+        const float32 = new Float32Array(int16.length);
         for (let i = 0; i < int16.length; i++) {
           float32[i] = int16[i] / 0x8000;
-        }
-
-        const fadeSamples = Math.min(16, Math.floor(float32.length / 8));
-        for (let i = 0; i < fadeSamples; i++) {
-          const g = i / fadeSamples;
-          float32[i] *= g;
-          float32[float32.length - 1 - i] *= g;
         }
 
         const audioBuffer = ctx.createBuffer(1, float32.length, sampleRate);
@@ -200,13 +251,14 @@ export function useP2PPcmVoice(options = {}) {
 
         source.start(nextPlayTimeRef.current);
         nextPlayTimeRef.current += audioBuffer.duration;
-
-        setMetrics((prev) => ({
-          ...prev,
-          played: prev.played + 1,
-          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
-        }));
+        playedInc += 1;
       }
+
+      metricsCacheRef.current = {
+        ...metricsCacheRef.current,
+        played: metricsCacheRef.current.played + playedInc,
+        buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+      };
 
       if (playbackQueueRef.current.length === 0) {
         setPlaybackStatus("等待音频");
@@ -252,12 +304,11 @@ export function useP2PPcmVoice(options = {}) {
 
     expectedSeqRef.current = expected;
 
-    if (droppedMissing > 0) {
-      setMetrics((prev) => ({
-        ...prev,
-        lost: prev.lost + droppedMissing,
-      }));
-    }
+    metricsCacheRef.current = {
+      ...metricsCacheRef.current,
+      lost: metricsCacheRef.current.lost + droppedMissing,
+      buffered: playbackQueueRef.current.length + buffer.size,
+    };
 
     if (playbackQueueRef.current.length > maxBufferFrames) {
       const dropCount = playbackQueueRef.current.length - maxBufferFrames;
@@ -265,12 +316,7 @@ export function useP2PPcmVoice(options = {}) {
       nextPlayTimeRef.current = 0;
     }
 
-    setMetrics((prev) => ({
-      ...prev,
-      buffered: playbackQueueRef.current.length + buffer.size,
-    }));
-
-    if (moved > 0) {
+    if (moved > 0 && !drainingRef.current) {
       playNext();
     }
   }, [maxBufferFrames, playNext, reorderWindow]);
@@ -284,11 +330,13 @@ export function useP2PPcmVoice(options = {}) {
 
       if (!seq || !timestampMs) {
         playbackQueueRef.current.push(bytes);
-        setMetrics((prev) => ({
-          ...prev,
-          recv: prev.recv + 1,
+
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          recv: metricsCacheRef.current.recv + 1,
           buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
-        }));
+        };
+
         playNext();
         return;
       }
@@ -298,20 +346,21 @@ export function useP2PPcmVoice(options = {}) {
       if (transitSamplesRef.current.length > 30) {
         transitSamplesRef.current.shift();
       }
+
       const avgTransitMs =
         transitSamplesRef.current.reduce((a, b) => a + b, 0) /
         transitSamplesRef.current.length;
 
       if (transitMs > lateDropMs) {
-        setMetrics((prev) => ({
-          ...prev,
-          recv: prev.recv + 1,
-          lateDropped: prev.lateDropped + 1,
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          recv: metricsCacheRef.current.recv + 1,
+          lateDropped: metricsCacheRef.current.lateDropped + 1,
           avgTransitMs: Math.round(avgTransitMs),
           lastSeq: seq,
           lastTimestampMs: timestampMs,
           buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
-        }));
+        };
         return;
       }
 
@@ -328,16 +377,16 @@ export function useP2PPcmVoice(options = {}) {
 
       const expected = expectedSeqRef.current;
       if (seq < expected) {
-        setMetrics((prev) => ({
-          ...prev,
-          recv: prev.recv + 1,
-          lateDropped: prev.lateDropped + 1,
-          outOfOrder: prev.outOfOrder + outOfOrderInc,
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          recv: metricsCacheRef.current.recv + 1,
+          lateDropped: metricsCacheRef.current.lateDropped + 1,
+          outOfOrder: metricsCacheRef.current.outOfOrder + outOfOrderInc,
           avgTransitMs: Math.round(avgTransitMs),
           lastSeq: seq,
           lastTimestampMs: timestampMs,
           buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
-        }));
+        };
         return;
       }
 
@@ -349,15 +398,15 @@ export function useP2PPcmVoice(options = {}) {
         });
       }
 
-      setMetrics((prev) => ({
-        ...prev,
-        recv: prev.recv + 1,
-        outOfOrder: prev.outOfOrder + outOfOrderInc,
+      metricsCacheRef.current = {
+        ...metricsCacheRef.current,
+        recv: metricsCacheRef.current.recv + 1,
+        outOfOrder: metricsCacheRef.current.outOfOrder + outOfOrderInc,
         avgTransitMs: Math.round(avgTransitMs),
         lastSeq: seq,
         lastTimestampMs: timestampMs,
         buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
-      }));
+      };
 
       flushPlayablePackets();
     },
@@ -380,20 +429,21 @@ export function useP2PPcmVoice(options = {}) {
           if (packet) {
             try {
               await invoke("p2p_send", { data: packet });
-              setMetrics((prev) => ({
-                ...prev,
-                sent: prev.sent + 1,
+
+              metricsCacheRef.current = {
+                ...metricsCacheRef.current,
+                sent: metricsCacheRef.current.sent + 1,
                 queueDepth: sendQueueRef.current.length,
-              }));
+              };
             } catch (e) {
               setLastError(e);
               appendLog(`发送失败: ${e?.message || String(e)}`);
             }
           } else {
-            setMetrics((prev) => ({
-              ...prev,
+            metricsCacheRef.current = {
+              ...metricsCacheRef.current,
               queueDepth: 0,
-            }));
+            };
           }
 
           await sleep(pacingIntervalMs);
@@ -417,16 +467,17 @@ export function useP2PPcmVoice(options = {}) {
       if (sendQueueRef.current.length > maxSendQueuePackets) {
         const dropCount = sendQueueRef.current.length - maxSendQueuePackets;
         sendQueueRef.current.splice(0, dropCount);
-        setMetrics((prev) => ({
-          ...prev,
-          paceDropped: prev.paceDropped + dropCount,
+
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          paceDropped: metricsCacheRef.current.paceDropped + dropCount,
           queueDepth: sendQueueRef.current.length,
-        }));
+        };
       } else {
-        setMetrics((prev) => ({
-          ...prev,
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
           queueDepth: sendQueueRef.current.length,
-        }));
+        };
       }
 
       startSendLoop();
@@ -481,6 +532,8 @@ export function useP2PPcmVoice(options = {}) {
       offConnected = await listen("p2p-connected", () => {
         setConnected(true);
         setP2pStatus("已连接");
+        callStartedAtRef.current = Date.now();
+        setCallDurationSeconds(0);
         appendLog("连接成功");
         startSendLoop();
       });
@@ -492,6 +545,7 @@ export function useP2PPcmVoice(options = {}) {
         setP2pStatus("已关闭");
         stopSendLoop();
         resetJitterState();
+        resetCallDuration();
         appendLog("连接已关闭");
       });
 
@@ -502,11 +556,11 @@ export function useP2PPcmVoice(options = {}) {
           timestampMs: Number(pkt.timestamp_ms || 0),
         };
 
-        setMetrics((prev) => ({
-          ...prev,
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
           lastSeq: Number(pkt.seq || 0),
           lastTimestampMs: Number(pkt.timestamp_ms || 0),
-        }));
+        };
       });
     };
 
@@ -520,7 +574,7 @@ export function useP2PPcmVoice(options = {}) {
       if (offClosed) offClosed();
       if (offPacket) offPacket();
     };
-  }, [appendLog, resetJitterState, startSendLoop, stopSendLoop]);
+  }, [appendLog, resetCallDuration, resetJitterState, startSendLoop, stopSendLoop]);
 
   const initNode = async () => {
     try {
@@ -552,6 +606,7 @@ export function useP2PPcmVoice(options = {}) {
       setP2pStatus("连接中...");
       setConnected(false);
       setLastError(null);
+      resetCallDuration();
 
       await invoke("p2p_connect", {
         remoteAddrJson,
@@ -565,6 +620,7 @@ export function useP2PPcmVoice(options = {}) {
       setConnected(false);
       setP2pStatus("连接失败");
       setLastError(e);
+      resetCallDuration();
       appendLog(`连接失败: ${e?.message || String(e)}`);
     }
   };
@@ -625,9 +681,9 @@ export function useP2PPcmVoice(options = {}) {
           const frame = merged.slice(0, frameSamples);
           merged = merged.slice(frameSamples);
 
-          const rms = calcRmsInt16(frame);
-
           if (enableVad) {
+            const rms = calcRmsInt16(frame);
+
             if (rms >= vadRmsThreshold) {
               vadSpeechStreakRef.current += 1;
               vadSilenceStreakRef.current = 0;
@@ -646,13 +702,14 @@ export function useP2PPcmVoice(options = {}) {
           }
 
           if (vadOpenRef.current) {
-            const bytes = Array.from(new Uint8Array(frame.buffer));
+            // 去掉 Array.from，直接传 Uint8Array
+            const bytes = new Uint8Array(frame.buffer);
             enqueueSendPacket(bytes);
           } else {
-            setMetrics((prev) => ({
-              ...prev,
-              vadDropped: prev.vadDropped + 1,
-            }));
+            metricsCacheRef.current = {
+              ...metricsCacheRef.current,
+              vadDropped: metricsCacheRef.current.vadDropped + 1,
+            };
           }
         }
 
@@ -676,7 +733,7 @@ export function useP2PPcmVoice(options = {}) {
 
       setIsCapturing(true);
       setCaptureStatus("正在采集/推送");
-      appendLog("麦克风增强已开启: echoCancellation / noiseSuppression / autoGainControl");
+      appendLog("麦克风原生增强已开启: echoCancellation / noiseSuppression / autoGainControl");
       appendLog(`VAD ${enableVad ? "已开启" : "已关闭"} / pacing=${pacingIntervalMs}ms`);
       appendLog("开始讲话");
     } catch (e) {
@@ -710,10 +767,10 @@ export function useP2PPcmVoice(options = {}) {
       vadSilenceStreakRef.current = 0;
       vadOpenRef.current = true;
 
-      setMetrics((prev) => ({
-        ...prev,
+      metricsCacheRef.current = {
+        ...metricsCacheRef.current,
         queueDepth: 0,
-      }));
+      };
 
       setIsCapturing(false);
       setCaptureStatus("已停止");
@@ -734,12 +791,13 @@ export function useP2PPcmVoice(options = {}) {
       setInitialized(false);
       setP2pStatus("已关闭");
       resetJitterState();
+      resetCallDuration();
       appendLog("连接已关闭");
     } catch (e) {
       setLastError(e);
       appendLog(`关闭失败: ${e?.message || String(e)}`);
     }
-  }, [appendLog, resetJitterState, stopCapture, stopSendLoop]);
+  }, [appendLog, resetCallDuration, resetJitterState, stopCapture, stopSendLoop]);
 
   const refreshLocalAddr = useCallback(async () => {
     try {
@@ -787,6 +845,7 @@ export function useP2PPcmVoice(options = {}) {
     initialized,
     connected,
     isCapturing,
+    callDurationSeconds,
 
     canInit: !initialized,
     canConnect,

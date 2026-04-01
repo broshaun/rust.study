@@ -10,7 +10,6 @@ import { ScrollArea,Stack } from "@mantine/core";
 
 export const Find = () => {
     const { http } = useHttpClient2('/rpc/chat/friend/')
-    // const { endpoint } = useHttpClient2('/imgs');
     const { joinPath } = useImgApiBase('avatar')
     const [keyword, setKeyword] = useState();
     const [debouncedKeyword] = useDebouncedValue(keyword, 500);
