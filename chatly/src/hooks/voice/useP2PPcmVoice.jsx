@@ -30,7 +30,6 @@ function seqLess(a, b) {
 export function useP2PPcmVoice(options = {}) {
   const {
     sampleRate = 48000,
-    processorBufferSize = 512,
     frameSamples = 480,
     useJitterBuffer = true,
     minBufferFrames = 3,
@@ -44,7 +43,6 @@ export function useP2PPcmVoice(options = {}) {
     vadHangoverFrames = 6,
     vadAttackFrames = 1,
 
-    // 新增：发送节奏控制
     pacingIntervalMs = 10,
     maxSendQueuePackets = 12,
   } = options;
@@ -52,6 +50,7 @@ export function useP2PPcmVoice(options = {}) {
   const streamRef = useRef(null);
   const captureContextRef = useRef(null);
   const playbackContextRef = useRef(null);
+  const workletNodeRef = useRef(null);
 
   const nextPlayTimeRef = useRef(0);
   const drainingRef = useRef(false);
@@ -600,21 +599,27 @@ export function useP2PPcmVoice(options = {}) {
         latencyHint: "interactive",
       });
 
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
+
+      await ctx.audioWorklet.addModule("/voice-processor.js");
+
       const source = ctx.createMediaStreamSource(stream);
-      const processor = ctx.createScriptProcessor(processorBufferSize, 1, 1);
+      const processor = new AudioWorkletNode(ctx, "voice-processor", {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        channelCount: 1,
+      });
 
       const mute = ctx.createGain();
       mute.gain.value = 0;
 
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-        const current = new Int16Array(input.length);
+      processor.port.onmessage = (e) => {
+        const raw = e.data instanceof ArrayBuffer ? new Int16Array(e.data) : new Int16Array(0);
+        if (raw.length === 0) return;
 
-        for (let i = 0; i < input.length; i++) {
-          current[i] = Math.max(-1, Math.min(1, input[i])) * 0x7fff;
-        }
-
-        let merged = concatInt16(captureCarryRef.current, current);
+        let merged = concatInt16(captureCarryRef.current, raw);
 
         while (merged.length >= frameSamples) {
           const frame = merged.slice(0, frameSamples);
@@ -660,6 +665,7 @@ export function useP2PPcmVoice(options = {}) {
 
       streamRef.current = stream;
       captureContextRef.current = ctx;
+      workletNodeRef.current = processor;
       captureCarryRef.current = new Int16Array(0);
 
       vadSpeechStreakRef.current = 0;
@@ -682,6 +688,11 @@ export function useP2PPcmVoice(options = {}) {
 
   const stopCapture = useCallback(async () => {
     try {
+      if (workletNodeRef.current) {
+        workletNodeRef.current.disconnect();
+        workletNodeRef.current = null;
+      }
+
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;

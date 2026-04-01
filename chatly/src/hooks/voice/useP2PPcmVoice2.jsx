@@ -13,28 +13,65 @@ function concatInt16(a, b) {
   return out;
 }
 
+function calcRmsInt16(frame) {
+  if (!frame || frame.length === 0) return 0;
+  let sum = 0;
+  for (let i = 0; i < frame.length; i++) {
+    const v = frame[i] / 32768;
+    sum += v * v;
+  }
+  return Math.sqrt(sum / frame.length);
+}
+
+function seqLess(a, b) {
+  return a < b;
+}
+
 export function useP2PPcmVoice(options = {}) {
   const {
     sampleRate = 48000,
     processorBufferSize = 512,
     frameSamples = 480,
     useJitterBuffer = true,
-    minBufferFrames = 2,
-    maxBufferFrames = 6,
+    minBufferFrames = 3,
+    maxBufferFrames = 10,
+    reorderWindow = 3,
+    lateDropMs = 250,
     initialRemoteAddr = "",
+
+    enableVad = true,
+    vadRmsThreshold = 0.012,
+    vadHangoverFrames = 6,
+    vadAttackFrames = 1,
+
+    // 新增：发送节奏控制
+    pacingIntervalMs = 10,
+    maxSendQueuePackets = 12,
   } = options;
 
   const streamRef = useRef(null);
   const captureContextRef = useRef(null);
   const playbackContextRef = useRef(null);
-  const playbackQueueRef = useRef([]);
+
   const nextPlayTimeRef = useRef(0);
   const drainingRef = useRef(false);
 
   const captureCarryRef = useRef(new Int16Array(0));
   const sendQueueRef = useRef([]);
-  const sendingRef = useRef(false);
+  const sendLoopRunningRef = useRef(false);
   const downlinkChannelRef = useRef(null);
+
+  const packetBufferRef = useRef(new Map());
+  const expectedSeqRef = useRef(null);
+  const latestSeqRef = useRef(null);
+  const playbackQueueRef = useRef([]);
+
+  const transitSamplesRef = useRef([]);
+  const lastPacketMetaRef = useRef({ seq: 0, timestampMs: 0 });
+
+  const vadSpeechStreakRef = useRef(0);
+  const vadSilenceStreakRef = useRef(0);
+  const vadOpenRef = useRef(true);
 
   const [localAddrJson, setLocalAddrJson] = useState("");
   const [remoteAddrJson, setRemoteAddrJson] = useState(initialRemoteAddr);
@@ -56,13 +93,51 @@ export function useP2PPcmVoice(options = {}) {
     buffered: 0,
     lastSeq: 0,
     lastTimestampMs: 0,
+    lost: 0,
+    outOfOrder: 0,
+    lateDropped: 0,
+    avgTransitMs: 0,
+    vadDropped: 0,
+    paceDropped: 0,
+    queueDepth: 0,
   });
 
   const appendLog = useCallback((text) => {
     setLogs((prev) => {
       const next = [...prev, `[${new Date().toLocaleTimeString()}] ${text}`];
-      return next.slice(-200);
+      return next.slice(-250);
     });
+  }, []);
+
+  const resetJitterState = useCallback(() => {
+    packetBufferRef.current.clear();
+    playbackQueueRef.current = [];
+    expectedSeqRef.current = null;
+    latestSeqRef.current = null;
+    nextPlayTimeRef.current = 0;
+    transitSamplesRef.current = [];
+    lastPacketMetaRef.current = { seq: 0, timestampMs: 0 };
+
+    vadSpeechStreakRef.current = 0;
+    vadSilenceStreakRef.current = 0;
+    vadOpenRef.current = true;
+
+    sendQueueRef.current = [];
+    sendLoopRunningRef.current = false;
+
+    setMetrics((prev) => ({
+      ...prev,
+      buffered: 0,
+      lastSeq: 0,
+      lastTimestampMs: 0,
+      lost: 0,
+      outOfOrder: 0,
+      lateDropped: 0,
+      avgTransitMs: 0,
+      vadDropped: 0,
+      paceDropped: 0,
+      queueDepth: 0,
+    }));
   }, []);
 
   const playNext = useCallback(async () => {
@@ -100,6 +175,13 @@ export function useP2PPcmVoice(options = {}) {
           float32[i] = int16[i] / 0x8000;
         }
 
+        const fadeSamples = Math.min(16, Math.floor(float32.length / 8));
+        for (let i = 0; i < fadeSamples; i++) {
+          const g = i / fadeSamples;
+          float32[i] *= g;
+          float32[float32.length - 1 - i] *= g;
+        }
+
         const audioBuffer = ctx.createBuffer(1, float32.length, sampleRate);
         audioBuffer.copyToChannel(float32, 0);
 
@@ -112,9 +194,9 @@ export function useP2PPcmVoice(options = {}) {
         if (
           nextPlayTimeRef.current === 0 ||
           nextPlayTimeRef.current < now ||
-          nextPlayTimeRef.current - now > 0.12
+          nextPlayTimeRef.current - now > 0.15
         ) {
-          nextPlayTimeRef.current = now + 0.01;
+          nextPlayTimeRef.current = now + 0.02;
         }
 
         source.start(nextPlayTimeRef.current);
@@ -123,7 +205,7 @@ export function useP2PPcmVoice(options = {}) {
         setMetrics((prev) => ({
           ...prev,
           played: prev.played + 1,
-          buffered: playbackQueueRef.current.length,
+          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
         }));
       }
 
@@ -139,32 +221,219 @@ export function useP2PPcmVoice(options = {}) {
     }
   }, [appendLog, minBufferFrames, sampleRate, useJitterBuffer]);
 
-  const flushSendQueue = useCallback(async () => {
-    if (sendingRef.current) return;
+  const flushPlayablePackets = useCallback(() => {
+    const buffer = packetBufferRef.current;
+    let expected = expectedSeqRef.current;
+    if (expected == null) return;
 
-    sendingRef.current = true;
+    let moved = 0;
+    let droppedMissing = 0;
 
-    try {
-      while (sendQueueRef.current.length > 0) {
-        const packet = sendQueueRef.current.shift();
+    while (true) {
+      if (buffer.has(expected)) {
+        const pkt = buffer.get(expected);
+        buffer.delete(expected);
+        playbackQueueRef.current.push(pkt.payload);
+        expected += 1;
+        moved += 1;
+        continue;
+      }
 
-        await invoke("p2p_send", { data: packet });
+      if (buffer.size >= reorderWindow) {
+        const keys = [...buffer.keys()].sort((a, b) => a - b);
+        if (keys.length > 0 && seqLess(expected, keys[0])) {
+          droppedMissing += keys[0] - expected;
+          expected = keys[0];
+          continue;
+        }
+      }
 
+      break;
+    }
+
+    expectedSeqRef.current = expected;
+
+    if (droppedMissing > 0) {
+      setMetrics((prev) => ({
+        ...prev,
+        lost: prev.lost + droppedMissing,
+      }));
+    }
+
+    if (playbackQueueRef.current.length > maxBufferFrames) {
+      const dropCount = playbackQueueRef.current.length - maxBufferFrames;
+      playbackQueueRef.current.splice(0, dropCount);
+      nextPlayTimeRef.current = 0;
+    }
+
+    setMetrics((prev) => ({
+      ...prev,
+      buffered: playbackQueueRef.current.length + buffer.size,
+    }));
+
+    if (moved > 0) {
+      playNext();
+    }
+  }, [maxBufferFrames, playNext, reorderWindow]);
+
+  const handleIncomingPayload = useCallback(
+    (bytes) => {
+      const meta = lastPacketMetaRef.current;
+      const seq = Number(meta.seq || 0);
+      const timestampMs = Number(meta.timestampMs || 0);
+      const now = Date.now();
+
+      if (!seq || !timestampMs) {
+        playbackQueueRef.current.push(bytes);
         setMetrics((prev) => ({
           ...prev,
-          sent: prev.sent + 1,
+          recv: prev.recv + 1,
+          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+        }));
+        playNext();
+        return;
+      }
+
+      const transitMs = Math.max(0, now - timestampMs);
+      transitSamplesRef.current.push(transitMs);
+      if (transitSamplesRef.current.length > 30) {
+        transitSamplesRef.current.shift();
+      }
+      const avgTransitMs =
+        transitSamplesRef.current.reduce((a, b) => a + b, 0) /
+        transitSamplesRef.current.length;
+
+      if (transitMs > lateDropMs) {
+        setMetrics((prev) => ({
+          ...prev,
+          recv: prev.recv + 1,
+          lateDropped: prev.lateDropped + 1,
+          avgTransitMs: Math.round(avgTransitMs),
+          lastSeq: seq,
+          lastTimestampMs: timestampMs,
+          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+        }));
+        return;
+      }
+
+      if (expectedSeqRef.current == null) {
+        expectedSeqRef.current = seq;
+      }
+
+      const latest = latestSeqRef.current;
+      let outOfOrderInc = 0;
+      if (latest != null && seq < latest) {
+        outOfOrderInc = 1;
+      }
+      latestSeqRef.current = latest == null ? seq : Math.max(latest, seq);
+
+      const expected = expectedSeqRef.current;
+      if (seq < expected) {
+        setMetrics((prev) => ({
+          ...prev,
+          recv: prev.recv + 1,
+          lateDropped: prev.lateDropped + 1,
+          outOfOrder: prev.outOfOrder + outOfOrderInc,
+          avgTransitMs: Math.round(avgTransitMs),
+          lastSeq: seq,
+          lastTimestampMs: timestampMs,
+          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+        }));
+        return;
+      }
+
+      if (!packetBufferRef.current.has(seq)) {
+        packetBufferRef.current.set(seq, {
+          payload: bytes,
+          timestampMs,
+          arrivedAt: now,
+        });
+      }
+
+      setMetrics((prev) => ({
+        ...prev,
+        recv: prev.recv + 1,
+        outOfOrder: prev.outOfOrder + outOfOrderInc,
+        avgTransitMs: Math.round(avgTransitMs),
+        lastSeq: seq,
+        lastTimestampMs: timestampMs,
+        buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+      }));
+
+      flushPlayablePackets();
+    },
+    [flushPlayablePackets, lateDropMs, playNext]
+  );
+
+  const startSendLoop = useCallback(() => {
+    if (sendLoopRunningRef.current) return;
+    sendLoopRunningRef.current = true;
+
+    const loop = async () => {
+      try {
+        while (sendLoopRunningRef.current) {
+          if (!connected) {
+            await sleep(pacingIntervalMs);
+            continue;
+          }
+
+          const packet = sendQueueRef.current.shift();
+          if (packet) {
+            try {
+              await invoke("p2p_send", { data: packet });
+              setMetrics((prev) => ({
+                ...prev,
+                sent: prev.sent + 1,
+                queueDepth: sendQueueRef.current.length,
+              }));
+            } catch (e) {
+              setLastError(e);
+              appendLog(`发送失败: ${e?.message || String(e)}`);
+            }
+          } else {
+            setMetrics((prev) => ({
+              ...prev,
+              queueDepth: 0,
+            }));
+          }
+
+          await sleep(pacingIntervalMs);
+        }
+      } finally {
+        sendLoopRunningRef.current = false;
+      }
+    };
+
+    loop();
+  }, [appendLog, connected, pacingIntervalMs]);
+
+  const stopSendLoop = useCallback(() => {
+    sendLoopRunningRef.current = false;
+  }, []);
+
+  const enqueueSendPacket = useCallback(
+    (bytesArray) => {
+      sendQueueRef.current.push(bytesArray);
+
+      if (sendQueueRef.current.length > maxSendQueuePackets) {
+        const dropCount = sendQueueRef.current.length - maxSendQueuePackets;
+        sendQueueRef.current.splice(0, dropCount);
+        setMetrics((prev) => ({
+          ...prev,
+          paceDropped: prev.paceDropped + dropCount,
+          queueDepth: sendQueueRef.current.length,
+        }));
+      } else {
+        setMetrics((prev) => ({
+          ...prev,
+          queueDepth: sendQueueRef.current.length,
         }));
       }
-    } catch (e) {
-      setLastError(e);
-      appendLog(`发送失败: ${e?.message || String(e)}`);
-    } finally {
-      sendingRef.current = false;
-      if (sendQueueRef.current.length > 0) {
-        queueMicrotask(() => flushSendQueue());
-      }
-    }
-  }, [appendLog]);
+
+      startSendLoop();
+    },
+    [maxSendQueuePackets, startSendLoop]
+  );
 
   const ensureDownlinkChannel = useCallback(() => {
     if (downlinkChannelRef.current) {
@@ -185,28 +454,12 @@ export function useP2PPcmVoice(options = {}) {
         bytes = new Uint8Array(payload || []);
       }
 
-      playbackQueueRef.current.push(bytes);
-
-      if (playbackQueueRef.current.length > maxBufferFrames) {
-        playbackQueueRef.current.splice(
-          0,
-          playbackQueueRef.current.length - maxBufferFrames
-        );
-        nextPlayTimeRef.current = 0;
-      }
-
-      setMetrics((prev) => ({
-        ...prev,
-        recv: prev.recv + 1,
-        buffered: playbackQueueRef.current.length,
-      }));
-
-      playNext();
+      handleIncomingPayload(bytes);
     };
 
     downlinkChannelRef.current = channel;
     return channel;
-  }, [maxBufferFrames, playNext]);
+  }, [handleIncomingPayload]);
 
   useEffect(() => {
     let offLog;
@@ -230,6 +483,7 @@ export function useP2PPcmVoice(options = {}) {
         setConnected(true);
         setP2pStatus("已连接");
         appendLog("连接成功");
+        startSendLoop();
       });
 
       offClosed = await listen("p2p-closed", () => {
@@ -237,13 +491,18 @@ export function useP2PPcmVoice(options = {}) {
         setInitialized(false);
         setIsCapturing(false);
         setP2pStatus("已关闭");
-        playbackQueueRef.current = [];
-        nextPlayTimeRef.current = 0;
+        stopSendLoop();
+        resetJitterState();
         appendLog("连接已关闭");
       });
 
       offPacket = await listen("p2p-packet", (event) => {
         const pkt = event.payload || {};
+        lastPacketMetaRef.current = {
+          seq: Number(pkt.seq || 0),
+          timestampMs: Number(pkt.timestamp_ms || 0),
+        };
+
         setMetrics((prev) => ({
           ...prev,
           lastSeq: Number(pkt.seq || 0),
@@ -255,13 +514,14 @@ export function useP2PPcmVoice(options = {}) {
     bindEvents();
 
     return () => {
+      stopSendLoop();
       if (offLog) offLog();
       if (offReady) offReady();
       if (offConnected) offConnected();
       if (offClosed) offClosed();
       if (offPacket) offPacket();
     };
-  }, [appendLog]);
+  }, [appendLog, resetJitterState, startSendLoop, stopSendLoop]);
 
   const initNode = async () => {
     try {
@@ -315,7 +575,6 @@ export function useP2PPcmVoice(options = {}) {
       if (!initialized) {
         throw new Error("请先初始化");
       }
-
       if (!connected) {
         throw new Error("请先建立连接");
       }
@@ -360,12 +619,39 @@ export function useP2PPcmVoice(options = {}) {
         while (merged.length >= frameSamples) {
           const frame = merged.slice(0, frameSamples);
           merged = merged.slice(frameSamples);
-          const bytes = Array.from(new Uint8Array(frame.buffer));
-          sendQueueRef.current.push(bytes);
+
+          const rms = calcRmsInt16(frame);
+
+          if (enableVad) {
+            if (rms >= vadRmsThreshold) {
+              vadSpeechStreakRef.current += 1;
+              vadSilenceStreakRef.current = 0;
+              if (vadSpeechStreakRef.current >= vadAttackFrames) {
+                vadOpenRef.current = true;
+              }
+            } else {
+              vadSpeechStreakRef.current = 0;
+              vadSilenceStreakRef.current += 1;
+              if (vadSilenceStreakRef.current > vadHangoverFrames) {
+                vadOpenRef.current = false;
+              }
+            }
+          } else {
+            vadOpenRef.current = true;
+          }
+
+          if (vadOpenRef.current) {
+            const bytes = Array.from(new Uint8Array(frame.buffer));
+            enqueueSendPacket(bytes);
+          } else {
+            setMetrics((prev) => ({
+              ...prev,
+              vadDropped: prev.vadDropped + 1,
+            }));
+          }
         }
 
         captureCarryRef.current = merged;
-        flushSendQueue();
       };
 
       source.connect(processor);
@@ -376,9 +662,16 @@ export function useP2PPcmVoice(options = {}) {
       captureContextRef.current = ctx;
       captureCarryRef.current = new Int16Array(0);
 
+      vadSpeechStreakRef.current = 0;
+      vadSilenceStreakRef.current = 0;
+      vadOpenRef.current = true;
+
+      startSendLoop();
+
       setIsCapturing(true);
       setCaptureStatus("正在采集/推送");
       appendLog("麦克风增强已开启: echoCancellation / noiseSuppression / autoGainControl");
+      appendLog(`VAD ${enableVad ? "已开启" : "已关闭"} / pacing=${pacingIntervalMs}ms`);
       appendLog("开始讲话");
     } catch (e) {
       setCaptureStatus("采集失败");
@@ -401,7 +694,15 @@ export function useP2PPcmVoice(options = {}) {
 
       captureCarryRef.current = new Int16Array(0);
       sendQueueRef.current = [];
-      sendingRef.current = false;
+
+      vadSpeechStreakRef.current = 0;
+      vadSilenceStreakRef.current = 0;
+      vadOpenRef.current = true;
+
+      setMetrics((prev) => ({
+        ...prev,
+        queueDepth: 0,
+      }));
 
       setIsCapturing(false);
       setCaptureStatus("已停止");
@@ -415,19 +716,19 @@ export function useP2PPcmVoice(options = {}) {
   const closeNode = useCallback(async () => {
     try {
       await stopCapture();
+      stopSendLoop();
       await invoke("p2p_close");
 
       setConnected(false);
       setInitialized(false);
       setP2pStatus("已关闭");
-      playbackQueueRef.current = [];
-      nextPlayTimeRef.current = 0;
+      resetJitterState();
       appendLog("连接已关闭");
     } catch (e) {
       setLastError(e);
       appendLog(`关闭失败: ${e?.message || String(e)}`);
     }
-  }, [appendLog, stopCapture]);
+  }, [appendLog, resetJitterState, stopCapture, stopSendLoop]);
 
   const refreshLocalAddr = useCallback(async () => {
     try {
