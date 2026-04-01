@@ -23,16 +23,19 @@ function calcRmsInt16(frame) {
   return Math.sqrt(sum / frame.length);
 }
 
+function seqLess(a, b) {
+  return a < b;
+}
+
 export function useP2PPcmVoice(options = {}) {
   const {
     sampleRate = 48000,
     frameSamples = 480,
-
-    // 现在是 stream + reliable ordered
-    // 这里保留一个简单播放缓冲，不再做 seq/timestamp 重排
+    useJitterBuffer = true,
     minBufferFrames = 3,
-    maxBufferFrames = 12,
-
+    maxBufferFrames = 10,
+    reorderWindow = 3,
+    lateDropMs = 250,
     initialRemoteAddr = "",
 
     enableVad = false,
@@ -57,7 +60,13 @@ export function useP2PPcmVoice(options = {}) {
   const sendLoopRunningRef = useRef(false);
   const downlinkChannelRef = useRef(null);
 
+  const packetBufferRef = useRef(new Map());
+  const expectedSeqRef = useRef(null);
+  const latestSeqRef = useRef(null);
   const playbackQueueRef = useRef([]);
+
+  const transitSamplesRef = useRef([]);
+  const lastPacketMetaRef = useRef({ seq: 0, timestampMs: 0 });
 
   const vadSpeechStreakRef = useRef(0);
   const vadSilenceStreakRef = useRef(0);
@@ -84,26 +93,33 @@ export function useP2PPcmVoice(options = {}) {
     recv: 0,
     played: 0,
     buffered: 0,
-    lastPayloadBytes: 0,
-    avgPayloadBytes: 0,
+    lastSeq: 0,
+    lastTimestampMs: 0,
+    lost: 0,
+    outOfOrder: 0,
+    lateDropped: 0,
+    avgTransitMs: 0,
     vadDropped: 0,
     paceDropped: 0,
     queueDepth: 0,
   });
 
+  // 批量更新 metrics，降低高频 re-render
   const metricsCacheRef = useRef({
     sent: 0,
     recv: 0,
     played: 0,
     buffered: 0,
-    lastPayloadBytes: 0,
-    avgPayloadBytes: 0,
+    lastSeq: 0,
+    lastTimestampMs: 0,
+    lost: 0,
+    outOfOrder: 0,
+    lateDropped: 0,
+    avgTransitMs: 0,
     vadDropped: 0,
     paceDropped: 0,
     queueDepth: 0,
   });
-
-  const packetSizeSamplesRef = useRef([]);
 
   const appendLog = useCallback((text) => {
     setLogs((prev) => {
@@ -117,12 +133,14 @@ export function useP2PPcmVoice(options = {}) {
     setCallDurationSeconds(0);
   }, []);
 
-  const resetRuntimeState = useCallback(() => {
+  const resetJitterState = useCallback(() => {
+    packetBufferRef.current.clear();
     playbackQueueRef.current = [];
+    expectedSeqRef.current = null;
+    latestSeqRef.current = null;
     nextPlayTimeRef.current = 0;
-    drainingRef.current = false;
-
-    packetSizeSamplesRef.current = [];
+    transitSamplesRef.current = [];
+    lastPacketMetaRef.current = { seq: 0, timestampMs: 0 };
 
     vadSpeechStreakRef.current = 0;
     vadSilenceStreakRef.current = 0;
@@ -134,8 +152,12 @@ export function useP2PPcmVoice(options = {}) {
     const resetMetrics = {
       ...metricsCacheRef.current,
       buffered: 0,
-      lastPayloadBytes: 0,
-      avgPayloadBytes: 0,
+      lastSeq: 0,
+      lastTimestampMs: 0,
+      lost: 0,
+      outOfOrder: 0,
+      lateDropped: 0,
+      avgTransitMs: 0,
       vadDropped: 0,
       paceDropped: 0,
       queueDepth: 0,
@@ -162,6 +184,7 @@ export function useP2PPcmVoice(options = {}) {
     return () => clearInterval(timer);
   }, [connected]);
 
+  // 100ms 批量刷新一次 metrics 到 UI
   useEffect(() => {
     const timer = setInterval(() => {
       setMetrics({ ...metricsCacheRef.current });
@@ -172,7 +195,9 @@ export function useP2PPcmVoice(options = {}) {
 
   const playNext = useCallback(async () => {
     if (drainingRef.current) return;
-    if (playbackQueueRef.current.length < minBufferFrames) return;
+
+    const requiredFrames = useJitterBuffer ? minBufferFrames : 1;
+    if (playbackQueueRef.current.length < requiredFrames) return;
 
     drainingRef.current = true;
 
@@ -196,7 +221,6 @@ export function useP2PPcmVoice(options = {}) {
       while (playbackQueueRef.current.length > 0) {
         const bytes = playbackQueueRef.current.shift();
         const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-
         const int16 = new Int16Array(
           uint8.buffer,
           uint8.byteOffset,
@@ -233,7 +257,7 @@ export function useP2PPcmVoice(options = {}) {
       metricsCacheRef.current = {
         ...metricsCacheRef.current,
         played: metricsCacheRef.current.played + playedInc,
-        buffered: playbackQueueRef.current.length,
+        buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
       };
 
       if (playbackQueueRef.current.length === 0) {
@@ -246,27 +270,147 @@ export function useP2PPcmVoice(options = {}) {
     } finally {
       drainingRef.current = false;
     }
-  }, [appendLog, minBufferFrames, sampleRate]);
+  }, [appendLog, minBufferFrames, sampleRate, useJitterBuffer]);
+
+  const flushPlayablePackets = useCallback(() => {
+    const buffer = packetBufferRef.current;
+    let expected = expectedSeqRef.current;
+    if (expected == null) return;
+
+    let moved = 0;
+    let droppedMissing = 0;
+
+    while (true) {
+      if (buffer.has(expected)) {
+        const pkt = buffer.get(expected);
+        buffer.delete(expected);
+        playbackQueueRef.current.push(pkt.payload);
+        expected += 1;
+        moved += 1;
+        continue;
+      }
+
+      if (buffer.size >= reorderWindow) {
+        const keys = [...buffer.keys()].sort((a, b) => a - b);
+        if (keys.length > 0 && seqLess(expected, keys[0])) {
+          droppedMissing += keys[0] - expected;
+          expected = keys[0];
+          continue;
+        }
+      }
+
+      break;
+    }
+
+    expectedSeqRef.current = expected;
+
+    metricsCacheRef.current = {
+      ...metricsCacheRef.current,
+      lost: metricsCacheRef.current.lost + droppedMissing,
+      buffered: playbackQueueRef.current.length + buffer.size,
+    };
+
+    if (playbackQueueRef.current.length > maxBufferFrames) {
+      const dropCount = playbackQueueRef.current.length - maxBufferFrames;
+      playbackQueueRef.current.splice(0, dropCount);
+      nextPlayTimeRef.current = 0;
+    }
+
+    if (moved > 0 && !drainingRef.current) {
+      playNext();
+    }
+  }, [maxBufferFrames, playNext, reorderWindow]);
 
   const handleIncomingPayload = useCallback(
     (bytes) => {
-      playbackQueueRef.current.push(bytes);
+      const meta = lastPacketMetaRef.current;
+      const seq = Number(meta.seq || 0);
+      const timestampMs = Number(meta.timestampMs || 0);
+      const now = Date.now();
 
-      if (playbackQueueRef.current.length > maxBufferFrames) {
-        const dropCount = playbackQueueRef.current.length - maxBufferFrames;
-        playbackQueueRef.current.splice(0, dropCount);
-        nextPlayTimeRef.current = 0;
+      if (!seq || !timestampMs) {
+        playbackQueueRef.current.push(bytes);
+
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          recv: metricsCacheRef.current.recv + 1,
+          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+        };
+
+        playNext();
+        return;
+      }
+
+      const transitMs = Math.max(0, now - timestampMs);
+      transitSamplesRef.current.push(transitMs);
+      if (transitSamplesRef.current.length > 30) {
+        transitSamplesRef.current.shift();
+      }
+
+      const avgTransitMs =
+        transitSamplesRef.current.reduce((a, b) => a + b, 0) /
+        transitSamplesRef.current.length;
+
+      if (transitMs > lateDropMs) {
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          recv: metricsCacheRef.current.recv + 1,
+          lateDropped: metricsCacheRef.current.lateDropped + 1,
+          avgTransitMs: Math.round(avgTransitMs),
+          lastSeq: seq,
+          lastTimestampMs: timestampMs,
+          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+        };
+        return;
+      }
+
+      if (expectedSeqRef.current == null) {
+        expectedSeqRef.current = seq;
+      }
+
+      const latest = latestSeqRef.current;
+      let outOfOrderInc = 0;
+      if (latest != null && seq < latest) {
+        outOfOrderInc = 1;
+      }
+      latestSeqRef.current = latest == null ? seq : Math.max(latest, seq);
+
+      const expected = expectedSeqRef.current;
+      if (seq < expected) {
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          recv: metricsCacheRef.current.recv + 1,
+          lateDropped: metricsCacheRef.current.lateDropped + 1,
+          outOfOrder: metricsCacheRef.current.outOfOrder + outOfOrderInc,
+          avgTransitMs: Math.round(avgTransitMs),
+          lastSeq: seq,
+          lastTimestampMs: timestampMs,
+          buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
+        };
+        return;
+      }
+
+      if (!packetBufferRef.current.has(seq)) {
+        packetBufferRef.current.set(seq, {
+          payload: bytes,
+          timestampMs,
+          arrivedAt: now,
+        });
       }
 
       metricsCacheRef.current = {
         ...metricsCacheRef.current,
         recv: metricsCacheRef.current.recv + 1,
-        buffered: playbackQueueRef.current.length,
+        outOfOrder: metricsCacheRef.current.outOfOrder + outOfOrderInc,
+        avgTransitMs: Math.round(avgTransitMs),
+        lastSeq: seq,
+        lastTimestampMs: timestampMs,
+        buffered: playbackQueueRef.current.length + packetBufferRef.current.size,
       };
 
-      playNext();
+      flushPlayablePackets();
     },
-    [maxBufferFrames, playNext]
+    [flushPlayablePackets, lateDropMs, playNext]
   );
 
   const startSendLoop = useCallback(() => {
@@ -400,32 +544,23 @@ export function useP2PPcmVoice(options = {}) {
         setIsCapturing(false);
         setP2pStatus("已关闭");
         stopSendLoop();
-        resetRuntimeState();
+        resetJitterState();
         resetCallDuration();
-        setPlaybackStatus("等待音频");
         appendLog("连接已关闭");
       });
 
       offPacket = await listen("p2p-packet", (event) => {
         const pkt = event.payload || {};
-        const payloadLen = Number(pkt.payload_len || 0);
+        lastPacketMetaRef.current = {
+          seq: Number(pkt.seq || 0),
+          timestampMs: Number(pkt.timestamp_ms || 0),
+        };
 
-        if (payloadLen > 0) {
-          packetSizeSamplesRef.current.push(payloadLen);
-          if (packetSizeSamplesRef.current.length > 30) {
-            packetSizeSamplesRef.current.shift();
-          }
-
-          const avgPayloadBytes =
-            packetSizeSamplesRef.current.reduce((a, b) => a + b, 0) /
-            packetSizeSamplesRef.current.length;
-
-          metricsCacheRef.current = {
-            ...metricsCacheRef.current,
-            lastPayloadBytes: payloadLen,
-            avgPayloadBytes: Math.round(avgPayloadBytes),
-          };
-        }
+        metricsCacheRef.current = {
+          ...metricsCacheRef.current,
+          lastSeq: Number(pkt.seq || 0),
+          lastTimestampMs: Number(pkt.timestamp_ms || 0),
+        };
       });
     };
 
@@ -439,7 +574,7 @@ export function useP2PPcmVoice(options = {}) {
       if (offClosed) offClosed();
       if (offPacket) offPacket();
     };
-  }, [appendLog, resetCallDuration, resetRuntimeState, startSendLoop, stopSendLoop]);
+  }, [appendLog, resetCallDuration, resetJitterState, startSendLoop, stopSendLoop]);
 
   const initNode = async () => {
     try {
@@ -537,8 +672,7 @@ export function useP2PPcmVoice(options = {}) {
       mute.gain.value = 0;
 
       processor.port.onmessage = (e) => {
-        const raw =
-          e.data instanceof ArrayBuffer ? new Int16Array(e.data) : new Int16Array(0);
+        const raw = e.data instanceof ArrayBuffer ? new Int16Array(e.data) : new Int16Array(0);
         if (raw.length === 0) return;
 
         let merged = concatInt16(captureCarryRef.current, raw);
@@ -568,7 +702,8 @@ export function useP2PPcmVoice(options = {}) {
           }
 
           if (vadOpenRef.current) {
-            const bytes = new Uint8Array(frame.buffer.slice(0));
+            // 去掉 Array.from，直接传 Uint8Array
+            const bytes = new Uint8Array(frame.buffer);
             enqueueSendPacket(bytes);
           } else {
             metricsCacheRef.current = {
@@ -655,15 +790,14 @@ export function useP2PPcmVoice(options = {}) {
       setConnected(false);
       setInitialized(false);
       setP2pStatus("已关闭");
-      setPlaybackStatus("等待音频");
-      resetRuntimeState();
+      resetJitterState();
       resetCallDuration();
       appendLog("连接已关闭");
     } catch (e) {
       setLastError(e);
       appendLog(`关闭失败: ${e?.message || String(e)}`);
     }
-  }, [appendLog, resetCallDuration, resetRuntimeState, stopCapture, stopSendLoop]);
+  }, [appendLog, resetCallDuration, resetJitterState, stopCapture, stopSendLoop]);
 
   const refreshLocalAddr = useCallback(async () => {
     try {

@@ -1,9 +1,9 @@
 use serde::Serialize;
-use tauri::{ipc::Channel, AppHandle, State};
+use tauri::{AppHandle, State, ipc::Channel};
 
 use super::p2p_transport::P2PState;
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub struct InitResponse {
     pub local_addr_json: String,
 }
@@ -18,6 +18,7 @@ pub async fn p2p_init(
     state.init(app).await?;
 
     let local_addr_json = state.get_local_addr_json().await?;
+
     Ok(InitResponse { local_addr_json })
 }
 
@@ -26,12 +27,11 @@ pub async fn p2p_connect(
     remote_addr_json: String,
     state: State<'_, P2PState>,
 ) -> Result<(), String> {
-    let remote_addr_json = remote_addr_json.trim();
-    if remote_addr_json.is_empty() {
+    if remote_addr_json.trim().is_empty() {
         return Err("remote_addr_json is empty".to_string());
     }
 
-    state.dial(remote_addr_json.to_string()).await
+    state.dial(remote_addr_json).await
 }
 
 #[tauri::command]
@@ -54,8 +54,6 @@ pub async fn p2p_get_local_addr(
 }
 
 #[tauri::command]
-pub async fn p2p_close(
-    state: State<'_, P2PState>,
-) -> Result<(), String> {
+pub async fn p2p_close(state: State<'_, P2PState>) -> Result<(), String> {
     state.close().await
 }

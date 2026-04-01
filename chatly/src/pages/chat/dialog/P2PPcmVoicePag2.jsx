@@ -19,16 +19,27 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { useP2PPcmVoice } from "hooks/voice/useP2PPcmVoice";
 import { useNavigate } from "react-router";
 
-export function P2PPcmVoicePage() {
-  const v = useP2PPcmVoice();
+export function P2PPcmVoicePage({ useJitterBuffer = true }) {
+  const v = useP2PPcmVoice({ useJitterBuffer });
 
   const [parsedRemoteAddr, setParsedRemoteAddr] = useState(null);
   const [pasteError, setPasteError] = useState("");
   const [openedModal, setOpenedModal] = useState(null);
   const navigate = useNavigate();
 
-  const localReady = useMemo(() => !!v.localAddrJson, [v.localAddrJson]);
-  const remoteReady = useMemo(() => !!parsedRemoteAddr, [parsedRemoteAddr]);
+  const localRows = useMemo(() => {
+    if (!v.localAddrJson) return [];
+    try {
+      return flattenObjectToRows(JSON.parse(v.localAddrJson));
+    } catch {
+      return [];
+    }
+  }, [v.localAddrJson]);
+
+  const remoteRows = useMemo(() => {
+    if (!parsedRemoteAddr) return [];
+    return flattenObjectToRows(parsedRemoteAddr);
+  }, [parsedRemoteAddr]);
 
   const handlePasteFromClipboard = async () => {
     try {
@@ -81,7 +92,7 @@ export function P2PPcmVoicePage() {
         >
           <StatusBox label="网络" value={v.p2pStatus} active={v.connected} />
           <StatusBox label="麦克风" value={v.captureStatus} active={v.isCapturing} />
-          <StatusBox label="播放" value={v.playbackStatus} active={v.playbackStatus === "播放中"} />
+          <StatusBox label="播放" value={v.playbackStatus} />
         </SimpleGrid>
 
         <Paper withBorder p="xs" radius="md" mb="sm" bg="gray.0">
@@ -145,14 +156,14 @@ export function P2PPcmVoicePage() {
         >
           <AddressCard
             title="本地地址"
-            active={localReady}
+            active={localRows.length > 0}
             onCopy={v.copyLocalAddr}
             onView={() => setOpenedModal("local")}
           />
 
           <AddressCard
             title="远端地址"
-            active={remoteReady}
+            active={remoteRows.length > 0}
             onPaste={handlePasteFromClipboard}
             onView={() => setOpenedModal("remote")}
           />
@@ -170,19 +181,7 @@ export function P2PPcmVoicePage() {
           <Metric label="播放" value={v.metrics.played} />
           <Metric label="缓冲" value={v.metrics.buffered} />
           <Metric label="时间" value={v.callDurationSeconds} suffix="s" />
-          <Metric label="队列" value={v.metrics.queueDepth} />
-        </SimpleGrid>
-
-        <SimpleGrid
-          cols={{ base: 2, xs: 2, sm: 4 }}
-          spacing="xs"
-          verticalSpacing="xs"
-          mb="sm"
-        >
-          <Metric label="当前包字节" value={v.metrics.lastPayloadBytes} suffix="B" />
-          <Metric label="平均包字节" value={v.metrics.avgPayloadBytes} suffix="B" />
-          <Metric label="VAD丢弃" value={v.metrics.vadDropped} />
-          <Metric label="发送丢弃" value={v.metrics.paceDropped} />
+          <Metric label="延迟" value={v.metrics.avgTransitMs} suffix="ms" />
         </SimpleGrid>
 
         <Divider mb="xs" />
@@ -190,7 +189,7 @@ export function P2PPcmVoicePage() {
           运行日志
         </Text>
 
-        <ScrollArea h={180}>
+        <ScrollArea h={150}>
           <Box
             p="xs"
             style={{
@@ -343,8 +342,36 @@ function Metric({ label, value, suffix = "" }) {
         {label}
       </Text>
       <Text size="sm" fw={600}>
-        {hasValue ? `${value}${suffix}` : "-"}
+        {hasValue ? `${value}${value === 0 ? "" : suffix}` : "-"}
       </Text>
     </Paper>
   );
+}
+
+function flattenObjectToRows(obj, parent = "") {
+  const rows = [];
+
+  for (const [k, v] of Object.entries(obj)) {
+    const key = parent ? `${parent}.${k}` : k;
+
+    if (Array.isArray(v)) {
+      if (v.length === 0) {
+        rows.push({ key, value: "[]" });
+      } else {
+        v.forEach((item, index) => {
+          if (typeof item === "object" && item !== null) {
+            rows.push(...flattenObjectToRows(item, `${key}[${index}]`));
+          } else {
+            rows.push({ key: `${key}[${index}]`, value: String(item) });
+          }
+        });
+      }
+    } else if (typeof v === "object" && v !== null) {
+      rows.push(...flattenObjectToRows(v, key));
+    } else {
+      rows.push({ key, value: String(v) });
+    }
+  }
+
+  return rows;
 }
