@@ -9,13 +9,12 @@ use iroh::{
     Endpoint, EndpointAddr,
 };
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, ipc::Channel};
 use tokio::sync::Mutex;
 
 /// 单独的 ALPN，后续如果你要加 control stream，可以再加一个 control ALPN。
 const VOICE_ALPN: &[u8] = b"/zoey/voice/1";
 
-/// 语音包类型。先只保留 Audio，后面可扩展 Fec / ComfortNoise / Dtmf 等。
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum VoicePayloadType {
@@ -33,10 +32,6 @@ impl TryFrom<u8> for VoicePayloadType {
     }
 }
 
-/// 语音 datagram 包头：
-/// - seq: 递增序号，后续前端或 Rust jitter buffer 可用来重排/统计丢包
-/// - timestamp_ms: 发送时刻，后续可据此丢弃过期包
-/// - payload_type: 先固定 Audio
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VoicePacket {
     pub seq: u32,
@@ -46,11 +41,6 @@ pub struct VoicePacket {
 }
 
 impl VoicePacket {
-    /// 自定义极小包头编码：
-    /// 4 bytes seq
-    /// 8 bytes timestamp_ms
-    /// 1 byte payload_type
-    /// N bytes payload
     pub fn encode(&self) -> Vec<u8> {
         let mut out = Vec::with_capacity(13 + self.payload.len());
         out.extend_from_slice(&self.seq.to_be_bytes());
@@ -90,6 +80,7 @@ pub struct P2PState {
     pub accept_task: Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>,
     pub recv_task: Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>,
     pub send_seq: Arc<AtomicU32>,
+    pub downlink_channel: Arc<Mutex<Option<Channel<Vec<u8>>>>>,
 }
 
 impl Default for P2PState {
@@ -103,6 +94,7 @@ impl Default for P2PState {
             accept_task: Arc::new(Mutex::new(None)),
             recv_task: Arc::new(Mutex::new(None)),
             send_seq: Arc::new(AtomicU32::new(1)),
+            downlink_channel: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -118,16 +110,17 @@ impl Clone for P2PState {
             accept_task: self.accept_task.clone(),
             recv_task: self.recv_task.clone(),
             send_seq: self.send_seq.clone(),
+            downlink_channel: self.downlink_channel.clone(),
         }
     }
 }
 
 impl P2PState {
-    /// 初始化本地 Iroh endpoint。
-    /// 这一步会：
-    /// 1. 创建 endpoint
-    /// 2. 导出可分享给对端的 EndpointAddr JSON
-    /// 3. 启动 accept loop
+    pub async fn set_downlink_channel(&self, channel: Channel<Vec<u8>>) {
+        let mut ch = self.downlink_channel.lock().await;
+        *ch = Some(channel);
+    }
+
     pub async fn init(&self, app: AppHandle) -> Result<(), String> {
         {
             let started = self.started.lock().await;
@@ -141,15 +134,12 @@ impl P2PState {
             *app_guard = Some(app);
         }
 
-        // Iroh 的 Endpoint 是主入口。
-        // 只接受配置的 ALPN。
         let endpoint = Endpoint::builder(presets::N0)
             .alpns(vec![VOICE_ALPN.to_vec()])
             .bind()
             .await
             .map_err(|e| format!("bind endpoint failed: {e}"))?;
 
-        // 文档建议：如果希望 EndpointAddr 足够可拨号，先 online 再 addr。
         endpoint.online().await;
 
         let addr = endpoint.addr();
@@ -184,7 +174,6 @@ impl P2PState {
         Ok(())
     }
 
-    /// 给 UI 直接取本地地址 JSON。
     pub async fn get_local_addr_json(&self) -> Result<String, String> {
         self.local_addr_json
             .lock()
@@ -193,7 +182,6 @@ impl P2PState {
             .ok_or_else(|| "local addr not initialized".to_string())
     }
 
-    /// 通过对端导出的 EndpointAddr JSON 建连。
     pub async fn dial(&self, addr_json: String) -> Result<(), String> {
         let endpoint = self
             .endpoint
@@ -225,8 +213,6 @@ impl P2PState {
         self.set_connection(conn).await
     }
 
-    /// 发送原始音频帧。
-    /// 这里会自动封装成 VoicePacket，再走 datagram 发出。
     pub async fn send(&self, audio_payload: Vec<u8>) -> Result<(), String> {
         let conn = self
             .connection
@@ -304,6 +290,11 @@ impl P2PState {
             *started = false;
         }
 
+        {
+            let mut ch = self.downlink_channel.lock().await;
+            *ch = None;
+        }
+
         emit_log_arc(&self.app, "p2p closed".to_string()).await;
         emit_event_arc(&self.app, "p2p-closed", true).await;
 
@@ -311,7 +302,6 @@ impl P2PState {
     }
 
     async fn set_connection(&self, conn: Connection) -> Result<(), String> {
-        // 停掉旧接收循环
         {
             let mut recv_guard = self.recv_task.lock().await;
             if let Some(task) = recv_guard.take() {
@@ -319,7 +309,6 @@ impl P2PState {
             }
         }
 
-        // 替换旧连接
         {
             let mut conn_guard = self.connection.lock().await;
             if let Some(old) = conn_guard.replace(conn.clone()) {
@@ -388,10 +377,15 @@ impl P2PState {
                 match conn.read_datagram().await {
                     Ok(bytes) => match VoicePacket::decode(&bytes) {
                         Ok(pkt) => {
-                            // 兼容你原来的前端事件：直接把 payload 发出去
-                            emit_event_arc(&state.app, "p2p-data", pkt.payload.clone()).await;
+                            // 关键变化：直接走 Channel，模仿 Quinn 的接收链路
+                            {
+                                let ch = state.downlink_channel.lock().await;
+                                if let Some(channel) = ch.as_ref() {
+                                    let _ = channel.send(pkt.payload.clone());
+                                }
+                            }
 
-                            // 增加一个更适合调试语音质量的事件
+                            // 统计包头信息仍然走事件，便于调试
                             emit_event_arc(&state.app, "p2p-packet", pkt).await;
                         }
                         Err(e) => {

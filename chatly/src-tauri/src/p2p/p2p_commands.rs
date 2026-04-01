@@ -1,12 +1,10 @@
 use serde::Serialize;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, State, ipc::Channel};
 
 use super::p2p_transport::P2PState;
 
 #[derive(Serialize)]
 pub struct InitResponse {
-    /// 直接给前端展示/复制的本地地址 JSON。
-    /// 另一端拿到这段 JSON 后，直接调用 p2p_connect(remote_addr_json) 即可。
     pub local_addr_json: String,
 }
 
@@ -14,7 +12,9 @@ pub struct InitResponse {
 pub async fn p2p_init(
     state: State<'_, P2PState>,
     app: AppHandle,
+    channel: Channel<Vec<u8>>,
 ) -> Result<InitResponse, String> {
+    state.set_downlink_channel(channel).await;
     state.init(app).await?;
 
     let local_addr_json = state.get_local_addr_json().await?;

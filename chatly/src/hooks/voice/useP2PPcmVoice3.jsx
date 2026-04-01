@@ -39,14 +39,11 @@ export function useP2PPcmVoice(options = {}) {
     lateDropMs = 250,
     initialRemoteAddr = "",
 
+    // VAD 参数
     enableVad = true,
-    vadRmsThreshold = 0.012,
-    vadHangoverFrames = 6,
-    vadAttackFrames = 1,
-
-    // 新增：发送节奏控制
-    pacingIntervalMs = 10,
-    maxSendQueuePackets = 12,
+    vadRmsThreshold = 0.012,      // 可调：0.008~0.02
+    vadHangoverFrames = 6,        // 静音开始后再多发几帧，避免吞字
+    vadAttackFrames = 1,          // 一有声音，几乎立即恢复
   } = options;
 
   const streamRef = useRef(null);
@@ -58,7 +55,7 @@ export function useP2PPcmVoice(options = {}) {
 
   const captureCarryRef = useRef(new Int16Array(0));
   const sendQueueRef = useRef([]);
-  const sendLoopRunningRef = useRef(false);
+  const sendingRef = useRef(false);
   const downlinkChannelRef = useRef(null);
 
   const packetBufferRef = useRef(new Map());
@@ -69,6 +66,7 @@ export function useP2PPcmVoice(options = {}) {
   const transitSamplesRef = useRef([]);
   const lastPacketMetaRef = useRef({ seq: 0, timestampMs: 0 });
 
+  // VAD 状态
   const vadSpeechStreakRef = useRef(0);
   const vadSilenceStreakRef = useRef(0);
   const vadOpenRef = useRef(true);
@@ -98,8 +96,6 @@ export function useP2PPcmVoice(options = {}) {
     lateDropped: 0,
     avgTransitMs: 0,
     vadDropped: 0,
-    paceDropped: 0,
-    queueDepth: 0,
   });
 
   const appendLog = useCallback((text) => {
@@ -122,9 +118,6 @@ export function useP2PPcmVoice(options = {}) {
     vadSilenceStreakRef.current = 0;
     vadOpenRef.current = true;
 
-    sendQueueRef.current = [];
-    sendLoopRunningRef.current = false;
-
     setMetrics((prev) => ({
       ...prev,
       buffered: 0,
@@ -135,8 +128,6 @@ export function useP2PPcmVoice(options = {}) {
       lateDropped: 0,
       avgTransitMs: 0,
       vadDropped: 0,
-      paceDropped: 0,
-      queueDepth: 0,
     }));
   }, []);
 
@@ -224,6 +215,7 @@ export function useP2PPcmVoice(options = {}) {
   const flushPlayablePackets = useCallback(() => {
     const buffer = packetBufferRef.current;
     let expected = expectedSeqRef.current;
+
     if (expected == null) return;
 
     let moved = 0;
@@ -365,75 +357,31 @@ export function useP2PPcmVoice(options = {}) {
     [flushPlayablePackets, lateDropMs, playNext]
   );
 
-  const startSendLoop = useCallback(() => {
-    if (sendLoopRunningRef.current) return;
-    sendLoopRunningRef.current = true;
+  const flushSendQueue = useCallback(async () => {
+    if (sendingRef.current) return;
 
-    const loop = async () => {
-      try {
-        while (sendLoopRunningRef.current) {
-          if (!connected) {
-            await sleep(pacingIntervalMs);
-            continue;
-          }
+    sendingRef.current = true;
 
-          const packet = sendQueueRef.current.shift();
-          if (packet) {
-            try {
-              await invoke("p2p_send", { data: packet });
-              setMetrics((prev) => ({
-                ...prev,
-                sent: prev.sent + 1,
-                queueDepth: sendQueueRef.current.length,
-              }));
-            } catch (e) {
-              setLastError(e);
-              appendLog(`发送失败: ${e?.message || String(e)}`);
-            }
-          } else {
-            setMetrics((prev) => ({
-              ...prev,
-              queueDepth: 0,
-            }));
-          }
+    try {
+      while (sendQueueRef.current.length > 0) {
+        const packet = sendQueueRef.current.shift();
+        await invoke("p2p_send", { data: packet });
 
-          await sleep(pacingIntervalMs);
-        }
-      } finally {
-        sendLoopRunningRef.current = false;
-      }
-    };
-
-    loop();
-  }, [appendLog, connected, pacingIntervalMs]);
-
-  const stopSendLoop = useCallback(() => {
-    sendLoopRunningRef.current = false;
-  }, []);
-
-  const enqueueSendPacket = useCallback(
-    (bytesArray) => {
-      sendQueueRef.current.push(bytesArray);
-
-      if (sendQueueRef.current.length > maxSendQueuePackets) {
-        const dropCount = sendQueueRef.current.length - maxSendQueuePackets;
-        sendQueueRef.current.splice(0, dropCount);
         setMetrics((prev) => ({
           ...prev,
-          paceDropped: prev.paceDropped + dropCount,
-          queueDepth: sendQueueRef.current.length,
-        }));
-      } else {
-        setMetrics((prev) => ({
-          ...prev,
-          queueDepth: sendQueueRef.current.length,
+          sent: prev.sent + 1,
         }));
       }
-
-      startSendLoop();
-    },
-    [maxSendQueuePackets, startSendLoop]
-  );
+    } catch (e) {
+      setLastError(e);
+      appendLog(`发送失败: ${e?.message || String(e)}`);
+    } finally {
+      sendingRef.current = false;
+      if (sendQueueRef.current.length > 0) {
+        queueMicrotask(() => flushSendQueue());
+      }
+    }
+  }, [appendLog]);
 
   const ensureDownlinkChannel = useCallback(() => {
     if (downlinkChannelRef.current) {
@@ -483,7 +431,6 @@ export function useP2PPcmVoice(options = {}) {
         setConnected(true);
         setP2pStatus("已连接");
         appendLog("连接成功");
-        startSendLoop();
       });
 
       offClosed = await listen("p2p-closed", () => {
@@ -491,7 +438,6 @@ export function useP2PPcmVoice(options = {}) {
         setInitialized(false);
         setIsCapturing(false);
         setP2pStatus("已关闭");
-        stopSendLoop();
         resetJitterState();
         appendLog("连接已关闭");
       });
@@ -514,14 +460,13 @@ export function useP2PPcmVoice(options = {}) {
     bindEvents();
 
     return () => {
-      stopSendLoop();
       if (offLog) offLog();
       if (offReady) offReady();
       if (offConnected) offConnected();
       if (offClosed) offClosed();
       if (offPacket) offPacket();
     };
-  }, [appendLog, resetJitterState, startSendLoop, stopSendLoop]);
+  }, [appendLog, resetJitterState]);
 
   const initNode = async () => {
     try {
@@ -575,6 +520,7 @@ export function useP2PPcmVoice(options = {}) {
       if (!initialized) {
         throw new Error("请先初始化");
       }
+
       if (!connected) {
         throw new Error("请先建立连接");
       }
@@ -642,7 +588,7 @@ export function useP2PPcmVoice(options = {}) {
 
           if (vadOpenRef.current) {
             const bytes = Array.from(new Uint8Array(frame.buffer));
-            enqueueSendPacket(bytes);
+            sendQueueRef.current.push(bytes);
           } else {
             setMetrics((prev) => ({
               ...prev,
@@ -652,6 +598,7 @@ export function useP2PPcmVoice(options = {}) {
         }
 
         captureCarryRef.current = merged;
+        flushSendQueue();
       };
 
       source.connect(processor);
@@ -666,12 +613,12 @@ export function useP2PPcmVoice(options = {}) {
       vadSilenceStreakRef.current = 0;
       vadOpenRef.current = true;
 
-      startSendLoop();
-
       setIsCapturing(true);
       setCaptureStatus("正在采集/推送");
       appendLog("麦克风增强已开启: echoCancellation / noiseSuppression / autoGainControl");
-      appendLog(`VAD ${enableVad ? "已开启" : "已关闭"} / pacing=${pacingIntervalMs}ms`);
+      appendLog(
+        `VAD ${enableVad ? "已开启" : "已关闭"}: threshold=${vadRmsThreshold}, hangover=${vadHangoverFrames}`
+      );
       appendLog("开始讲话");
     } catch (e) {
       setCaptureStatus("采集失败");
@@ -694,15 +641,11 @@ export function useP2PPcmVoice(options = {}) {
 
       captureCarryRef.current = new Int16Array(0);
       sendQueueRef.current = [];
+      sendingRef.current = false;
 
       vadSpeechStreakRef.current = 0;
       vadSilenceStreakRef.current = 0;
       vadOpenRef.current = true;
-
-      setMetrics((prev) => ({
-        ...prev,
-        queueDepth: 0,
-      }));
 
       setIsCapturing(false);
       setCaptureStatus("已停止");
@@ -716,7 +659,6 @@ export function useP2PPcmVoice(options = {}) {
   const closeNode = useCallback(async () => {
     try {
       await stopCapture();
-      stopSendLoop();
       await invoke("p2p_close");
 
       setConnected(false);
@@ -728,7 +670,7 @@ export function useP2PPcmVoice(options = {}) {
       setLastError(e);
       appendLog(`关闭失败: ${e?.message || String(e)}`);
     }
-  }, [appendLog, resetJitterState, stopCapture, stopSendLoop]);
+  }, [appendLog, resetJitterState, stopCapture]);
 
   const refreshLocalAddr = useCallback(async () => {
     try {
