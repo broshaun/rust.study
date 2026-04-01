@@ -21,9 +21,6 @@ pub struct QuicState {
 }
 
 impl QuicState {
-    pub fn inner(&self) -> Arc<RwLock<QuicInner>> {
-        self.inner.clone()
-    }
 
     pub async fn set_downlink_channel(&self, channel: Channel<Vec<u8>>) {
         let mut ch = self.downlink_channel.write().await;

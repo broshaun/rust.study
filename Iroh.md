@@ -29,3 +29,24 @@ relay forwarding
 QUIC address discovery
 rate limit
 metrics
+
+
+
+
+{
+  "id": "d985369deff42bc78a085f36d1e93ecc316324f88b44d8eed4672bd1c35b690c",
+  "addrs": [
+    {
+      "Relay": "https://usw1-1.relay.n0.iroh-canary.iroh.link./"
+    },
+    {
+      "Ip": "116.147.146.37:21201"
+    },
+    {
+      "Ip": "192.168.0.107:51107"
+    },
+    {
+      "Ip": "192.168.2.1:51107"
+    }
+  ]
+}

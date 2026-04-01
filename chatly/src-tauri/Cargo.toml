@@ -32,7 +32,5 @@ rcgen = "0.13"
 iroh = "0.97"
 
 tauri = { version = "2.10.3", features = ["protocol-asset"] }
-tauri-plugin-log = "2"
 tauri-plugin-http = "2"
-tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
