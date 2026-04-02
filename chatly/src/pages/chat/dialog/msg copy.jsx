@@ -7,13 +7,15 @@ import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ScrollArea, Box, ActionIcon, Text } from "@mantine/core";
-import { IconChevronLeft, IconPhone } from '@tabler/icons-react';
+import { ScrollArea, Box } from "@mantine/core";
+import { IconChevronLeft } from '@tabler/icons-react';
 import { MsgItem, MsgImgs, ChatMsg } from 'components/chat';
 import { useNavigate, Outlet, useOutlet } from 'react-router';
+import { IconPhone } from '@tabler/icons-react';
+import { ActionIcon } from "@mantine/core";
 import { ImageUpload } from "components/flutter";
 import { IconPhoto } from '@tabler/icons-react';
-
+import { ActionIcon } from "@mantine/core";
 
 
 
@@ -81,8 +83,7 @@ export function Msg() {
     useEffect(() => {
         if (!db) return;
         const sub = liveQuery(
-            // () => db.table('message').where('uid').equals(uid).reverse().toArray()
-            () => db.table('message').where('uid').equals(uid).toArray()
+            () => db.table('message').where('uid').equals(uid).reverse().toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
@@ -119,9 +120,9 @@ export function Msg() {
     const rowVirtualizer = useVirtualizer({
         count: msgs.length,
         getScrollElement: () => containerRef.current,
-        estimateSize: () => 90,
+        estimateSize: () => 75,
         measureElement: (el) => el.getBoundingClientRect().height,
-        overscan: 6,
+        overscan: 5,
         useFlushSync: false,
     });
 
@@ -137,21 +138,6 @@ export function Msg() {
         uploadRef.current?.clear();
         return 'ok'
     }
-
-
-    useEffect(() => {
-        if (!msgs.length) return;
-        requestAnimationFrame(() => {
-            rowVirtualizer.measure();
-            requestAnimationFrame(() => {
-                rowVirtualizer.scrollToIndex(msgs.length - 1, {
-                    align: "end",
-                    behavior: "auto",
-                });
-            });
-        });
-    }, [msgs.length, rowVirtualizer]);
-
 
 
     return <ChatMsg >
@@ -173,61 +159,62 @@ export function Msg() {
                             const msg = msgs[virtualRow.index];
                             if (!msg) return null;
                             const { type, content } = parseMsgContent(msg?.msg);
-                            return <MsgItem
-                                key={msg.id}
-                                avatar={msg.signal === 'send' ? sendAvatarSrc : receiveAvatarSrc}
-                                timestamp={msg.timestamp}
-                                position={msg.signal === 'send' ? 'right' : 'left'}
-                                virtualRow={virtualRow}
-                                measureElement={rowVirtualizer.measureElement}
-                                msgType={type}
-                                content={content}
-                            />
+                            let node = null;
 
+                            if (type === 'image') {
+                                node =
+                                    msg.signal === 'receive' ? (
+                                        <MsgImgs
+                                            avatar={receiveAvatarSrc}
+                                            imgUrl={content}
+                                            timestamp={msg.timestamp}
+                                            position="left"
+                                        />
+                                    ) : (
+                                        <MsgImgs
+                                            avatar={sendAvatarSrc}
+                                            imgUrl={content}
+                                            timestamp={msg.timestamp}
+                                            position="right"
+                                        />
+                                    );
+                            } else {
+                                node =
+                                    msg.signal === 'receive' ? (
+                                        <MsgItem
+                                            avatar={receiveAvatarSrc}
+                                            msg={content}
+                                            timestamp={msg.timestamp}
+                                            position="left"
+                                        />
+                                    ) : (
+                                        <MsgItem
+                                            avatar={sendAvatarSrc}
+                                            msg={content}
+                                            timestamp={msg.timestamp}
+                                            position="right"
+                                        />
+                                    );
+                            }
 
-                            // if (type === 'image') {
-                            //     if (msg.signal === 'receive') {
-                            //         return <MsgImgs
-                            //             key={msg.id}
-                            //             avatar={receiveAvatarSrc}
-                            //             imgUrl={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'left'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     } else if (msg.signal === 'send') {
-                            //         return <MsgImgs
-                            //             key={msg.id}
-                            //             avatar={sendAvatarSrc}
-                            //             imgUrl={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'right'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     }
-                            // } else if (type === 'text') {
-                            //     if (msg.signal === 'receive') {
-                            //         return <MsgItem
-                            //             key={msg.id}
-                            //             avatar={receiveAvatarSrc}
-                            //             msg={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'left'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     } else if (msg.signal === 'send') {
-                            //         return <MsgItem
-                            //             key={msg.id}
-                            //             avatar={sendAvatarSrc}
-                            //             msg={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'right'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     }
-                            // }
-
+                            return (
+                                <div
+                                    key={msg.id}
+                                    ref={rowVirtualizer.measureElement}
+                                    style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                        width: "100%",
+                                        transform: `translateY(${virtualRow.start}px)`,
+                                    }}
+                                >
+                                    {node}
+                                </div>
+                            );
                         })}
+
+
 
                     </Box>
                 </Box>
@@ -248,6 +235,10 @@ export function Msg() {
                     <IconPhone />
                 </ActionIcon>
 
+
+                <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/dialog/phone') }}>
+                    <IconPhone />
+                </ActionIcon>
 
 
 

@@ -1,21 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+
+
+/**
+必须放在 Tauri / Rust 的
+这些更适合放 Rust：
+网络接收后的抖动处理
+更强的播放时序控制
+丢包补偿
+降噪、AEC、AGC 这类真正的音频处理
+需要稳定实时性的部分
+因为 Rust 更稳，时序更好控。
+
+
+这些放 JS 没问题，而且通常也更方便：
+拼帧
+很轻量的播放队列
+调用浏览器原生麦克风能力：
+echoCancellation
+noiseSuppression
+autoGainControl
+ */
+
 function concatInt16(a, b) {
   const out = new Int16Array(a.length + b.length);
   out.set(a, 0);
   out.set(b, a.length);
   return out;
-}
-
-function calcRmsInt16(frame) {
-  if (!frame || frame.length === 0) return 0;
-
-  let sum = 0;
-  for (let i = 0; i < frame.length; i++) {
-    const v = frame[i] / 32768;
-    sum += v * v;
-  }
-  return Math.sqrt(sum / frame.length);
 }
 
 function createVoiceProcessorUrl() {
@@ -48,15 +59,8 @@ export function usePcmVoice(options = {}) {
   const {
     sampleRate = 48000,
     frameSamples = 480,
-
     minBufferFrames = 3,
     maxBufferFrames = 12,
-
-    enableVad = false,
-    vadRmsThreshold = 0.012,
-    vadHangoverFrames = 6,
-    vadAttackFrames = 1,
-
     sendPacket,
     subscribePacket,
   } = options;
@@ -72,10 +76,6 @@ export function usePcmVoice(options = {}) {
 
   const captureCarryRef = useRef(new Int16Array(0));
   const playbackQueueRef = useRef([]);
-
-  const vadSpeechStreakRef = useRef(0);
-  const vadSilenceStreakRef = useRef(0);
-  const vadOpenRef = useRef(true);
 
   const [captureStatus, setCaptureStatus] = useState("未开始");
   const [playbackStatus, setPlaybackStatus] = useState("等待音频");
@@ -114,6 +114,22 @@ export function usePcmVoice(options = {}) {
     return () => clearInterval(timer);
   }, []);
 
+  const ensurePlaybackContext = useCallback(async () => {
+    if (!playbackContextRef.current) {
+      playbackContextRef.current = new AudioContext({
+        sampleRate,
+        latencyHint: "interactive",
+      });
+    }
+
+    const ctx = playbackContextRef.current;
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+
+    return ctx;
+  }, [sampleRate]);
+
   const playNext = useCallback(async () => {
     if (drainingRef.current) return;
     if (playbackQueueRef.current.length < minBufferFrames) return;
@@ -121,18 +137,7 @@ export function usePcmVoice(options = {}) {
     drainingRef.current = true;
 
     try {
-      if (!playbackContextRef.current) {
-        playbackContextRef.current = new AudioContext({
-          sampleRate,
-          latencyHint: "interactive",
-        });
-      }
-
-      const ctx = playbackContextRef.current;
-      if (ctx.state === "suspended") {
-        await ctx.resume();
-      }
-
+      const ctx = await ensurePlaybackContext();
       setPlaybackStatus("播放中");
 
       let playedInc = 0;
@@ -182,7 +187,7 @@ export function usePcmVoice(options = {}) {
     } finally {
       drainingRef.current = false;
     }
-  }, [appendLog, minBufferFrames, sampleRate]);
+  }, [appendLog, ensurePlaybackContext, minBufferFrames, sampleRate]);
 
   const handleIncomingPacket = useCallback(
     (packet) => {
@@ -191,13 +196,12 @@ export function usePcmVoice(options = {}) {
           packet instanceof Uint8Array
             ? packet
             : packet instanceof ArrayBuffer
-            ? new Uint8Array(packet)
-            : Array.isArray(packet)
-            ? new Uint8Array(packet)
-            : new Uint8Array([]);
+              ? new Uint8Array(packet)
+              : Array.isArray(packet)
+                ? new Uint8Array(packet)
+                : new Uint8Array([]);
 
-        if (!bytes.length) return;
-        if (bytes.byteLength < 2) return;
+        if (!bytes.length || bytes.byteLength < 2) return;
 
         const int16 = new Int16Array(
           bytes.buffer,
@@ -293,42 +297,13 @@ export function usePcmVoice(options = {}) {
           const frame = merged.slice(0, frameSamples);
           merged = merged.slice(frameSamples);
 
-          if (enableVad) {
-            const rms = calcRmsInt16(frame);
+          const bytes = new Uint8Array(frame.buffer.slice(0));
+          sendPacket?.(bytes);
 
-            if (rms >= vadRmsThreshold) {
-              vadSpeechStreakRef.current += 1;
-              vadSilenceStreakRef.current = 0;
-
-              if (vadSpeechStreakRef.current >= vadAttackFrames) {
-                vadOpenRef.current = true;
-              }
-            } else {
-              vadSpeechStreakRef.current = 0;
-              vadSilenceStreakRef.current += 1;
-
-              if (vadSilenceStreakRef.current > vadHangoverFrames) {
-                vadOpenRef.current = false;
-              }
-            }
-          } else {
-            vadOpenRef.current = true;
-          }
-
-          if (vadOpenRef.current) {
-            const bytes = new Uint8Array(frame.buffer.slice(0));
-            sendPacket?.(bytes);
-
-            metricsCacheRef.current = {
-              ...metricsCacheRef.current,
-              sentFrames: metricsCacheRef.current.sentFrames + 1,
-            };
-          } else {
-            metricsCacheRef.current = {
-              ...metricsCacheRef.current,
-              vadDropped: metricsCacheRef.current.vadDropped + 1,
-            };
-          }
+          metricsCacheRef.current = {
+            ...metricsCacheRef.current,
+            sentFrames: metricsCacheRef.current.sentFrames + 1,
+          };
         }
 
         captureCarryRef.current = merged;
@@ -343,10 +318,6 @@ export function usePcmVoice(options = {}) {
       workletNodeRef.current = processor;
       captureCarryRef.current = new Int16Array(0);
 
-      vadSpeechStreakRef.current = 0;
-      vadSilenceStreakRef.current = 0;
-      vadOpenRef.current = true;
-
       setIsCapturing(true);
       setCaptureStatus("正在采集/发送");
       appendLog("开始讲话");
@@ -355,16 +326,7 @@ export function usePcmVoice(options = {}) {
       setLastError(e);
       appendLog(`采集失败: ${e?.message || String(e)}`);
     }
-  }, [
-    appendLog,
-    enableVad,
-    frameSamples,
-    sampleRate,
-    sendPacket,
-    vadAttackFrames,
-    vadHangoverFrames,
-    vadRmsThreshold,
-  ]);
+  }, [appendLog, frameSamples, sampleRate, sendPacket]);
 
   const stopCapture = useCallback(async () => {
     try {
@@ -390,9 +352,6 @@ export function usePcmVoice(options = {}) {
       }
 
       captureCarryRef.current = new Int16Array(0);
-      vadSpeechStreakRef.current = 0;
-      vadSilenceStreakRef.current = 0;
-      vadOpenRef.current = true;
 
       setIsCapturing(false);
       setCaptureStatus("已停止");
@@ -415,10 +374,21 @@ export function usePcmVoice(options = {}) {
 
   useEffect(() => {
     return () => {
-      workletNodeRef.current?.disconnect?.();
-      streamRef.current?.getTracks?.().forEach((t) => t.stop());
-      captureContextRef.current?.close?.();
-      playbackContextRef.current?.close?.();
+      try {
+        workletNodeRef.current?.disconnect?.();
+      } catch { }
+
+      try {
+        streamRef.current?.getTracks?.().forEach((t) => t.stop());
+      } catch { }
+
+      try {
+        captureContextRef.current?.close?.();
+      } catch { }
+
+      try {
+        playbackContextRef.current?.close?.();
+      } catch { }
 
       if (workletUrlRef.current) {
         URL.revokeObjectURL(workletUrlRef.current);

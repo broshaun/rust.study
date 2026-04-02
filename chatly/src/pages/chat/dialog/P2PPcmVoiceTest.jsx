@@ -18,10 +18,10 @@ import {
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 
-import { useP2PTransport } from "hooks/p2p/useP2PTransport";
+import { useP2PVoiceTransport } from "hooks/voice/useP2PVoiceTransport";
 import { usePcmVoice } from "hooks/voice/usePcmVoice";
 
-export function P2PPcmVoicePage() {
+export function P2PPcmVoiceTest() {
   const [resetSeed, setResetSeed] = useState(0);
 
   return (
@@ -33,7 +33,7 @@ export function P2PPcmVoicePage() {
 }
 
 function P2PPcmVoicePageInner({ onHardReset }) {
-  const transport = useP2PTransport({
+  const transport = useP2PVoiceTransport({
     pacingIntervalMs: 10,
     maxSendQueuePackets: 24,
   });
@@ -61,8 +61,14 @@ function P2PPcmVoicePageInner({ onHardReset }) {
     }
   }, [voice.metrics.played]);
 
-  const localReady = useMemo(() => !!transport.localAddrJson, [transport.localAddrJson]);
-  const remoteReady = useMemo(() => !!parsedRemoteAddr, [parsedRemoteAddr]);
+  const localReady = useMemo(
+    () => !!transport.localAddrJson,
+    [transport.localAddrJson]
+  );
+  const remoteReady = useMemo(
+    () => !!parsedRemoteAddr,
+    [parsedRemoteAddr]
+  );
 
   const networkColor = useMemo(() => {
     if (transport.connected) return "green";
@@ -119,15 +125,15 @@ function P2PPcmVoicePageInner({ onHardReset }) {
   const handleReset = async () => {
     try {
       await voice.stopCapture();
-    } catch (_) { }
+    } catch (_) {}
 
     try {
       voice.resetPlayback?.();
-    } catch (_) { }
+    } catch (_) {}
 
     try {
       await transport.close();
-    } catch (_) { }
+    } catch (_) {}
 
     setPlaybackStarted(false);
     setParsedRemoteAddr(null);
@@ -172,7 +178,12 @@ function P2PPcmVoicePageInner({ onHardReset }) {
               启动
             </Button>
 
-            <Button size="xs" onClick={transport.connect} disabled={!transport.canConnect} color="green">
+            <Button
+              size="xs"
+              onClick={transport.connect}
+              disabled={!transport.canConnect}
+              color="green"
+            >
               连接
             </Button>
 

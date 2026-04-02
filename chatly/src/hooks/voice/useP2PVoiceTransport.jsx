@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-
 // 音频数据传输
 export function useP2PVoiceTransport(options = {}) {
   const {
@@ -143,7 +142,7 @@ export function useP2PVoiceTransport(options = {}) {
 
     const channel = new Channel();
 
-    channel.onmessage = async (message) => {
+    channel.onmessage = (message) => {
       let bytes;
 
       if (message instanceof Uint8Array) {
@@ -159,14 +158,12 @@ export function useP2PVoiceTransport(options = {}) {
         recv: metricsCacheRef.current.recv + 1,
       };
 
-      try {
-        await invoke("p2p_voice_push_raw_packet", {
-          data: Array.from(bytes),
-        });
-      } catch (e) {
+      invoke("p2p_voice_push_raw_packet", {
+        data: Array.from(bytes),
+      }).catch((e) => {
         setLastError(e);
         appendLog(`原始语音包处理失败: ${e?.message || String(e)}`);
-      }
+      });
     };
 
     rawDownlinkChannelRef.current = channel;

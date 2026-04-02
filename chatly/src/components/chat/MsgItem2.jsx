@@ -1,108 +1,121 @@
 import React, { memo } from "react";
 import { Box, Flex, Paper, Text, Stack } from "@mantine/core";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar, SafeImage } from "components/flutter";
 
-/**
- * MsgItem - Mantine 商务版
- * 适配虚拟列表、自动主题切换、气泡方圆角设计
- */
-export const MsgItem = memo(
-  ({ data, receiveAvatar, sendAvatar, virtualRow }) => {
-    if (!data) return null;
+// ==========================================
+// 1. 内容渲染组件
+// ==========================================
 
-    const isSend = data.signal === "send";
-    const currentAvatarUrl = isSend ? sendAvatar : receiveAvatar;
+const TextContent = ({ content }) => (
+  <Text style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 14, lineHeight: 1.5 }}>
+    {content}
+  </Text>
+);
 
-    // 虚拟列表样式
-    const virtualStyle = virtualRow
-      ? {
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          transform: `translateY(${virtualRow.start}px)`,
-          height: virtualRow.size,
-        }
-      : {};
+const ImageContent = ({ content }) => (
+  <SafeImage
+    url={content}
+    previewUrl={content}
+    height={50}    
+    fit="contain" 
+    radius={0}       
+    allowPreview
+  />
+);
+const PhoneContent = ({ content }) => (
+  <Flex align="center" gap="xs" style={{ padding: "2px 0" }}>
+    <Text size={16}>📞</Text>
+    <Text size="sm" fw={500}>{content || "通话记录"}</Text>
+  </Flex>
+);
 
-    return (
-      <Box 
-        px="md" 
-        py={8} 
-        style={{ ...virtualStyle, boxSizing: "border-box" }}
-      >
-        <Flex
-          direction={isSend ? "row-reverse" : "row"}
-          align="flex-start"
-          gap="sm"
-          style={{ maxWidth: "100%" }}
+const CONTENT_COMPONENTS = {
+  text: TextContent,
+  image: ImageContent,
+  phone: PhoneContent,
+};
+
+// ==========================================
+// 2. 主容器组件 (MsgItem)
+// ==========================================
+
+export const MsgItem = memo(({
+  avatar, timestamp, position = "left", virtualRow, measureElement, msgType = "text", content, bubbleProps,
+}) => {
+  if (!content) return null;
+  const isRight = position === "right";
+  const isImage = msgType === "image";
+  const ContentComponent = CONTENT_COMPONENTS[msgType] || CONTENT_COMPONENTS.text;
+
+  return (
+    <div
+      ref={measureElement}
+      data-index={virtualRow?.index}
+      style={{
+        position: "absolute", top: 0, left: 0, width: "100%",
+        transform: `translateY(${virtualRow?.start ?? 0}px)`,
+        boxSizing: "border-box", padding: "8px 16px",
+      }}
+    >
+      <Flex direction={isRight ? "row-reverse" : "row"} align="flex-start" gap="sm">
+        <Box style={{ flexShrink: 0 }}>
+          <SafeAvatar url={avatar} size={36} radius={6} />
+        </Box>
+
+        <Stack 
+          gap={4} 
+          align={isRight ? "flex-end" : "flex-start"} 
+          style={{ 
+            flex: 1, 
+            minWidth: 0,
+            // 🌟 关键：确保 Stack 内部的消息块不会被强制拉伸
+            display: 'flex', 
+            flexDirection: 'column' 
+          }}
         >
-          {/* 头像区域 - 保持不被压缩 */}
-          <Box style={{ flexShrink: 0 }}>
-            <SafeAvatar
-              url={currentAvatarUrl}
-              size={36}
-              radius={6}
-              border="1px solid var(--mantine-color-default-border)"
-            />
-          </Box>
-
-          {/* 消息与时间容器 */}
-          <Stack 
-            gap={4} 
-            align={isSend ? "flex-end" : "flex-start"} 
-            style={{ flex: 1, minWidth: 0 }}
+          <Paper
+            px={isImage ? 0 : 14}
+            py={isImage ? 0 : 10}
+            shadow="none"
+            style={{
+              // 🌟 核心修复逻辑
+              display: isImage ? 'inline-flex' : 'block', // 图片模式下使用行内伸缩
+              height: isImage ? 50 : 'auto',             // 强制高度 50
+              width: isImage ? 'auto' : undefined,       // 宽度自动
+              maxWidth: isImage ? "70%" : "85%",
+              
+              overflow: "hidden", 
+              backgroundColor: isRight ? "var(--mantine-primary-color-filled)" : "var(--mantine-color-default-hover)",
+              color: isRight ? "var(--mantine-color-white)" : "var(--mantine-color-text)",
+              borderRadius: isRight ? "12px 2px 12px 12px" : "2px 12px 12px 12px",
+              ...bubbleProps?.style,
+            }}
+            {...bubbleProps}
           >
-            {/* 消息气泡 */}
-            <Paper
-              px={14}
-              py={10}
-              shadow="none"
-              style={{
-                maxWidth: "85%",
-                wordBreak: "break-all",
-                whiteSpace: "pre-wrap",
-                fontSize: "14px",
-                lineHeight: 1.5,
-                // 根据发送/接收状态切换气泡形状和颜色
-                backgroundColor: isSend 
-                  ? "var(--mantine-primary-color-filled)" 
-                  : "var(--mantine-color-default-hover)",
-                color: isSend 
-                  ? "var(--mantine-color-white)" 
-                  : "var(--mantine-color-text)",
-                // 标志性的气泡角处理：发送端右上角方角，接收端左上角方角
-                borderRadius: isSend 
-                  ? "12px 2px 12px 12px" 
-                  : "2px 12px 12px 12px",
+            <ContentComponent content={content} />
+          </Paper>
+
+          {timestamp && (
+            <Text 
+              size="10px" 
+              c="dimmed" 
+              style={{ 
+                opacity: 0.7, 
+                padding: isRight ? "0 4px 0 0" : "0 0 0 4px",
+                whiteSpace: 'nowrap'
               }}
             >
-              {data.msg}
-            </Paper>
-
-            {/* 时间显示 */}
-            {data.timestamp && (
-              <Text 
-                size="10px" 
-                c="dimmed" 
-                style={{ opacity: 0.7, padding: isSend ? "0 4px 0 0" : "0 0 0 4px" }}
-              >
-                {data.timestamp}
-              </Text>
-            )}
-          </Stack>
-        </Flex>
-      </Box>
-    );
-  },
-  // 高性能 Memo 对比
-  (p, n) => (
-    p.receiveAvatar === n.receiveAvatar &&
-    p.sendAvatar === n.sendAvatar &&
-    p.data?.id === n.data?.id &&
-    p.data?.msg === n.data?.msg &&
-    p.virtualRow?.start === n.virtualRow?.start
-  )
-);
+              {timestamp}
+            </Text>
+          )}
+        </Stack>
+      </Flex>
+    </div>
+  );
+}, (p, n) => (
+  p.msgType === n.msgType && p.content === n.content && p.avatar === n.avatar &&
+  p.timestamp === n.timestamp && p.position === n.position &&
+  p.virtualRow?.start === n.virtualRow?.start && p.virtualRow?.index === n.virtualRow?.index
+));
 
 MsgItem.displayName = "MsgItem";

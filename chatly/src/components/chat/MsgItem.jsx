@@ -1,109 +1,122 @@
 import React, { memo } from "react";
 import { Box, Flex, Paper, Text, Stack } from "@mantine/core";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar, SafeImage } from "components/flutter";
 
-/**
- * MsgItem - 优化版
- * @param {string} avatar - 头像URL
- * @param {string} msg - 消息内容
- * @param {string} timestamp - 时间戳
- * @param {'left' | 'right'} position - 消息位置 (left: 接收, right: 发送)
- * @param {object} virtualRow - 虚拟列表行信息
- */
-export const MsgItem = memo(
-  ({ avatar, msg, timestamp, position, virtualRow }) => {
-    if (!msg) return null;
+// ==========================================
+// 1. 内容渲染组件
+// ==========================================
 
-    const isRight = position === "right";
+const TextContent = ({ content }) => (
+  <Text style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 14, lineHeight: 1.5 }}>
+    {content}
+  </Text>
+);
 
-    // 虚拟列表样式计算
-    const virtualStyle = virtualRow
-      ? {
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          transform: `translateY(${virtualRow.start}px)`,
-          height: `${virtualRow.size}px`,
-        }
-      : {};
+const ImageContent = ({ content }) => (
+  <SafeImage
+    url={content}
+    previewUrl={content}
+    height={50}     // 🌟 仅传入高度，完美触发 SafeImage 的单维度比例推算
+    radius={0}      // 🌟 圆角由外层 Paper 统一裁切，内部设为 0
+    allowPreview
+  />
+);
 
-    return (
-      <Box 
-        px="md" 
-        py={8} 
-        style={{ ...virtualStyle, boxSizing: "border-box" }}
-      >
-        <Flex
-          direction={isRight ? "row-reverse" : "row"}
-          align="flex-start"
-          gap="sm"
+const PhoneContent = ({ content }) => (
+  <Flex align="center" gap="xs" style={{ padding: "2px 0" }}>
+    <Text size={16}>📞</Text>
+    <Text size="sm" fw={500}>{content || "通话记录"}</Text>
+  </Flex>
+);
+
+const CONTENT_COMPONENTS = {
+  text: TextContent,
+  image: ImageContent,
+  phone: PhoneContent,
+};
+
+// ==========================================
+// 2. 主容器组件 (MsgItem)
+// ==========================================
+
+export const MsgItem = memo(({
+  avatar, timestamp, position = "left", virtualRow, measureElement, msgType = "text", content, bubbleProps,
+}) => {
+  if (!content) return null;
+  const isRight = position === "right";
+  const isImage = msgType === "image";
+  const ContentComponent = CONTENT_COMPONENTS[msgType] || CONTENT_COMPONENTS.text;
+
+  return (
+    <div
+      ref={measureElement}
+      data-index={virtualRow?.index}
+      style={{
+        position: "absolute", top: 0, left: 0, width: "100%",
+        transform: `translateY(${virtualRow?.start ?? 0}px)`,
+        boxSizing: "border-box", padding: "8px 16px",
+      }}
+    >
+      <Flex direction={isRight ? "row-reverse" : "row"} align="flex-start" gap="sm">
+        <Box style={{ flexShrink: 0 }}>
+          <SafeAvatar url={avatar} size={36} radius={6} />
+        </Box>
+
+        <Stack
+          gap={4}
+          align={isRight ? "flex-end" : "flex-start"}
+          style={{ flex: 1, minWidth: 0 }}
         >
-          {/* 头像 */}
-          <Box style={{ flexShrink: 0 }}>
-            <SafeAvatar
-              url={avatar}
-              size={36}
-              radius={6}
-              border="1px solid var(--mantine-color-default-border)"
-            />
-          </Box>
+          <Paper
+            px={isImage ? 0 : 14}
+            py={isImage ? 0 : 10}
+            shadow="none"
+            style={{
+              // 🌟 配合新版 SafeImage 的极简布局容器
+              display: isImage ? "inline-block" : "block",
+              width: isImage ? "fit-content" : "auto",
+              maxWidth: isImage ? "70%" : "85%",
 
-          {/* 消息体 */}
-          <Stack 
-            gap={4} 
-            align={isRight ? "flex-end" : "flex-start"} 
-            style={{ flex: 1, minWidth: 0 }}
+              // 消除图片底部的默认基线间隙
+              lineHeight: isImage ? 0 : "inherit",
+              overflow: "hidden",
+
+              // 图片消息设为透明背景，防止边缘露出底色
+              backgroundColor: isImage ? "transparent" : (isRight ? "var(--mantine-primary-color-filled)" : "var(--mantine-color-default-hover)"),
+              color: isRight ? "var(--mantine-color-white)" : "var(--mantine-color-text)",
+              borderRadius: isRight ? "12px 2px 12px 12px" : "2px 12px 12px 12px",
+              ...bubbleProps?.style,
+            }}
+            {...bubbleProps}
           >
-            <Paper
-              px={14}
-              py={10}
-              shadow="none"
+            <ContentComponent content={content} />
+          </Paper>
+
+          {timestamp && (
+            <Text
+              size="10px"
+              c="dimmed"
               style={{
-                maxWidth: "85%",
-                wordBreak: "break-all",
-                whiteSpace: "pre-wrap",
-                fontSize: "14px",
-                lineHeight: 1.5,
-                // 商务配色：发送端使用主题色，接收端使用浅灰色
-                backgroundColor: isRight 
-                  ? "var(--mantine-primary-color-filled)" 
-                  : "var(--mantine-color-default-hover)",
-                color: isRight 
-                  ? "var(--mantine-color-white)" 
-                  : "var(--mantine-color-text)",
-                // 非对称圆角设计
-                borderRadius: isRight 
-                  ? "12px 2px 12px 12px" 
-                  : "2px 12px 12px 12px",
+                opacity: 0.7,
+                padding: isRight ? "0 4px 0 0" : "0 0 0 4px",
+                whiteSpace: "nowrap"
               }}
             >
-              {msg}
-            </Paper>
-
-            {/* 时间戳 */}
-            {timestamp && (
-              <Text 
-                size="10px" 
-                c="dimmed" 
-                style={{ opacity: 0.7, padding: isRight ? "0 4px 0 0" : "0 0 0 4px" }}
-              >
-                {timestamp}
-              </Text>
-            )}
-          </Stack>
-        </Flex>
-      </Box>
-    );
-  },
-  // 性能优化：仅在核心数据变化时重绘
-  (p, n) => (
-    p.avatar === n.avatar &&
-    p.msg === n.msg &&
-    p.timestamp === n.timestamp &&
-    p.position === n.position &&
-    p.virtualRow?.start === n.virtualRow?.start
-  )
-);
+              {timestamp}
+            </Text>
+          )}
+        </Stack>
+      </Flex>
+    </div>
+  );
+}, (p, n) => (
+  p.msgType === n.msgType && 
+  p.content === n.content && 
+  p.avatar === n.avatar &&
+  p.timestamp === n.timestamp && 
+  p.position === n.position &&
+  p.virtualRow?.start === n.virtualRow?.start && 
+  p.virtualRow?.index === n.virtualRow?.index
+));
 
 MsgItem.displayName = "MsgItem";
