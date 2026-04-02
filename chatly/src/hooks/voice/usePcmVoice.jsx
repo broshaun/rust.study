@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function concatInt16(a, b) {
   const out = new Int16Array(a.length + b.length);
@@ -197,6 +197,7 @@ export function usePcmVoice(options = {}) {
             : new Uint8Array([]);
 
         if (!bytes.length) return;
+        if (bytes.byteLength < 2) return;
 
         const int16 = new Int16Array(
           bytes.buffer,

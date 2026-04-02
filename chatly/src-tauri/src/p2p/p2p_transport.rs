@@ -7,25 +7,25 @@ use iroh::{
 use serde::{Deserialize, Serialize};
 use tauri::{ipc::Channel, AppHandle, Emitter};
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncWriteExt},
     sync::Mutex,
 };
 
-const VOICE_ALPN: &[u8] = b"/zoey/voice/1";
+const P2P_ALPN: &[u8] = b"/zoey/p2p/1";
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum VoiceDataType {
-    Audio = 0,
+pub enum P2PDataType {
+    Raw = 0,
 }
 
-impl TryFrom<u8> for VoiceDataType {
+impl TryFrom<u8> for P2PDataType {
     type Error = String;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
-            0 => Ok(Self::Audio),
-            _ => Err(format!("unknown voice data type: {}", value)),
+            0 => Ok(Self::Raw),
+            _ => Err(format!("unknown p2p data type: {}", value)),
         }
     }
 }
@@ -33,12 +33,12 @@ impl TryFrom<u8> for VoiceDataType {
 /// 应用层 framed message:
 /// [4 bytes length][1 byte data_type][payload...]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VoiceMessage {
-    pub data_type: VoiceDataType,
+pub struct P2PMessage {
+    pub data_type: P2PDataType,
     pub payload: Vec<u8>,
 }
 
-impl VoiceMessage {
+impl P2PMessage {
     pub fn encode(&self) -> Vec<u8> {
         let body_len = 1usize + self.payload.len();
         let mut out = Vec::with_capacity(4 + body_len);
@@ -52,10 +52,10 @@ impl VoiceMessage {
 
     pub fn decode_body(body: &[u8]) -> Result<Self, String> {
         if body.is_empty() {
-            return Err("voice message body too short: 0".to_string());
+            return Err("p2p message body too short: 0".to_string());
         }
 
-        let data_type = VoiceDataType::try_from(body[0])?;
+        let data_type = P2PDataType::try_from(body[0])?;
         let payload = body[1..].to_vec();
 
         Ok(Self { data_type, payload })
@@ -63,8 +63,8 @@ impl VoiceMessage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VoicePacketDebug {
-    pub data_type: VoiceDataType,
+pub struct P2PPacketDebug {
+    pub data_type: P2PDataType,
     pub payload_len: usize,
 }
 
@@ -79,7 +79,7 @@ pub struct P2PState {
     pub recv_task: Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>,
 
     pub send_stream: Arc<Mutex<Option<SendStream>>>,
-    pub downlink_channel: Arc<Mutex<Option<Channel<Vec<u8>>>>>,
+    pub raw_downlink_channel: Arc<Mutex<Option<Channel<Vec<u8>>>>>,
 }
 
 impl Default for P2PState {
@@ -93,7 +93,7 @@ impl Default for P2PState {
             accept_task: Arc::new(Mutex::new(None)),
             recv_task: Arc::new(Mutex::new(None)),
             send_stream: Arc::new(Mutex::new(None)),
-            downlink_channel: Arc::new(Mutex::new(None)),
+            raw_downlink_channel: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -109,14 +109,14 @@ impl Clone for P2PState {
             accept_task: self.accept_task.clone(),
             recv_task: self.recv_task.clone(),
             send_stream: self.send_stream.clone(),
-            downlink_channel: self.downlink_channel.clone(),
+            raw_downlink_channel: self.raw_downlink_channel.clone(),
         }
     }
 }
 
 impl P2PState {
-    pub async fn set_downlink_channel(&self, channel: Channel<Vec<u8>>) {
-        let mut ch = self.downlink_channel.lock().await;
+    pub async fn set_raw_downlink_channel(&self, channel: Channel<Vec<u8>>) {
+        let mut ch = self.raw_downlink_channel.lock().await;
         *ch = Some(channel);
     }
 
@@ -134,7 +134,7 @@ impl P2PState {
         }
 
         let endpoint = Endpoint::builder(presets::N0)
-            .alpns(vec![VOICE_ALPN.to_vec()])
+            .alpns(vec![P2P_ALPN.to_vec()])
             .bind()
             .await
             .map_err(|e| format!("bind endpoint failed: {e}"))?;
@@ -199,7 +199,7 @@ impl P2PState {
         .await;
 
         let conn = endpoint
-            .connect(remote_addr, VOICE_ALPN)
+            .connect(remote_addr, P2P_ALPN)
             .await
             .map_err(|e| format!("connect failed: {e}"))?;
 
@@ -212,10 +212,10 @@ impl P2PState {
         self.set_outgoing_connection(conn).await
     }
 
-    pub async fn send(&self, audio_payload: Vec<u8>) -> Result<(), String> {
-        let encoded = VoiceMessage {
-            data_type: VoiceDataType::Audio,
-            payload: audio_payload,
+    pub async fn send(&self, raw_payload: Vec<u8>) -> Result<(), String> {
+        let encoded = P2PMessage {
+            data_type: P2PDataType::Raw,
+            payload: raw_payload,
         }
         .encode();
 
@@ -282,7 +282,7 @@ impl P2PState {
         }
 
         {
-            let mut ch = self.downlink_channel.lock().await;
+            let mut ch = self.raw_downlink_channel.lock().await;
             *ch = None;
         }
 
@@ -440,26 +440,28 @@ impl P2PState {
         let task = tauri::async_runtime::spawn(async move {
             loop {
                 match read_one_message(&mut recv).await {
-                    Ok(msg) => match msg.data_type {
-                        VoiceDataType::Audio => {
-                            {
-                                let ch = state.downlink_channel.lock().await;
-                                if let Some(channel) = ch.as_ref() {
-                                    let _ = channel.send(msg.payload.clone());
+                    Ok(msg) => {
+                        match msg.data_type {
+                            P2PDataType::Raw => {
+                                {
+                                    let ch = state.raw_downlink_channel.lock().await;
+                                    if let Some(channel) = ch.as_ref() {
+                                        let _ = channel.send(msg.payload.clone());
+                                    }
                                 }
-                            }
 
-                            emit_event_arc(
-                                &state.app,
-                                "p2p-packet",
-                                VoicePacketDebug {
-                                    data_type: msg.data_type,
-                                    payload_len: msg.payload.len(),
-                                },
-                            )
-                            .await;
+                                emit_event_arc(
+                                    &state.app,
+                                    "p2p-packet",
+                                    P2PPacketDebug {
+                                        data_type: msg.data_type,
+                                        payload_len: msg.payload.len(),
+                                    },
+                                )
+                                .await;
+                            }
                         }
-                    },
+                    }
                     Err(e) => {
                         emit_log_arc(
                             &state.app,
@@ -480,7 +482,7 @@ impl P2PState {
     }
 }
 
-async fn read_one_message(recv: &mut RecvStream) -> Result<VoiceMessage, String> {
+async fn read_one_message(recv: &mut RecvStream) -> Result<P2PMessage, String> {
     let mut len_buf = [0u8; 4];
     recv.read_exact(&mut len_buf)
         .await
@@ -496,7 +498,7 @@ async fn read_one_message(recv: &mut RecvStream) -> Result<VoiceMessage, String>
         .await
         .map_err(|e| format!("read message body failed: {e}"))?;
 
-    VoiceMessage::decode_body(&body)
+    P2PMessage::decode_body(&body)
 }
 
 async fn emit_log_arc(app: &Arc<Mutex<Option<AppHandle>>>, msg: String) {

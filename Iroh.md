@@ -51,3 +51,17 @@ useOpusVoice 使用opus-recorder和opus-decoder数据编码解码
 
 
 @wasm-audio-decoders/opus-ml
+
+
+
+现在我们只考虑Tauri前端传来的PCM 通话音频。现在要打包出去，再接收回来。怎么做好？
+
+
+NetEQ
+NetEQ = 专门解决“音频包到达不均匀 → 播放要平滑”的引擎
+
+它做三件事：
+
+📦 排序（乱序包）
+⏱️ 调节延迟（自适应 buffer）
+🔧 补偿（丢包/晚包 → PLC）
