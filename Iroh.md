@@ -43,3 +43,11 @@ metrics
 编码 (采集)	opus-recorder	采集麦克风并编码最稳，支持 Raw Opus 帧输出，无 Ogg 冗余。
 解码 (播放)	opus-decoder	来自 eshaz/wasm-audio-decoders，支持 Opus 1.5 (ML)，丢包补偿性能最强。
 
+根据这个代码。拆分为
+useP2PTransport 只管数据上下传递
+useOpusVoice 使用opus-recorder和opus-decoder数据编码解码
+两个需要互相独立，给我jsx代码。
+
+
+
+@wasm-audio-decoders/opus-ml

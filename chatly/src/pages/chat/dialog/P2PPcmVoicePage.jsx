@@ -16,18 +16,33 @@ import {
   ActionIcon,
 } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useP2PPcmVoice } from "hooks/voice/useP2PPcmVoice";
 import { useNavigate } from "react-router";
 
+import { useP2PTransport } from "hooks/voice/useP2PTransport";
+import { usePcmVoice } from "hooks/voice/usePcmVoice";
+
 export function P2PPcmVoicePage() {
-  const v = useP2PPcmVoice();
+  const transport = useP2PTransport({
+    pacingIntervalMs: 10,
+    maxSendQueuePackets: 24,
+  });
+
+  const voice = usePcmVoice({
+    sampleRate: 48000,
+    frameSamples: 480,
+    minBufferFrames: 3,
+    maxBufferFrames: 12,
+    enableVad: false,
+    sendPacket: transport.send,
+    subscribePacket: transport.onMessage,
+  });
 
   const [parsedRemoteAddr, setParsedRemoteAddr] = useState(null);
   const [pasteError, setPasteError] = useState("");
   const [openedModal, setOpenedModal] = useState(null);
   const navigate = useNavigate();
 
-  const localReady = useMemo(() => !!v.localAddrJson, [v.localAddrJson]);
+  const localReady = useMemo(() => !!transport.localAddrJson, [transport.localAddrJson]);
   const remoteReady = useMemo(() => !!parsedRemoteAddr, [parsedRemoteAddr]);
 
   const handlePasteFromClipboard = async () => {
@@ -42,7 +57,7 @@ export function P2PPcmVoicePage() {
         return;
       }
 
-      v.setRemoteAddrJson(text);
+      transport.setRemoteAddrJson(text);
 
       try {
         setParsedRemoteAddr(JSON.parse(text));
@@ -57,6 +72,28 @@ export function P2PPcmVoicePage() {
   const handleBack = () => {
     navigate("/chat/dialog");
   };
+
+  const handleReset = async () => {
+    try {
+      await voice.stopCapture();
+    } catch (_) {}
+
+    try {
+      voice.resetPlayback?.();
+    } catch (_) {}
+
+    try {
+      await transport.close();
+    } catch (_) {}
+  };
+
+  const mergedLogs = useMemo(() => {
+    const tLogs = transport.logs || [];
+    const vLogs = voice.logs || [];
+    return [...tLogs, ...vLogs].slice(-300);
+  }, [transport.logs, voice.logs]);
+
+  const mergedError = transport.lastError || voice.lastError;
 
   return (
     <Container size="lg" py={{ base: 8, sm: 12 }}>
@@ -79,22 +116,31 @@ export function P2PPcmVoicePage() {
           verticalSpacing="xs"
           mb="sm"
         >
-          <StatusBox label="网络" value={v.p2pStatus} active={v.connected} />
-          <StatusBox label="麦克风" value={v.captureStatus} active={v.isCapturing} />
-          <StatusBox label="播放" value={v.playbackStatus} active={v.playbackStatus === "播放中"} />
+          <StatusBox label="网络" value={transport.status} active={transport.connected} />
+          <StatusBox label="麦克风" value={voice.captureStatus} active={voice.isCapturing} />
+          <StatusBox
+            label="播放"
+            value={voice.playbackStatus}
+            active={voice.playbackStatus === "播放中"}
+          />
         </SimpleGrid>
 
         <Paper withBorder p="xs" radius="md" mb="sm" bg="gray.0">
           <Group gap="xs" wrap="wrap">
-            <Button size="xs" radius="md" onClick={v.initNode} disabled={!v.canInit}>
+            <Button
+              size="xs"
+              radius="md"
+              onClick={transport.init}
+              disabled={!transport.canInit}
+            >
               启动
             </Button>
 
             <Button
               size="xs"
               radius="md"
-              onClick={v.connectRemote}
-              disabled={!v.canConnect}
+              onClick={transport.connect}
+              disabled={!transport.canConnect}
               color="green"
             >
               连接
@@ -103,7 +149,7 @@ export function P2PPcmVoicePage() {
             <Button
               size="xs"
               radius="md"
-              onClick={v.closeNode}
+              onClick={handleReset}
               color="red"
               variant="light"
             >
@@ -113,8 +159,8 @@ export function P2PPcmVoicePage() {
             <Button
               size="xs"
               radius="md"
-              onClick={v.startCapture}
-              disabled={!v.canStartTalk}
+              onClick={voice.startCapture}
+              disabled={!transport.connected || !voice.canStartTalk}
             >
               讲话
             </Button>
@@ -122,8 +168,8 @@ export function P2PPcmVoicePage() {
             <Button
               size="xs"
               radius="md"
-              onClick={v.stopCapture}
-              disabled={!v.canStopTalk}
+              onClick={voice.stopCapture}
+              disabled={!voice.canStopTalk}
               color="red"
             >
               停止
@@ -146,7 +192,7 @@ export function P2PPcmVoicePage() {
           <AddressCard
             title="本地地址"
             active={localReady}
-            onCopy={v.copyLocalAddr}
+            onCopy={transport.copyLocalAddr}
             onView={() => setOpenedModal("local")}
           />
 
@@ -159,18 +205,19 @@ export function P2PPcmVoicePage() {
         </SimpleGrid>
 
         <Divider mb="xs" />
+
         <SimpleGrid
           cols={{ base: 2, xs: 3, sm: 6 }}
           spacing="xs"
           verticalSpacing="xs"
           mb="sm"
         >
-          <Metric label="发送" value={v.metrics.sent} />
-          <Metric label="接收" value={v.metrics.recv} />
-          <Metric label="播放" value={v.metrics.played} />
-          <Metric label="缓冲" value={v.metrics.buffered} />
-          <Metric label="时间" value={v.callDurationSeconds} suffix="s" />
-          <Metric label="队列" value={v.metrics.queueDepth} />
+          <Metric label="发送" value={transport.metrics.sent} />
+          <Metric label="接收" value={transport.metrics.recv} />
+          <Metric label="播放" value={voice.metrics.played} />
+          <Metric label="缓冲" value={voice.metrics.buffered} />
+          <Metric label="发送帧" value={voice.metrics.sentFrames} />
+          <Metric label="接收帧" value={voice.metrics.recvFrames} />
         </SimpleGrid>
 
         <SimpleGrid
@@ -179,10 +226,10 @@ export function P2PPcmVoicePage() {
           verticalSpacing="xs"
           mb="sm"
         >
-          <Metric label="当前包字节" value={v.metrics.lastPayloadBytes} suffix="B" />
-          <Metric label="平均包字节" value={v.metrics.avgPayloadBytes} suffix="B" />
-          <Metric label="VAD丢弃" value={v.metrics.vadDropped} />
-          <Metric label="发送丢弃" value={v.metrics.paceDropped} />
+          <Metric label="当前包字节" value={transport.metrics.lastPayloadBytes} suffix="B" />
+          <Metric label="平均包字节" value={transport.metrics.avgPayloadBytes} suffix="B" />
+          <Metric label="VAD丢弃" value={voice.metrics.vadDropped} />
+          <Metric label="发送丢弃" value={transport.metrics.paceDropped} />
         </SimpleGrid>
 
         <Divider mb="xs" />
@@ -203,13 +250,13 @@ export function P2PPcmVoicePage() {
               lineHeight: 1.45,
             }}
           >
-            {v.logs?.length ? v.logs.join("\n") : "暂无日志"}
+            {mergedLogs.length ? mergedLogs.join("\n") : "暂无日志"}
           </Box>
         </ScrollArea>
 
-        {v.lastError && (
+        {mergedError && (
           <Alert color="red" mt="sm" p="xs" radius="md">
-            错误提示: {v.lastError.message || String(v.lastError)}
+            错误提示: {mergedError.message || String(mergedError)}
           </Alert>
         )}
       </Paper>
@@ -226,7 +273,7 @@ export function P2PPcmVoicePage() {
         radius="lg"
         centered
       >
-        <JsonViewer json={v.localAddrJson} />
+        <JsonViewer json={transport.localAddrJson} />
       </Modal>
 
       <Modal
@@ -241,7 +288,7 @@ export function P2PPcmVoicePage() {
         radius="lg"
         centered
       >
-        <JsonViewer json={v.remoteAddrJson} />
+        <JsonViewer json={transport.remoteAddrJson} />
       </Modal>
     </Container>
   );

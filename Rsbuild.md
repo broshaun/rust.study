@@ -43,6 +43,9 @@ For iOS development, run:
   pnpm add @tanstack/react-virtual
 
   # pnpm add @rsbuild/plugin-basic-ssl -D
+  pnpm remove opus-decoder opus-recorder
+  pnpm add @wasm-audio-decoders/opus-decoder @wasm-audio-decoders/opus-encoder
+   pnpm add opus-decoder
 ```
 
 
