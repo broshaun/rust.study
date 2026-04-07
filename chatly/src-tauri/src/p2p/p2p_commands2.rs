@@ -90,12 +90,8 @@ pub async fn p2p_voice_send_pcm(
         return Ok(());
     }
 
-    let maybe_frame = voice.prepare_pcm_frame(data).await?;
-
-    match maybe_frame {
-        Some(frame) => p2p.send(frame).await,
-        None => Ok(()),
-    }
+    let frame = voice.prepare_pcm_frame(data).await?;
+    p2p.send(frame).await
 }
 
 #[tauri::command]
