@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
-import { useWinSize, } from 'hooks';
+import { useWinSize, useMsgState} from 'hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { useImgApiBase } from "hooks/http"
@@ -17,10 +17,14 @@ export const Item = () => {
     const [dialog, handlers] = useListState([]);
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
+
+
     const { joinPath } = useImgApiBase('/avatar/')
 
-    const { winHeight, isMobile } = useWinSize()
-    const { db, userId, isReady } = useUserDB(account);
+    const { winHeight } = useWinSize()
+    const { db } = useUserDB(account);
+
+    const setCurrent = useMsgState((s) => s.setCurrent);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
@@ -42,9 +46,12 @@ export const Item = () => {
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
+        
         const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
+        setCurrent({ 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName })
+
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/message/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName } })
+            navigate('/chat/message')
         })
     }, [navigate, db])
 

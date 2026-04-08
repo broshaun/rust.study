@@ -1,7 +1,7 @@
 import React, { useEffect, Suspense, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useOutlet } from 'react-router';
 import { useUserDB } from 'hooks/db';
-import { useWinSize } from 'hooks';
+import { useWinSize, useMsgState } from 'hooks';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -17,10 +17,12 @@ export const Mian = () => {
 
     const [dialog, handlers] = useListState([]);
     const [account] = useLocalStorage({ key: 'savedAccount' })
-    
+
     const { joinPath } = useImgApiBase('/avatar/')
     const { winHeight, isMobile } = useWinSize()
     const { db, userId, isReady } = useUserDB(account);
+
+    const setCurrent = useMsgState((s) => s.setCurrent);
 
 
 
@@ -47,9 +49,12 @@ export const Mian = () => {
     // 打开聊天
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
+
         const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
+        setCurrent({ 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName })
+
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/chat/dialog/msg/', { state: { 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName } })
+            navigate('/chat/dialog/message/')
         })
     }, [navigate, db])
 
@@ -111,7 +116,7 @@ export const Mian = () => {
             <Grid.Col span={8} >
                 {outlet ? (
                     <Paper p={0} radius={5} withBorder m="md" >
-                        <Outlet/>
+                        <Outlet />
                     </Paper>
                 ) : (
                     <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>

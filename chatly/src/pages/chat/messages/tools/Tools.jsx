@@ -21,11 +21,11 @@ export function Tools() {
             </ActionIcon>
         </ImageUpload> */}
 
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/rtc') }}>
+        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/dialog/rtc') }}>
             <IconPhone />
         </ActionIcon>
 
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/phone') }}>
+        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/dialog/phone') }}>
             <IconPhone />
         </ActionIcon>
 

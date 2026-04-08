@@ -1,33 +1,22 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useHttpClient2, useImgApiBase } from 'hooks/http';
-import { useDateTime, useWinSize } from 'hooks';
+import { useDateTime } from 'hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useUserDB } from 'hooks/db';
 import { useLocalStorage } from '@mantine/hooks';
 
 
+
 export const Main = () => {
-    const location = useLocation();
+    const { joinPath: joinPathImg30 } = useImgApiBase('/img30/')
+    const { joinPath: joinPathAvatar } = useImgApiBase('/avatar/')
 
     /** 账号对应信息
      * 个人数据库
      */
     const [account] = useLocalStorage({ key: 'savedAccount' });
     const { db } = useUserDB(account);
-
-    /** 个人头像
-     * 
-     */
-    const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
-    const sendAvatarSrc = useMemo(() => {
-        if (!myAvatar) return "";
-        return joinPathAvatar(myAvatar)
-    }, [myAvatar]);
-
-
-    const { uid } = location.state || {};
     const { getDateTimeStr } = useDateTime();
-
 
     /**
      * 发送信息
@@ -36,6 +25,8 @@ export const Main = () => {
     const { mutateAsync: fnSendMsg, isPending: loading } = useMutation(
         {
             mutationFn: async ({ uid, msgText }) => {
+
+                console.log('发送测试。。。',uid, msgText)
                 http.requestBodyJson('PUT', { user_id: uid, msg: msgText })
                     .then((results) => {
                         if (!results) return;
@@ -71,8 +62,7 @@ export const Main = () => {
         }
     );
 
-    const { joinPath: joinPathImg30 } = useImgApiBase('/img30/')
-    const { joinPath: joinPathAvatar } = useImgApiBase('/avatar/')
+
 
     return <Outlet context={{ fnSendMsg, loading, uploadImg30, joinPathImg30, joinPathAvatar, db }} />
 

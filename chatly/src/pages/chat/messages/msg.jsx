@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
-import { useWinSize } from 'hooks';
+import { useWinSize, useMsgState,useTitle } from 'hooks';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -25,18 +25,25 @@ export const parseMsgContent = (msg) => {
 
 export function Msg() {
     const navigate = useNavigate();
+    const setTitle = useTitle((state) => state.setTitle);
+
+
     const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
-    const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, uid, db } = useOutletContext();
+    const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, db } = useOutletContext();
 
 
+    const current = useMsgState((s) => s.current);
+    
+    console.log('current', current)
+    setTitle(current?.displayName)
 
     const [msgs, setMsgs] = useState([]);
     const [sendText, setSendText] = useState('');
     const [usable, setUsable] = useState(false)
 
     const receiveAvatarSrc = useMemo(() => {
-        return 1
-    }, []);
+        return current?.avatar_url
+    }, [current?.avatar_url]);
 
     const sendAvatarSrc = useMemo(() => {
         if (!myAvatar) return "";
@@ -48,7 +55,7 @@ export function Msg() {
     useEffect(() => {
         if (!db) return;
         const sub = liveQuery(
-            () => db.table('message').where('uid').equals(uid).reverse().toArray()
+            () => db.table('message').where('uid').equals(current?.uid).reverse().toArray()
             // () => db.table('message').where('uid').equals(uid).toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
@@ -56,7 +63,7 @@ export function Msg() {
         });
 
         return () => sub.unsubscribe();
-    }, [uid, db]);
+    }, [current?.uid, db]);
 
 
 
@@ -73,8 +80,9 @@ export function Msg() {
 
     const senddd = async () => {
         if (sendText) {
-            await fnSendMsg({ uid, msgText: sendText })
+            await fnSendMsg({ uid: current?.uid, msgText: sendText })
         }
+        setSendText(() => "")
         return 'ok'
     }
 
@@ -115,7 +123,7 @@ export function Msg() {
             </ScrollArea>
         </ChatMsg.Content>
 
-        <ChatMsg.Tool onClose={() => setUsable(false)} onOpen={() => { setUsable(true); navigate('/chat/message/tools'); }} >
+        <ChatMsg.Tool onClose={() => setUsable(false)} onOpen={() => { setUsable(true); navigate('tools'); }} >
             <Outlet />
         </ChatMsg.Tool>
 
