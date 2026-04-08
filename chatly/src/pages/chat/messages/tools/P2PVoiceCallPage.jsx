@@ -22,11 +22,14 @@ import {
   IconVolumeOff,
 } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
-
 import { useP2PVoiceTransport } from "hooks/voice/useP2PVoiceTransport";
 import { usePcmVoice } from "hooks/voice/usePcmVoice";
 
+
+
+
 export function P2PVoiceCallPage() {
+
   const transport = useP2PVoiceTransport({
     maxPendingSends: 24,
   });
@@ -44,12 +47,55 @@ export function P2PVoiceCallPage() {
 
   const [inCall, setInCall] = useState(false);
   const [playbackStarted, setPlaybackStarted] = useState(false);
-
-  // ⭐ 新增状态
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
 
+
+
+
+
   const metrics = voice?.metrics || {};
+
+  // ⭐ 自动初始化 + 自动连接
+  useEffect(() => {
+    let mounted = true;
+
+    const autoInit = async () => {
+      try {
+        if (!transport.initialized) {
+          await transport.init();
+        }
+
+        if (transport.remoteAddrJson && !transport.connected) {
+          await transport.connect();
+        }
+
+      } catch (e) {
+        console.error("auto init error:", e);
+      }
+    };
+
+    autoInit();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // ⭐ 退出组件时强制关闭（核心）
+  useEffect(() => {
+    return () => {
+      (async () => {
+        try {
+          await voice.stopCapture();
+        } catch { }
+
+        try {
+          await transport.close();
+        } catch { }
+      })();
+    };
+  }, []);
 
   useEffect(() => {
     if ((metrics.played ?? 0) > 0 || (metrics.recvFrames ?? 0) > 0) {
@@ -59,9 +105,10 @@ export function P2PVoiceCallPage() {
 
   const networkColor = useMemo(() => {
     if (transport.connected) return "green";
-    if (transport.status?.includes("连接中")) return "yellow";
+    if (transport.initialized) return "blue";
+    if (transport.status?.includes("初始化")) return "yellow";
     return "gray";
-  }, [transport.connected, transport.status]);
+  }, [transport.connected, transport.initialized, transport.status]);
 
   const callStatus = useMemo(() => {
     if (muted) return "已静音";
@@ -69,8 +116,9 @@ export function P2PVoiceCallPage() {
     if (playbackStarted && speakerOn) return "对方正在讲话";
     if (!speakerOn) return "扬声器关闭";
     if (transport.connected) return "已连接";
-    return "未连接";
-  }, [muted, voice.isCapturing, playbackStarted, speakerOn, transport.connected]);
+    if (transport.initialized) return "已初始化";
+    return "未初始化";
+  }, [muted, voice.isCapturing, playbackStarted, speakerOn, transport.connected, transport.initialized]);
 
   const handleBack = () => {
     navigate("/chat/dialog");
@@ -78,10 +126,6 @@ export function P2PVoiceCallPage() {
 
   const startCall = async () => {
     try {
-      if (!transport.initialized) {
-        await transport.init();
-      }
-
       if (!transport.connected) {
         await transport.connect();
       }
@@ -105,7 +149,6 @@ export function P2PVoiceCallPage() {
     setPlaybackStarted(false);
   };
 
-  // ⭐ 静音（停止发送声音）
   const toggleMute = async () => {
     if (!muted) {
       await voice.stopCapture();
@@ -116,10 +159,9 @@ export function P2PVoiceCallPage() {
     }
   };
 
-  // ⭐ 关闭扬声器（只是不播放，不影响接收）
   const toggleSpeaker = () => {
     if (speakerOn) {
-      voice.resetPlayback?.(); // 清空播放
+      voice.resetPlayback?.();
       setSpeakerOn(false);
     } else {
       setSpeakerOn(true);
@@ -142,7 +184,11 @@ export function P2PVoiceCallPage() {
           <Title order={4}>语音通话</Title>
 
           <Badge color={networkColor}>
-            {transport.connected ? "已连接" : "未连接"}
+            {transport.connected
+              ? "已连接"
+              : transport.initialized
+                ? "已初始化"
+                : "未初始化"}
           </Badge>
         </Group>
 
@@ -150,7 +196,11 @@ export function P2PVoiceCallPage() {
           py="xl"
           style={{
             borderRadius: 20,
-            background: "#f1f3f5",
+            background: transport.connected
+              ? "#d3f9d8"
+              : transport.initialized
+                ? "#e7f5ff"
+                : "#e9ecef",
           }}
         >
           <Stack align="center">
@@ -168,7 +218,17 @@ export function P2PVoiceCallPage() {
               <ThemeIcon
                 size={50}
                 radius="xl"
-                color={muted ? "gray" : voice.isCapturing ? "green" : "blue"}
+                color={
+                  muted
+                    ? "gray"
+                    : voice.isCapturing
+                      ? "green"
+                      : transport.connected
+                        ? "green"
+                        : transport.initialized
+                          ? "blue"
+                          : "gray"
+                }
                 variant="light"
               >
                 {muted ? (
@@ -189,7 +249,6 @@ export function P2PVoiceCallPage() {
           </Stack>
         </Box>
 
-        {/* ⭐ 控制按钮区 */}
         {inCall && (
           <Group justify="center" mt="lg" gap="xl">
             <ActionIcon

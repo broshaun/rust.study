@@ -2,8 +2,8 @@ import { Mian } from "./main";
 import { Msg } from "./msg";
 import { Mobile } from "./mobile";
 import { Item } from "./item";
-import { P2PPcmVoiceTest } from "./P2PPcmVoiceTest";
-import { P2PVoiceCallPage } from "./P2PVoiceCallPage";
+import { P2PPcmVoiceTest, P2PVoiceCallPage, Tools } from "./tools";
+
 
 
 
@@ -11,7 +11,13 @@ export const RsDialog = [
     {
         path: "dialog", element: <Mian />,
         children: [
-            { path: "msg", element: <Msg /> },
+            {
+                path: "msg", element: <Msg />, children: [
+                    { path: "tools", element: <Tools /> },
+                    { path: "rtc", element: <P2PPcmVoiceTest /> },
+                    { path: "phone", element: <P2PVoiceCallPage /> }
+                ]
+            },
             { path: "rtc", element: <P2PPcmVoiceTest /> },
             { path: "phone", element: <P2PVoiceCallPage /> }
         ],

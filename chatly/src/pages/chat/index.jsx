@@ -5,6 +5,8 @@ import { RsFriend } from "./friend";
 import { RsDialog } from "./dialog";
 import { RsMyInfo } from "./myinfo";
 import { Msg } from "./dialog/msg";
+import { RsMsgs } from "./messages";
+
 import { useHttpClient2 } from 'hooks/http';
 import { useToken } from "hooks/store"
 import { useUserDB } from 'hooks/db';
@@ -24,6 +26,7 @@ export const RsChat = [
           ...RsFriend,
           ...RsDialog,
           ...RsMyInfo,
+          ...RsMsgs,
         ],
       },
       {

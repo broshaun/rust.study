@@ -7,9 +7,9 @@ import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ScrollArea, Box, ActionIcon, Text } from "@mantine/core";
+import { ScrollArea, Box, ActionIcon, Text, Textarea, Button } from "@mantine/core";
 import { IconChevronLeft, IconPhone } from '@tabler/icons-react';
-import { MsgItem, MsgImgs, ChatMsg } from 'components/chat';
+import { MsgItem, ChatMsg } from 'components/chat';
 import { useNavigate, Outlet, useOutlet } from 'react-router';
 import { ImageUpload } from "components/flutter";
 import { IconPhoto } from '@tabler/icons-react';
@@ -18,11 +18,17 @@ import { IconPhoto } from '@tabler/icons-react';
 
 
 export const parseMsgContent = (msg) => {
-    if (typeof msg !== 'string') return { type: 'text', content: '' };
-    if (msg.startsWith('[image]')) {
-        return { type: 'image', content: msg.slice(7) };
+    if (typeof msg !== 'string') {
+        return { type: 'text', content: '' };
     }
-    return { type: 'text', content: msg };
+    if (msg.startsWith('[image]')) {
+        return { type: 'image', content: msg.slice(7), };
+    }
+    if (msg.startsWith('[phone]')) {
+        const raw = msg.slice(7).trim();
+        return { type: 'phone', content: msg, json: JSON.parse(raw) };
+    }
+    return { type: 'text', content: msg, };
 };
 
 export function Msg() {
@@ -38,8 +44,6 @@ export function Msg() {
     const [usable, setUsable] = useState(false)
 
     const uploadRef = useRef(null);
-
-
 
     const { http: httpFiles30 } = useHttpClient2('/files/img30/');
     const { joinPath: img30path } = useImgApiBase('/img30/')
@@ -81,8 +85,8 @@ export function Msg() {
     useEffect(() => {
         if (!db) return;
         const sub = liveQuery(
-            // () => db.table('message').where('uid').equals(uid).reverse().toArray()
-            () => db.table('message').where('uid').equals(uid).toArray()
+            () => db.table('message').where('uid').equals(uid).reverse().toArray()
+            // () => db.table('message').where('uid').equals(uid).toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
@@ -92,14 +96,19 @@ export function Msg() {
     }, [uid, db]);
 
 
-    const { mutateAsync: fnSendMsg } = useMutation(
+    const { mutateAsync: fnSendMsg, isPending: loading } = useMutation(
         {
             mutationFn: async ({ uid, msgText }) => {
+
+
+
                 http.requestBodyJson('PUT', { user_id: uid, msg: msgText })
                     .then((results) => {
                         if (!results) return;
                         const { code } = results;
                         if (code === 200) {
+                            // console.log('results',results)
+
                             db.table('message').put({
                                 uid: uid,
                                 msg: msgText,
@@ -125,32 +134,39 @@ export function Msg() {
         useFlushSync: false,
     });
 
+    // useEffect(() => {
+    //     if (!msgs.length) return;
+    //     requestAnimationFrame(() => {
+    //         rowVirtualizer.measure();
+    //         requestAnimationFrame(() => {
+    //             rowVirtualizer.scrollToIndex(msgs.length - 1, {
+    //                 align: "end",
+    //                 behavior: "auto",
+    //             });
+    //         });
+    //     });
+    // }, [msgs.length, rowVirtualizer]);
+
+
+
+
     const senddd = async () => {
         if (sendText) {
             await fnSendMsg({ uid, msgText: sendText })
         }
         if (uploadRef.current?.file) {
+            console.log('发送图片。。。')
             const imgFile = await uploadFile(uploadRef.current.file)
+
+            console.log('发送图片。。。', imgFile)
             await fnSendMsg({ uid, msgText: `[image]${img30path(imgFile)}` })
         }
+
         setSendText(() => "")
         uploadRef.current?.clear();
         return 'ok'
     }
 
-
-    useEffect(() => {
-        if (!msgs.length) return;
-        requestAnimationFrame(() => {
-            rowVirtualizer.measure();
-            requestAnimationFrame(() => {
-                rowVirtualizer.scrollToIndex(msgs.length - 1, {
-                    align: "end",
-                    behavior: "auto",
-                });
-            });
-        });
-    }, [msgs.length, rowVirtualizer]);
 
 
 
@@ -160,7 +176,7 @@ export function Msg() {
             left={isMobile ? <IconChevronLeft size={22} stroke={1.5} onClick={() => navigate(f_url)} /> : <a />}
         />
         <ChatMsg.Content>
-            <ScrollArea viewportRef={containerRef} h={winHeight - 130} >
+            <ScrollArea viewportRef={containerRef} h={winHeight - 200} >
                 <Box px={12}>
                     <Box style={{
                         height: rowVirtualizer.getTotalSize(),
@@ -173,6 +189,10 @@ export function Msg() {
                             const msg = msgs[virtualRow.index];
                             if (!msg) return null;
                             const { type, content } = parseMsgContent(msg?.msg);
+
+                            // console.log('type', type)
+                            // console.log('content', content)
+
                             return <MsgItem
                                 key={msg.id}
                                 avatar={msg.signal === 'send' ? sendAvatarSrc : receiveAvatarSrc}
@@ -184,49 +204,6 @@ export function Msg() {
                                 content={content}
                             />
 
-
-                            // if (type === 'image') {
-                            //     if (msg.signal === 'receive') {
-                            //         return <MsgImgs
-                            //             key={msg.id}
-                            //             avatar={receiveAvatarSrc}
-                            //             imgUrl={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'left'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     } else if (msg.signal === 'send') {
-                            //         return <MsgImgs
-                            //             key={msg.id}
-                            //             avatar={sendAvatarSrc}
-                            //             imgUrl={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'right'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     }
-                            // } else if (type === 'text') {
-                            //     if (msg.signal === 'receive') {
-                            //         return <MsgItem
-                            //             key={msg.id}
-                            //             avatar={receiveAvatarSrc}
-                            //             msg={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'left'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     } else if (msg.signal === 'send') {
-                            //         return <MsgItem
-                            //             key={msg.id}
-                            //             avatar={sendAvatarSrc}
-                            //             msg={content}
-                            //             timestamp={msg.timestamp}
-                            //             position={'right'}
-                            //             virtualRow={virtualRow}
-                            //         />
-                            //     }
-                            // }
-
                         })}
 
                     </Box>
@@ -234,25 +211,32 @@ export function Msg() {
             </ScrollArea>
         </ChatMsg.Content>
 
-        <ChatMsg.Send button={'发送'} usable={usable} onClick={() => senddd()} >
-            <ChatMsg.Tool onClose={() => { uploadRef.current?.clear(); setUsable(false); }} onOpen={() => setUsable(true)} >
+        <ChatMsg.Tool onClose={() => setUsable(false)} onOpen={() => { setUsable(true); navigate('/chat/dialog/msg/tools'); }} >
+            <Outlet context={{ setSendText, uploadRef }} />
+        </ChatMsg.Tool>
 
-                <ImageUpload ref={uploadRef} size={32} onDirtyChange={(b) => setUsable(p => b || p)}>
-                    <ActionIcon variant="subtle" color="gray" title="发送图片">
-                        <IconPhoto />
-                    </ActionIcon>
-                </ImageUpload>
+        <ChatMsg.Send button={'发送'} onClick={() => { setSendText(""); }} >
 
+            <Textarea
+                style={{ flex: 1 }}
+                placeholder="请输入..."
+                variant="filled"
+                radius="md"
+                autosize
+                minRows={1}
+                maxRows={1}
+                value={sendText}
+                onChange={(e) => { setSendText(e.currentTarget.value); setUsable((e.currentTarget.value.length > 0)); }}
+            />
+            <Button
+                disabled={!usable}
+                loading={loading}
+                onClick={() => { console.log('点击发送。。。'); senddd(); }}
+                radius="md"
+            >
+                发送
+            </Button>
 
-                <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/chat/dialog/rtc') }}>
-                    <IconPhone />
-                </ActionIcon>
-
-
-
-
-            </ChatMsg.Tool>
-            <ChatMsg.SendText onChange={(text) => { setSendText(text); if (text) { setUsable(true) } else { setUsable(false) }; }} />
         </ChatMsg.Send>
     </ChatMsg>
 
