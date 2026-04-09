@@ -120,9 +120,6 @@ export function P2PVoiceCallPage() {
     return "未初始化";
   }, [muted, voice.isCapturing, playbackStarted, speakerOn, transport.connected, transport.initialized]);
 
-  const handleBack = () => {
-    navigate("/chat/dialog");
-  };
 
   const startCall = async () => {
     try {
@@ -172,14 +169,6 @@ export function P2PVoiceCallPage() {
     <Container size="sm" py="lg">
       <Paper shadow="sm" radius="xl" p="lg" withBorder>
         <Group justify="space-between" mb="md">
-          <ActionIcon
-            variant="subtle"
-            size="lg"
-            radius="xl"
-            onClick={handleBack}
-          >
-            <IconArrowLeft size={20} stroke={2} />
-          </ActionIcon>
 
           <Title order={4}>语音通话</Title>
 

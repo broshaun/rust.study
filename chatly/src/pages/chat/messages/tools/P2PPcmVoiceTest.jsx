@@ -118,10 +118,6 @@ function P2PPcmVoicePageInner({ onHardReset }) {
     }
   };
 
-  const handleBack = () => {
-    navigate("/chat/dialog");
-  };
-
   const handleReset = async () => {
     try {
       await voice.stopCapture();
@@ -154,17 +150,6 @@ function P2PPcmVoicePageInner({ onHardReset }) {
   return (
     <Container size="lg" py={{ base: 8, sm: 12 }}>
       <Paper shadow="xs" radius="lg" p={{ base: "sm", sm: "md" }} withBorder>
-        <Group justify="space-between" align="center" mb="sm" wrap="nowrap">
-          <ActionIcon variant="light" size="md" radius="xl" onClick={handleBack}>
-            <IconArrowLeft size={18} />
-          </ActionIcon>
-
-          <Title order={4} ta="center" style={{ flex: 1 }}>
-            P2P 控制台
-          </Title>
-
-          <Box w={36} />
-        </Group>
 
         <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs" mb="sm">
           <StatusBox label="网络" value={transport.status} color={networkColor} />

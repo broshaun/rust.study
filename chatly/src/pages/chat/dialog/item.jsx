@@ -1,30 +1,23 @@
-import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
+import React, { useEffect, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
-import { useWinSize, useMsgState} from 'hooks';
+import { useWinSize, useMsgState } from 'hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { useImgApiBase } from "hooks/http"
 import { ScrollArea, Box } from '@mantine/core';
-
+import { useAppBar } from "components";
 
 
 export const Item = () => {
     const navigate = useNavigate()
-
     const [dialog, handlers] = useListState([]);
     const [account] = useLocalStorage({ key: 'savedAccount' })
-
-
-
     const { joinPath } = useImgApiBase('/avatar/')
-
     const { winHeight } = useWinSize()
     const { db } = useUserDB(account);
-
-    const setCurrent = useMsgState((s) => s.setCurrent);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
@@ -43,10 +36,18 @@ export const Item = () => {
         return () => sub.unsubscribe()
     }, [db])
 
+    const setLeftPath = useAppBar((state) => state.setLeftPath);
+    const setTitle = useAppBar((state) => state.setTitle);
+    useEffect(() => {
+        setLeftPath(null)
+        setTitle('消息列表');
+    }, [])
+
     // 打开聊天
+    const setCurrent = useMsgState((s) => s.setCurrent);
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
-        
+
         const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
         setCurrent({ 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName })
 

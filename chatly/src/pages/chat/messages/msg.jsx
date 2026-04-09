@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
-import { useWinSize, useMsgState,useTitle } from 'hooks';
+import { useWinSize, useMsgState } from 'hooks';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ScrollArea, Box, Textarea, Button } from "@mantine/core";
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Outlet, useNavigate, useOutletContext } from 'react-router';
+import { useAppBar } from "components";
 
 
 export const parseMsgContent = (msg) => {
@@ -25,17 +26,21 @@ export const parseMsgContent = (msg) => {
 
 export function Msg() {
     const navigate = useNavigate();
-    const setTitle = useTitle((state) => state.setTitle);
-
-
     const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
     const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, db } = useOutletContext();
+    const { winHeight } = useWinSize();
 
-
+    const setTitle = useAppBar((state) => state.setTitle);
+    const setLeftPath = useAppBar((state) => state.setLeftPath);
     const current = useMsgState((s) => s.current);
-    
-    console.log('current', current)
-    setTitle(current?.displayName)
+    useEffect(() => {
+        // console.log('current', current)
+        setTitle(current?.displayName)
+        setLeftPath('/chat/mobile/dialog/')
+    }, [current])
+
+
+
 
     const [msgs, setMsgs] = useState([]);
     const [sendText, setSendText] = useState('');
@@ -50,7 +55,7 @@ export function Msg() {
         return joinPathAvatar(myAvatar)
     }, [myAvatar]);
 
-    const { winHeight } = useWinSize();
+
 
     useEffect(() => {
         if (!db) return;

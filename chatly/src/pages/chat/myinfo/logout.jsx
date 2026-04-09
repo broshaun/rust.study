@@ -12,6 +12,7 @@ export const Logout = () => {
 
 
 
+
   const logout = () => {
     http.post('DELETE').catch(console.error);
     delToken()

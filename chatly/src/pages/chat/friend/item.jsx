@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { useHttpClient2,useImgApiBase } from 'hooks/http';
+import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useWinSize } from 'hooks';
 import { useUserDB } from 'hooks/db';
 import { liveQuery } from 'dexie';
@@ -10,7 +10,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { Group, ScrollArea, Box } from '@mantine/core';
-
+import { useAppBar } from "components";
 
 
 export const Item = () => {
@@ -29,7 +29,7 @@ export const Item = () => {
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
-            ...row,  avatar_url: joinPath(row.avatar_url)
+            ...row, avatar_url: joinPath(row.avatar_url)
         }));
         handlers.setState(formattedData);
     };
@@ -81,6 +81,14 @@ export const Item = () => {
             },
         }
     );
+
+
+    const setLeftPath = useAppBar((state) => state.setLeftPath);
+    const setTitle = useAppBar((state) => state.setTitle);
+    useEffect(() => {
+        setLeftPath(null)
+        setTitle('好友列表');
+    }, [])
 
     useEffect(() => {
         if (!db) return;

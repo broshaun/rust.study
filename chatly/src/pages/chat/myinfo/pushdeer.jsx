@@ -1,10 +1,9 @@
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
-import { InputText2 } from 'components';
+import { InputText2, useAppBar } from 'components';
 import { useHttpClient2 } from 'hooks/http';
-import { XBox, Icon } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query';
-
+import { Group } from "@mantine/core";
 
 
 export const PushDeer = () => {
@@ -12,6 +11,13 @@ export const PushDeer = () => {
     const location = useLocation();
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const [pushKey, setPushKey] = useState(location.state?.pushKey)
+
+    const setLeftPath = useAppBar((state) => state.setLeftPath);
+    const setTitle = useAppBar((state) => state.setTitle);
+    useEffect(() => {
+        setLeftPath('/chat/self/mylist/')
+        setTitle('请输入PushKey');
+    }, [])
 
     const { mutateAsync: update, isPending: loading } = useMutation({
         mutationFn: async (push_key) => {
@@ -30,23 +36,15 @@ export const PushDeer = () => {
         },
     });
 
-
     return <Suspense fallback={<div>加载中...</div>}>
-        <XBox justify='left' padding={20}>
-            <Icon name='chevron-left' onClick={() => { navigate('/chat/self/mylist/'); }} />
-        </XBox>
-        <XBox justify='center' padding={20}><h3>请输入PushKey</h3></XBox>
-
-        <XBox padding={20}>
+         <Group p={25}>
             {location.state &&
                 <InputText2 showMask minWidth='300' defaultValue={pushKey} onChangeValue={(value) => { setPushKey(value) }} >
                     <InputText2.Left icon='key' />
                     <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/chat/self/mylist/'); }} />
                 </InputText2>
             }
-        </XBox>
-
-
+        </Group>
     </Suspense>
 
 

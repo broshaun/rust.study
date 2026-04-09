@@ -1,34 +1,37 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
-import { useWinSize, useDateTime, useTitle } from 'hooks';
+import { useWinSize, useDateTime } from 'hooks';
+import { AppBar, useAppBar } from "components";
 import { IconTabler } from 'components/flutter';
 import { liveQuery } from 'dexie';
 import { useUserDB } from 'hooks/db';
-import { useLocalStorage, useDisclosure } from "@mantine/hooks";
-import { AppShell, ActionIcon, Stack, Group, Center, Grid, Title, Center } from "@mantine/core";
-import { IconMessage, IconUsers, IconUser, IconChevronLeft } from "@tabler/icons-react";
+import { useLocalStorage } from "@mantine/hooks";
+import { AppShell, Group, Center } from "@mantine/core";
+import { IconMessage, IconUsers, IconUser } from "@tabler/icons-react";
 
 
 
 export function Chat() {
+
+
   const navigate = useNavigate();
-  const title = useTitle((state) => state.title);
-  const setTitle = useTitle((state) => state.setTitle);
+  const isShowBack = useAppBar((state) => state.leftPath !== null);
+  
+  const setTitle = useAppBar((state) => state.setTitle);
+  // const setLeftPath = useAppBar((state) => state.setLeftPath);
+  // setTitle('主页')
 
   const [dot, setDot] = useState(false)
   const [account] = useLocalStorage({ key: 'savedAccount' })
-
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
   const { db } = useUserDB(account);
 
-  const [footerOpened, { toggle }] = useDisclosure(true);
-
   const items = useMemo(() => {
     return [
-      { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setTitle('消息列表'); setDot(false); }} dot={dot} /> },
-      { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); setTitle('好友列表'); }} /> },
-      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/chat/self/mylist/', { state: getTimestampMs() }); setTitle('我的信息'); }} /> },
+      { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setDot(false); }} dot={dot} /> },
+      { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); }} /> },
+      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/chat/self/mylist/'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, dot]);
 
@@ -49,11 +52,9 @@ export function Chat() {
     return (
       <AppShell navbar={{ width: 65 }}>
         <AppShell.Navbar >
-          <Stack gap={25} p={25} align="center">
-            {
-              visibleItems.map((item) => <div key={item.key}>{item.icon}</div>)
-            }
-          </Stack>
+          {
+            visibleItems.map((item) => <AppShell.Section key={item.key} align="center" p={10} >{item.icon}</AppShell.Section>)
+          }
         </AppShell.Navbar>
         <AppShell.Main>
           <Outlet />
@@ -67,23 +68,11 @@ export function Chat() {
     <AppShell
       padding={0}
       header={{ height: 55 }}
-      footer={{ height: 55, collapsed: !footerOpened }}
+      footer={{ height: 55, collapsed: isShowBack }}
+      transitionDuration={0}
     >
       <AppShell.Header>
-
-        <Grid p={15}>
-          <Grid.Col span={2}>
-            <Center>
-              <ActionIcon variant="subtle" color="gray" onClick={() => { navigate('/chat/'); toggle();setTitle('主页') }}>
-                <IconChevronLeft size={24} />
-              </ActionIcon>
-            </Center>
-          </Grid.Col>
-          <Grid.Col span={8}>
-            <Center><Title order={5}>{title}</Title></Center>
-          </Grid.Col>
-        </Grid>
-
+        <AppBar />
       </AppShell.Header>
       <AppShell.Main>
         <Outlet />

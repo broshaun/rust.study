@@ -1,7 +1,7 @@
 import React, { useState, Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { Modal } from 'components';
-import { deleteUserDB} from 'hooks/db';
+import { deleteUserDB } from 'hooks/db';
 import { clearAllImageCache } from "hooks/http";
 
 
@@ -9,7 +9,7 @@ import { clearAllImageCache } from "hooks/http";
 export const ClearLogs = () => {
     const navigate = useNavigate();
     const [open, setOpen] = useState(true);
- 
+
 
 
     const clear = async (click) => {
@@ -21,7 +21,7 @@ export const ClearLogs = () => {
             navigate('/chat/self/mylist/')
         }
         setOpen(false)
-        
+
     }
 
 
