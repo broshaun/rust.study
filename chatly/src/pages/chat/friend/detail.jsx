@@ -64,7 +64,7 @@ export function Detail() {
     const displayName = friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
     db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
 
-    const targetPath = isMobile ? '/message/' : '/chat/dialog/msg/';
+    const targetPath = isMobile ? '/chat/message/' : '/chat/dialog/message/';
     navigate(targetPath, {
       state: {
         uid: friend.uid,

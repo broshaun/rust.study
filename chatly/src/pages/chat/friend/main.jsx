@@ -126,13 +126,13 @@ export const Mian = () => {
                 <Paper p={0} radius={5} withBorder m="md">
                     <ScrollArea ref={parentRef} h={winHeight - 34} >
                         <Right>
-                            <Indicator disabled={afriend}>
-                                <ActionIcon onClick={() => { navigate('/chat/mobile/find/') }}>
-                                    <IconUserSearch />
+                            <Indicator color="red" dot size={5} offset={5} disabled={!afriend}>
+                                <ActionIcon variant="transparent" c="gray.6" color="gray" onClick={() => { navigate('/chat/mobile/find/') }}>
+                                    <IconUserSearch size={20} />
                                 </ActionIcon>
                             </Indicator>
                         </Right>
-                        <Divider fade />
+                        <Divider spacing={5} fade />
 
                         <Box px={12}>
                             <Box style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>

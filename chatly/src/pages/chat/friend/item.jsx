@@ -134,7 +134,7 @@ export const Item = () => {
             </Indicator>
         </Group>
 
-        <Divider fade spacing={8} />
+        <Divider spacing={5} fade />
 
         <ScrollArea viewportRef={parentRef} h={winHeight - 26} style={{ width: '100%' }}>
             <Box px={12}>
