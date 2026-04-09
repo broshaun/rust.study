@@ -4,12 +4,13 @@ import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useUserDB } from 'hooks/db';
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
-import { Divider, Icon, Right } from 'components/flutter';
+import { Divider, Right } from 'components/flutter';
 import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { Grid, ScrollArea, Box, Paper, Paper } from '@mantine/core';
+import { Grid, ScrollArea, Box, Paper, Paper, ActionIcon, Indicator } from '@mantine/core';
+import { IconUserSearch } from "@tabler/icons-react";
 
 
 export const Mian = () => {
@@ -125,7 +126,11 @@ export const Mian = () => {
                 <Paper p={0} radius={5} withBorder m="md">
                     <ScrollArea ref={parentRef} h={winHeight - 34} >
                         <Right>
-                            <Icon name='user-plus' onClick={() => { navigate('/chat/mobile/find/') }} badgeContent={afriend} />
+                            <Indicator disabled={afriend}>
+                                <ActionIcon onClick={() => { navigate('/chat/mobile/find/') }}>
+                                    <IconUserSearch />
+                                </ActionIcon>
+                            </Indicator>
                         </Right>
                         <Divider fade />
 
