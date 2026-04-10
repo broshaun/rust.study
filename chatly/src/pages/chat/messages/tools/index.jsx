@@ -1,5 +1,5 @@
-export { P2PPcmVoiceTest } from "./P2PPcmVoiceTest";
-export { P2PVoiceCallPage } from "./P2PVoiceCallPage";
+export { P2PPcmVoiceTest } from "components/chat"
+export { VoiceCall } from "./VoiceCall";
 export { Tools } from "./Tools";
 
 

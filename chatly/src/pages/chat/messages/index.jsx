@@ -1,5 +1,5 @@
 import { Msg } from "./msg";
-import { P2PPcmVoiceTest, P2PVoiceCallPage, Tools } from "./tools";
+import { P2PPcmVoiceTest, VoiceCall, Tools } from "./tools";
 import { Main } from "./main";
 
 
@@ -14,7 +14,7 @@ export const RsMsgs = [
                 ]
             },
             { path: "rtc", element: <P2PPcmVoiceTest /> },
-            { path: "phone", element: <P2PVoiceCallPage /> }
+            { path: "phone", element: <VoiceCall /> }
         ]
     },
 ];

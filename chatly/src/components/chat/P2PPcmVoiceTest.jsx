@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   Container,
   Paper,
-  Title,
   SimpleGrid,
   Text,
   Button,
@@ -12,10 +11,8 @@ import {
   Divider,
   Alert,
   Badge,
-  Modal,
-  ActionIcon,
+  Modal
 } from "@mantine/core";
-import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 
 import { useP2PVoiceTransport } from "hooks/voice/useP2PVoiceTransport";
@@ -23,6 +20,7 @@ import { usePcmVoice } from "hooks/voice/usePcmVoice";
 
 export function P2PPcmVoiceTest() {
   const [resetSeed, setResetSeed] = useState(0);
+
 
   return (
     <P2PPcmVoicePageInner

@@ -62,8 +62,6 @@ export const Main = () => {
         }
     );
 
-
-
     return <Outlet context={{ fnSendMsg, loading, uploadImg30, joinPathImg30, joinPathAvatar, db }} />
 
 }

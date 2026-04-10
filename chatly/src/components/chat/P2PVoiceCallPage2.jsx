@@ -13,7 +13,6 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import {
-  IconArrowLeft,
   IconPhone,
   IconPhoneOff,
   IconMicrophone,
@@ -21,7 +20,6 @@ import {
   IconVolume,
   IconVolumeOff,
 } from "@tabler/icons-react";
-import { useNavigate } from "react-router";
 import { useP2PVoiceTransport } from "hooks/voice/useP2PVoiceTransport";
 import { usePcmVoice } from "hooks/voice/usePcmVoice";
 
@@ -43,16 +41,10 @@ export function P2PVoiceCallPage() {
     subscribePacket: transport.onMessage,
   });
 
-  const navigate = useNavigate();
-
   const [inCall, setInCall] = useState(false);
   const [playbackStarted, setPlaybackStarted] = useState(false);
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
-
-
-
-
 
   const metrics = voice?.metrics || {};
 
