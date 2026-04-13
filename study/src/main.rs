@@ -1,28 +1,30 @@
 use mylib::add;
-// use mytest::test_struct;
+use myiroh::client;
 use myiroh::server;
 
 #[tokio::main]
 async fn main() {
     println!("Hello, world!");
+
     let num = add(1, 2);
     println!("add is {}", num);
 
-    // mytest create
-    // test_struct::fn1();
+    let (ep, addr) = server::get_server_addr().await.unwrap();
+    println!("SERVER ADDR: {:#?}", addr);
 
-    if let Ok((_ep, addr)) = server::get_server_addr().await{
+    let server_task = tokio::spawn(async move {
+        if let Err(e) = server::run_server(ep).await {
+            eprintln!("server error: {}", e);
+        }
+    });
 
-        // println!("SERVER EP = {:#?}", _ep);
-        println!("SERVER ADDR:{:#?}", addr);
-    }else{
-        println!("获取IP失败...");
-    };
-
+    client::run_client(addr).await.unwrap();
 
     if let Ok(ip) = server::get_public_ip().await {
-        println!("pub ip is {:#?}", ip);
+        println!("pub ip is {}", ip);
     } else {
         println!("获取Public IP失败...");
     }
+
+    let _ = server_task.await;
 }
