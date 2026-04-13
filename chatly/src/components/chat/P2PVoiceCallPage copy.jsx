@@ -34,7 +34,6 @@ function P2PVoiceCallPageInner({ onHardReset }) {
     maxSendQueuePackets: 24,
   });
 
-  // 完全使用你测试成功的原生调用方式，不加任何壳
   const voice = usePcmVoice({
     sampleRate: 48000,
     frameSamples: 480,
@@ -49,6 +48,7 @@ function P2PVoiceCallPageInner({ onHardReset }) {
   const [pasteError, setPasteError] = useState("");
   const [openedModal, setOpenedModal] = useState(null);
   const [playbackStarted, setPlaybackStarted] = useState(false);
+  const [didAutoInit, setDidAutoInit] = useState(false);
 
   useEffect(() => {
     if (voice.metrics.played > 0) {
@@ -56,8 +56,22 @@ function P2PVoiceCallPageInner({ onHardReset }) {
     }
   }, [voice.metrics.played]);
 
-  const localReady = useMemo(() => !!transport.localAddrJson, [transport.localAddrJson]);
-  const remoteReady = useMemo(() => !!parsedRemoteAddr, [parsedRemoteAddr]);
+  // 只做自动初始化，不做额外页面清理，避免打断正常收包
+  useEffect(() => {
+    if (!didAutoInit && transport.canInit) {
+      setDidAutoInit(true);
+      transport.init?.();
+    }
+  }, [didAutoInit, transport.canInit, transport]);
+
+  const localReady = useMemo(
+    () => !!transport.localAddrJson,
+    [transport.localAddrJson]
+  );
+  const remoteReady = useMemo(
+    () => !!parsedRemoteAddr,
+    [parsedRemoteAddr]
+  );
 
   const networkColor = useMemo(() => {
     if (transport.connected) return "green";
@@ -87,12 +101,16 @@ function P2PVoiceCallPageInner({ onHardReset }) {
     try {
       setPasteError("");
       setParsedRemoteAddr(null);
+
       const text = await navigator.clipboard.readText();
+
       if (!text || !text.trim()) {
         setPasteError("剪贴板为空");
         return;
       }
+
       transport.setRemoteAddrJson(text);
+
       try {
         setParsedRemoteAddr(JSON.parse(text));
       } catch {
@@ -104,14 +122,23 @@ function P2PVoiceCallPageInner({ onHardReset }) {
   };
 
   const handleReset = async () => {
-    try { await voice.stopCapture(); } catch (_) {}
-    try { voice.resetPlayback?.(); } catch (_) {}
-    try { await transport.close(); } catch (_) {}
+    try {
+      await voice.stopCapture();
+    } catch (_) {}
+
+    try {
+      voice.resetPlayback?.();
+    } catch (_) {}
+
+    try {
+      await transport.close();
+    } catch (_) {}
 
     setPlaybackStarted(false);
     setParsedRemoteAddr(null);
     setPasteError("");
     setOpenedModal(null);
+
     onHardReset?.();
   };
 
@@ -126,7 +153,6 @@ function P2PVoiceCallPageInner({ onHardReset }) {
   return (
     <Container size="lg" py={{ base: 8, sm: 12 }}>
       <Paper shadow="xs" radius="lg" p={{ base: "sm", sm: "md" }} withBorder>
-
         <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs" mb="sm">
           <StatusBox label="网络" value={transport.status} color={networkColor} />
           <StatusBox label="麦克风" value={voice.captureStatus} color={micColor} />
@@ -135,11 +161,6 @@ function P2PVoiceCallPageInner({ onHardReset }) {
 
         <Paper withBorder p="xs" radius="md" mb="sm" bg="gray.0">
           <Group gap="xs" wrap="wrap">
-            {/* 严格按照测试通过的手动流程：启动 -> 连接 -> 讲话 */}
-            <Button size="xs" onClick={transport.init} disabled={!transport.canInit}>
-              启动
-            </Button>
-
             <Button
               size="xs"
               onClick={transport.connect}
@@ -147,10 +168,6 @@ function P2PVoiceCallPageInner({ onHardReset }) {
               color="green"
             >
               连接
-            </Button>
-
-            <Button size="xs" onClick={handleReset} color="red" variant="light">
-              重置
             </Button>
 
             <Button
@@ -172,7 +189,11 @@ function P2PVoiceCallPageInner({ onHardReset }) {
           </Group>
         </Paper>
 
-        {pasteError && <Alert color="red" mb="sm">{pasteError}</Alert>}
+        {pasteError && (
+          <Alert color="red" mb="sm">
+            {pasteError}
+          </Alert>
+        )}
 
         <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
           <AddressCard
@@ -197,10 +218,23 @@ function P2PVoiceCallPageInner({ onHardReset }) {
         </SimpleGrid>
 
         <Divider mb="xs" />
-        <Text fw={600} size="sm" mb={6}>运行日志</Text>
+        <Text fw={600} size="sm" mb={6}>
+          运行日志
+        </Text>
 
         <ScrollArea h={180}>
-          <Box p="xs" style={{ background: "#0f172a", color: "#e2e8f0", fontSize: 11, fontFamily: "monospace", borderRadius: 8, whiteSpace: "pre-wrap", lineHeight: 1.45 }}>
+          <Box
+            p="xs"
+            style={{
+              background: "#0f172a",
+              color: "#e2e8f0",
+              fontSize: 11,
+              fontFamily: "monospace",
+              borderRadius: 8,
+              whiteSpace: "pre-wrap",
+              lineHeight: 1.45,
+            }}
+          >
             {mergedLogs.length ? mergedLogs.join("\n") : "暂无日志"}
           </Box>
         </ScrollArea>
@@ -212,11 +246,33 @@ function P2PVoiceCallPageInner({ onHardReset }) {
         )}
       </Paper>
 
-      <Modal opened={openedModal === "local"} onClose={() => setOpenedModal(null)} title={<Text fw={700} ta="center" w="100%">本地地址</Text>} size="xl" radius="lg" centered>
+      <Modal
+        opened={openedModal === "local"}
+        onClose={() => setOpenedModal(null)}
+        title={
+          <Text fw={700} ta="center" w="100%">
+            本地地址
+          </Text>
+        }
+        size="xl"
+        radius="lg"
+        centered
+      >
         <JsonViewer json={transport.localAddrJson} />
       </Modal>
 
-      <Modal opened={openedModal === "remote"} onClose={() => setOpenedModal(null)} title={<Text fw={700} ta="center" w="100%">远端地址</Text>} size="xl" radius="lg" centered>
+      <Modal
+        opened={openedModal === "remote"}
+        onClose={() => setOpenedModal(null)}
+        title={
+          <Text fw={700} ta="center" w="100%">
+            远端地址
+          </Text>
+        }
+        size="xl"
+        radius="lg"
+        centered
+      >
         <JsonViewer json={transport.remoteAddrJson} />
       </Modal>
     </Container>
@@ -226,8 +282,12 @@ function P2PVoiceCallPageInner({ onHardReset }) {
 function StatusBox({ label, value, color = "gray" }) {
   return (
     <Paper withBorder radius="md" p="xs">
-      <Text size="10px" c="dimmed" mb={2}>{label}</Text>
-      <Badge size="sm" color={color}>{value || "-"}</Badge>
+      <Text size="10px" c="dimmed" mb={2}>
+        {label}
+      </Text>
+      <Badge size="sm" color={color}>
+        {value || "-"}
+      </Badge>
     </Paper>
   );
 }
@@ -235,8 +295,12 @@ function StatusBox({ label, value, color = "gray" }) {
 function Metric({ label, value }) {
   return (
     <Paper withBorder radius="md" p="xs">
-      <Text size="10px" c="dimmed" mb={2}>{label}</Text>
-      <Text size="sm" fw={600}>{value ?? "-"}</Text>
+      <Text size="10px" c="dimmed" mb={2}>
+        {label}
+      </Text>
+      <Text size="sm" fw={600}>
+        {value ?? "-"}
+      </Text>
     </Paper>
   );
 }
@@ -246,12 +310,25 @@ function AddressCard({ title, active, onCopy, onPaste, onView }) {
     <Paper withBorder p="sm">
       <Group justify="space-between">
         <Text size="sm">{title}</Text>
-        <Badge color={active ? "green" : "gray"}>{active ? "就绪" : "未就绪"}</Badge>
+        <Badge color={active ? "green" : "gray"}>
+          {active ? "就绪" : "未就绪"}
+        </Badge>
       </Group>
+
       <Group mt="xs">
-        {onCopy && <Button size="xs" onClick={onCopy}>复制</Button>}
-        {onPaste && <Button size="xs" onClick={onPaste}>粘贴</Button>}
-        <Button size="xs" onClick={onView} disabled={!active}>查看</Button>
+        {onCopy && (
+          <Button size="xs" onClick={onCopy}>
+            复制
+          </Button>
+        )}
+        {onPaste && (
+          <Button size="xs" onClick={onPaste}>
+            粘贴
+          </Button>
+        )}
+        <Button size="xs" onClick={onView} disabled={!active}>
+          查看
+        </Button>
       </Group>
     </Paper>
   );
@@ -259,12 +336,30 @@ function AddressCard({ title, active, onCopy, onPaste, onView }) {
 
 function JsonViewer({ json }) {
   let displayText = "暂无数据";
+
   if (json && json.trim()) {
-    try { displayText = JSON.stringify(JSON.parse(json), null, 2); } catch { displayText = json; }
+    try {
+      displayText = JSON.stringify(JSON.parse(json), null, 2);
+    } catch {
+      displayText = json;
+    }
   }
+
   return (
     <ScrollArea h={420} type="always" offsetScrollbars>
-      <Box p="md" style={{ background: "#0f172a", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.5 }}>
+      <Box
+        p="md"
+        style={{
+          background: "#0f172a",
+          color: "#e2e8f0",
+          fontSize: 12,
+          fontFamily: "monospace",
+          borderRadius: 8,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+          lineHeight: 1.5,
+        }}
+      >
         {displayText}
       </Box>
     </ScrollArea>

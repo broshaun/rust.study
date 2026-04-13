@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "chatly/src-tauri",
-]
+members = ["chatly/src-tauri", "myiroh", "mylib", "mytest", "study"]
 resolver = "2"

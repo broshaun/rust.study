@@ -1,0 +1,8 @@
+[package]
+name = "study"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+mylib = { path = "../mylib" }
+mytest = { path = "../mytest" }
