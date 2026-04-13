@@ -9,9 +9,15 @@ pub async fn get_server_addr() -> Result<(Endpoint, EndpointAddr)> {
 
     let addr = ep.addr();
 
-    // 打印
-    println!("SERVER ADDR:{:#?}", addr);
-
     // 返回
     Ok((ep, addr))
+}
+
+
+pub async fn get_public_ip() -> anyhow::Result<String> {
+    let ip = reqwest::get("https://api.ipify.org")
+        .await?
+        .text()
+        .await?;
+    Ok(ip)
 }

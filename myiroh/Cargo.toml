@@ -5,5 +5,6 @@ edition = "2024"
 
 [dependencies]
 iroh = "0.97"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "io-util"] }
+tokio = { version = "1", features = ["full"] }
 anyhow = "1"
+reqwest = { version = "0.11", features = ["json"] }

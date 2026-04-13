@@ -11,6 +11,18 @@ async fn main() {
     // mytest create
     // test_struct::fn1();
 
-    let (_ep, addr) = server::get_server_addr().await.unwrap();
-    println!("{:?}", addr);
+    if let Ok((_ep, addr)) = server::get_server_addr().await{
+
+        // println!("SERVER EP = {:#?}", _ep);
+        println!("SERVER ADDR:{:#?}", addr);
+    }else{
+        println!("获取IP失败...");
+    };
+
+
+    if let Ok(ip) = server::get_public_ip().await {
+        println!("pub ip is {:#?}", ip);
+    } else {
+        println!("获取Public IP失败...");
+    }
 }
