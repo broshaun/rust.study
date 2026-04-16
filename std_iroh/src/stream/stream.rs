@@ -1,8 +1,11 @@
-use anyhow::{anyhow, Context, Result};
-use iroh::endpoint::{presets, Endpoint};
+use anyhow::{Context, Result, anyhow};
+use iroh::endpoint::{Endpoint, presets};
 use iroh_tickets::endpoint::EndpointTicket;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex, RwLock};
+use tokio::{
+    sync::{Mutex, RwLock, mpsc},
+    task::JoinHandle,
+};
 
 const ALPN: &[u8] = b"/zoey/chat/1";
 const CHANNEL_SIZE: usize = 64;
@@ -43,7 +46,7 @@ impl Node {
     /// 关闭整个节点
     pub async fn close(&self) {
         self.close_session().await;
-        let _ = self.endpoint.close().await;
+        self.endpoint.close().await;
     }
 
     pub fn is_online(&self) -> bool {
@@ -56,89 +59,90 @@ impl Node {
 
     pub fn print_info(&self) {
         println!("🚀 节点已启动");
-        println!("🎫 节点信息:\n{:#?}", EndpointTicket::new(self.endpoint.addr()));
+        println!(
+            "🎫 节点信息:\n{:#?}",
+            EndpointTicket::new(self.endpoint.addr())
+        );
     }
 
     /// 【服务端】等待连接
     pub async fn start_accept(&self) -> Result<()> {
-        let incoming = self.endpoint.accept().await.ok_or_else(|| anyhow!("Endpoint closed"))?;
+        let incoming = self.endpoint.accept().await.context("未能打开accept")?;
         let conn = incoming.await.context("Connection establishment failed")?;
-        let (send, recv) = conn.accept_bi().await.context("Failed to accept bi-stream")?;
-
-        self.bind_io_loop(send, recv).await;
+        let (send, recv) = conn
+            .accept_bi()
+            .await
+            .context("Failed to accept bi-stream")?;
+        self.bind_io_loop(send, recv).await?;
         Ok(())
     }
 
     /// 【客户端】连接远端
     pub async fn start_connect(&self, ticket_str: &str) -> Result<()> {
-        let ticket: EndpointTicket = ticket_str.parse().map_err(|e| anyhow!("解析失败: {e}"))?;
-        
-        let conn = self.endpoint.connect(ticket, ALPN).await
+        let ticket: EndpointTicket = ticket_str.parse().context("解析失败")?;
+        let conn = self
+            .endpoint
+            .connect(ticket, ALPN)
+            .await
             .context("Failed to connect to peer")?;
-
         let (mut send, recv) = conn.open_bi().await.context("Failed to open bi-stream")?;
-
         // 发送握手信号
-        send.write_all(b"HELO").await.context("Failed to send handshake")?;
-
-        self.bind_io_loop(send, recv).await;
+        send.write_all(b"HELO")
+            .await
+            .context("Failed to send handshake")?;
+        self.bind_io_loop(send, recv).await?;
         Ok(())
     }
 
     /// 发送数据：极速非阻塞设计
     pub async fn send(&self, data: Vec<u8>) -> Result<()> {
         // 只需瞬间获取读锁，克隆一个 Sender 出来，立刻释放锁
-        let tx = self.tx.read().await.clone(); 
-        
-        match tx {
-            Some(sender) => {
-                sender.send(data).await.map_err(|_| anyhow!("会话已断开，发送失败"))?;
-                Ok(())
-            }
-            None => Err(anyhow!("No active session")),
-        }
+        let tx = self.tx.read().await.clone().context("No active session")?;
+        tx.send(data).await.context("会话已断开，发送失败")?;
+        Ok(())
     }
 
     /// 接收数据：安全的独占接收
     pub async fn recv(&self) -> Result<Option<Vec<u8>>> {
         let mut rx_guard = self.rx.lock().await;
-        
-        match rx_guard.as_mut() {
-            Some(rx) => Ok(rx.recv().await),
-            None => Err(anyhow!("No active session")),
-        }
+        let rx = rx_guard.as_mut().context("No active session")?;
+        Ok(rx.recv().await)
     }
 
     /// 内部私有方法：处理网络流转换并绑定到当前 Node
-    async fn bind_io_loop(&self, mut quic_send: iroh::endpoint::SendStream, mut quic_recv: iroh::endpoint::RecvStream) {
+    async fn bind_io_loop(
+        &self,
+        mut quic_send: iroh::endpoint::SendStream,
+        mut quic_recv: iroh::endpoint::RecvStream,
+    ) -> Result<()> {
         let (outgoing_tx, mut outgoing_rx) = mpsc::channel::<Vec<u8>>(CHANNEL_SIZE);
         let (incoming_tx, incoming_rx) = mpsc::channel::<Vec<u8>>(CHANNEL_SIZE);
 
-        // 更新状态 (先清空旧的连接)
         *self.tx.write().await = Some(outgoing_tx);
         *self.rx.lock().await = Some(incoming_rx);
 
-        // 任务 A: [网络 -> 内存]
+        // 任务 A: 网络 -> 内存
         tokio::spawn(async move {
             let mut buf = vec![0u8; 8192];
+
             loop {
                 match quic_recv.read(&mut buf).await {
-                    Ok(Some(n)) if n > 0 => {
-                        if incoming_tx.send(buf[..n].to_vec()).await.is_err() {
-                            break; // 内部不再接收，退出
+                    Ok(Some(n)) => {
+                        if let Err(e) = incoming_tx.send(buf[..n].to_vec()).await {
+                            eprintln!("🔴 [通道发送失败]: {e}");
+                            break;
                         }
                     }
-                    Ok(None) => break, // 对端关闭
+                    Ok(None) => break,
                     Err(e) => {
                         eprintln!("🔴 [IO Read Error]: {e}");
                         break;
                     }
-                    _ => {}
                 }
             }
         });
 
-        // 任务 B: [内存 -> 网络]
+        // 任务 B: 内存 -> 网络
         tokio::spawn(async move {
             while let Some(data) = outgoing_rx.recv().await {
                 if let Err(e) = quic_send.write_all(&data).await {
@@ -146,7 +150,12 @@ impl Node {
                     break;
                 }
             }
-            let _ = quic_send.finish(); // 优雅结束
+
+            if let Err(e) = quic_send.finish() {
+                eprintln!("🔴 [close stream err]: {e}");
+            }
         });
+
+        Ok(())
     }
 }
