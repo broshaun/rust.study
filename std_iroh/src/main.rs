@@ -8,8 +8,8 @@ use tokio::time::{sleep, Duration};
 async fn main() -> Result<()> {
     println!("=== Iroh 双工流开发测试 ===\n");
 
-    let server = stream::stream::Node::new().await?;
-    let client = stream::stream::Node::new().await?;
+    let mut server = stream::stream::Node::new().await?;
+    let mut client = stream::stream::Node::new().await?;
 
     let ticket = server.get_ticket();
     server.print_info();
@@ -29,13 +29,9 @@ async fn main() -> Result<()> {
 
         loop {
             match server.recv().await {
-                Ok(Some(data)) => {
+                Ok(data) => {
                     println!("📬 [Server] 收到 bytes: {:?}", data);
                     println!("📬 [Server] 收到 text:  {}", String::from_utf8_lossy(&data));
-                }
-                Ok(None) => {
-                    println!("⚠️ [Server] 客户端已断开连接");
-                    break;
                 }
                 Err(e) => {
                     eprintln!("🔴 [Server] 接收失败: {:#?}", e);
@@ -58,10 +54,12 @@ async fn main() -> Result<()> {
     client.send(b"123".to_vec()).await?;
 
     match client.recv().await {
-        Ok(Some(data)) => {
+        Ok(data) => {
             println!("📬 [Client] 收到 text: {}", String::from_utf8_lossy(&data));
         }
-        _ => println!("⚠️ [Client] 没收到服务端消息"),
+        Err(e) => {
+            println!("⚠️ [Client] 没收到服务端消息{:#?}",e);
+        }
     }
 
     sleep(Duration::from_millis(500)).await;

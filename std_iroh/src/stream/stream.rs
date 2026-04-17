@@ -1,24 +1,18 @@
 use anyhow::{Context, Result, anyhow};
+use flume::{Receiver, Sender};
 use iroh::endpoint::{Endpoint, presets};
 use iroh_tickets::endpoint::EndpointTicket;
-use std::sync::Arc;
-use tokio::{
-    sync::{Mutex, RwLock, mpsc},
-    task::JoinHandle,
-};
 
 const ALPN: &[u8] = b"/zoey/chat/1";
-const CHANNEL_SIZE: usize = 64;
 
-/// 优雅的 Node 结构：彻底解耦了发送与接收，并支持任意 Clone
-#[derive(Clone)]
+struct BiChannel {
+    tx: Sender<Vec<u8>>,
+    rx: Receiver<Vec<u8>>,
+}
+
 pub struct Node {
     endpoint: Endpoint,
-    // 读写分离存放：
-    // tx 使用 RwLock，发送时只需短暂拿读锁 clone 出一份 Sender 即可，毫不阻塞
-    tx: Arc<RwLock<Option<mpsc::Sender<Vec<u8>>>>>,
-    // rx 必须独占接收，使用 Mutex
-    rx: Arc<Mutex<Option<mpsc::Receiver<Vec<u8>>>>>,
+    bichannel: Option<BiChannel>,
 }
 
 impl Node {
@@ -27,25 +21,16 @@ impl Node {
             .alpns(vec![ALPN.to_vec()])
             .bind()
             .await?;
-
         endpoint.online().await;
-
         Ok(Self {
             endpoint,
-            tx: Arc::new(RwLock::new(None)),
-            rx: Arc::new(Mutex::new(None)),
+            bichannel: None,
         })
-    }
-
-    /// 主动清空当前 session（利用 Rust 机制，通道释放后后台任务会自动退出）
-    pub async fn close_session(&self) {
-        self.tx.write().await.take();
-        self.rx.lock().await.take();
     }
 
     /// 关闭整个节点
     pub async fn close(&self) {
-        self.close_session().await;
+        // self.close_session();
         self.endpoint.close().await;
     }
 
@@ -66,7 +51,7 @@ impl Node {
     }
 
     /// 【服务端】等待连接
-    pub async fn start_accept(&self) -> Result<()> {
+    pub async fn start_accept(&mut self) -> Result<()> {
         let incoming = self.endpoint.accept().await.context("未能打开accept")?;
         let conn = incoming.await.context("Connection establishment failed")?;
         let (send, recv) = conn
@@ -78,15 +63,10 @@ impl Node {
     }
 
     /// 【客户端】连接远端
-    pub async fn start_connect(&self, ticket_str: &str) -> Result<()> {
+    pub async fn start_connect(&mut self, ticket_str: &str) -> Result<()> {
         let ticket: EndpointTicket = ticket_str.parse().context("解析失败")?;
-        let conn = self
-            .endpoint
-            .connect(ticket, ALPN)
-            .await
-            .context("Failed to connect to peer")?;
-        let (mut send, recv) = conn.open_bi().await.context("Failed to open bi-stream")?;
-        // 发送握手信号
+        let conn = self.endpoint.connect(ticket, ALPN).await?;
+        let (mut send, recv) = conn.open_bi().await?;
         send.write_all(b"HELO")
             .await
             .context("Failed to send handshake")?;
@@ -94,66 +74,65 @@ impl Node {
         Ok(())
     }
 
-    /// 发送数据：极速非阻塞设计
+    /// 发送数据：利用 Flume 的异步发送
     pub async fn send(&self, data: Vec<u8>) -> Result<()> {
-        // 只需瞬间获取读锁，克隆一个 Sender 出来，立刻释放锁
-        let tx = self.tx.read().await.clone().context("No active session")?;
-        tx.send(data).await.context("会话已断开，发送失败")?;
+        let Some(ch) = self.bichannel.as_ref() else {
+            return Err(anyhow!("通道未开启"));
+        };
+        let tx = ch.tx.clone();
+        tx.send_async(data).await.context("发送失败")?;
         Ok(())
     }
 
-    /// 接收数据：安全的独占接收
-    pub async fn recv(&self) -> Result<Option<Vec<u8>>> {
-        let mut rx_guard = self.rx.lock().await;
-        let rx = rx_guard.as_mut().context("No active session")?;
-        Ok(rx.recv().await)
+    /// 接收数据：利用 Flume 的异步接收
+    pub async fn recv(&self) -> Result<Vec<u8>> {
+        let Some(ch) = self.bichannel.as_ref() else {
+            return Err(anyhow!("通道未开启"));
+        };
+        let rx = ch.rx.clone();
+        let data = rx.recv_async().await.context("接收失败")?;
+        Ok(data)
     }
 
-    /// 内部私有方法：处理网络流转换并绑定到当前 Node
+    /// 内部私ive方法：处理网络流转换
     async fn bind_io_loop(
-        &self,
+        &mut self,
         mut quic_send: iroh::endpoint::SendStream,
         mut quic_recv: iroh::endpoint::RecvStream,
     ) -> Result<()> {
-        let (outgoing_tx, mut outgoing_rx) = mpsc::channel::<Vec<u8>>(CHANNEL_SIZE);
-        let (incoming_tx, incoming_rx) = mpsc::channel::<Vec<u8>>(CHANNEL_SIZE);
+        let (outgoing_tx, outgoing_rx) = flume::unbounded::<Vec<u8>>();
+        let (incoming_tx, incoming_rx) = flume::unbounded::<Vec<u8>>();
 
-        *self.tx.write().await = Some(outgoing_tx);
-        *self.rx.lock().await = Some(incoming_rx);
+        self.bichannel = Some(BiChannel {
+            tx: outgoing_tx,
+            rx: incoming_rx,
+        });
 
-        // 任务 A: 网络 -> 内存
+        // 任务 A: 网络 -> 内存 (Iroh -> Flume)
         tokio::spawn(async move {
             let mut buf = vec![0u8; 8192];
-
             loop {
                 match quic_recv.read(&mut buf).await {
                     Ok(Some(n)) => {
-                        if let Err(e) = incoming_tx.send(buf[..n].to_vec()).await {
+                        if let Err(e) = incoming_tx.send_async(buf[..n].to_vec()).await {
                             eprintln!("🔴 [通道发送失败]: {e}");
                             break;
                         }
                     }
                     Ok(None) => break,
-                    Err(e) => {
-                        eprintln!("🔴 [IO Read Error]: {e}");
-                        break;
-                    }
+                    Err(_) => break,
                 }
             }
         });
 
-        // 任务 B: 内存 -> 网络
+        // 任务 B: 内存 -> 网络 (Flume -> Iroh)
         tokio::spawn(async move {
-            while let Some(data) = outgoing_rx.recv().await {
-                if let Err(e) = quic_send.write_all(&data).await {
-                    eprintln!("🔴 [IO Write Error]: {e}");
+            while let Ok(data) = outgoing_rx.recv_async().await {
+                if let Err(_) = quic_send.write_all(&data).await {
                     break;
                 }
             }
-
-            if let Err(e) = quic_send.finish() {
-                eprintln!("🔴 [close stream err]: {e}");
-            }
+            let _ = quic_send.finish();
         });
 
         Ok(())
