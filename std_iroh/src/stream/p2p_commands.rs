@@ -1,0 +1,136 @@
+use super::stream::P2PNode;
+use async_lock::RwLock;
+use std::sync::atomic::{AtomicBool, Ordering};
+use tauri::ipc::Channel;
+
+#[derive(Default)]
+pub struct AppState {
+    pub is_online: AtomicBool,
+    pub p2p_node: RwLock<Option<P2PNode>>,
+}
+
+impl AppState {
+    pub fn new() -> Self {
+        Self {
+            is_online: AtomicBool::new(false),
+            p2p_node: RwLock::new(None),
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn p2p_init(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let mut lock = state.p2p_node.write().await;
+    let Ok(node) = P2PNode::new().await else {
+        return Err("初始化失败".to_string());
+    };
+    *lock = Some(node);
+
+    Ok(" P2P 节点初始化成功".to_string())
+}
+
+#[tauri::command]
+pub async fn p2p_close(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let guard = state.p2p_node.read().await;
+    let Some(node) = guard.as_ref() else {
+        return Err("未启动节点".to_string());
+    };
+    // let Some(ch) = state.p2p_channel.as_ref() else {
+    //     return Err(anyhow!("未启动通道"));
+    // };
+    node.close().await;
+
+    Ok("关闭节点".to_owned())
+}
+
+#[tauri::command]
+pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let guard = state.p2p_node.read().await;
+    if let Some(p2p) = guard.as_ref() {
+        let ticket = p2p.get_info();
+        return Ok(ticket);
+    };
+    Ok("".to_owned())
+}
+
+#[tauri::command]
+pub async fn p2p_is_online(state: tauri::State<'_, AppState>) -> Result<bool, String> {
+    let guard = state.p2p_node.read().await;
+    let Some(p2p) = guard.as_ref() else {
+        return Ok(false);
+    };
+    Ok(p2p.is_online())
+}
+
+#[tauri::command]
+pub async fn p2p_get_ticket(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let guard = state.p2p_node.read().await;
+    if let Some(p2p) = guard.as_ref() {
+        let ticket = p2p.get_ticket();
+        return Ok(ticket);
+    };
+    Ok("".to_owned())
+}
+
+/**
+ * 启动监听后会无限循环，内不会执行到最后
+ */
+#[tauri::command]
+pub async fn p2p_start_accept(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let guard = state.p2p_node.read().await;
+    let Some(node) = guard.as_ref() else {
+        return Err("未启动节点".to_string());
+    };
+
+    if let Err(e) = node.start_accept().await{
+        return Err(format!("启动监听节点失败{:#?}", e));
+    };
+    Ok(node.get_info())
+}
+
+#[tauri::command]
+pub async fn p2p_start_connect(
+    state: tauri::State<'_, AppState>,
+    addr: String,
+) -> Result<String, String> {
+    let guard = state.p2p_node.read().await;
+    let Some(node) = guard.as_ref() else {
+        return Err("未启动节点".to_string());
+    };
+
+
+    if let Err(e) = node.start_connect(&addr).await {
+        return Err(format!("连接失败{:#?}", e));
+    };
+    Ok(node.get_info())
+}
+
+#[tauri::command]
+pub async fn p2p_send(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<(), String> {
+    let rgch = state.p2p_node.read().await;
+    let Some(ch) = rgch.as_ref() else {
+        return Err("未启动通道".to_string());
+    };
+    if let Err(e) = ch.send(data).await {
+        return Err(format!("发送错误{:?}", e));
+    };
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn p2p_recv(
+    state: tauri::State<'_, AppState>,
+    on_data: Channel<Vec<u8>>,
+) -> Result<(), String> {
+    let rgch = state.p2p_node.read().await;
+    let Some(ch) = rgch.as_ref() else {
+        return Err("未启动通道".to_string());
+    };
+    loop {
+        if let Ok(data) = ch.recv().await {
+            if let Err(e) = on_data.send(data) {
+                return Err(format!("前端通道发送失败:{:?}", e));
+            };
+        };
+    }
+}

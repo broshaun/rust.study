@@ -7,7 +7,7 @@ import { liveQuery } from 'dexie';
 import { useUserDB } from 'hooks/db';
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
-import { IconMessage, IconUsers, IconUser } from "@tabler/icons-react";
+import { IconMessage, IconUsers, IconUser,IconFlask } from "@tabler/icons-react";
 
 
 
@@ -29,6 +29,7 @@ export function Chat() {
 
   const items = useMemo(() => {
     return [
+      { key: 'test', icon: <IconTabler icon={IconFlask} label='测试' labelPos='bottom' onClick={() => { navigate('/chat/test/') }} /> },
       { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setDot(false); }} dot={dot} /> },
       { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); }} /> },
       { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/chat/self/mylist/'); }} /> },
