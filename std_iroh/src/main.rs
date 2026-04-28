@@ -38,7 +38,6 @@ async fn run_client(ticket: String) -> Result<()> {
     println!("=== Iroh Client 模式 ===\n");
 
     let client = P2PNode::new().await?;
-    client.print_info();
     println!("Client is_online: {}", client.is_online());
 
     println!("🔵 [Client] 正在连接服务端...");
@@ -116,8 +115,6 @@ async fn run_server() -> Result<()> {
 
     let server = P2PNode::new().await?;
     let ticket = server.get_ticket();
-
-    server.print_info();
     println!("Server is_online: {}", server.is_online());
 
     println!("\n===== SERVER TICKET =====");

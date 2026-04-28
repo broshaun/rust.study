@@ -1,7 +1,9 @@
 use super::stream::P2PNode;
-use async_lock::RwLock;
+use tokio::sync::RwLock;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri::ipc::Channel;
+use tauri::{Emitter, ipc::Channel};
+use tokio::sync::{Mutex,watch,mpsc::{Receiver,Sender,channel}};
+
 
 #[derive(Default)]
 pub struct AppState {
@@ -24,8 +26,10 @@ pub async fn p2p_init(state: tauri::State<'_, AppState>) -> Result<String, Strin
     let Ok(node) = P2PNode::new().await else {
         return Err("初始化失败".to_string());
     };
-    *lock = Some(node);
+    *lock = Some(node.clone());
 
+    let a = node.is_online();
+    state.is_online.store(a, Ordering::SeqCst);
     Ok(" P2P 节点初始化成功".to_string())
 }
 
@@ -35,10 +39,8 @@ pub async fn p2p_close(state: tauri::State<'_, AppState>) -> Result<String, Stri
     let Some(node) = guard.as_ref() else {
         return Err("未启动节点".to_string());
     };
-    // let Some(ch) = state.p2p_channel.as_ref() else {
-    //     return Err(anyhow!("未启动通道"));
-    // };
     node.close().await;
+    state.is_online.store(false, Ordering::SeqCst);
 
     Ok("关闭节点".to_owned())
 }
@@ -54,13 +56,51 @@ pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, Strin
 }
 
 #[tauri::command]
-pub async fn p2p_is_online(state: tauri::State<'_, AppState>) -> Result<bool, String> {
+pub async fn p2p_is_online(state: tauri::State<'_, AppState>, window: tauri::Window) -> Result<bool, String> {
     let guard = state.p2p_node.read().await;
     let Some(p2p) = guard.as_ref() else {
         return Ok(false);
     };
     Ok(p2p.is_online())
+  
+
 }
+
+
+#[tauri::command]
+// 这里加个 window 参数！！！
+pub async fn send_to_this_window(window: tauri::Window) {
+    // 给【当前这个窗口】发消息
+
+
+        let (status_tx, mut status_rx) = watch::channel(true);
+        let a = status_tx.send(false);
+        // let a = status_tx.send(false);
+        let status_rx2 = status_rx.clone();
+        // let a = status_rx2.borrow();
+
+    
+        match status_rx.changed().await {
+            Ok(a) => {
+                // 获取最新状态
+                let state = status_rx.borrow();
+                println!("当前最新状态：{:?}", state);
+                window.emit("state-change", *state).ok();
+            }
+            Err(a) => {
+                println!("通道关闭，退出");
+                // return false;
+            }
+        };
+
+
+    window.emit(
+        "message",       // 事件名字
+        "我是 Rust，我只发给这个窗口" // 数据
+    ).unwrap();
+
+}
+
 
 #[tauri::command]
 pub async fn p2p_get_ticket(state: tauri::State<'_, AppState>) -> Result<String, String> {
@@ -82,10 +122,13 @@ pub async fn p2p_start_accept(state: tauri::State<'_, AppState>) -> Result<Strin
         return Err("未启动节点".to_string());
     };
 
-    if let Err(e) = node.start_accept().await{
-        return Err(format!("启动监听节点失败{:#?}", e));
-    };
-    Ok(node.get_info())
+    let node2 = node.clone();
+
+    tokio::spawn(async move {
+        let _ = node2.start_accept().await;
+    });
+
+    Ok("✅ 后台监听已启动，等待客户端连接".into())
 }
 
 #[tauri::command]
@@ -98,11 +141,10 @@ pub async fn p2p_start_connect(
         return Err("未启动节点".to_string());
     };
 
-
     if let Err(e) = node.start_connect(&addr).await {
         return Err(format!("连接失败{:#?}", e));
     };
-    Ok(node.get_info())
+    Ok("✅ 发起客户端连接".into())
 }
 
 #[tauri::command]

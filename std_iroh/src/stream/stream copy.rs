@@ -19,7 +19,7 @@ pub struct P2PChannel {
     // 网络 -> 内存 (Iroh -> Flume)
     incoming_rx: flume::Receiver<ChannelMessage>,
     incoming_tx: flume::Sender<ChannelMessage>,
-    // 通道状态
+    // 通达状态
     is_active: Arc<AtomicBool>,
 }
 
@@ -44,11 +44,13 @@ impl P2PChannel {
 
     async fn send(&self, data: Vec<u8>) -> Result<bool> {
         let active_flag = self.is_active.clone();
+
         if active_flag.load(Ordering::Relaxed){
             let msg = ChannelMessage::Data(data);
             self.outgoing_tx.send_async(msg).await.context("发送失败")?;
             return Ok(true);
         };
+
         Ok(false)
     }
 
@@ -190,12 +192,7 @@ impl P2PNode {
     }
 
     pub fn is_online(&self) -> bool {
-        let active_flag = self.message.is_active.clone();
-        if !self.endpoint.is_closed() && active_flag.load(Ordering::Relaxed) {
-            return true;
-        }else{
-            return false;
-        }
+        !self.endpoint.is_closed()
     }
 
     pub fn get_ticket(&self) -> String {
@@ -206,11 +203,11 @@ impl P2PNode {
         format!("{:#?}", EndpointTicket::new(self.endpoint.addr()))
     }
 
-    // pub fn print_info(&self) {
-    //     println!("🚀 节点已启动");
-    //     println!(
-    //         "🎫 节点信息:\n{:#?}",
-    //         EndpointTicket::new(self.endpoint.addr())
-    //     );
-    // }
+    pub fn print_info(&self) {
+        println!("🚀 节点已启动");
+        println!(
+            "🎫 节点信息:\n{:#?}",
+            EndpointTicket::new(self.endpoint.addr())
+        );
+    }
 }
