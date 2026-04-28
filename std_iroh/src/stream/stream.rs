@@ -14,7 +14,7 @@ use tokio::sync::{
 const ALPN: &[u8] = b"/zoey/chat/1";
 
 #[derive(Clone, Debug)]
-pub enum ChannelMessage {
+enum ChannelMessage {
     Data(Vec<u8>),
     Stop,
 }
@@ -47,8 +47,13 @@ impl P2PChannel {
     /**
      * 彻底关闭通道
      */
-    fn close(&self) {
-        self.is_active.store(false, Ordering::SeqCst);
+    async fn stop(&self)-> Result<()> {
+        let active_flag = self.is_active.clone();
+        if active_flag.load(Ordering::Relaxed) {
+            let msg = ChannelMessage::Stop;
+            self.outgoing_tx.send(msg).await?;
+        };
+        Ok(())
     }
 
     async fn send(&self, data: Vec<u8>) -> Result<bool> {
@@ -70,7 +75,7 @@ impl P2PChannel {
                 return Ok(data);
             }
             ChannelMessage::Stop => {
-                self.close();
+                self.is_active.store(false, Ordering::SeqCst);
                 return Err(anyhow!("未能接收信息"));
             }
         };
@@ -82,13 +87,25 @@ impl P2PChannel {
         mut quic_recv: iroh::endpoint::RecvStream,
     ) -> Result<tokio::task::JoinHandle<Result<()>>> {
         let mut set = tokio::task::JoinSet::<Result<()>>::new();
+
         // 任务 A: 网络 -> 内存 (Iroh -> Flume)
+        let active_flag = self.is_active.clone();
         let tx = self.incoming_tx.clone();
         set.spawn(async move {
             let mut buf = vec![0u8; 8192];
-            while let Some(n) = quic_recv.read(&mut buf).await? {
-                let data = buf[..n].to_vec();
-                tx.send(ChannelMessage::Data(data)).await?
+            while active_flag.load(Ordering::Relaxed) {
+                let result = quic_recv.read(&mut buf).await?;
+                match result {
+                    Some(n) => {
+                        let data = buf[..n].to_vec();
+                        tx.send(ChannelMessage::Data(data)).await?;
+                    }
+                    None => {
+                        tx.send(ChannelMessage::Stop).await?;
+                        active_flag.store(false, Ordering::SeqCst);
+                        break;
+                    }
+                }
             }
             return Ok(());
         });
@@ -182,7 +199,7 @@ impl P2PNode {
 
     pub async fn close(&self) {
         self.endpoint.close().await;
-        self.message.close();
+        let _ = self.message.stop().await;
     }
 
     pub fn is_online(&self) -> bool {
