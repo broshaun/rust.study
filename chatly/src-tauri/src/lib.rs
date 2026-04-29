@@ -63,6 +63,7 @@ pub fn run() {
             p2p_commands::p2p_close,
             p2p_commands::p2p_info,
             p2p_commands::p2p_is_online,
+            p2p_commands::p2p_is_channel,
             p2p_commands::p2p_get_ticket,
             p2p_commands::p2p_start_accept,
             p2p_commands::p2p_start_connect,

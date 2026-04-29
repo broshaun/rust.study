@@ -1,9 +1,7 @@
 use super::stream::P2PNode;
-use async_lock::RwLock;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri::{Emitter, ipc::Channel};
-use tokio::sync::{Mutex,watch,mpsc::{Receiver,Sender,channel}};
-
+use tauri::{ipc::Channel, Emitter};
+use tokio::sync::{watch, RwLock};
 
 #[derive(Default)]
 pub struct AppState {
@@ -56,14 +54,21 @@ pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, Strin
 }
 
 #[tauri::command]
-pub async fn p2p_is_online(state: tauri::State<'_, AppState>, window: tauri::Window) -> Result<bool, String> {
+pub async fn p2p_is_online(state: tauri::State<'_, AppState>) -> Result<bool, String> {
     let guard = state.p2p_node.read().await;
     let Some(p2p) = guard.as_ref() else {
         return Ok(false);
     };
     Ok(p2p.is_online())
-  
+}
 
+#[tauri::command]
+pub async fn p2p_is_channel(state: tauri::State<'_, AppState>) -> Result<bool, String> {
+    let guard = state.p2p_node.read().await;
+    let Some(p2p) = guard.as_ref() else {
+        return Ok(false);
+    };
+    Ok(p2p.is_channel())
 }
 
 
@@ -71,34 +76,50 @@ pub async fn p2p_is_online(state: tauri::State<'_, AppState>, window: tauri::Win
 // 这里加个 window 参数！！！
 pub async fn send_to_this_window(window: tauri::Window) {
     // 给【当前这个窗口】发消息
+    let (status_tx, mut status_rx) = watch::channel(true);
+    let a = status_tx.send(false);
+    // let a = status_tx.send(false);
+    let status_rx2 = status_rx.clone();
+    // let a = status_rx2.borrow();
 
+    match status_rx.changed().await {
+        Ok(a) => {
+            // 获取最新状态
+            let state = status_rx.borrow();
+            println!("当前最新状态：{:?}", state);
+            window.emit("state-change", *state).ok();
+        }
+        Err(a) => {
+            println!("通道关闭，退出");
+            // return false;
+        }
+    };
 
-        let (status_tx, mut status_rx) = watch::channel(true);
-        let a = status_tx.send(false);
-        // let a = status_tx.send(false);
-        let status_rx2 = status_rx.clone();
-        // let a = status_rx2.borrow();
-
-    
+    window
+        .emit(
+            "message",                     // 事件名字
+            "我是 Rust，我只发给这个窗口", // 数据
+        )
+        .unwrap();
+}
+#[tauri::command]
+pub async fn send_to_message(state: tauri::State<'_, AppState>, on_data: Channel<bool>) -> Result<(), String>  {
+    let (status_tx, mut status_rx) = watch::channel(true);
+    let _ = status_tx.send(false);
+    loop {
         match status_rx.changed().await {
-            Ok(a) => {
-                // 获取最新状态
+            Ok(_a) => {
                 let state = status_rx.borrow();
                 println!("当前最新状态：{:?}", state);
-                window.emit("state-change", *state).ok();
+                if let Err(e) = on_data.send(*state) {
+                    return Err(format!("前端通道发送失败:{:?}", e));
+                };
             }
-            Err(a) => {
+            Err(_a) => {
                 println!("通道关闭，退出");
-                // return false;
             }
         };
-
-
-    window.emit(
-        "message",       // 事件名字
-        "我是 Rust，我只发给这个窗口" // 数据
-    ).unwrap();
-
+    }
 }
 
 

@@ -10,6 +10,7 @@ use tokio::sync::{
     mpsc::{Receiver, Sender, channel},
     watch,
 };
+use tokio::time::{sleep, Duration};
 
 const ALPN: &[u8] = b"/zoey/chat/1";
 
@@ -47,9 +48,8 @@ impl P2PChannel {
     /**
      * 彻底关闭通道
      */
-    async fn stop(&self)-> Result<()> {
-        let active_flag = self.is_active.clone();
-        if active_flag.load(Ordering::Relaxed) {
+    async fn stop(&self) -> Result<()> {
+        if self.is_active.load(Ordering::Relaxed) {
             let msg = ChannelMessage::Stop;
             self.outgoing_tx.send(msg).await?;
         };
@@ -57,8 +57,7 @@ impl P2PChannel {
     }
 
     async fn send(&self, data: Vec<u8>) -> Result<bool> {
-        let active_flag = self.is_active.clone();
-        if active_flag.load(Ordering::Relaxed) {
+        if self.is_active.load(Ordering::Relaxed) {
             let msg = ChannelMessage::Data(data);
             self.outgoing_tx.send(msg).await?;
             return Ok(true);
@@ -87,23 +86,39 @@ impl P2PChannel {
         mut quic_recv: iroh::endpoint::RecvStream,
     ) -> Result<tokio::task::JoinHandle<Result<()>>> {
         let mut set = tokio::task::JoinSet::<Result<()>>::new();
+        let (stop_tx, stop_rx) = watch::channel(false);
 
+        
         // 任务 A: 网络 -> 内存 (Iroh -> Flume)
+        let mut rx_a = stop_rx.clone();
         let active_flag = self.is_active.clone();
         let tx = self.incoming_tx.clone();
         set.spawn(async move {
             let mut buf = vec![0u8; 8192];
+
             while active_flag.load(Ordering::Relaxed) {
-                let result = quic_recv.read(&mut buf).await?;
-                match result {
-                    Some(n) => {
-                        let data = buf[..n].to_vec();
-                        tx.send(ChannelMessage::Data(data)).await?;
-                    }
-                    None => {
-                        tx.send(ChannelMessage::Stop).await?;
-                        active_flag.store(false, Ordering::SeqCst);
-                        break;
+                tokio::select! {
+                    _ = rx_a.changed() => {
+                        if *rx_a.borrow() {
+                            break;
+                        }
+
+                    },
+                    res = quic_recv.read(&mut buf) => {
+                        match res? {
+                            Some(n) => {
+                                let data = buf[..n].to_vec();
+                                tx.send(ChannelMessage::Data(data)).await?;
+                            }
+                            None => {
+                                tx.send(ChannelMessage::Stop).await?;
+                                break;
+                            }
+                        }
+                    },
+                    _ = sleep(Duration::from_secs(30)) => {
+                        println!("Timeout reached: 30 seconds passed.");
+                        break
                     }
                 }
             }
@@ -112,14 +127,30 @@ impl P2PChannel {
 
         // 任务 B: 内存 -> 网络 (Flume -> Iroh)
         let rx = self.outgoing_rx.clone();
+        let mut rx_a = stop_rx.clone();
+        let active_flag = self.is_active.clone();
         set.spawn(async move {
             let mut a = rx.lock().await;
-            while let Some(msg) = a.recv().await {
-                match msg {
-                    ChannelMessage::Data(data) => {
-                        quic_send.write_all(&data).await?;
+
+            while active_flag.load(Ordering::Relaxed) {
+                tokio::select! {
+                    _ = rx_a.changed() => {
+                        if *rx_a.borrow() {
+                            break;
+                        }
+                    },
+                    Some(msg) = a.recv() => {
+                        match msg {
+                            ChannelMessage::Data(data) => {
+                                quic_send.write_all(&data).await?;
+                            }
+                            ChannelMessage::Stop => break,
+                        }
+                    },
+                    _ = sleep(Duration::from_secs(30)) => {
+                        println!("Timeout reached: 30 seconds passed.");
+                        break
                     }
-                    ChannelMessage::Stop => break,
                 }
             }
             quic_send.finish()?;
@@ -127,14 +158,15 @@ impl P2PChannel {
         });
 
         let active_flag = self.is_active.clone();
+        let tx_a = stop_tx.clone();
         let handle: tokio::task::JoinHandle<Result<()>> = tokio::spawn(async move {
             while let Some(res) = set.join_next().await {
+                tx_a.send(false)?;
+                active_flag.store(false, Ordering::SeqCst);
                 match res? {
-                    Ok(_) => {
-                        continue;
+                    Ok(()) => {
                     }
                     Err(e) => {
-                        active_flag.store(false, Ordering::SeqCst);
                         return Err(anyhow!(e));
                     }
                 }
@@ -221,5 +253,4 @@ impl P2PNode {
     pub fn get_info(&self) -> String {
         format!("{:#?}", EndpointTicket::new(self.endpoint.addr()))
     }
-
 }
