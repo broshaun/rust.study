@@ -54,15 +54,21 @@ pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, Strin
 }
 
 #[tauri::command]
-pub async fn p2p_is_online(
-    state: tauri::State<'_, AppState>,
-    window: tauri::Window,
-) -> Result<bool, String> {
+pub async fn p2p_is_online(state: tauri::State<'_, AppState>) -> Result<bool, String> {
     let guard = state.p2p_node.read().await;
     let Some(p2p) = guard.as_ref() else {
         return Ok(false);
     };
     Ok(p2p.is_online())
+}
+
+#[tauri::command]
+pub async fn p2p_is_channel(state: tauri::State<'_, AppState>) -> Result<bool, String> {
+    let guard = state.p2p_node.read().await;
+    let Some(p2p) = guard.as_ref() else {
+        return Ok(false);
+    };
+    Ok(p2p.is_channel())
 }
 
 #[tauri::command]
@@ -95,6 +101,7 @@ pub async fn send_to_this_window(window: tauri::Window) {
         )
         .unwrap();
 }
+
 #[tauri::command]
 pub async fn send_to_message(state: tauri::State<'_, AppState>, on_data: Channel<bool>) -> Result<(), String>  {
     let (status_tx, mut status_rx) = watch::channel(true);
@@ -183,7 +190,7 @@ pub async fn p2p_recv(
         return Err("未启动通道".to_string());
     };
     loop {
-        if let Ok(data) = ch.recv().await {
+        if let Some(data) = ch.recv().await {
             if let Err(e) = on_data.send(data) {
                 return Err(format!("前端通道发送失败:{:?}", e));
             };

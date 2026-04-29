@@ -65,17 +65,19 @@ impl P2PChannel {
         Ok(false)
     }
 
-    async fn recv(&self) -> Result<Vec<u8>> {
+    async fn recv(&self) -> Option<Vec<u8>> {
         let a = self.incoming_rx.clone();
         let mut b = a.lock().await;
-        let msg = b.recv().await.context("接收失败")?;
+        let Some(msg) = b.recv().await else{
+            return None
+        };
         match msg {
             ChannelMessage::Data(data) => {
-                return Ok(data);
+                return Some(data);
             }
             ChannelMessage::Stop => {
-                self.is_active.store(false, Ordering::SeqCst);
-                return Err(anyhow!("未能接收信息"));
+                // self.is_active.store(false, Ordering::SeqCst);
+                return None
             }
         };
     }
@@ -114,10 +116,10 @@ impl P2PChannel {
                             }
                         }
                     },
-                    _ = sleep(Duration::from_secs(30)) => {
-                        println!("Timeout reached: 30 seconds passed.");
-                        break
-                    }
+                    // _ = sleep(Duration::from_secs(30)) => {
+                    //     println!("Timeout reached: 30 seconds passed.");
+                    //     break
+                    // }
                 }
             }
             return Ok(());
@@ -145,10 +147,10 @@ impl P2PChannel {
                             ChannelMessage::Stop => break,
                         }
                     },
-                    _ = sleep(Duration::from_secs(30)) => {
-                        println!("Timeout reached: 30 seconds passed.");
-                        break
-                    }
+                    // _ = sleep(Duration::from_secs(30)) => {
+                    //     println!("Timeout reached: 30 seconds passed.");
+                    //     break
+                    // }
                 }
             }
             quic_send.finish()?;
@@ -160,12 +162,12 @@ impl P2PChannel {
         let handle: tokio::task::JoinHandle<Result<()>> = tokio::spawn(async move {
             while let Some(res) = set.join_next().await {
                 active_flag.store(false, Ordering::SeqCst);
-                tx_a.send(false)?;
-                
                 match res? {
                     Ok(()) => {
+                        tx_a.send(false)?;
                     }
                     Err(e) => {
+                        set.abort_all();
                         return Err(anyhow!(e));
                     }
                 }
@@ -200,7 +202,7 @@ impl P2PNode {
         return self.message.send(data).await;
     }
 
-    pub async fn recv(&self) -> Result<Vec<u8>> {
+    pub async fn recv(&self) -> Option<Vec<u8>> {
         return self.message.recv().await;
     }
 

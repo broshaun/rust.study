@@ -71,7 +71,6 @@ pub async fn p2p_is_channel(state: tauri::State<'_, AppState>) -> Result<bool, S
     Ok(p2p.is_channel())
 }
 
-
 #[tauri::command]
 // 这里加个 window 参数！！！
 pub async fn send_to_this_window(window: tauri::Window) {
@@ -102,6 +101,7 @@ pub async fn send_to_this_window(window: tauri::Window) {
         )
         .unwrap();
 }
+
 #[tauri::command]
 pub async fn send_to_message(state: tauri::State<'_, AppState>, on_data: Channel<bool>) -> Result<(), String>  {
     let (status_tx, mut status_rx) = watch::channel(true);
@@ -190,7 +190,7 @@ pub async fn p2p_recv(
         return Err("未启动通道".to_string());
     };
     loop {
-        if let Ok(data) = ch.recv().await {
+        if let Some(data) = ch.recv().await {
             if let Err(e) = on_data.send(data) {
                 return Err(format!("前端通道发送失败:{:?}", e));
             };

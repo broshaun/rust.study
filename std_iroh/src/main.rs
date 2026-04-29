@@ -51,14 +51,14 @@ async fn run_client(ticket: String) -> Result<()> {
     let recv_task = tokio::spawn(async move {
         loop {
             match ch_recv.recv().await {
-                Ok(data) => {
+                Some(data) => {
                     println!("\n📬 [Client] 收到: {}", String::from_utf8_lossy(&data));
                     print!("> ");
                     use std::io::Write;
                     std::io::stdout().flush().ok();
                 }
-                Err(e) => {
-                    eprintln!("\n⚠️ [Client] 接收失败 / 连接结束: {:#?}", e);
+                None => {
+                    eprintln!("\n⚠️ [Client] 接收失败 / 连接结束");
                     break;
                 }
             }
@@ -135,7 +135,7 @@ async fn run_server() -> Result<()> {
         loop {
             println!("接收信息");
             match server.recv().await {
-                Ok(data) => {
+                Some(data) => {
                     let text = String::from_utf8_lossy(&data);
                     println!("📬 [Server] 收到 bytes: {:?}", data);
                     println!("📬 [Server] 收到 text: {}", text);
@@ -151,8 +151,8 @@ async fn run_server() -> Result<()> {
                         break;
                     }
                 }
-                Err(e) => {
-                    eprintln!("🔴 [Server] 当前连接结束: {:#?}", e);
+                None => {
+                    eprintln!("🔴 [Server] 当前连接结束");
                     break;
                 }
             }
