@@ -59,16 +59,20 @@ pub fn run() {
             // p2p_voice_close,
 
 
-            p2p_commands::p2p_init,
-            p2p_commands::p2p_close,
+            p2p_commands::p2p_start,
+            p2p_commands::p2p_stop,
+            p2p_commands::p2p_test,
+            // p2p_commands::p2p_state,
+            // p2p_commands::p2p_state_message,
+
             p2p_commands::p2p_info,
-            p2p_commands::p2p_is_online,
-            p2p_commands::p2p_is_channel,
             p2p_commands::p2p_get_ticket,
+
             p2p_commands::p2p_start_accept,
             p2p_commands::p2p_start_connect,
             p2p_commands::p2p_send,
             p2p_commands::p2p_recv,
+            
 
             p2p_commands::send_to_this_window,
             

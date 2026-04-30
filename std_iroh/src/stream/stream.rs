@@ -13,10 +13,7 @@ use tokio::sync::{
 // use tokio::time::{sleep, Duration};
 use serde::Serialize;
 
-
-
 const ALPN: &[u8] = b"/zoey/chat/1";
-
 
 #[derive(Clone, Debug)]
 enum ChannelMessage {
@@ -34,7 +31,6 @@ pub struct P2PChannel {
     incoming_tx: Sender<ChannelMessage>,
     // 通道状态
     is_active: Arc<AtomicBool>,
-
 }
 
 impl P2PChannel {
@@ -73,16 +69,14 @@ impl P2PChannel {
     async fn recv(&self) -> Option<Vec<u8>> {
         let a = self.incoming_rx.clone();
         let mut b = a.lock().await;
-        let Some(msg) = b.recv().await else{
-            return None
+        let Some(msg) = b.recv().await else {
+            return None;
         };
         match msg {
             ChannelMessage::Data(data) => {
                 return Some(data);
             }
-            ChannelMessage::Stop => {
-                return None
-            }
+            ChannelMessage::Stop => return None,
         };
     }
 
@@ -97,7 +91,7 @@ impl P2PChannel {
         let mut set = tokio::task::JoinSet::<Result<()>>::new();
 
         // 任务 A: 网络 -> 内存 (Iroh -> Flume)
-        let mut rx_a = stop_rx.clone(); 
+        let mut rx_a = stop_rx.clone();
         let tx = self.incoming_tx.clone();
         set.spawn(async move {
             let mut buf = vec![0u8; 8192];
@@ -182,6 +176,14 @@ pub struct P2PState {
     pub is_online: bool,
     pub is_active: bool,
 }
+impl P2PState {
+    pub fn new() -> Self {
+        Self {
+            is_online: false,
+            is_active: false,
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct P2PNode {
@@ -210,7 +212,6 @@ impl P2PNode {
     pub async fn recv(&self) -> Option<Vec<u8>> {
         return self.message.recv().await;
     }
-
     /**
      * 内部发送信息处理
      */
@@ -234,7 +235,6 @@ impl P2PNode {
         let _ = self.message.bind_io_loop(send, recv)?;
         Ok(())
     }
-
     /**
      * 安全关闭节点
      */
@@ -242,17 +242,15 @@ impl P2PNode {
         self.endpoint.close().await;
         let _ = self.message.stop().await;
     }
-
-
-
+    /**
+     * 节点状态
+     */
     pub fn p2p_state(&self) -> P2PState {
         P2PState {
             is_online: !self.endpoint.is_closed(),
             is_active: self.message.is_active.load(Ordering::SeqCst),
         }
     }
-
-
     /**
      * 连接凭证
      */

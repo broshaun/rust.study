@@ -6,19 +6,35 @@ import React, { useState, useEffect, useRef } from 'react';
 
 export function PcmTestPage() {
 
-  const p2p_init = async () => {
+  const p2p_start = async () => {
+    const onData = new Channel();
+    onData.onmessage = (data) => {
+      console.log("节点状态data", data)
+    }
+
     try {
-      const rsp = await invoke('p2p_init');
+      console.log("📡 建立接收通道...");
+      const rsp = await invoke('p2p_start', { onData });
       console.log(rsp);
     } catch (err) {
       console.error(err);
     }
   };
 
-
-  const p2p_close = async () => {
+  const p2p_test = async () => {
     try {
-      const rsp = await invoke('p2p_close');
+      const rsp = await invoke('p2p_test');
+      console.log(rsp);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+
+
+  const p2p_stop = async () => {
+    try {
+      const rsp = await invoke('p2p_stop');
       console.log(rsp);
     } catch (err) {
       console.error(err);
@@ -150,8 +166,10 @@ export function PcmTestPage() {
 
       <h2>PCM Test</h2>
 
-      <button onClick={p2p_init}>1. 初始化节点</button>
-      <button onClick={p2p_close}>2. 关闭节点</button>
+      <button onClick={p2p_start}>初始化节点</button>
+      <button onClick={p2p_test}>测试消息</button>
+
+      <button onClick={p2p_stop}>2. 关闭节点</button>
       <button onClick={p2p_info}>3. 节点详情</button>
       <button onClick={p2p_ticket}>4. 连接密钥</button>
 

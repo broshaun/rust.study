@@ -1,16 +1,16 @@
-use anyhow::{Context, Result, anyhow};
-use iroh::endpoint::{Endpoint, presets};
+use anyhow::{anyhow, Context, Result};
+use iroh::endpoint::{presets, Endpoint};
 use iroh_tickets::endpoint::EndpointTicket;
 use std::sync::{
-    Arc,
     atomic::{AtomicBool, Ordering},
+    Arc,
 };
 use tokio::sync::{
-    Mutex,
-    mpsc::{Receiver, Sender, channel},
-    watch,
+    mpsc::{channel, Receiver, Sender},
+    watch, Mutex,
 };
-use tokio::time::{sleep, Duration};
+// use tokio::time::{sleep, Duration};
+use serde::Serialize;
 
 const ALPN: &[u8] = b"/zoey/chat/1";
 
@@ -62,23 +62,20 @@ impl P2PChannel {
             self.outgoing_tx.send(msg).await?;
             return Ok(true);
         }
-        Ok(false)
+        Err(anyhow!("未打开通道"))
     }
 
     async fn recv(&self) -> Option<Vec<u8>> {
         let a = self.incoming_rx.clone();
         let mut b = a.lock().await;
-        let Some(msg) = b.recv().await else{
-            return None
+        let Some(msg) = b.recv().await else {
+            return None;
         };
         match msg {
             ChannelMessage::Data(data) => {
                 return Some(data);
             }
-            ChannelMessage::Stop => {
-                // self.is_active.store(false, Ordering::SeqCst);
-                return None
-            }
+            ChannelMessage::Stop => return None,
         };
     }
 
@@ -87,22 +84,20 @@ impl P2PChannel {
         mut quic_send: iroh::endpoint::SendStream,
         mut quic_recv: iroh::endpoint::RecvStream,
     ) -> Result<tokio::task::JoinHandle<Result<()>>> {
+        self.is_active.store(true, Ordering::SeqCst);
+        let (stop_tx, stop_rx) = watch::channel(true);
+
         let mut set = tokio::task::JoinSet::<Result<()>>::new();
-        let (stop_tx, stop_rx) = watch::channel(false);
 
         // 任务 A: 网络 -> 内存 (Iroh -> Flume)
         let mut rx_a = stop_rx.clone();
-        let active_flag = self.is_active.clone();
         let tx = self.incoming_tx.clone();
         set.spawn(async move {
             let mut buf = vec![0u8; 8192];
-
-            while active_flag.load(Ordering::Relaxed) {
+            while *rx_a.borrow() {
                 tokio::select! {
                     _ = rx_a.changed() => {
-                        if *rx_a.borrow() {
-                            break;
-                        }
+                        break;
                     },
                     res = quic_recv.read(&mut buf) => {
                         match res? {
@@ -128,16 +123,13 @@ impl P2PChannel {
         // 任务 B: 内存 -> 网络 (Flume -> Iroh)
         let rx = self.outgoing_rx.clone();
         let mut rx_a = stop_rx.clone();
-        let active_flag = self.is_active.clone();
+        // let active_flag = self.is_active.clone();
         set.spawn(async move {
             let mut a = rx.lock().await;
-
-            while active_flag.load(Ordering::Relaxed) {
+            while *rx_a.borrow() {
                 tokio::select! {
                     _ = rx_a.changed() => {
-                        if *rx_a.borrow() {
-                            break;
-                        }
+                        break;
                     },
                     Some(msg) = a.recv() => {
                         match msg {
@@ -178,9 +170,30 @@ impl P2PChannel {
     }
 }
 
+
+#[derive(Debug, Clone, Serialize)]
+pub struct P2PState {
+    pub is_online: bool,
+    pub is_active: bool,
+}
+impl P2PState {
+    pub fn new() -> Self {
+        Self {
+            is_online: false,
+            is_active: false,
+        }
+    }
+}
+// #[derive(Debug, Clone, Serialize)]
+// pub enum P2PState {
+//     Init,
+//     Start { is_online: bool, is_active: bool },
+//     Stop,
+// }
+
 #[derive(Clone, Debug)]
 pub struct P2PNode {
-    pub endpoint: Arc<Endpoint>,
+    pub endpoint: Endpoint,
     pub message: P2PChannel,
 }
 
@@ -193,7 +206,7 @@ impl P2PNode {
         endpoint.online().await;
 
         Ok(Self {
-            endpoint: Arc::new(endpoint),
+            endpoint: endpoint,
             message: P2PChannel::new(),
         })
     }
@@ -205,7 +218,6 @@ impl P2PNode {
     pub async fn recv(&self) -> Option<Vec<u8>> {
         return self.message.recv().await;
     }
-
     /**
      * 内部发送信息处理
      */
@@ -229,18 +241,21 @@ impl P2PNode {
         let _ = self.message.bind_io_loop(send, recv)?;
         Ok(())
     }
-
+    /**
+     * 安全关闭节点
+     */
     pub async fn close(&self) {
         self.endpoint.close().await;
         let _ = self.message.stop().await;
     }
-
-    pub fn is_online(&self) -> bool {
-        !self.endpoint.is_closed()
-    }
-
-    pub fn is_channel(&self) -> bool {
-        self.message.is_active.load(Ordering::SeqCst)
+    /**
+     * 节点状态
+     */
+    pub fn p2p_state(&self) -> P2PState {
+        P2PState {
+            is_online: !self.endpoint.is_closed(),
+            is_active: self.message.is_active.load(Ordering::SeqCst),
+        }
     }
     /**
      * 连接凭证
