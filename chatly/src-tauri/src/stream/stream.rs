@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use iroh::endpoint::{presets, Endpoint};
 use iroh_tickets::endpoint::EndpointTicket;
 use std::sync::{
@@ -244,9 +244,10 @@ impl P2PNode {
     /**
      * 安全关闭节点
      */
-    pub async fn close(&self) {
-        self.endpoint.close().await;
-        let _ = self.message.stop().await;
+    pub async fn close(&self) -> Result<()> {
+        let _a = self.message.stop().await?;
+        let _b = self.endpoint.close().await;
+        Ok(())
     }
     /**
      * 节点状态

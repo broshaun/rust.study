@@ -29,20 +29,24 @@ pub async fn p2p_start(
         return Err("启动节点失败".to_string());
     };
     *lock = Some(node.clone());
-    let (status_tx, status_rx) = watch::channel(node.p2p_state());
+
+
+    let (status_tx,mut status_rx) = watch::channel(node.p2p_state());
     let mut guard = state.p2p_inform.write().await;
     *guard = Some(status_tx);
 
-    let mut rx = status_rx.clone();
+    // let mut rx = status_rx.clone();
     tokio::spawn(async move {
-        while rx.changed().await.is_ok() {
+        while status_rx.changed().await.is_ok() {
             let state = status_rx.borrow();
             if let Err(e) = on_data.send(state.clone()) {
-                eprintln!("消息通知发送失败:{:?}", e)
-                // return Err(format!("消息通知发送失败:{:?}", e));
+                eprintln!("消息通知发送失败:{:?}", e);
+                break;
             };
         }
     });
+
+    
 
     Ok("启动节点".to_owned())
 }
@@ -53,15 +57,18 @@ pub async fn p2p_start(
 #[tauri::command]
 pub async fn p2p_test(state: tauri::State<'_, AppState>) -> Result<String, String> {
     let guard = state.p2p_node.read().await;
+    // let Some(node) = guard.as_ref() else {
+    //     return Err("未启动节点".to_string());
+    // };
     let Some(node) = guard.as_ref() else {
         return Err("未启动节点".to_string());
     };
 
-    let guard2 = state.p2p_inform.write().await;
-    let Some(state) = guard2.clone() else {
+    let guard2 = state.p2p_inform.read().await;
+    let Some(tx) = guard2.clone() else {
         return Err("为启动状态通知".to_string());
     };
-    let _ = state.send(node.p2p_state());
+    let _ = tx.send(node.p2p_state());
     Ok("测试发送消息".to_owned())
 }
 
@@ -70,55 +77,21 @@ pub async fn p2p_test(state: tauri::State<'_, AppState>) -> Result<String, Strin
  */
 #[tauri::command]
 pub async fn p2p_stop(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let mut guard = state.p2p_node.write().await;
-    let Some(node) = guard.take() else {
+    let guard = state.p2p_node.read().await;
+    let Some(node) = guard.as_ref() else {
         return Err("未启动节点".to_string());
     };
-    node.close().await;
-    *guard = None;
-    let guard2 = state.p2p_inform.write().await;
+    if let Err(e) = node.close().await{
+        return Err(format!("节点关闭错误： {:?}",e));
+    };
+
+    let guard2 = state.p2p_inform.read().await;
     let Some(state) = guard2.clone() else {
         return Err("为启动状态通知".to_string());
     };
     let _ = state.send(node.p2p_state());
     Ok("关闭节点".to_owned())
 }
-/**
- * 启动节点信息
- */
-// #[tauri::command]
-// pub async fn p2p_state(state: tauri::State<'_, AppState>) -> Result<P2PState, String> {
-//     let guard = state.p2p_node.read().await;
-//     let Some(node) = guard.as_ref() else {
-//         return Err("未启动节点".to_string());
-//     };
-//     Ok(node.p2p_state())
-// }
-
-/**
- * 启动节点信息监听
- */
-// #[tauri::command]
-// pub async fn p2p_state_message(
-//     state: tauri::State<'_, AppState>,
-//     on_data: Channel<P2PState>,
-// ) -> Result<(), String> {
-//     let guard = state.p2p_node.read().await;
-//     let Some(node) = guard.as_ref() else {
-//         return Err("未启动节点".to_string());
-//     };
-//     let (status_tx, mut status_rx) = watch::channel(node.p2p_state());
-//     let mut lock = state.p2p_inform.write().await;
-//     *lock = Some(status_tx);
-
-//     while status_rx.changed().await.is_ok() {
-//         let state = status_rx.borrow();
-//         if let Err(e) = on_data.send(state.clone()) {
-//             return Err(format!("消息通知发送失败:{:?}", e));
-//         };
-//     }
-//     Ok(())
-// }
 
 /**
  * 节点地址详情
@@ -126,18 +99,18 @@ pub async fn p2p_stop(state: tauri::State<'_, AppState>) -> Result<String, Strin
 #[tauri::command]
 pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, String> {
     let guard = state.p2p_node.read().await;
-    if let Some(p2p) = guard.as_ref() {
-        let ticket = p2p.get_info();
-        return Ok(ticket);
+    let Some(node) = guard.as_ref() else {
+        return Err("未启动节点".to_string());
     };
-    Ok("".to_owned())
+    let a = node.get_info();
+    Ok(a)
 }
 
 #[tauri::command]
 pub async fn p2p_get_ticket(state: tauri::State<'_, AppState>) -> Result<String, String> {
     let guard = state.p2p_node.read().await;
-    if let Some(p2p) = guard.as_ref() {
-        let ticket = p2p.get_ticket();
+    if let Some(node) = guard.as_ref() {
+        let ticket = node.get_ticket();
         return Ok(ticket);
     };
     Ok("".to_owned())
@@ -152,9 +125,7 @@ pub async fn p2p_start_accept(state: tauri::State<'_, AppState>) -> Result<Strin
     let Some(node) = guard.as_ref() else {
         return Err("未启动节点".to_string());
     };
-
     let node2 = node.clone();
-
     tokio::spawn(async move {
         let _ = node2.start_accept().await;
     });
@@ -171,7 +142,6 @@ pub async fn p2p_start_connect(
     let Some(node) = guard.as_ref() else {
         return Err("未启动节点".to_string());
     };
-
     if let Err(e) = node.start_connect(&addr).await {
         return Err(format!("连接失败{:#?}", e));
     };
@@ -180,11 +150,11 @@ pub async fn p2p_start_connect(
 
 #[tauri::command]
 pub async fn p2p_send(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<(), String> {
-    let rgch = state.p2p_node.read().await;
-    let Some(ch) = rgch.as_ref() else {
-        return Err("未启动通道".to_string());
+    let guard = state.p2p_node.read().await;
+    let Some(node) = guard.as_ref() else {
+        return Err("未启动节点".to_string());
     };
-    if let Err(e) = ch.send(data).await {
+    if let Err(e) = node.send(data).await {
         return Err(format!("发送错误{:?}", e));
     };
     Ok(())
@@ -195,10 +165,11 @@ pub async fn p2p_recv(
     state: tauri::State<'_, AppState>,
     on_data: Channel<Vec<u8>>,
 ) -> Result<(), String> {
-    let rgch = state.p2p_node.read().await;
-    let Some(ch) = rgch.as_ref() else {
-        return Err("未启动通道".to_string());
+    let guard = state.p2p_node.read().await;
+    let Some(node) = guard.as_ref() else {
+        return Err("未启动节点".to_string());
     };
+    let ch = node.clone();
     loop {
         if let Some(data) = ch.recv().await {
             if let Err(e) = on_data.send(data) {

@@ -13,7 +13,7 @@ export function PcmTestPage() {
     }
 
     try {
-      console.log("📡 建立接收通道...");
+      console.log("📡 启动节点...");
       const rsp = await invoke('p2p_start', { onData });
       console.log(rsp);
     } catch (err) {
@@ -61,9 +61,28 @@ export function PcmTestPage() {
   }
 
 
+  const p2p_recv_test = async () => {
+    const onData = new Channel();
+    onData.onmessage = (data) => {
+      const text = new TextDecoder().decode(new Uint8Array(data));
+      console.log("📬 [P2P Recv]:", text);
+      console.log("📦 [Raw Bytes]:", data);
+      // const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+      // playback.pushBytes(bytes);
+    };
+    try {
+      console.log("📡 正在建立接收通道...");
+      // 注意：由于 Rust 端是 loop，此 await 会一直挂起直到连接关闭
+      await invoke('p2p_recv', { onData });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleStartAccept = async () => {
     try {
       const rsp = await invoke('p2p_start_accept');
+      p2p_recv_test()
       console.log("启动节点监听...");
       console.log(rsp);
     } catch (err) {
@@ -83,35 +102,6 @@ export function PcmTestPage() {
       console.log("✅ 连接成功:", result);
     } catch (err) {
       console.error("❌ 连接失败:", err);
-    }
-  };
-
-  const p2p_recv = async () => {
-    const onData = new Channel();
-
-    // 核心：直接在控制台输出
-    onData.onmessage = (data) => {
-      // data 是来自 Rust 的字节数组 (Uint8Array)
-      const text = new TextDecoder().decode(new Uint8Array(data));
-      console.log("📬 [P2P Recv]:", text);
-      console.log("📦 [Raw Bytes]:", data);
-      const bytes =
-        data instanceof Uint8Array
-          ? data
-          : new Uint8Array(data);
-
-      playback.pushBytes(bytes);
-
-
-
-    };
-
-    try {
-      console.log("📡 正在建立接收通道...");
-      // 注意：由于 Rust 端是 loop，此 await 会一直挂起直到连接关闭
-      await invoke('p2p_recv', { onData });
-    } catch (err) {
-      console.error(err);
     }
   };
 
@@ -167,7 +157,7 @@ export function PcmTestPage() {
       <h2>PCM Test</h2>
 
       <button onClick={p2p_start}>初始化节点</button>
-      <button onClick={p2p_test}>测试消息</button>
+      <button onClick={p2p_test}>获取当前状态</button>
 
       <button onClick={p2p_stop}>2. 关闭节点</button>
       <button onClick={p2p_info}>3. 节点详情</button>
@@ -196,9 +186,6 @@ export function PcmTestPage() {
 
       <br />
       <button onClick={p2p_send}>5.发送信息</button>
-
-      <br />
-      <button onClick={p2p_recv}>启动接收信息</button>
 
       <button onClick={capture.startCapture} disabled={capture.isCapturing}>
         开始采集
