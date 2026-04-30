@@ -1,6 +1,7 @@
 mod ping;
 mod stream;
 
+
 use anyhow::{bail, Context, Result};
 use std::env;
 use stream::stream::{P2PNode};
@@ -38,7 +39,7 @@ async fn run_client(ticket: String) -> Result<()> {
     println!("=== Iroh Client 模式 ===\n");
 
     let client = P2PNode::new().await?;
-    println!("Client is_online: {}", client.is_online());
+    println!("Client is_online: {:?}", client.p2p_state());
 
     println!("🔵 [Client] 正在连接服务端...");
     client.start_connect(&ticket).await?;
@@ -115,7 +116,7 @@ async fn run_server() -> Result<()> {
 
     let server = P2PNode::new().await?;
     let ticket = server.get_ticket();
-    println!("Server is_online: {}", server.is_online());
+    println!("Server is_online: {:?}", server.p2p_state());
 
     println!("\n===== SERVER TICKET =====");
     println!("cargo run -- client {ticket}");
