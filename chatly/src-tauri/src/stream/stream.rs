@@ -1,120 +1,84 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use iroh::endpoint::{presets, Endpoint};
 use iroh_tickets::endpoint::EndpointTicket;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
-use tokio::sync::{
-    mpsc::{channel, Receiver, Sender},
-    watch, Mutex,
-};
-// use tokio::time::{sleep, Duration};
-use serde::Serialize;
+use tokio_util::sync::CancellationToken;
+
 
 const ALPN: &[u8] = b"/zoey/chat/1";
 
 #[derive(Clone, Debug)]
-enum ChannelMessage {
-    Data(Vec<u8>),
-    Stop,
-}
-
-#[derive(Clone, Debug)]
 pub struct P2PChannel {
     // 内存 -> 网络 (Flume -> Iroh)
-    outgoing_tx: Sender<ChannelMessage>,
-    outgoing_rx: Arc<Mutex<Receiver<ChannelMessage>>>,
+    outgoing_tx: flume::Sender<Vec<u8>>,
+    outgoing_rx: flume::Receiver<Vec<u8>>,
     // 网络 -> 内存 (Iroh -> Flume)
-    incoming_rx: Arc<Mutex<Receiver<ChannelMessage>>>,
-    incoming_tx: Sender<ChannelMessage>,
-    // 通道状态
-    is_active: Arc<AtomicBool>,
+    incoming_rx: flume::Receiver<Vec<u8>>,
+    incoming_tx: flume::Sender<Vec<u8>>,
+    token: CancellationToken,
 }
 
 impl P2PChannel {
     fn new() -> Self {
-        let (outgoing_tx, outgoing_rx) = channel::<ChannelMessage>(10);
-        let (incoming_tx, incoming_rx) = channel::<ChannelMessage>(10);
+        let (outgoing_tx, outgoing_rx) = flume::bounded::<Vec<u8>>(10);
+        let (incoming_tx, incoming_rx) = flume::bounded::<Vec<u8>>(10);
+        let token = CancellationToken::new();
         P2PChannel {
             outgoing_tx,
-            outgoing_rx: Arc::new(Mutex::new(outgoing_rx)),
+            outgoing_rx,
             incoming_tx,
-            incoming_rx: Arc::new(Mutex::new(incoming_rx)),
-            is_active: Arc::new(AtomicBool::new(true)),
+            incoming_rx,
+            token,
         }
-    }
-
-    /**
-     * 彻底关闭通道
-     */
-    async fn stop(&self) -> Result<()> {
-        if self.is_active.load(Ordering::Relaxed) {
-            let msg = ChannelMessage::Stop;
-            self.outgoing_tx.send(msg).await?;
-        };
-        Ok(())
     }
 
     async fn send(&self, data: Vec<u8>) -> Result<bool> {
-        if self.is_active.load(Ordering::Relaxed) {
-            let msg = ChannelMessage::Data(data);
-            self.outgoing_tx.send(msg).await?;
-            return Ok(true);
+        if self.token.is_cancelled() {
+            return Err(anyhow!("未打开通道"));
         }
-        Err(anyhow!("未打开通道"))
+        self.outgoing_tx.send_async(data).await?;
+        return Ok(true);
     }
 
     async fn recv(&self) -> Option<Vec<u8>> {
-        let a = self.incoming_rx.clone();
-        let mut b = a.lock().await;
-        let Some(msg) = b.recv().await else {
+        if self.token.is_cancelled() {
+            return None;
+        }
+        let rx = self.incoming_rx.clone();
+        let Ok(msg) = rx.recv_async().await else {
             return None;
         };
-        match msg {
-            ChannelMessage::Data(data) => {
-                return Some(data);
-            }
-            ChannelMessage::Stop => return None,
-        };
+        return Some(msg);
     }
 
-    fn bind_io_loop(
+    async fn bind_io_loop(
         &self,
         mut quic_send: iroh::endpoint::SendStream,
         mut quic_recv: iroh::endpoint::RecvStream,
-    ) -> Result<tokio::task::JoinHandle<Result<()>>> {
-        self.is_active.store(true, Ordering::SeqCst);
-        let (stop_tx, stop_rx) = watch::channel(true);
-
-        let mut set = tokio::task::JoinSet::<Result<()>>::new();
+    ) -> Result<()> {
+        let mut set: tokio::task::JoinSet<Result<()>> = tokio::task::JoinSet::<Result<()>>::new();
+        // 任务 A: 网络 -> 内存 (Iroh -> Flume)
+        let atoken = self.token.clone();
+        let tx = self.incoming_tx.clone();
 
         // 任务 A: 网络 -> 内存 (Iroh -> Flume)
-        let mut rx_a = stop_rx.clone();
-        let tx = self.incoming_tx.clone();
         set.spawn(async move {
             let mut buf = vec![0u8; 8192];
-            while *rx_a.borrow() {
+            loop {
                 tokio::select! {
-                    _ = rx_a.changed() => {
+                    _ = atoken.cancelled() => {
                         break;
                     },
                     res = quic_recv.read(&mut buf) => {
                         match res? {
                             Some(n) => {
                                 let data = buf[..n].to_vec();
-                                tx.send(ChannelMessage::Data(data)).await?;
+                                tx.send_async(data).await?;
                             }
                             None => {
-                                tx.send(ChannelMessage::Stop).await?;
                                 break;
                             }
                         }
                     },
-                    // _ = sleep(Duration::from_secs(30)) => {
-                    //     println!("Timeout reached: 30 seconds passed.");
-                    //     break
-                    // }
                 }
             }
             return Ok(());
@@ -122,74 +86,36 @@ impl P2PChannel {
 
         // 任务 B: 内存 -> 网络 (Flume -> Iroh)
         let rx = self.outgoing_rx.clone();
-        let mut rx_a = stop_rx.clone();
-        // let active_flag = self.is_active.clone();
+        let atoken = self.token.clone();
         set.spawn(async move {
-            let mut a = rx.lock().await;
-            while *rx_a.borrow() {
+            loop {
                 tokio::select! {
-                    _ = rx_a.changed() => {
+                    _ = atoken.cancelled() => {
                         break;
                     },
-                    Some(msg) = a.recv() => {
-                        match msg {
-                            ChannelMessage::Data(data) => {
-                                quic_send.write_all(&data).await?;
-                            }
-                            ChannelMessage::Stop => break,
-                        }
+                    Ok(msg) = rx.recv_async() => {
+                        quic_send.write_all(&msg).await?;
                     },
-                    // _ = sleep(Duration::from_secs(30)) => {
-                    //     println!("Timeout reached: 30 seconds passed.");
-                    //     break
-                    // }
                 }
             }
             quic_send.finish()?;
             return Ok(());
         });
 
-        let active_flag = self.is_active.clone();
-        let tx_a = stop_tx.clone();
-        let handle: tokio::task::JoinHandle<Result<()>> = tokio::spawn(async move {
-            while let Some(res) = set.join_next().await {
-                active_flag.store(false, Ordering::SeqCst);
-                match res? {
-                    Ok(()) => {
-                        tx_a.send(false)?;
-                    }
-                    Err(e) => {
-                        set.abort_all();
-                        return Err(anyhow!(e));
-                    }
+        while let Some(res) = set.join_next().await {
+            match res? {
+                Ok(()) => {
+                    self.token.cancel();
+                }
+                Err(e) => {
+                    set.abort_all();
+                    return Err(anyhow!(e));
                 }
             }
-            Ok(())
-        });
-        Ok(handle)
-    }
-}
-
-
-#[derive(Debug, Clone, Serialize)]
-pub struct P2PState {
-    pub is_online: bool,
-    pub is_active: bool,
-}
-impl P2PState {
-    pub fn new() -> Self {
-        Self {
-            is_online: false,
-            is_active: false,
         }
+        Ok(())
     }
 }
-// #[derive(Debug, Clone, Serialize)]
-// pub enum P2PState {
-//     Init,
-//     Start { is_online: bool, is_active: bool },
-//     Stop,
-// }
 
 #[derive(Clone, Debug)]
 pub struct P2PNode {
@@ -203,6 +129,7 @@ impl P2PNode {
             .alpns(vec![ALPN.to_vec()])
             .bind()
             .await?;
+
         endpoint.online().await;
 
         Ok(Self {
@@ -226,7 +153,7 @@ impl P2PNode {
         let incoming = endpoint.accept().await.context("未能打开accept")?;
         let conn = incoming.await?;
         let (send, recv) = conn.accept_bi().await.context("123")?;
-        let _ = self.message.bind_io_loop(send, recv)?;
+        let _a = self.message.bind_io_loop(send, recv).await?;
         Ok(())
     }
 
@@ -238,26 +165,10 @@ impl P2PNode {
         send.write_all(b"HELO")
             .await
             .context("Failed to send handshake")?;
-        let _ = self.message.bind_io_loop(send, recv)?;
+        let _a = self.message.bind_io_loop(send, recv).await?;
         Ok(())
     }
-    /**
-     * 安全关闭节点
-     */
-    pub async fn close(&self) -> Result<()> {
-        let _a = self.message.stop().await?;
-        let _b = self.endpoint.close().await;
-        Ok(())
-    }
-    /**
-     * 节点状态
-     */
-    pub fn p2p_state(&self) -> P2PState {
-        P2PState {
-            is_online: !self.endpoint.is_closed(),
-            is_active: self.message.is_active.load(Ordering::SeqCst),
-        }
-    }
+
     /**
      * 连接凭证
      */

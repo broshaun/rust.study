@@ -1,133 +1,159 @@
-use super::stream::{P2PNode, P2PState};
+use super::stream::P2PNode;
+use anyhow::{anyhow, Context, Result};
+use async_lock::RwLock;
+use serde::Serialize;
+use std::sync::{Arc, Weak};
 use tauri::{ipc::Channel, Emitter};
-use tokio::sync::{watch, RwLock};
+use tokio_util::sync::CancellationToken;
+use tokio_util::task::TaskTracker;
+
+#[derive(Debug, Clone, Serialize)]
+pub enum Message {
+    Test,
+    Err(String),
+    Data,
+}
 
 pub struct AppState {
-    pub p2p_node: RwLock<Option<P2PNode>>,
-    pub p2p_inform: RwLock<Option<watch::Sender<P2PState>>>,
+    pub tx: flume::Sender<Message>,
+    pub rx: flume::Receiver<Message>,
+    pub node: RwLock<Option<P2PNode>>,
+    pub task: RwLock<Option<TaskTracker>>,
+    pub token: RwLock<Option<CancellationToken>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
+        let (tx, rx) = flume::bounded::<Message>(10);
+        let node = RwLock::new(None);
+        let task = RwLock::new(None);
+        let token = RwLock::new(None);
         Self {
-            p2p_node: RwLock::new(None),
-            p2p_inform: RwLock::new(None),
+            tx,
+            rx,
+            node,
+            task,
+            token,
         }
     }
 }
 /**
- * 启动节点
- * 启动节点信息监听
+ * 启动任务
+ * 启动信息监听
  */
 #[tauri::command]
 pub async fn p2p_start(
     state: tauri::State<'_, AppState>,
-    on_data: Channel<P2PState>,
+    on_data: Channel<Message>,
 ) -> Result<String, String> {
-    let mut lock = state.p2p_node.write().await;
-    let Ok(node) = P2PNode::new().await else {
-        return Err("启动节点失败".to_string());
+    let mut token_guard = state.token.write().await;
+    if let Some(token) = token_guard.take() {
+        token.cancel();
+    }
+
+    let mut task_guard = state.task.write().await;
+    if let Some(task) = task_guard.take() {
+        task.close();
+        task.wait().await;
+    }
+
+    let mut node_guard = state.node.write().await;
+    if let Some(node) = node_guard.take() {
+        drop(node);
+    }
+
+    let task = TaskTracker::new();
+    let token = CancellationToken::new();
+    let Ok(nede) = P2PNode::new().await else {
+        return Err("启动节点失败".to_owned());
     };
-    *lock = Some(node.clone());
 
-
-    let (status_tx,mut status_rx) = watch::channel(node.p2p_state());
-    let mut guard = state.p2p_inform.write().await;
-    *guard = Some(status_tx);
-
-    // let mut rx = status_rx.clone();
-    tokio::spawn(async move {
-        while status_rx.changed().await.is_ok() {
-            let state = status_rx.borrow();
-            if let Err(e) = on_data.send(state.clone()) {
-                eprintln!("消息通知发送失败:{:?}", e);
-                break;
-            };
+    let atoken = token.clone();
+    let rx = state.rx.clone();
+    task.spawn(async move {
+        loop {
+            tokio::select! {
+                _ = atoken.cancelled() => {
+                        break;
+                },
+                Ok(state) = rx.recv_async() => {
+                    if let Err(e) = on_data.send(state) {
+                        eprintln!("消息通知发送失败:{:?}", e);
+                        break;
+                    };
+                }
+            }
         }
     });
 
-    
+    *node_guard = Some(nede);
+    *task_guard = Some(task);
+    *token_guard = Some(token);
 
-    Ok("启动节点".to_owned())
+    Ok("启动任务".to_owned())
 }
+/**
+ * 停止任务
+ */
+#[tauri::command]
+pub async fn p2p_stop(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let mut token_guard = state.token.write().await;
+    if let Some(token) = token_guard.take() {
+        token.cancel();
+    };
 
+    let mut guard = state.task.write().await;
+    if let Some(tracker) = guard.take() {
+        tracker.close();
+        tracker.wait().await;
+    };
+
+    let mut node_guard = state.node.write().await;
+    if let Some(node) = node_guard.take() {
+        drop(node);
+    };
+
+    Ok("关闭节点".to_owned())
+}
 /**
  * 测试发送消息
  */
 #[tauri::command]
 pub async fn p2p_test(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let guard = state.p2p_node.read().await;
-    // let Some(node) = guard.as_ref() else {
-    //     return Err("未启动节点".to_string());
-    // };
-    let Some(node) = guard.as_ref() else {
-        return Err("未启动节点".to_string());
+    let guard = state.task.read().await;
+    let Some(task) = guard.as_ref() else {
+        return Err("未启动任务".to_string());
     };
-
-    let guard2 = state.p2p_inform.read().await;
-    let Some(tx) = guard2.clone() else {
-        return Err("为启动状态通知".to_string());
-    };
-    let _ = tx.send(node.p2p_state());
-    Ok("测试发送消息".to_owned())
+    let a = task.is_closed();
+    state.tx.send_async(Message::Test).await;
+    Ok(format!("Task closed {}", a))
 }
 
-/**
- * 安全停止节点
- */
-#[tauri::command]
-pub async fn p2p_stop(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let guard = state.p2p_node.read().await;
-    let Some(node) = guard.as_ref() else {
-        return Err("未启动节点".to_string());
-    };
-    if let Err(e) = node.close().await{
-        return Err(format!("节点关闭错误： {:?}",e));
-    };
-
-    let guard2 = state.p2p_inform.read().await;
-    let Some(state) = guard2.clone() else {
-        return Err("为启动状态通知".to_string());
-    };
-    let _ = state.send(node.p2p_state());
-    Ok("关闭节点".to_owned())
-}
-
-/**
- * 节点地址详情
- */
-#[tauri::command]
-pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let guard = state.p2p_node.read().await;
-    let Some(node) = guard.as_ref() else {
-        return Err("未启动节点".to_string());
-    };
-    let a = node.get_info();
-    Ok(a)
-}
-
-#[tauri::command]
-pub async fn p2p_get_ticket(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let guard = state.p2p_node.read().await;
-    if let Some(node) = guard.as_ref() {
-        let ticket = node.get_ticket();
-        return Ok(ticket);
-    };
-    Ok("".to_owned())
-}
-
-/**
- * 启动监听后会无限循环，内不会执行到最后
- */
 #[tauri::command]
 pub async fn p2p_start_accept(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let guard = state.p2p_node.read().await;
-    let Some(node) = guard.as_ref() else {
-        return Err("未启动节点".to_string());
+    let tesk_guard = state.task.read().await;
+    let Some(task) = tesk_guard.as_ref() else {
+        return Err("未启动任务".to_string());
     };
-    let node2 = node.clone();
-    tokio::spawn(async move {
-        let _ = node2.start_accept().await;
+
+    let tx = state.tx.clone();
+
+    let task = task.clone();
+
+    // let node = P2PNode::new().await.unwrap();
+
+    let node_guard = state.node.read().await;
+    let Some(node) = node_guard.as_ref() else {
+        return Err("未启动任务".to_string());
+    };
+
+    let node = node.clone();
+
+    let a = node.get_info();
+    let b = node.get_ticket();
+
+    task.spawn(async move {
+        let a = node.start_accept().await;
     });
 
     Ok("✅ 后台监听已启动，等待客户端连接".into())
@@ -138,22 +164,37 @@ pub async fn p2p_start_connect(
     state: tauri::State<'_, AppState>,
     addr: String,
 ) -> Result<String, String> {
-    let guard = state.p2p_node.read().await;
-    let Some(node) = guard.as_ref() else {
-        return Err("未启动节点".to_string());
+    let task_guard = state.task.read().await;
+    let Some(task) = task_guard.as_ref() else {
+        return Err("未启动任务".to_string());
     };
-    if let Err(e) = node.start_connect(&addr).await {
-        return Err(format!("连接失败{:#?}", e));
+
+    let node_guard = state.node.read().await;
+    let Some(node) = node_guard.as_ref() else {
+        return Err("未启动任务".to_string());
     };
+
+    let a = node.get_info();
+    let b = node.get_ticket();
+    let node = node.clone();
+
+    task.spawn(async move {
+        if let Err(e) = node.start_connect(&addr).await {
+            eprintln!("连接失败{:#?}", e);
+        };
+    });
+
     Ok("✅ 发起客户端连接".into())
 }
 
 #[tauri::command]
 pub async fn p2p_send(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<(), String> {
-    let guard = state.p2p_node.read().await;
-    let Some(node) = guard.as_ref() else {
-        return Err("未启动节点".to_string());
+
+    let node_guard = state.node.read().await;
+    let Some(node) = node_guard.as_ref() else {
+        return Err("未启动任务".to_string());
     };
+
     if let Err(e) = node.send(data).await {
         return Err(format!("发送错误{:?}", e));
     };
@@ -165,9 +206,9 @@ pub async fn p2p_recv(
     state: tauri::State<'_, AppState>,
     on_data: Channel<Vec<u8>>,
 ) -> Result<(), String> {
-    let guard = state.p2p_node.read().await;
-    let Some(node) = guard.as_ref() else {
-        return Err("未启动节点".to_string());
+    let node_guard = state.node.read().await;
+    let Some(node) = node_guard.as_ref() else {
+        return Err("未启动任务".to_string());
     };
     let ch = node.clone();
     loop {
@@ -178,6 +219,36 @@ pub async fn p2p_recv(
         };
     }
 }
+
+/**
+ * 节点地址详情
+ */
+#[tauri::command]
+pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let node_guard = state.node.read().await;
+    let Some(node) = node_guard.as_ref() else {
+        return Err("未启动任务".to_string());
+    };
+    let a = node.get_info();
+    Ok(a)
+}
+
+#[tauri::command]
+pub async fn p2p_get_ticket(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let node_guard = state.node.read().await;
+    let Some(node) = node_guard.as_ref() else {
+        return Err("未启动任务".to_string());
+    };
+
+    let ticket = node.get_ticket();
+    return Ok(ticket);
+
+
+}
+
+/**
+ * 启动监听后会无限循环，内不会执行到最后
+ */
 
 /**
  * 发送单条信息
