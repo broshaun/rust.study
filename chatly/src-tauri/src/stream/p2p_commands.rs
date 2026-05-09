@@ -1,11 +1,9 @@
-use super::stream::P2PNode;
+use super::stream::{Cmd, Task};
 use anyhow::{anyhow, Context, Result};
 use async_lock::RwLock;
 use serde::Serialize;
-use std::sync::{Arc, Weak};
 use tauri::{ipc::Channel, Emitter};
-use tokio_util::sync::CancellationToken;
-use tokio_util::task::TaskTracker;
+use tokio::sync::{mpsc, oneshot};
 
 #[derive(Debug, Clone, Serialize)]
 pub enum Message {
@@ -15,26 +13,15 @@ pub enum Message {
 }
 
 pub struct AppState {
-    pub tx: flume::Sender<Message>,
-    pub rx: flume::Receiver<Message>,
-    pub node: RwLock<Option<P2PNode>>,
-    pub task: RwLock<Option<TaskTracker>>,
-    pub token: RwLock<Option<CancellationToken>>,
+    pub tx: RwLock<Option<mpsc::Sender<Cmd>>>,
+    pub task: RwLock<Option<Task>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
-        let (tx, rx) = flume::bounded::<Message>(10);
-        let node = RwLock::new(None);
+        let tx = RwLock::new(None);
         let task = RwLock::new(None);
-        let token = RwLock::new(None);
-        Self {
-            tx,
-            rx,
-            node,
-            task,
-            token,
-        }
+        Self { tx, task }
     }
 }
 /**
@@ -42,53 +29,17 @@ impl AppState {
  * 启动信息监听
  */
 #[tauri::command]
-pub async fn p2p_start(
-    state: tauri::State<'_, AppState>,
-    on_data: Channel<Message>,
-) -> Result<String, String> {
-    let mut token_guard = state.token.write().await;
-    if let Some(token) = token_guard.take() {
-        token.cancel();
-    }
-
+pub async fn p2p_start(state: tauri::State<'_, AppState>) -> Result<String, String> {
     let mut task_guard = state.task.write().await;
-    if let Some(task) = task_guard.take() {
-        task.close();
-        task.wait().await;
-    }
+    let mut tx_guard = state.tx.write().await;
 
-    let mut node_guard = state.node.write().await;
-    if let Some(node) = node_guard.take() {
-        drop(node);
-    }
+    let task = task_guard.take().unwrap_or_else(Task::new);
+    let (tx, rx) = mpsc::channel(10);
 
-    let task = TaskTracker::new();
-    let token = CancellationToken::new();
-    let Ok(nede) = P2PNode::new().await else {
-        return Err("启动节点失败".to_owned());
-    };
+    task.manage(rx).await;
 
-    let atoken = token.clone();
-    let rx = state.rx.clone();
-    task.spawn(async move {
-        loop {
-            tokio::select! {
-                _ = atoken.cancelled() => {
-                        break;
-                },
-                Ok(state) = rx.recv_async() => {
-                    if let Err(e) = on_data.send(state) {
-                        eprintln!("消息通知发送失败:{:?}", e);
-                        break;
-                    };
-                }
-            }
-        }
-    });
-
-    *node_guard = Some(nede);
+    *tx_guard = Some(tx);
     *task_guard = Some(task);
-    *token_guard = Some(token);
 
     Ok("启动任务".to_owned())
 }
@@ -97,23 +48,16 @@ pub async fn p2p_start(
  */
 #[tauri::command]
 pub async fn p2p_stop(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let mut token_guard = state.token.write().await;
-    if let Some(token) = token_guard.take() {
-        token.cancel();
-    };
+    let mut task_guard = state.task.write().await;
+    if let Some(ts) = task_guard.take() {
+        ts.stop().await;
+    }
+    let mut tx_guard = state.tx.write().await;
+    if let Some(tx) = tx_guard.take() {
+        drop(tx);
+    }
 
-    let mut guard = state.task.write().await;
-    if let Some(tracker) = guard.take() {
-        tracker.close();
-        tracker.wait().await;
-    };
-
-    let mut node_guard = state.node.write().await;
-    if let Some(node) = node_guard.take() {
-        drop(node);
-    };
-
-    Ok("关闭节点".to_owned())
+    Ok("关闭任务".to_owned())
 }
 /**
  * 测试发送消息
@@ -121,39 +65,49 @@ pub async fn p2p_stop(state: tauri::State<'_, AppState>) -> Result<String, Strin
 #[tauri::command]
 pub async fn p2p_test(state: tauri::State<'_, AppState>) -> Result<String, String> {
     let guard = state.task.read().await;
-    let Some(task) = guard.as_ref() else {
+    let Some(ts) = guard.as_ref() else {
         return Err("未启动任务".to_string());
     };
-    let a = task.is_closed();
-    state.tx.send_async(Message::Test).await;
-    Ok(format!("Task closed {}", a))
+    let a = ts.info();
+    Ok(a)
 }
 
 #[tauri::command]
-pub async fn p2p_start_accept(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let tesk_guard = state.task.read().await;
-    let Some(task) = tesk_guard.as_ref() else {
-        return Err("未启动任务".to_string());
+pub async fn p2p_start_accept(
+    state: tauri::State<'_, AppState>,
+    on_data: Channel<Vec<u8>>,
+) -> Result<String, String> {
+    let tx_guard = state.tx.read().await;
+    let Some(tx) = tx_guard.as_ref() else {
+        return Err("未启动通道".to_string());
     };
 
-    let tx = state.tx.clone();
+    
 
-    let task = task.clone();
-
-    // let node = P2PNode::new().await.unwrap();
-
-    let node_guard = state.node.read().await;
-    let Some(node) = node_guard.as_ref() else {
-        return Err("未启动任务".to_string());
+    let (rtx, rrx) = oneshot::channel();
+    let _a = tx.send(Cmd::Accept { reply: rtx }).await;
+    
+    let node = match rrx.await{
+        Ok(t)=>t,
+        Err(e)=>{
+            return Err(format!("{:?}",e));
+        }
     };
 
-    let node = node.clone();
 
-    let a = node.get_info();
-    let b = node.get_ticket();
 
-    task.spawn(async move {
-        let a = node.start_accept().await;
+
+    let task_guard = state.task.read().await;
+    let Some(ts) = task_guard.as_ref() else {
+        return Err("未启动节点（后台任务）".to_string());
+    };
+
+    ts.task.spawn(async move {
+        while let Some(data) = node.recv().await {
+            if let Err(e) = on_data.send(data) {
+                eprintln!("前端通道发送失败:{:?}", e);
+            };
+        }
     });
 
     Ok("✅ 后台监听已启动，等待客户端连接".into())
@@ -162,93 +116,99 @@ pub async fn p2p_start_accept(state: tauri::State<'_, AppState>) -> Result<Strin
 #[tauri::command]
 pub async fn p2p_start_connect(
     state: tauri::State<'_, AppState>,
+    on_data: Channel<Vec<u8>>,
     addr: String,
 ) -> Result<String, String> {
+    let tx_guard = state.tx.read().await;
+    let Some(tx) = tx_guard.as_ref() else {
+        return Err("未启动通道".to_string());
+    };
+
+
+    let (rtx, rrx) = oneshot::channel();
+    let _a = tx.send(Cmd::Connect { ticket: addr, reply: rtx }).await;
+    let node = match rrx.await{
+        Ok(t)=>t,
+        Err(e)=>{
+            return Err(format!("{:?}",e));
+        }
+    };
+
+
     let task_guard = state.task.read().await;
-    let Some(task) = task_guard.as_ref() else {
+    let Some(ts) = task_guard.as_ref() else {
         return Err("未启动任务".to_string());
     };
 
-    let node_guard = state.node.read().await;
-    let Some(node) = node_guard.as_ref() else {
-        return Err("未启动任务".to_string());
-    };
-
-    let a = node.get_info();
-    let b = node.get_ticket();
-    let node = node.clone();
-
-    task.spawn(async move {
-        if let Err(e) = node.start_connect(&addr).await {
-            eprintln!("连接失败{:#?}", e);
-        };
+    ts.task.spawn(async move {
+        while let Some(data) = node.recv().await {
+            if let Err(e) = on_data.send(data) {
+                eprintln!("前端通道发送失败:{:?}", e);
+            };
+        }
     });
 
-    Ok("✅ 发起客户端连接".into())
+    Ok("✅ 后台监听已启动，发起客户端连接".into())
 }
 
 #[tauri::command]
 pub async fn p2p_send(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<(), String> {
-
-    let node_guard = state.node.read().await;
-    let Some(node) = node_guard.as_ref() else {
-        return Err("未启动任务".to_string());
+    let tx_guard = state.tx.read().await;
+    let Some(tx) = tx_guard.as_ref() else {
+        return Err("未启动通道".to_string());
     };
 
-    if let Err(e) = node.send(data).await {
-        return Err(format!("发送错误{:?}", e));
+    let (rtx, rrx) = oneshot::channel();
+    let _a = tx.send(Cmd::Get { reply: rtx }).await;
+
+    if let Ok(node) = rrx.await{
+        let b= node.send(data).await;
+        match b {
+            Ok(())=>{
+                return Ok(());
+            },
+            Err(e)=>{
+                let a = format!("{:?}",e);
+                return Err(a);
+            }
+            
+        }
     };
     Ok(())
-}
-
-#[tauri::command]
-pub async fn p2p_recv(
-    state: tauri::State<'_, AppState>,
-    on_data: Channel<Vec<u8>>,
-) -> Result<(), String> {
-    let node_guard = state.node.read().await;
-    let Some(node) = node_guard.as_ref() else {
-        return Err("未启动任务".to_string());
-    };
-    let ch = node.clone();
-    loop {
-        if let Some(data) = ch.recv().await {
-            if let Err(e) = on_data.send(data) {
-                return Err(format!("前端通道发送失败:{:?}", e));
-            };
-        };
-    }
 }
 
 /**
  * 节点地址详情
  */
-#[tauri::command]
-pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let node_guard = state.node.read().await;
-    let Some(node) = node_guard.as_ref() else {
-        return Err("未启动任务".to_string());
-    };
-    let a = node.get_info();
-    Ok(a)
-}
+// #[tauri::command]
+// pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, String> {
+
+//     let task_guard = state.task.read().await;
+//     let Some(ts) = task_guard.as_ref() else {
+//         return Err("未启动任务".to_string());
+//     };
+//     let a = ts.info();
+//     Ok(a)
+// }
 
 #[tauri::command]
 pub async fn p2p_get_ticket(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let node_guard = state.node.read().await;
-    let Some(node) = node_guard.as_ref() else {
-        return Err("未启动任务".to_string());
+    let tx_guard = state.tx.read().await;
+    let Some(tx) = tx_guard.as_ref() else {
+        return Err("未启动通道".to_string());
     };
 
-    let ticket = node.get_ticket();
-    return Ok(ticket);
+    let (rtx, rrx) = oneshot::channel();
+    let _a = tx.send(Cmd::Get { reply: rtx }).await;
+    if let Ok(node) = rrx.await{
+        let ticket = node.get_ticket();
+        return Ok(ticket);
+    };
 
-
+    return Ok("".to_string());
+    
 }
 
-/**
- * 启动监听后会无限循环，内不会执行到最后
- */
 
 /**
  * 发送单条信息

@@ -31,7 +31,7 @@ export const RsChat = [
           ...RsMsgs,
           {
             path: "test",
-            element: <PcmTestPage />,
+            element: <Test />,
           }
         ],
       },

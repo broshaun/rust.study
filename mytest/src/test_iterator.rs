@@ -18,16 +18,11 @@ impl Iterator for Counter {
         } else {
             None
         }
-        
     }
-
-
 }
 
 pub fn fn1() {
     let mut counter = Counter::new(5);
-
-
 
     while let Some(num) = counter.next() {
         println!("next {}", num); // 输出 1 到 5

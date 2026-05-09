@@ -32,17 +32,12 @@ pub async fn quic_connect(
 }
 
 #[tauri::command]
-pub async fn quic_send(
-    data: Vec<u8>,
-    state: State<'_, QuicState>,
-) -> Result<(), String> {
+pub async fn quic_send(data: Vec<u8>, state: State<'_, QuicState>) -> Result<(), String> {
     state.send_bytes(data).await
 }
 
 #[tauri::command]
-pub async fn quic_close(
-    state: State<'_, QuicState>,
-) -> Result<(), String> {
+pub async fn quic_close(state: State<'_, QuicState>) -> Result<(), String> {
     state.close().await;
     Ok(())
 }

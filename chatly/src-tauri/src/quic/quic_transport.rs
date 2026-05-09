@@ -21,7 +21,6 @@ pub struct QuicState {
 }
 
 impl QuicState {
-
     pub async fn set_downlink_channel(&self, channel: Channel<Vec<u8>>) {
         let mut ch = self.downlink_channel.write().await;
         *ch = Some(channel);
@@ -31,8 +30,7 @@ impl QuicState {
         let server_config = build_server_config()?;
         let client_config = build_client_config()?;
 
-        let mut endpoint =
-            Endpoint::server(server_config, bind_addr).map_err(|e| e.to_string())?;
+        let mut endpoint = Endpoint::server(server_config, bind_addr).map_err(|e| e.to_string())?;
 
         endpoint.set_default_client_config(client_config);
 
@@ -183,8 +181,8 @@ impl QuicState {
 }
 
 fn build_server_config() -> Result<ServerConfig, String> {
-    let certified = generate_simple_self_signed(vec!["localhost".into()])
-        .map_err(|e| e.to_string())?;
+    let certified =
+        generate_simple_self_signed(vec!["localhost".into()]).map_err(|e| e.to_string())?;
 
     let cert_der = certified.cert.der().to_vec();
     let key_der = certified.key_pair.serialize_der();
@@ -197,12 +195,8 @@ fn build_server_config() -> Result<ServerConfig, String> {
 
 fn build_client_config() -> Result<ClientConfig, String> {
     use rustls::{
-        client::danger::{
-            HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier,
-        },
-        ClientConfig as RustlsClientConfig,
-        DigitallySignedStruct,
-        SignatureScheme,
+        client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier},
+        ClientConfig as RustlsClientConfig, DigitallySignedStruct, SignatureScheme,
     };
 
     #[derive(Debug)]

@@ -5,6 +5,8 @@ import { listen } from '@tauri-apps/api/event'
 
 export const Test = () => {
 
+
+    // 接收单条信息
     listen("message", (e) => {
         console.log(e.payload);
     })
@@ -14,9 +16,10 @@ export const Test = () => {
         invoke("send_to_this_window")
     }
 
-    const p2p_init = async () => {
+
+    const p2p_start = async () => {
         try {
-            const rsp = await invoke('p2p_init');
+            const rsp = await invoke('p2p_start');
             console.log(rsp);
         } catch (err) {
             console.error(err);
@@ -24,9 +27,9 @@ export const Test = () => {
     };
 
 
-    const p2p_close = async () => {
+    const p2p_stop = async () => {
         try {
-            const rsp = await invoke('p2p_close');
+            const rsp = await invoke('p2p_stop');
             console.log(rsp);
         } catch (err) {
             console.error(err);
@@ -34,14 +37,75 @@ export const Test = () => {
     }
 
 
-    const p2p_info = async () => {
+    const p2p_test = async () => {
         try {
-            const rsp = await invoke('p2p_info');
+            const rsp = await invoke('p2p_test');
             console.log(rsp);
         } catch (err) {
             console.error(err);
         }
     }
+
+
+    const p2p_start_accept = async () => {
+        const onData = new Channel();
+
+        // 核心：直接在控制台输出
+        onData.onmessage = (data) => {
+            // data 是来自 Rust 的字节数组 (Uint8Array)
+            const text = new TextDecoder().decode(new Uint8Array(data));
+            console.log("📬 [P2P Recv]:", text);
+            console.log("📦 [Raw Bytes]:", data);
+        };
+
+        try {
+            console.log("📡 建立接收通道...");
+            let rsp = await invoke('p2p_start_accept', { onData });
+            console.log(rsp);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+
+
+    const [inputAddr, setInputAddr] = useState("");
+    const p2p_start_connect = async (addr) =>  {
+        const onData = new Channel();
+
+        // 核心：直接在控制台输出
+        onData.onmessage = (data) => {
+            // data 是来自 Rust 的字节数组 (Uint8Array)
+            const text = new TextDecoder().decode(new Uint8Array(data));
+            console.log("📬 [P2P Recv]:", text);
+            console.log("📦 [Raw Bytes]:", data);
+        };
+
+        try {
+            console.log("📡 建立接收通道...");
+            let rsp = await invoke('p2p_start_connect', {addr, onData });
+            console.log(rsp);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const p2p_send = async () => {
+        try {
+            const text = "hello p2p";
+            const data = Array.from(new TextEncoder().encode(text));
+
+            console.log("📤 [P2P Send]:", text, data);
+
+            let rsp = await invoke("p2p_send", {
+                data,
+            });
+
+            console.log("✅ 发送反馈",rsp);
+        } catch (err) {
+            console.error("❌ 发送错误:", err);
+        }
+    };
 
 
     const p2p_ticket = async () => {
@@ -54,83 +118,17 @@ export const Test = () => {
     }
 
 
-    const handleStartAccept = async () => {
-        try {
-            const rsp = await invoke('p2p_start_accept');
-            console.log("启动节点监听...");
-            console.log(rsp);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-
-    const [inputAddr, setInputAddr] = useState("");
-    const p2p_start_connect = async (addr) => {
-        try {
-            console.log("🔗 正在连接:", addr);
-            const result = await invoke("p2p_start_connect", {
-                addr,
-            });
-
-            console.log("✅ 连接成功:", result);
-        } catch (err) {
-            console.error("❌ 连接失败:", err);
-        }
-    };
-
-    const p2p_recv = async () => {
-        const onData = new Channel();
-
-        // 核心：直接在控制台输出
-        onData.onmessage = (data) => {
-            // data 是来自 Rust 的字节数组 (Uint8Array)
-            const text = new TextDecoder().decode(new Uint8Array(data));
-            console.log("📬 [P2P Recv]:", text);
-            console.log("📦 [Raw Bytes]:", data);
-        };
-
-        try {
-            console.log("📡 正在建立接收通道...");
-            // 注意：由于 Rust 端是 loop，此 await 会一直挂起直到连接关闭
-            await invoke('p2p_recv', { onData });
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-
-
-    const p2p_send = async () => {
-        try {
-            const text = "hello p2p";
-            const data = Array.from(new TextEncoder().encode(text));
-
-            console.log("📤 [P2P Send]:", text, data);
-
-            await invoke("p2p_send", {
-                data,
-            });
-
-            console.log("✅ 发送成功");
-        } catch (err) {
-            console.error("❌ 发送失败:", err);
-        }
-    };
-
-
+    
 
     return <div style={{ padding: '20px' }}>
-
-        <button onClick={p2p_init}>1. 初始化节点</button>
-        <button onClick={p2p_close}>2. 关闭节点</button>
-        <button onClick={p2p_info}>3. 节点详情</button>
-        <button onClick={p2p_ticket}>4. 连接密钥</button>
-
-
         <br />
-        <button onClick={handleStartAccept} >1. 启动节点监听 </button>
-
+        <button onClick={p2p_start}>启动后台任务(节点)</button>
+        <br />
+        <button onClick={p2p_stop}>停止后台任务(节点)</button>
+        <br />
+        <button onClick={p2p_test}>任务测试</button>
+        <br />
+        <button onClick={p2p_start_accept} >启动节点监听 </button>
 
         <br />
         <input
@@ -143,20 +141,17 @@ export const Test = () => {
         <button
             onClick={() => p2p_start_connect(inputAddr)}
             disabled={!inputAddr.trim()}
-        >
-            1.发起连接
-        </button>
-
+        >发起连接</button>
 
         <br />
-        <button onClick={p2p_send}>5.发送信息</button>
+        <button onClick={p2p_send}>发送信息</button>
 
         <br />
-        <button onClick={p2p_recv}>6.接收信息</button>
+        <button onClick={p2p_ticket}>获取本地连接密钥</button>
 
 
-        <br />
-        <button onClick={send_to_this_window}>7.Rust发送至前端</button>
+        {/* <br />
+        <button onClick={send_to_this_window}>Rust发送至前端</button> */}
 
 
 

@@ -6,6 +6,4 @@ async fn main() {
 
     let num = add(1, 2);
     println!("add is {}", num);
-
-
 }

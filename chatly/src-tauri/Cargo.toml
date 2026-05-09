@@ -27,6 +27,7 @@ tokio = { version = "1", features = [
     "macros",
     "time",
     "signal",
+    "sync"
 ] }
 tokio-util = "0.7.18"
 flume = "0.12.0"

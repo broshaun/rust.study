@@ -1,6 +1,6 @@
 use super::stream::{P2PNode, P2PState};
-use tauri::{ipc::Channel, Emitter};
-use tokio::sync::{watch, RwLock};
+use tauri::{Emitter, ipc::Channel};
+use tokio::sync::{RwLock, watch};
 
 pub struct AppState {
     pub p2p_node: RwLock<Option<P2PNode>>,
@@ -20,7 +20,10 @@ impl AppState {
  * 启动节点信息监听
  */
 #[tauri::command]
-pub async fn p2p_start(state: tauri::State<'_, AppState>,on_data: Channel<P2PState>) -> Result<(), String> {
+pub async fn p2p_start(
+    state: tauri::State<'_, AppState>,
+    on_data: Channel<P2PState>,
+) -> Result<(), String> {
     let mut lock = state.p2p_node.write().await;
     let Ok(node) = P2PNode::new().await else {
         return Err("启动节点失败".to_string());
@@ -34,7 +37,7 @@ pub async fn p2p_start(state: tauri::State<'_, AppState>,on_data: Channel<P2PSta
         if let Err(e) = on_data.send(state.clone()) {
             return Err(format!("消息通知发送失败:{:?}", e));
         };
-    };
+    }
     Ok(())
 }
 /**
@@ -49,7 +52,7 @@ pub async fn p2p_stop(state: tauri::State<'_, AppState>) -> Result<String, Strin
     node.close().await;
     *guard = None;
     let guard2 = state.p2p_inform.write().await;
-    let Some(state) = guard2.clone() else{
+    let Some(state) = guard2.clone() else {
         return Err("为启动状态通知".to_string());
     };
     let _ = state.send(node.p2p_state());

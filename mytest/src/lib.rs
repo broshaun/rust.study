@@ -6,13 +6,7 @@ pub mod test_struct;
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        test_function,
-        test_ifelse,
-        test_loops,
-        test_iterator,
-        test_struct,
-    };
+    use crate::{test_function, test_ifelse, test_iterator, test_loops, test_struct};
 
     #[test]
     fn run() {

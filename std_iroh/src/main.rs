@@ -1,10 +1,9 @@
 mod ping;
 mod stream;
 
-
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::env;
-use stream::stream::{P2PNode};
+use stream::stream::P2PNode;
 use tokio::io::{self, AsyncBufReadExt, BufReader};
 use tokio::signal;
 

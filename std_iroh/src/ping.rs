@@ -11,18 +11,12 @@ pub async fn start() -> Result<()> {
     let ticket = EndpointTicket::new(endpoint.addr());
     println!("{} \n", ticket);
     println!("节点信息: \n {:#?}", ticket);
-    
-
 
     println!("++++++++++++++++++++++监听Ping服务++++++++++++++++++++++");
     let ping = Ping::new();
     let recv_router = Router::builder(endpoint).accept(ALPN, ping).spawn(); //处理ping请求，并返回路由
     let addr = recv_router.endpoint().addr();
     println!("++++++++++++++++++++++监听Ping服务++++++++++++++++++++++");
-
-
-
-
 
     println!("++++++++++++++++++++++连接信息++++++++++++++++++++++");
     let send_ep = Endpoint::bind(presets::N0).await?;

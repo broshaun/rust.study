@@ -6,10 +6,7 @@ use iroh::{
 };
 use serde::{Deserialize, Serialize};
 use tauri::{ipc::Channel, AppHandle, Emitter};
-use tokio::{
-    io::{AsyncWriteExt},
-    sync::Mutex,
-};
+use tokio::{io::AsyncWriteExt, sync::Mutex};
 
 const P2P_ALPN: &[u8] = b"/zoey/p2p/1";
 
@@ -320,12 +317,7 @@ impl P2PState {
 
         self.start_recv_loop(conn.clone(), recv).await;
 
-        emit_event_arc(
-            &self.app,
-            "p2p-connected",
-            conn.remote_id().to_string(),
-        )
-        .await;
+        emit_event_arc(&self.app, "p2p-connected", conn.remote_id().to_string()).await;
         emit_log_arc(
             &self.app,
             format!("active connection ready (outgoing): {}", conn.remote_id()),
@@ -363,12 +355,7 @@ impl P2PState {
 
         self.start_recv_loop(conn.clone(), recv).await;
 
-        emit_event_arc(
-            &self.app,
-            "p2p-connected",
-            conn.remote_id().to_string(),
-        )
-        .await;
+        emit_event_arc(&self.app, "p2p-connected", conn.remote_id().to_string()).await;
         emit_log_arc(
             &self.app,
             format!("active connection ready (incoming): {}", conn.remote_id()),
@@ -440,28 +427,26 @@ impl P2PState {
         let task = tauri::async_runtime::spawn(async move {
             loop {
                 match read_one_message(&mut recv).await {
-                    Ok(msg) => {
-                        match msg.data_type {
-                            P2PDataType::Raw => {
-                                {
-                                    let ch = state.raw_downlink_channel.lock().await;
-                                    if let Some(channel) = ch.as_ref() {
-                                        let _ = channel.send(msg.payload.clone());
-                                    }
+                    Ok(msg) => match msg.data_type {
+                        P2PDataType::Raw => {
+                            {
+                                let ch = state.raw_downlink_channel.lock().await;
+                                if let Some(channel) = ch.as_ref() {
+                                    let _ = channel.send(msg.payload.clone());
                                 }
-
-                                emit_event_arc(
-                                    &state.app,
-                                    "p2p-packet",
-                                    P2PPacketDebug {
-                                        data_type: msg.data_type,
-                                        payload_len: msg.payload.len(),
-                                    },
-                                )
-                                .await;
                             }
+
+                            emit_event_arc(
+                                &state.app,
+                                "p2p-packet",
+                                P2PPacketDebug {
+                                    data_type: msg.data_type,
+                                    payload_len: msg.payload.len(),
+                                },
+                            )
+                            .await;
                         }
-                    }
+                    },
                     Err(e) => {
                         emit_log_arc(
                             &state.app,

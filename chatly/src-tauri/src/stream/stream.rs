@@ -1,10 +1,102 @@
 use anyhow::{anyhow, Context, Result};
 use iroh::endpoint::{presets, Endpoint};
 use iroh_tickets::endpoint::EndpointTicket;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+use tokio::sync::{mpsc, oneshot};
 use tokio_util::sync::CancellationToken;
-
+use tokio_util::task::TaskTracker;
 
 const ALPN: &[u8] = b"/zoey/chat/1";
+
+pub enum Cmd {
+    Accept {
+        reply: oneshot::Sender<P2PNode>,
+    },
+    Connect {
+        ticket: String,
+        reply: oneshot::Sender<P2PNode>,
+    },
+    Get {
+        reply: oneshot::Sender<P2PNode>,
+    },
+}
+
+#[derive(Clone, Debug)]
+pub struct Task {
+    pub task: TaskTracker,
+    pub token: CancellationToken,
+}
+
+impl Task {
+    pub fn new() -> Self {
+        let task = TaskTracker::new();
+        let token = CancellationToken::new();
+        Self { task, token }
+    }
+
+    pub async fn stop(&self) {
+        self.token.cancel();
+        self.task.close();
+        self.task.wait().await;
+    }
+
+    pub fn info(&self) -> String {
+        let closed = self.task.is_closed();
+        let cancelled = self.token.is_cancelled();
+        format!(
+            "task closed is {} token cancelled is {} ",
+            closed, cancelled
+        )
+    }
+
+    pub async fn manage(&self, mut rx: mpsc::Receiver<Cmd>) {
+        let task = self.task.clone();
+        let token = self.token.clone();
+
+        self.task.spawn(async move {
+            let res = P2PNode::new().await;
+
+            while let Ok(ref node) = res {
+                tokio::select! {
+                    _ = token.cancelled() => {
+                        node.stop().await;
+                        break;
+                    },
+                    Some(cmd) = rx.recv() => {
+                        match cmd {
+                            Cmd::Accept { reply } => {
+                                let node2 = node.clone();
+                                task.spawn(async move{
+                                    if let Err(e) = node2.start_accept().await {
+                                        eprintln!("start_accept error: {:?}", e);
+                                    }
+                                });
+                                let _ = reply.send(node.clone());
+                            },
+                            Cmd::Connect { ticket, reply } => {
+                                let node2 = node.clone();
+                                task.spawn(async move{
+                                    if let Err(e) = node2.start_connect(&ticket).await {
+                                        eprintln!("start_connect error: {:?}", e);
+                                    }
+                                });
+                                let _ = reply.send(node.clone());
+                            },
+                            Cmd::Get { reply } =>{
+                                let node = node.clone();
+                                reply.send(node).unwrap();
+
+                            },
+                        }
+                    },
+                }
+            }
+        });
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct P2PChannel {
@@ -31,12 +123,18 @@ impl P2PChannel {
         }
     }
 
-    async fn send(&self, data: Vec<u8>) -> Result<bool> {
+    fn stop(&self) {
+        self.token.cancel();
+        // self.task.close();
+        // self.task.wait().await;
+    }
+
+    async fn send(&self, data: Vec<u8>) -> Result<()> {
         if self.token.is_cancelled() {
             return Err(anyhow!("未打开通道"));
         }
         self.outgoing_tx.send_async(data).await?;
-        return Ok(true);
+        return Ok(());
     }
 
     async fn recv(&self) -> Option<Vec<u8>> {
@@ -55,13 +153,13 @@ impl P2PChannel {
         mut quic_send: iroh::endpoint::SendStream,
         mut quic_recv: iroh::endpoint::RecvStream,
     ) -> Result<()> {
-        let mut set: tokio::task::JoinSet<Result<()>> = tokio::task::JoinSet::<Result<()>>::new();
+        let task = TaskTracker::new();
         // 任务 A: 网络 -> 内存 (Iroh -> Flume)
         let atoken = self.token.clone();
         let tx = self.incoming_tx.clone();
 
         // 任务 A: 网络 -> 内存 (Iroh -> Flume)
-        set.spawn(async move {
+        task.spawn(async move {
             let mut buf = vec![0u8; 8192];
             loop {
                 tokio::select! {
@@ -69,10 +167,10 @@ impl P2PChannel {
                         break;
                     },
                     res = quic_recv.read(&mut buf) => {
-                        match res? {
+                        match res.unwrap() {
                             Some(n) => {
                                 let data = buf[..n].to_vec();
-                                tx.send_async(data).await?;
+                                tx.send_async(data).await.unwrap();
                             }
                             None => {
                                 break;
@@ -81,38 +179,26 @@ impl P2PChannel {
                     },
                 }
             }
-            return Ok(());
         });
 
         // 任务 B: 内存 -> 网络 (Flume -> Iroh)
         let rx = self.outgoing_rx.clone();
         let atoken = self.token.clone();
-        set.spawn(async move {
+        task.spawn(async move {
             loop {
                 tokio::select! {
                     _ = atoken.cancelled() => {
                         break;
                     },
                     Ok(msg) = rx.recv_async() => {
-                        quic_send.write_all(&msg).await?;
+                        quic_send.write_all(&msg).await.unwrap();
                     },
                 }
             }
-            quic_send.finish()?;
-            return Ok(());
+            quic_send.finish().unwrap();
         });
-
-        while let Some(res) = set.join_next().await {
-            match res? {
-                Ok(()) => {
-                    self.token.cancel();
-                }
-                Err(e) => {
-                    set.abort_all();
-                    return Err(anyhow!(e));
-                }
-            }
-        }
+        task.close();
+        task.wait().await;
         Ok(())
     }
 }
@@ -120,7 +206,9 @@ impl P2PChannel {
 #[derive(Clone, Debug)]
 pub struct P2PNode {
     pub endpoint: Endpoint,
-    pub message: P2PChannel,
+    pub channel: P2PChannel,
+
+    pub is_active: Arc<AtomicBool>,
 }
 
 impl P2PNode {
@@ -134,30 +222,50 @@ impl P2PNode {
 
         Ok(Self {
             endpoint: endpoint,
-            message: P2PChannel::new(),
+            channel: P2PChannel::new(),
+            is_active: Arc::new(AtomicBool::new(false)),
         })
     }
 
-    pub async fn send(&self, data: Vec<u8>) -> Result<bool> {
-        return self.message.send(data).await;
+    pub async fn stop(&self) {
+        self.channel.stop();
+        self.endpoint.close().await;
+    }
+
+    pub async fn send(&self, data: Vec<u8>) -> Result<()> {
+        if self.is_active.load(Ordering::Relaxed) {
+            return self.channel.send(data).await;
+        };
+        return Err(anyhow!("未接通节点"));
     }
 
     pub async fn recv(&self) -> Option<Vec<u8>> {
-        return self.message.recv().await;
+        return self.channel.recv().await;
     }
     /**
      * 内部发送信息处理
      */
     pub async fn start_accept(&self) -> Result<()> {
+        if self.is_active.load(Ordering::Relaxed) {
+            return Err(anyhow!("不要重复启动节点连接"));
+        }
+        self.is_active.store(true, Ordering::SeqCst);
+
         let endpoint = self.endpoint.clone();
         let incoming = endpoint.accept().await.context("未能打开accept")?;
         let conn = incoming.await?;
         let (send, recv) = conn.accept_bi().await.context("123")?;
-        let _a = self.message.bind_io_loop(send, recv).await?;
+        let _a = self.channel.bind_io_loop(send, recv).await?;
+
+        self.is_active.store(false, Ordering::SeqCst);
         Ok(())
     }
 
     pub async fn start_connect(&self, ticket_str: &str) -> Result<()> {
+        if self.is_active.load(Ordering::Relaxed) {
+            return Err(anyhow!("不要重复启动节点连接"));
+        }
+        self.is_active.store(true, Ordering::SeqCst);
         let endpoint = self.endpoint.clone();
         let ticket: EndpointTicket = ticket_str.parse().context("解析失败")?;
         let conn: iroh::endpoint::Connection = endpoint.connect(ticket, ALPN).await?;
@@ -165,7 +273,9 @@ impl P2PNode {
         send.write_all(b"HELO")
             .await
             .context("Failed to send handshake")?;
-        let _a = self.message.bind_io_loop(send, recv).await?;
+        let _a = self.channel.bind_io_loop(send, recv).await?;
+
+        self.is_active.store(false, Ordering::SeqCst);
         Ok(())
     }
 
