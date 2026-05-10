@@ -1,16 +1,7 @@
 use super::stream::{Cmd, Task};
-use anyhow::{anyhow, Context, Result};
 use async_lock::RwLock;
-use serde::Serialize;
 use tauri::{ipc::Channel, Emitter};
 use tokio::sync::{mpsc, oneshot};
-
-#[derive(Debug, Clone, Serialize)]
-pub enum Message {
-    Test,
-    Err(String),
-    Data,
-}
 
 pub struct AppState {
     pub tx: RwLock<Option<mpsc::Sender<Cmd>>>,

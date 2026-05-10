@@ -1,11 +1,8 @@
 use anyhow::{anyhow, Context, Result};
 use iroh::endpoint::{presets, Endpoint};
 use iroh_tickets::endpoint::EndpointTicket;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
-use tokio::sync::{mpsc, oneshot};
+use std::sync::{Arc};
+use tokio::sync::{mpsc, oneshot, RwLock};
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
 
@@ -40,7 +37,7 @@ impl Task {
     pub async fn stop(&self) {
         self.token.cancel();
         self.task.close();
-        self.task.wait().await;
+        // self.task.wait().await;
     }
 
     pub fn info(&self) -> String {
@@ -87,7 +84,9 @@ impl Task {
                             },
                             Cmd::Get { reply } =>{
                                 let node = node.clone();
-                                reply.send(node).unwrap();
+                                if let Err(e) = reply.send(node) {
+                                    eprintln!("start_connect error: {:?}", e);
+                                };
 
                             },
                         }
@@ -96,6 +95,14 @@ impl Task {
             }
         });
     }
+}
+
+#[derive(Clone, Debug)]
+pub enum P2PState {
+    Idle,        // 空闲
+    Calling,     // 呼叫
+    Connected,   // 连通
+    Disconnected // 断开
 }
 
 #[derive(Clone, Debug)]
@@ -125,8 +132,6 @@ impl P2PChannel {
 
     fn stop(&self) {
         self.token.cancel();
-        // self.task.close();
-        // self.task.wait().await;
     }
 
     async fn send(&self, data: Vec<u8>) -> Result<()> {
@@ -203,12 +208,11 @@ impl P2PChannel {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone,Debug)]
 pub struct P2PNode {
     pub endpoint: Endpoint,
     pub channel: P2PChannel,
-
-    pub is_active: Arc<AtomicBool>,
+    pub state: Arc<RwLock<P2PState>>,
 }
 
 impl P2PNode {
@@ -223,7 +227,7 @@ impl P2PNode {
         Ok(Self {
             endpoint: endpoint,
             channel: P2PChannel::new(),
-            is_active: Arc::new(AtomicBool::new(false)),
+            state: Arc::new(RwLock::new(P2PState::Idle)),
         })
     }
 
@@ -233,10 +237,20 @@ impl P2PNode {
     }
 
     pub async fn send(&self, data: Vec<u8>) -> Result<()> {
-        if self.is_active.load(Ordering::Relaxed) {
-            return self.channel.send(data).await;
-        };
-        return Err(anyhow!("未接通节点"));
+        match *self.state.read().await {
+            P2PState::Idle =>{
+                return Err(anyhow!("未呼叫通话"));
+            },
+            P2PState::Calling => {
+                return Err(anyhow!("通话未接通"));
+            },
+            P2PState::Connected => {
+                return self.channel.send(data).await;
+            },
+            P2PState::Disconnected => {
+                return Err(anyhow!("通话已结束"));
+            },
+        }
     }
 
     pub async fn recv(&self) -> Option<Vec<u8>> {
@@ -246,26 +260,43 @@ impl P2PNode {
      * 内部发送信息处理
      */
     pub async fn start_accept(&self) -> Result<()> {
-        if self.is_active.load(Ordering::Relaxed) {
-            return Err(anyhow!("不要重复启动节点连接"));
+        match *self.state.read().await {
+            P2PState::Idle =>{},
+            P2PState::Calling => {
+                return Err(anyhow!("重复通话"));
+            },
+            P2PState::Connected => {
+                return Err(anyhow!("无法多个通话"));
+            },
+            P2PState::Disconnected => {
+                return Err(anyhow!("通话已结束"));
+            },
         }
-        self.is_active.store(true, Ordering::SeqCst);
-
+        *self.state.write().await = P2PState::Calling;
         let endpoint = self.endpoint.clone();
         let incoming = endpoint.accept().await.context("未能打开accept")?;
         let conn = incoming.await?;
         let (send, recv) = conn.accept_bi().await.context("123")?;
+        *self.state.write().await = P2PState::Connected;
         let _a = self.channel.bind_io_loop(send, recv).await?;
-
-        self.is_active.store(false, Ordering::SeqCst);
+        *self.state.write().await = P2PState::Disconnected;
         Ok(())
     }
 
     pub async fn start_connect(&self, ticket_str: &str) -> Result<()> {
-        if self.is_active.load(Ordering::Relaxed) {
-            return Err(anyhow!("不要重复启动节点连接"));
+        match *self.state.read().await {
+            P2PState::Idle =>{},
+            P2PState::Calling => {
+                return Err(anyhow!("重复通话"));
+            },
+            P2PState::Connected => {
+                return Err(anyhow!("无法多个通话"));
+            },
+            P2PState::Disconnected => {
+                return Err(anyhow!("通话已结束"));
+            },
         }
-        self.is_active.store(true, Ordering::SeqCst);
+        *self.state.write().await = P2PState::Calling;
         let endpoint = self.endpoint.clone();
         let ticket: EndpointTicket = ticket_str.parse().context("解析失败")?;
         let conn: iroh::endpoint::Connection = endpoint.connect(ticket, ALPN).await?;
@@ -273,9 +304,9 @@ impl P2PNode {
         send.write_all(b"HELO")
             .await
             .context("Failed to send handshake")?;
+        *self.state.write().await = P2PState::Connected;
         let _a = self.channel.bind_io_loop(send, recv).await?;
-
-        self.is_active.store(false, Ordering::SeqCst);
+        *self.state.write().await = P2PState::Disconnected;
         Ok(())
     }
 

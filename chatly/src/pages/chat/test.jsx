@@ -17,39 +17,17 @@ export const Test = () => {
     }
 
 
-    const p2p_start = async () => {
-        try {
-            const rsp = await invoke('p2p_start');
-            console.log(rsp);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-
-    const p2p_stop = async () => {
-        try {
-            const rsp = await invoke('p2p_stop');
-            console.log(rsp);
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-
-    const p2p_test = async () => {
-        try {
-            const rsp = await invoke('p2p_test');
-            console.log(rsp);
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
+    // const p2p_start = async () => {
+    //     try {
+    //         const rsp = await invoke('p2p_start');
+    //         console.log(rsp);
+    //     } catch (err) {
+    //         console.error(err);
+    //     }
+    // };
 
     const p2p_start_accept = async () => {
         const onData = new Channel();
-
         // 核心：直接在控制台输出
         onData.onmessage = (data) => {
             // data 是来自 Rust 的字节数组 (Uint8Array)
@@ -59,8 +37,12 @@ export const Test = () => {
         };
 
         try {
+
+            const st = await invoke('p2p_start');
+            console.log(st);
+
             console.log("📡 建立接收通道...");
-            let rsp = await invoke('p2p_start_accept', { onData });
+            const rsp = await invoke('p2p_start_accept', { onData });
             console.log(rsp);
         } catch (err) {
             console.error(err);
@@ -82,6 +64,8 @@ export const Test = () => {
         };
 
         try {
+            const st = await invoke('p2p_start');
+            console.log(st);
             console.log("📡 建立接收通道...");
             let rsp = await invoke('p2p_start_connect', {addr, onData });
             console.log(rsp);
@@ -89,6 +73,27 @@ export const Test = () => {
             console.error(err);
         }
     };
+
+    const p2p_stop = async () => {
+        try {
+            const rsp = await invoke('p2p_stop');
+            console.log(rsp);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+
+    const p2p_test = async () => {
+        try {
+            const rsp = await invoke('p2p_test');
+            console.log(rsp);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+
 
     const p2p_send = async () => {
         try {
@@ -121,14 +126,8 @@ export const Test = () => {
     
 
     return <div style={{ padding: '20px' }}>
-        <br />
-        <button onClick={p2p_start}>启动后台任务(节点)</button>
-        <br />
-        <button onClick={p2p_stop}>停止后台任务(节点)</button>
-        <br />
-        <button onClick={p2p_test}>任务测试</button>
-        <br />
-        <button onClick={p2p_start_accept} >启动节点监听 </button>
+
+        <button onClick={p2p_start_accept} >发起通话 </button>
 
         <br />
         <input
@@ -141,10 +140,20 @@ export const Test = () => {
         <button
             onClick={() => p2p_start_connect(inputAddr)}
             disabled={!inputAddr.trim()}
-        >发起连接</button>
+        >对应通话接收</button>
 
         <br />
-        <button onClick={p2p_send}>发送信息</button>
+        <button onClick={p2p_stop}>结束通话</button>
+        <br />
+
+
+        <br />
+        <button onClick={p2p_send}>发送语音测试</button>
+        <br />
+        <button onClick={p2p_test}>任务测试</button>
+        <br />
+        
+   
 
         <br />
         <button onClick={p2p_ticket}>获取本地连接密钥</button>
