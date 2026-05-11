@@ -29,9 +29,6 @@ export function Tools() {
             </ActionIcon>
         </ImageUpload> */}
 
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { isMobile ? navigate('/chat/rtc') : navigate('/chat/dialog/rtc') }}>
-            <IconPhone />
-        </ActionIcon>
 
         <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { isMobile ? navigate('/chat/phone') : navigate('/chat/dialog/phone') }}>
             <IconPhone />

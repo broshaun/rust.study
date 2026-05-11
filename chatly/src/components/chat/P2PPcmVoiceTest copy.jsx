@@ -13,22 +13,24 @@ import {
   Badge,
   Modal
 } from "@mantine/core";
+import { useNavigate } from "react-router";
 
 import { useP2PVoiceTransport } from "hooks/voice/useP2PVoiceTransport";
 import { usePcmVoice } from "hooks/voice/usePcmVoice";
 
-export default function P2PVoiceCallPage() {
+export function P2PPcmVoiceTest() {
   const [resetSeed, setResetSeed] = useState(0);
 
+
   return (
-    <P2PVoiceCallPageInner
+    <P2PPcmVoicePageInner
       key={resetSeed}
       onHardReset={() => setResetSeed((v) => v + 1)}
     />
   );
 }
 
-function P2PVoiceCallPageInner({ onHardReset }) {
+function P2PPcmVoicePageInner({ onHardReset }) {
   const transport = useP2PVoiceTransport({
     pacingIntervalMs: 10,
     maxSendQueuePackets: 24,
@@ -47,22 +49,15 @@ function P2PVoiceCallPageInner({ onHardReset }) {
   const [parsedRemoteAddr, setParsedRemoteAddr] = useState(null);
   const [pasteError, setPasteError] = useState("");
   const [openedModal, setOpenedModal] = useState(null);
+  const navigate = useNavigate();
+
   const [playbackStarted, setPlaybackStarted] = useState(false);
-  const [didAutoInit, setDidAutoInit] = useState(false);
 
   useEffect(() => {
     if (voice.metrics.played > 0) {
       setPlaybackStarted(true);
     }
   }, [voice.metrics.played]);
-
-  // 只做自动初始化，不做额外页面清理，避免打断正常收包
-  useEffect(() => {
-    if (!didAutoInit && transport.canInit) {
-      setDidAutoInit(true);
-      transport.init?.();
-    }
-  }, [didAutoInit, transport.canInit, transport]);
 
   const localReady = useMemo(
     () => !!transport.localAddrJson,
@@ -153,6 +148,7 @@ function P2PVoiceCallPageInner({ onHardReset }) {
   return (
     <Container size="lg" py={{ base: 8, sm: 12 }}>
       <Paper shadow="xs" radius="lg" p={{ base: "sm", sm: "md" }} withBorder>
+
         <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs" mb="sm">
           <StatusBox label="网络" value={transport.status} color={networkColor} />
           <StatusBox label="麦克风" value={voice.captureStatus} color={micColor} />
@@ -161,6 +157,10 @@ function P2PVoiceCallPageInner({ onHardReset }) {
 
         <Paper withBorder p="xs" radius="md" mb="sm" bg="gray.0">
           <Group gap="xs" wrap="wrap">
+            <Button size="xs" onClick={transport.init} disabled={!transport.canInit}>
+              启动
+            </Button>
+
             <Button
               size="xs"
               onClick={transport.connect}
@@ -168,6 +168,10 @@ function P2PVoiceCallPageInner({ onHardReset }) {
               color="green"
             >
               连接
+            </Button>
+
+            <Button size="xs" onClick={handleReset} color="red" variant="light">
+              重置
             </Button>
 
             <Button

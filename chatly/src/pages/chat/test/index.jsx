@@ -6,6 +6,5 @@ export const RsTest = [
     {
         path: "test",
         element: <PcmTestPage />,
-      },
+    },
 ];
-
