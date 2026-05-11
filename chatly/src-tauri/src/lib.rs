@@ -57,7 +57,7 @@ pub fn run() {
             p2p_commands::p2p_start,
             p2p_commands::p2p_stop,
             p2p_commands::p2p_test,
-            // p2p_commands::p2p_state,
+            p2p_commands::p2p_state,
             // p2p_commands::p2p_state_message,
             // p2p_commands::p2p_info,
             p2p_commands::p2p_get_ticket,

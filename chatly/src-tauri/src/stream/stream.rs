@@ -260,26 +260,44 @@ impl P2PNode {
      * 内部发送信息处理
      */
     pub async fn start_accept(&self) -> Result<()> {
-        match *self.state.read().await {
-            P2PState::Idle =>{},
-            P2PState::Calling => {
-                return Err(anyhow!("重复通话"));
-            },
-            P2PState::Connected => {
-                return Err(anyhow!("无法多个通话"));
-            },
-            P2PState::Disconnected => {
-                return Err(anyhow!("通话已结束"));
-            },
+        {
+            let mut state = self.state.write().await;
+            match *state {
+                P2PState::Idle =>{
+                    println!("通话");
+                    *state = P2PState::Calling;
+                },
+                P2PState::Calling => {
+                    return Err(anyhow!("重复通话"));
+                },
+                P2PState::Connected => {
+                    return Err(anyhow!("无法多个通话"));
+                },
+                P2PState::Disconnected => {
+                    return Err(anyhow!("通话已结束"));
+                },
+            }
         }
-        *self.state.write().await = P2PState::Calling;
+
+        // *self.state.write().await = P2PState::Calling;
+
         let endpoint = self.endpoint.clone();
         let incoming = endpoint.accept().await.context("未能打开accept")?;
         let conn = incoming.await?;
         let (send, recv) = conn.accept_bi().await.context("123")?;
-        *self.state.write().await = P2PState::Connected;
+
+        {
+            let mut state = self.state.write().await;
+            *state = P2PState::Connected;
+        }
+        
         let _a = self.channel.bind_io_loop(send, recv).await?;
-        *self.state.write().await = P2PState::Disconnected;
+
+        {
+            let mut state = self.state.write().await;
+            *state = P2PState::Disconnected;
+        }
+
         Ok(())
     }
 
@@ -314,12 +332,15 @@ impl P2PNode {
      * 连接凭证
      */
     pub fn get_ticket(&self) -> String {
-        EndpointTicket::new(self.endpoint.addr()).to_string()
+        let a  = EndpointTicket::new(self.endpoint.addr());
+        println!("{:#?}",a);
+        a.to_string()
     }
     /**
      * 节点信息
      */
-    pub fn get_info(&self) -> String {
-        format!("{:#?}", EndpointTicket::new(self.endpoint.addr()))
+    pub async fn get_state(&self) -> P2PState {
+        let state_guard = self.state.read().await;
+        state_guard.clone()
     }
 }

@@ -13,8 +13,7 @@ import { useUserDB } from 'hooks/db';
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
-import { Test } from "./test";
-import { PcmTestPage } from "./test2";
+import { RsTest } from "./test";
 
 
 export const RsChat = [
@@ -29,10 +28,7 @@ export const RsChat = [
           ...RsDialog,
           ...RsMyInfo,
           ...RsMsgs,
-          {
-            path: "test",
-            element: <Test />,
-          }
+          ...RsTest,
         ],
       },
       {

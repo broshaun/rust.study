@@ -3,7 +3,7 @@ import { invoke, Channel } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event'
 
 
-export const Test = () => {
+export const P2PTest = () => {
 
 
     // 接收单条信息
@@ -17,14 +17,14 @@ export const Test = () => {
     }
 
 
-    // const p2p_start = async () => {
-    //     try {
-    //         const rsp = await invoke('p2p_start');
-    //         console.log(rsp);
-    //     } catch (err) {
-    //         console.error(err);
-    //     }
-    // };
+    const p2p_start = async () => {
+        try {
+            const rsp = await invoke('p2p_start');
+            console.log(rsp);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const p2p_start_accept = async () => {
         const onData = new Channel();
@@ -38,8 +38,8 @@ export const Test = () => {
 
         try {
 
-            const st = await invoke('p2p_start');
-            console.log(st);
+            // const st = await invoke('p2p_start');
+            // console.log(st);
 
             console.log("📡 建立接收通道...");
             const rsp = await invoke('p2p_start_accept', { onData });
@@ -52,7 +52,7 @@ export const Test = () => {
 
 
     const [inputAddr, setInputAddr] = useState("");
-    const p2p_start_connect = async (addr) =>  {
+    const p2p_start_connect = async (addr) => {
         const onData = new Channel();
 
         // 核心：直接在控制台输出
@@ -64,10 +64,10 @@ export const Test = () => {
         };
 
         try {
-            const st = await invoke('p2p_start');
-            console.log(st);
+            // const st = await invoke('p2p_start');
+            // console.log(st);
             console.log("📡 建立接收通道...");
-            let rsp = await invoke('p2p_start_connect', {addr, onData });
+            let rsp = await invoke('p2p_start_connect', { addr, onData });
             console.log(rsp);
         } catch (err) {
             console.error(err);
@@ -95,6 +95,17 @@ export const Test = () => {
 
 
 
+    const p2p_state = async () => {
+        try {
+            const rsp = await invoke('p2p_state');
+            console.log(rsp);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+
+
     const p2p_send = async () => {
         try {
             const text = "hello p2p";
@@ -106,7 +117,7 @@ export const Test = () => {
                 data,
             });
 
-            console.log("✅ 发送反馈",rsp);
+            console.log("✅ 发送反馈", rsp);
         } catch (err) {
             console.error("❌ 发送错误:", err);
         }
@@ -123,10 +134,12 @@ export const Test = () => {
     }
 
 
-    
+
 
     return <div style={{ padding: '20px' }}>
+        <button onClick={p2p_start} >开启节点 </button>
 
+        <br />
         <button onClick={p2p_start_accept} >发起通话 </button>
 
         <br />
@@ -143,17 +156,17 @@ export const Test = () => {
         >对应通话接收</button>
 
         <br />
-        <button onClick={p2p_stop}>结束通话</button>
-        <br />
-
+        <button onClick={p2p_stop}>结束通话并关闭节点</button>
 
         <br />
         <button onClick={p2p_send}>发送语音测试</button>
         <br />
         <button onClick={p2p_test}>任务测试</button>
         <br />
-        
-   
+        <button onClick={p2p_state}>节点状态</button>
+        <br />
+
+
 
         <br />
         <button onClick={p2p_ticket}>获取本地连接密钥</button>

@@ -63,6 +63,30 @@ pub async fn p2p_test(state: tauri::State<'_, AppState>) -> Result<String, Strin
     Ok(a)
 }
 
+
+/**
+ * 测试发送消息
+ */
+#[tauri::command]
+pub async fn p2p_state(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let tx_guard = state.tx.read().await;
+    let Some(tx) = tx_guard.as_ref() else {
+        return Err("未启动通道".to_string());
+    };
+
+    let (rtx, rrx) = oneshot::channel();
+    let _a = tx.send(Cmd::Get { reply: rtx }).await;
+
+    if let Ok(node) = rrx.await{
+        let b= node.get_state().await;
+        let c = format!("{:?}",b);
+        return Ok(c);
+    };
+
+    Ok("".to_string())
+
+}
+
 #[tauri::command]
 pub async fn p2p_start_accept(
     state: tauri::State<'_, AppState>,
