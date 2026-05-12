@@ -1,8 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use iroh::endpoint::{presets, Endpoint};
 use iroh_tickets::endpoint::EndpointTicket;
-use std::sync::{Arc};
-use tokio::sync::{mpsc, oneshot, RwLock};
+use tokio::sync::{mpsc, oneshot, watch};
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
 
@@ -99,10 +98,10 @@ impl Task {
 
 #[derive(Clone, Debug)]
 pub enum P2PState {
-    Idle,        // 空闲
-    Calling,     // 呼叫
-    Connected,   // 连通
-    Disconnected // 断开
+    Idle,         // 空闲
+    Calling,      // 呼叫
+    Connected,    // 连通
+    Disconnected, // 断开
 }
 
 #[derive(Clone, Debug)]
@@ -208,15 +207,19 @@ impl P2PChannel {
     }
 }
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct P2PNode {
     pub endpoint: Endpoint,
     pub channel: P2PChannel,
-    pub state: Arc<RwLock<P2PState>>,
+    // pub state: Arc<RwLock<P2PState>>,
+    pub state_tx: watch::Sender<P2PState>,
+    pub state_rx: watch::Receiver<P2PState>,
 }
 
 impl P2PNode {
     pub async fn new() -> Result<Self> {
+        let (state_tx, state_rx) = watch::channel(P2PState::Idle);
+
         let endpoint = Endpoint::builder(presets::N0)
             .alpns(vec![ALPN.to_vec()])
             .bind()
@@ -227,7 +230,9 @@ impl P2PNode {
         Ok(Self {
             endpoint: endpoint,
             channel: P2PChannel::new(),
-            state: Arc::new(RwLock::new(P2PState::Idle)),
+            // state: Arc::new(RwLock::new(P2PState::Idle)),
+            state_tx,
+            state_rx,
         })
     }
 
@@ -237,19 +242,20 @@ impl P2PNode {
     }
 
     pub async fn send(&self, data: Vec<u8>) -> Result<()> {
-        match *self.state.read().await {
-            P2PState::Idle =>{
+        let state = self.state_rx.borrow().clone();
+        match state {
+            P2PState::Idle => {
                 return Err(anyhow!("未呼叫通话"));
-            },
+            }
             P2PState::Calling => {
                 return Err(anyhow!("通话未接通"));
-            },
+            }
             P2PState::Connected => {
                 return self.channel.send(data).await;
-            },
+            }
             P2PState::Disconnected => {
                 return Err(anyhow!("通话已结束"));
-            },
+            }
         }
     }
 
@@ -260,61 +266,50 @@ impl P2PNode {
      * 内部发送信息处理
      */
     pub async fn start_accept(&self) -> Result<()> {
-        {
-            let mut state = self.state.write().await;
-            match *state {
-                P2PState::Idle =>{
-                    println!("通话");
-                    *state = P2PState::Calling;
-                },
-                P2PState::Calling => {
-                    return Err(anyhow!("重复通话"));
-                },
-                P2PState::Connected => {
-                    return Err(anyhow!("无法多个通话"));
-                },
-                P2PState::Disconnected => {
-                    return Err(anyhow!("通话已结束"));
-                },
+        let state = self.state_rx.borrow().clone();
+        match state {
+            P2PState::Idle => {
+                println!("通话");
+                let _a = self.state_tx.send(P2PState::Calling);
             }
-        }
-
-        // *self.state.write().await = P2PState::Calling;
-
+            P2PState::Calling => {
+                return Err(anyhow!("重复通话"));
+            }
+            P2PState::Connected => {
+                return Err(anyhow!("无法多个通话"));
+            }
+            P2PState::Disconnected => {
+                return Err(anyhow!("通话已结束"));
+            }
+        };
         let endpoint = self.endpoint.clone();
         let incoming = endpoint.accept().await.context("未能打开accept")?;
         let conn = incoming.await?;
         let (send, recv) = conn.accept_bi().await.context("123")?;
-
-        {
-            let mut state = self.state.write().await;
-            *state = P2PState::Connected;
-        }
-        
+        let _a = self.state_tx.send(P2PState::Connected);
         let _a = self.channel.bind_io_loop(send, recv).await?;
-
-        {
-            let mut state = self.state.write().await;
-            *state = P2PState::Disconnected;
-        }
+        let _a = self.state_tx.send(P2PState::Disconnected);
 
         Ok(())
     }
 
     pub async fn start_connect(&self, ticket_str: &str) -> Result<()> {
-        match *self.state.read().await {
-            P2PState::Idle =>{},
+        let state = self.state_rx.borrow().clone();
+        match state {
+            P2PState::Idle => {
+                println!("通话");
+                let _a = self.state_tx.send(P2PState::Calling);
+            }
             P2PState::Calling => {
                 return Err(anyhow!("重复通话"));
-            },
+            }
             P2PState::Connected => {
                 return Err(anyhow!("无法多个通话"));
-            },
+            }
             P2PState::Disconnected => {
                 return Err(anyhow!("通话已结束"));
-            },
-        }
-        *self.state.write().await = P2PState::Calling;
+            }
+        };
         let endpoint = self.endpoint.clone();
         let ticket: EndpointTicket = ticket_str.parse().context("解析失败")?;
         let conn: iroh::endpoint::Connection = endpoint.connect(ticket, ALPN).await?;
@@ -322,9 +317,9 @@ impl P2PNode {
         send.write_all(b"HELO")
             .await
             .context("Failed to send handshake")?;
-        *self.state.write().await = P2PState::Connected;
+        let _a = self.state_tx.send(P2PState::Connected);
         let _a = self.channel.bind_io_loop(send, recv).await?;
-        *self.state.write().await = P2PState::Disconnected;
+        let _a = self.state_tx.send(P2PState::Disconnected);
         Ok(())
     }
 
@@ -332,15 +327,14 @@ impl P2PNode {
      * 连接凭证
      */
     pub fn get_ticket(&self) -> String {
-        let a  = EndpointTicket::new(self.endpoint.addr());
-        println!("{:#?}",a);
+        let a = EndpointTicket::new(self.endpoint.addr());
+        println!("{:#?}", a);
         a.to_string()
     }
-    /**
-     * 节点信息
-     */
+    // /**
+    //  * 节点信息
+    //  */
     pub async fn get_state(&self) -> P2PState {
-        let state_guard = self.state.read().await;
-        state_guard.clone()
+        self.state_rx.borrow().clone()
     }
 }

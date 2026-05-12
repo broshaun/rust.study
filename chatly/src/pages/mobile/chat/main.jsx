@@ -1,0 +1,74 @@
+import React, { useEffect, useMemo, useState } from "react"
+import { Outlet, useNavigate } from "react-router";
+import { useWinSize, useDateTime } from 'hooks';
+import { AppBar, useAppBar } from "components";
+import { IconTabler } from 'components/flutter';
+import { liveQuery } from 'dexie';
+import { useUserDB } from 'hooks/db';
+import { useLocalStorage } from "@mantine/hooks";
+import { AppShell, Group, Center } from "@mantine/core";
+import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react";
+
+
+
+export function Chat() {
+
+
+  const navigate = useNavigate();
+  const isShowBack = useAppBar((state) => state.leftPath !== null);
+
+  const setTitle = useAppBar((state) => state.setTitle);
+  // const setLeftPath = useAppBar((state) => state.setLeftPath);
+  // setTitle('主页')
+
+  const [dot, setDot] = useState(false)
+  const [account] = useLocalStorage({ key: 'savedAccount' })
+  const { getTimestampMs } = useDateTime();
+  const { isMobile } = useWinSize();
+  const { db } = useUserDB(account);
+
+  const items = useMemo(() => {
+    return [
+      { key: 'test', icon: <IconTabler icon={IconFlask} label='测试' labelPos='bottom' onClick={() => { navigate('/mobile/chat/test/') }} /> },
+      { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { navigate('/mobile/chat/dialog/'); setDot(false); }} dot={dot} /> },
+      { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
+      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self/mylist/'); }} /> },
+    ]
+  }, [isMobile, navigate, getTimestampMs, dot]);
+
+  useEffect(() => {
+    if (!db) return;
+    const sub = liveQuery(
+      () => db.table('message').count()
+    ).subscribe({
+      next: (count) => setDot(count > 0)
+    })
+    return () => sub.unsubscribe()
+  }, [db])
+
+  const visibleItems = items; // 如果有 display: false 的需求，在此过滤
+
+
+  return (
+    <AppShell
+      padding={0}
+      header={{ height: 55 }}
+      footer={{ height: 55, collapsed: isShowBack }}
+      transitionDuration={0}
+    >
+      <AppShell.Header>
+        <AppBar />
+      </AppShell.Header>
+      <AppShell.Main>
+        <Outlet />
+      </AppShell.Main>
+      <AppShell.Footer>
+        <Group h="100%" grow gap={1} >
+          {
+            visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
+          }
+        </Group>
+      </AppShell.Footer>
+    </AppShell>
+  );
+}

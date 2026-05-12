@@ -18,9 +18,11 @@ export const useAppBar = create((set) => ({
 
 export function AppBar() {
   const navigate = useNavigate();
+  
   const title = useAppBar((state) => state.title);
   const leftPath = useAppBar((state) => state.leftPath);
   const rightPath = useAppBar((state) => state.rightPath);
+
   const handleBack = () => {
     if (leftPath === "-1") {
       navigate(-1);

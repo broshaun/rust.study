@@ -63,28 +63,56 @@ pub async fn p2p_test(state: tauri::State<'_, AppState>) -> Result<String, Strin
     Ok(a)
 }
 
-
 /**
  * 测试发送消息
  */
 #[tauri::command]
-pub async fn p2p_state(state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let tx_guard = state.tx.read().await;
-    let Some(tx) = tx_guard.as_ref() else {
-        return Err("未启动通道".to_string());
+pub async fn p2p_state(
+    state: tauri::State<'_, AppState>,
+    on_data: Channel<String>,
+) -> Result<String, String> {
+
+    let ts = {
+        let task_guard = state.task.read().await;
+        let Some(ts) = task_guard.as_ref() else {
+            return Err("未启动节点（后台任务）".to_string());
+        };
+        ts.clone()
+    };
+
+    let tx = {
+        let tx_guard = state.tx.read().await;
+        let Some(tx) = tx_guard.as_ref() else {
+            return Err("未启动通道".to_string());
+        };
+        tx.clone()
     };
 
     let (rtx, rrx) = oneshot::channel();
     let _a = tx.send(Cmd::Get { reply: rtx }).await;
+    if let Ok(node) = rrx.await {
+        let mut rx = node.state_rx.clone();
+        let token = ts.token.clone();
+        ts.task.spawn(async move {
+            loop {
+                tokio::select! {
+                    _ = token.cancelled()=>{
+                        break
+                    },
+                    _ = rx.changed()=>{
+                        let current_state = rx.borrow().clone();
+                        let datastr = format!("{:#?}",current_state);
 
-    if let Ok(node) = rrx.await{
-        let b= node.get_state().await;
-        let c = format!("{:?}",b);
-        return Ok(c);
+                        if let Err(e) = on_data.send(datastr) {
+                            eprintln!("前端通道发送失败:{:?}", e);
+                        };
+                    }
+                }
+            }
+        });
     };
 
-    Ok("".to_string())
-
+    Ok("启动节点状态监听".to_owned())
 }
 
 #[tauri::command]
@@ -97,20 +125,15 @@ pub async fn p2p_start_accept(
         return Err("未启动通道".to_string());
     };
 
-    
-
     let (rtx, rrx) = oneshot::channel();
     let _a = tx.send(Cmd::Accept { reply: rtx }).await;
-    
-    let node = match rrx.await{
-        Ok(t)=>t,
-        Err(e)=>{
-            return Err(format!("{:?}",e));
+
+    let node = match rrx.await {
+        Ok(t) => t,
+        Err(e) => {
+            return Err(format!("{:?}", e));
         }
     };
-
-
-
 
     let task_guard = state.task.read().await;
     let Some(ts) = task_guard.as_ref() else {
@@ -134,33 +157,56 @@ pub async fn p2p_start_connect(
     on_data: Channel<Vec<u8>>,
     addr: String,
 ) -> Result<String, String> {
-    let tx_guard = state.tx.read().await;
-    let Some(tx) = tx_guard.as_ref() else {
-        return Err("未启动通道".to_string());
+    let tx = {
+        let tx_guard = state.tx.read().await;
+        let Some(tx) = tx_guard.as_ref() else {
+            return Err("未启动通道".to_string());
+        };
+        tx.clone()
     };
-
 
     let (rtx, rrx) = oneshot::channel();
-    let _a = tx.send(Cmd::Connect { ticket: addr, reply: rtx }).await;
-    let node = match rrx.await{
-        Ok(t)=>t,
-        Err(e)=>{
-            return Err(format!("{:?}",e));
+    let _a = tx
+        .send(Cmd::Connect {
+            ticket: addr,
+            reply: rtx,
+        })
+        .await;
+    let node = match rrx.await {
+        Ok(t) => t,
+        Err(e) => {
+            return Err(format!("{:?}", e));
         }
     };
 
-
-    let task_guard = state.task.read().await;
-    let Some(ts) = task_guard.as_ref() else {
-        return Err("未启动任务".to_string());
+    let ts = {
+        let task_guard = state.task.read().await;
+        let Some(ts) = task_guard.as_ref() else {
+            return Err("未启动节点（后台任务）".to_string());
+        };
+        ts.clone()
     };
 
+    let token = ts.token.clone();
     ts.task.spawn(async move {
-        while let Some(data) = node.recv().await {
-            if let Err(e) = on_data.send(data) {
-                eprintln!("前端通道发送失败:{:?}", e);
-            };
+        loop {
+            tokio::select! {
+                _ = token.cancelled()=>{
+                        break
+                },
+
+                Some(data) = node.recv()=>{
+                    if let Err(e) = on_data.send(data) {
+                        eprintln!("前端通道发送失败:{:?}", e);
+                    };
+                },
+            }
         }
+        // while let Some(data) = node.recv().await {
+        //     if let Err(e) = on_data.send(data) {
+        //         eprintln!("前端通道发送失败:{:?}", e);
+        //     };
+        // }
     });
 
     Ok("✅ 后台监听已启动，发起客户端连接".into())
@@ -176,17 +222,16 @@ pub async fn p2p_send(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Resul
     let (rtx, rrx) = oneshot::channel();
     let _a = tx.send(Cmd::Get { reply: rtx }).await;
 
-    if let Ok(node) = rrx.await{
-        let b= node.send(data).await;
+    if let Ok(node) = rrx.await {
+        let b = node.send(data).await;
         match b {
-            Ok(())=>{
+            Ok(()) => {
                 return Ok(());
-            },
-            Err(e)=>{
-                let a = format!("{:?}",e);
+            }
+            Err(e) => {
+                let a = format!("{:?}", e);
                 return Err(a);
             }
-            
         }
     };
     Ok(())
@@ -215,15 +260,13 @@ pub async fn p2p_get_ticket(state: tauri::State<'_, AppState>) -> Result<String,
 
     let (rtx, rrx) = oneshot::channel();
     let _a = tx.send(Cmd::Get { reply: rtx }).await;
-    if let Ok(node) = rrx.await{
+    if let Ok(node) = rrx.await {
         let ticket = node.get_ticket();
         return Ok(ticket);
     };
 
     return Ok("".to_string());
-    
 }
-
 
 /**
  * 发送单条信息

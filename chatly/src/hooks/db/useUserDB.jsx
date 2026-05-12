@@ -21,6 +21,7 @@ const createUserDB = (userId) => {
   return db;
 };
 
+// 指定用户数据库
 export const useUserDB = (userId) => {
   const db = useMemo(() => {
     if (!userId) return null;
@@ -52,6 +53,5 @@ export const deleteUserDB = async (userId) => {
     db.close();
     dbCache.delete(userId);
   }
-
   await Dexie.delete(dbName);
 };
