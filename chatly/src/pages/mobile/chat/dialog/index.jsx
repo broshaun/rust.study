@@ -11,10 +11,6 @@ export const RsDialog = [
         children: [
             {
                 index: true,
-                element: <Navigate to="list" replace />,
-            },
-            {
-                path: "list",
                 element: <Item />
             },
         ]

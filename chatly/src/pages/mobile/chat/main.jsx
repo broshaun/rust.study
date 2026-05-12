@@ -32,7 +32,7 @@ export function Chat() {
       { key: 'test', icon: <IconTabler icon={IconFlask} label='测试' labelPos='bottom' onClick={() => { navigate('/mobile/chat/test/') }} /> },
       { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { navigate('/mobile/chat/dialog/'); setDot(false); }} dot={dot} /> },
       { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
-      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self/mylist/'); }} /> },
+      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self//'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, dot]);
 

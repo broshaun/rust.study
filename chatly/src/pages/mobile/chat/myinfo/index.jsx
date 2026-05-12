@@ -17,14 +17,28 @@ export const RsMyInfo = [
         children: [
             {
                 index: true,
-                element: <Navigate to="mylist" replace />,
+                element: <MyList />,
             },
-            { path: "mylist", element: <MyList />, },
-            { path: "image", element: <Avatar2 />, },
-            { path: "name", element: <Nikename />, },
-            { path: "pushdeer", element: <PushDeer />, },
-            { path: "clear", element: <ClearLogs />, },
-            { path: "lgout", element: <Logout />, },
+            {
+                path: "image",
+                element: <Avatar2 />,
+            },
+            {
+                path: "name",
+                element: <Nikename />,
+            },
+            {
+                path: "pushdeer",
+                element: <PushDeer />,
+            },
+            {
+                path: "clear",
+                element: <ClearLogs />,
+            },
+            {
+                path: "lgout",
+                element: <Logout />,
+            },
         ]
     }
 ];

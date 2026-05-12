@@ -1,5 +1,5 @@
+import { Outlet, Navigate } from "react-router";
 import { ChatGuard } from "pages/mobile/guard";
-
 import { Chat } from "./chat/main";
 import { RsFriend } from "./chat/friend";
 import { RsDialog } from "./chat/dialog";
@@ -19,6 +19,10 @@ export const RsMobile = [
                 element: <ChatGuard />,
                 children: [
                     {
+                        index: true,
+                        element: <Navigate to="dialog" replace/>,
+                    },
+                    {   
                         element: <Chat />,
                         children: [
                             ...RsFriend,
