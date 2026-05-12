@@ -19,13 +19,20 @@ export const RsFriend = [
                 index: true,
                 element: <Navigate to="list" replace />,
             },
-            { path: "list", element: <Item /> },
-            { path: "detail", element: <Detail /> },
-            { path: "find", element: <Find /> },
+            {
+                path: "list",
+                element: <Item />
+            },
+            {
+                path: "detail",
+                element: <Detail />
+            },
+            {
+                path: "find",
+                element: <Find />
+            },
         ]
     }
-
-
 ];
 
 

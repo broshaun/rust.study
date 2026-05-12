@@ -1,3 +1,4 @@
+import { Outlet, Navigate } from "react-router";
 import { MyList } from "./mylist";
 import { Avatar2 } from "./avatar";
 import { Nikename } from "./nickname";
@@ -6,11 +7,24 @@ import { PushDeer } from "./pushdeer";
 import { ClearLogs } from "./clear";
 
 
+export const MyInfo = () => {
+    return <Outlet />
+}
+
 export const RsMyInfo = [
-    { path: "mylist", element: <MyList />, },
-    { path: "image", element: <Avatar2 />, },
-    { path: "name", element: <Nikename />, },
-    { path: "pushdeer", element: <PushDeer />, },
-    { path: "clear", element: <ClearLogs />, },
-    { path: "lgout", element: <Logout />, },
+    {
+        path: "self", element: <MyInfo />,
+        children: [
+            {
+                index: true,
+                element: <Navigate to="mylist" replace />,
+            },
+            { path: "mylist", element: <MyList />, },
+            { path: "image", element: <Avatar2 />, },
+            { path: "name", element: <Nikename />, },
+            { path: "pushdeer", element: <PushDeer />, },
+            { path: "clear", element: <ClearLogs />, },
+            { path: "lgout", element: <Logout />, },
+        ]
+    }
 ];
