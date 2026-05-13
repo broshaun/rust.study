@@ -6,7 +6,7 @@ import { useDisclosure } from '@mantine/hooks';
 
 
 
-export function Main() {
+export function Auth() {
   const navigate = useNavigate();
   const drawerMenu = [
     { key: 'login', display: true, icon: { name: 'user-circle', label: '登陆' }, onTap: () => { navigate('/mobile/auth/user/') } },

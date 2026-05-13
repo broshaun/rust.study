@@ -7,7 +7,9 @@ import { RsMyInfo } from "./chat/myinfo";
 import { RsMsgs } from "./chat/messages";
 import { RsTest } from "./chat/test";
 
-import { RsUser } from "./auth";
+import { Auth } from "./auth/main";
+import { RsUser } from "./auth/user";
+
 
 
 
@@ -38,6 +40,7 @@ export const RsMobile = [
             },
             {
                 path: "auth",
+                element: <Auth />,
                 children: [
                     {
                         index: true,

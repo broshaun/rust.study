@@ -1,14 +1,20 @@
-
-import { LogOn } from "./login/login2";
-import { Register } from "./register/register2";
+import { Outlet, Navigate } from "react-router";
+import { LogOn } from "./login2";
+import { Register } from "./register2";
 import { Settings } from "./settings";
 import { Agent } from "./settings/agent";
 import { MyList } from "./settings/setist";
-import { Main } from "./main";
+
+
+
+
+export const User = () => {
+    return <Outlet />
+}
 
 export const RsUser = [
   {
-    path: "user", element: <Main />,
+    path: "user", element: <User />,
     children: [
       {
         index: true,

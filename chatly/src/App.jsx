@@ -1,15 +1,11 @@
 import { createHashRouter, RouterProvider, Navigate } from "react-router";
 import Home from "pages/home";
-import { RsUser } from "pages/desktop/user";
-import { RsChat } from "pages/desktop/chat";
 import { useToken } from "hooks";
-
 import { RsMobile } from "pages/mobile";
 
 
 const App = () => {
   const { remainSeconds } = useToken();
-
   const router = createHashRouter([
           // {
       //   path: "/",
@@ -21,9 +17,7 @@ const App = () => {
         element: <Home />,
       },
       ...RsMobile,
-      // ...RsUser,
-      // ...RsChat,
-      
+
     ]);
   
   return <RouterProvider router={router} />;
