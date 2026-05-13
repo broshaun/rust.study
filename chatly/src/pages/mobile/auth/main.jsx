@@ -6,12 +6,12 @@ import { useDisclosure } from '@mantine/hooks';
 
 
 
-export function User() {
+export function Main() {
   const navigate = useNavigate();
   const drawerMenu = [
-    { key: 'login', display: true, icon: { name: 'user-circle', label: '登陆' }, onTap: () => { navigate('/user/login/') } },
-    { key: 'register', display: true, icon: { name: 'user-plus', label: '注册' }, onTap: () => { navigate('/user/register/') } },
-    { key: 'settings', display: true, icon: { name: 'cog-6-tooth', label: '设置' }, onTap: () => { navigate('/user/settings/setlist/') } },
+    { key: 'login', display: true, icon: { name: 'user-circle', label: '登陆' }, onTap: () => { navigate('/mobile/auth/user/') } },
+    { key: 'register', display: true, icon: { name: 'user-plus', label: '注册' }, onTap: () => { navigate('/mobile/auth/user/register/') } },
+    { key: 'settings', display: true, icon: { name: 'cog-6-tooth', label: '设置' }, onTap: () => { navigate('/mobile/auth/user/settings/setlist/') } },
   ];
 
   const [opened, { open, close }] = useDisclosure(false);

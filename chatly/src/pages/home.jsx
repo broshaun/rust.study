@@ -2,7 +2,7 @@ import { useNavigate, } from "react-router";
 import { Desktop } from 'components';
 
 
-export const Home2 = () => {
+export const Home = () => {
     const navigate = useNavigate();
     const desktopData = [
         { label: '用户认证', iconName: 'user-tie', onClick: () => { navigate('/user') } },
@@ -10,7 +10,7 @@ export const Home2 = () => {
     ];
     return <Desktop desktopData={desktopData}></Desktop>
 }
-export default Home2;
+export default Home;
 
 
 

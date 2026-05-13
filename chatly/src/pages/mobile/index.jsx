@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from "react-router";
+import { Navigate } from "react-router";
 import { ChatGuard } from "pages/mobile/guard";
 import { Chat } from "./chat/main";
 import { RsFriend } from "./chat/friend";
@@ -6,7 +6,8 @@ import { RsDialog } from "./chat/dialog";
 import { RsMyInfo } from "./chat/myinfo";
 import { RsMsgs } from "./chat/messages";
 import { RsTest } from "./chat/test";
-import { RsUser } from "./user";
+
+import { RsUser } from "./auth";
 
 
 
@@ -20,9 +21,9 @@ export const RsMobile = [
                 children: [
                     {
                         index: true,
-                        element: <Navigate to="dialog" replace/>,
+                        element: <Navigate to="dialog" replace />,
                     },
-                    {   
+                    {
                         element: <Chat />,
                         children: [
                             ...RsFriend,
@@ -36,12 +37,17 @@ export const RsMobile = [
                 ],
             },
             {
-                path: "user",
+                path: "auth",
                 children: [
+                    {
+                        index: true,
+                        element: <Navigate to="user" replace />,
+                    },
                     ...RsUser
                 ]
-            }
 
+
+            }
 
         ],
     },
