@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
 
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/hook';
 import { useToken } from "hooks/store"
 import { getUserDB } from "hooks/db/DBUser";
 import { useQuery } from '@tanstack/react-query'

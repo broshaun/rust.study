@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from "react";
 import { fetch } from "@tauri-apps/plugin-http";
-import { useApiBase } from "./useApiBase";
+import { useApiBase } from "../storage/useApiBase";
 import { useToken } from "hooks";
 
 /**

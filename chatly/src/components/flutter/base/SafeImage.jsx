@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, memo, useMemo } from 'react';
 import { Box, Skeleton, Image, Modal, UnstyledButton, Group, ActionIcon, Divider } from '@mantine/core';
 import { IconZoomIn, IconMaximize, IconRotateClockwise, IconDownload, IconX } from '@tabler/icons-react';
-import { useImage } from 'hooks/http';
+import { useImage } from 'hooks/hook';
 
 export const SafeImage = memo(({
   url, previewUrl, width, height, radius = 'sm', fit = 'fill',

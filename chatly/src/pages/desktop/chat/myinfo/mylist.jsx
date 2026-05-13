@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/hook';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, Divider, NavLink } from '@mantine/core';
 import {

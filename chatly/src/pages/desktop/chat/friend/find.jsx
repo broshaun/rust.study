@@ -1,6 +1,6 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { InputText2, } from 'components';
-import { useHttpClient2, useImgApiBase } from 'hooks/http';
+import { useHttpClient2, useImgApiBase } from 'hooks/hook';
 import { UserInfoCard } from 'components/chat';
 import { Divider, SafeAvatar } from 'components/flutter';
 import { useMutation, useQuery } from '@tanstack/react-query'

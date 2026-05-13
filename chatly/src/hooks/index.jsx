@@ -1,3 +1,5 @@
 export * from './store';
-export * from './useWinSize';
+export * from './storage';
+
+export * from './hook/useWinSize';
 export * from './dateTimeUtils';

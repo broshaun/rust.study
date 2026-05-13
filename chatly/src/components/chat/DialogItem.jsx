@@ -1,5 +1,5 @@
 import { memo, useMemo, useCallback } from "react";
-import { useApiBase } from "hooks/http";
+import { useApiBase } from "hooks/hook";
 import { SafeAvatar } from "components/flutter"; // 请确保路径指向你的 SafeAvatar 组件
 
 /**

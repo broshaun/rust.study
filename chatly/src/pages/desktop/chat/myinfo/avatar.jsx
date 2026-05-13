@@ -1,7 +1,7 @@
 import { useCallback, Suspense, useMemo, useEffect } from "react";
 import { useLocation } from 'react-router';
 import { ImageUpload, useAppBar } from 'components';
-import { useHttpClient2, useImgApiBase } from 'hooks/http';
+import { useHttpClient2, useImgApiBase } from 'hooks/hook';
 import { useLocalStorage } from '@mantine/hooks';
 import { SafeAvatar, SizedBox } from 'components/flutter';
 import { Grid, Group, Center } from "@mantine/core";

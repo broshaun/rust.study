@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { useHttpClient2 } from 'hooks/http';
+import { useHttpClient2 } from 'hooks/hook';
 import { getUserDB } from "hooks/db/DBUser";
 import { SafeAvatar, Divider } from 'components/flutter';
 import { InfoTile } from 'components/chat';

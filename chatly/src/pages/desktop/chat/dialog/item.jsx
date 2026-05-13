@@ -6,7 +6,7 @@ import { DialogItem } from 'components/chat';
 import { useWinSize, useMsgState } from 'hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { useImgApiBase } from "hooks/http"
+import { useImgApiBase } from "hooks/hook"
 import { ScrollArea, Box } from '@mantine/core';
 import { useAppBar } from "components";
 
