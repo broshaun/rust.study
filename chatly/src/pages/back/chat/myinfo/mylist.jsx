@@ -48,7 +48,7 @@ export const MyList = () => {
                 label="头像"
                 leftSection={<IconUserCircle size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/mobile/chat/self/image/", { state: apiInfo })}
+                onClick={() => navigate("/chat/self/image/", { state: apiInfo })}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
@@ -60,28 +60,28 @@ export const MyList = () => {
                 label={`昵称：${apiInfo?.nikename}`}
                 leftSection={<IconId size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => { navigate("/mobile/chat/self/name/", { state: apiInfo }); refetch(); }}
+                onClick={() => { navigate("/chat/self/name/", { state: apiInfo }); refetch(); }}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="设置手机提醒"
                 leftSection={<IconDeviceMobileMessage size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => { navigate("/mobile/chat/self/pushdeer/", { state: apiInfo }); refetch(); }}
+                onClick={() => { navigate("/chat/self/pushdeer/", { state: apiInfo }); refetch(); }}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="清空聊天记录"
                 leftSection={<IconTrash size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/mobile/chat/self/clear/")}
+                onClick={() => navigate("/chat/self/clear/")}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="退出当前登录"
                 leftSection={<IconLogout size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/mobile/chat/self/lgout/")}
+                onClick={() => navigate("/chat/self/lgout/")}
             />
         </Stack>
 

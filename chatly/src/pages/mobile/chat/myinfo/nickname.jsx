@@ -15,7 +15,7 @@ export const Nikename = () => {
     const setLeftPath = useAppBar((state) => state.setLeftPath);
     const setTitle = useAppBar((state) => state.setTitle);
     useEffect(() => {
-        setLeftPath('/chat/self/mylist/')
+        setLeftPath('/mobile/chat/self/')
         setTitle('修改昵称');
     }, [])
 
@@ -43,7 +43,7 @@ export const Nikename = () => {
             {location.state &&
                 <InputText2 defaultValue={location.state?.nikename} onChangeValue={(value) => { setName(value) }}>
                     <InputText2.Left icon='bookmark-square' />
-                    <InputText2.Right label='确定' onClick={() => { update(name); navigate('/chat/self/mylist/'); }} />
+                    <InputText2.Right label='确定' onClick={() => { update(name); navigate('/mobile/chat/self/'); }} />
                 </InputText2>
             }
         </Group>

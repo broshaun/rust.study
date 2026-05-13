@@ -18,7 +18,6 @@ export const Find = () => {
 
     const setLeftPath = useAppBar((state) => state.setLeftPath);
     const setTitle = useAppBar((state) => state.setTitle);
-    
     useEffect(() => {
         setLeftPath('/chat/mobile/friend/')
         setTitle('好友查找');

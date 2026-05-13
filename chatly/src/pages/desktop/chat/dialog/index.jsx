@@ -1,20 +1,19 @@
-import { Mian } from "./main";
-import { Mobile } from "./mobile";
-import { RsMsgs } from "pages/desktop/chat/messages";
+import { Outlet, Navigate } from "react-router";
+import { Item } from "./item";
 
-
+export const Dialog = () => {
+    return <Outlet />
+}
 
 export const RsDialog = [
     {
-        path: "dialog", element: <Mian />,
+        path: "dialog", element: <Dialog />,
         children: [
-            ...RsMsgs
-        ],
-    },
-    {
-        path: "mobile", element: <Mobile />,
-        children: [
-            { path: "dialog", element: <Mobile.Item /> },
-        ],
-    },
+            {
+                index: true,
+                element: <Item />
+            },
+        ]
+    }
+
 ];

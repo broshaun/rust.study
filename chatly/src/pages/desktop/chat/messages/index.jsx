@@ -1,21 +1,33 @@
+import { Outlet, Navigate } from "react-router";
 import { Msg } from "./msg";
 import { P2PPcmVoiceTest, Tools } from "./tools";
-import { Main } from "./main";
+
+
+export const Msgs = () => {
+    return <Outlet />
+}
 
 
 export const RsMsgs = [
     {
-        element: <Main />,
+        path: 'message', element: <Msgs />,
         children: [
-            {
-                path: "message", element: <Msg />,
-                children: [
-                    { path: "tools", element: <Tools /> },
-                ]
+            { 
+                index: true, 
+                element: <Msg /> 
             },
-            { path: "phone", element: <P2PPcmVoiceTest /> }
+            { 
+                path: "tools", 
+                element: <Tools /> 
+            },
+            { 
+                path: "phone", 
+                element: <P2PPcmVoiceTest /> 
+            }
         ]
-    },
+    }
+
+
 ];
 
 

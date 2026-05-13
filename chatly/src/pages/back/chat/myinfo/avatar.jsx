@@ -41,7 +41,7 @@ export const Avatar2 = () => {
     const setLeftPath = useAppBar((state) => state.setLeftPath);
     const setTitle = useAppBar((state) => state.setTitle);
     useEffect(() => {
-        setLeftPath('/mobile/chat/self/')
+        setLeftPath('/chat/self/mylist/')
         setTitle('上传头像');
     }, [])
 

@@ -16,9 +16,9 @@ export const ClearLogs = () => {
         await clearAllImageCache();
         if (click) {
             deleteUserDB().then(console.log('记录清空'))
-            navigate('/mobile/chat/self/');
+            navigate('/chat/self/mylist/');
         } else {
-            navigate('/mobile/chat/self/')
+            navigate('/chat/self/mylist/')
         }
         setOpen(false)
 

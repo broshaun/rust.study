@@ -7,7 +7,7 @@ import { liveQuery } from 'dexie';
 import { useUserDB } from 'hooks/db';
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
-import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react";
+import { IconMessage, IconUsers, IconUser,IconFlask } from "@tabler/icons-react";
 
 
 
@@ -16,7 +16,7 @@ export function Chat() {
 
   const navigate = useNavigate();
   const isShowBack = useAppBar((state) => state.leftPath !== null);
-
+  
   const setTitle = useAppBar((state) => state.setTitle);
   // const setLeftPath = useAppBar((state) => state.setLeftPath);
   // setTitle('主页')
@@ -29,10 +29,10 @@ export function Chat() {
 
   const items = useMemo(() => {
     return [
-      { key: 'test', icon: <IconTabler icon={IconFlask} label='测试' labelPos='bottom' onClick={() => { navigate('/mobile/chat/test/') }} /> },
-      { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { navigate('/mobile/chat/dialog/'); setDot(false); }} dot={dot} /> },
-      { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
-      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self//'); }} /> },
+      { key: 'test', icon: <IconTabler icon={IconFlask} label='测试' labelPos='bottom' onClick={() => { navigate('/chat/test/') }} /> },
+      { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { isMobile ? navigate('/chat/mobile/dialog/') : navigate('/chat/dialog/'); setDot(false); }} dot={dot} /> },
+      { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { isMobile ? navigate('/chat/mobile/friend/') : navigate('/chat/friend/'); }} /> },
+      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/chat/self/mylist/'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, dot]);
 
@@ -48,7 +48,23 @@ export function Chat() {
 
   const visibleItems = items; // 如果有 display: false 的需求，在此过滤
 
+  // --- PC 端布局 ---
+  if (!isMobile) {
+    return (
+      <AppShell navbar={{ width: 65 }}>
+        <AppShell.Navbar >
+          {
+            visibleItems.map((item) => <AppShell.Section key={item.key} align="center" p={10} >{item.icon}</AppShell.Section>)
+          }
+        </AppShell.Navbar>
+        <AppShell.Main>
+          <Outlet />
+        </AppShell.Main>
+      </AppShell>
+    );
+  }
 
+  // --- 移动端布局 ---
   return (
     <AppShell
       padding={0}

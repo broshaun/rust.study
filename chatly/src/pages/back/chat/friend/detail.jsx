@@ -28,7 +28,6 @@ export function Detail() {
   }, [location.state?.select])
 
   const { http: http2 } = useHttpClient2('/rpc/chat/friend/');
-  const { isMobile } = useWinSize();
 
 
   // 删除好友逻辑
@@ -63,7 +62,8 @@ export function Detail() {
     if (!friend?.id) return;
     const displayName = friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
     db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
-    
+
+
     navigate('/chat/message/', {
       state: {
         uid: friend.uid,
@@ -73,54 +73,54 @@ export function Detail() {
     });
   }
 
-  return <Stack p={20} >
-    <Center>
-      <SafeAvatar
-        url={friend?.avatar_url}
-        size={80}           // 稍微加大尺寸，显得大气
-        radius={8}          // 建议给一点圆角（如8px），比纯直角更有现代感
-        cover={true}        // 核心：保持比例裁剪，不变形
-        autoUpdate
-      />
-    </Center>
+  return  <Stack p={20} >
+      <Center>
+        <SafeAvatar
+          url={friend?.avatar_url}
+          size={80}           // 稍微加大尺寸，显得大气
+          radius={8}          // 建议给一点圆角（如8px），比纯直角更有现代感
+          cover={true}        // 核心：保持比例裁剪，不变形
+          autoUpdate
+        />
+      </Center>
 
-    <Title order={5}>账户信息</Title>
+      <Title order={5}>账户信息</Title>
 
-    <Divider fade />
+      <Divider fade />
 
-    <InfoTile icon="IconId" label="名称" value={friend?.nikename} />
-    <InfoTile icon="mail" label="邮箱" value={friend?.email} />
-    <InfoTile
-      icon="IconUserEdit"
-      label="备注"
-      value={friend?.remark}
-      onConfirm={(remark) => {
-        setFriend((p) => ({ ...p, remark }));
-        updRemark({ id: friend?.id, remark });
-      }}
-    />
-
-    <Group p={10} gap={25} justify="center" wrap="nowrap">
-      <Button
-        variant="filled"
-        color="indigo"
-        radius="md"
-        onClick={() => openMsgWindow(friend)}
-      >
-        发起聊天
-      </Button>
-
-      <Button
-        variant="filled"
-        color="orange"
-        radius="md"
-        onClick={() => {
-          delFid(friend?.id).then(() => { navigate('/chat/mobile/friend/') })
+      <InfoTile icon="IconId" label="名称" value={friend?.nikename} />
+      <InfoTile icon="mail" label="邮箱" value={friend?.email} />
+      <InfoTile
+        icon="IconUserEdit"
+        label="备注"
+        value={friend?.remark}
+        onConfirm={(remark) => {
+          setFriend((p) => ({ ...p, remark }));
+          updRemark({ id: friend?.id, remark });
         }}
-      >
-        删除好友
-      </Button>
-    </Group>
-  </Stack>
+      />
+
+      <Group p={10} gap={25} justify="center" wrap="nowrap">
+        <Button
+          variant="filled"
+          color="indigo"
+          radius="md"
+          onClick={() => openMsgWindow(friend)}
+        >
+          发起聊天
+        </Button>
+
+        <Button
+          variant="filled"
+          color="orange"
+          radius="md"
+          onClick={() => {
+            delFid(friend?.id).then(() => { navigate('/chat/friend/') })
+          }}
+        >
+          删除好友
+        </Button>
+      </Group>
+    </Stack>
 
 }

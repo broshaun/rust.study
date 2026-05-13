@@ -1,5 +1,5 @@
 import { Navigate } from "react-router";
-import { ChatGuard } from "pages/mobile/guard";
+import { ChatGuard } from "pages/desktop/guard";
 import { Chat } from "./chat/main";
 import { RsFriend } from "./chat/friend";
 import { RsDialog } from "./chat/dialog";

@@ -15,7 +15,7 @@ export const PushDeer = () => {
     const setLeftPath = useAppBar((state) => state.setLeftPath);
     const setTitle = useAppBar((state) => state.setTitle);
     useEffect(() => {
-        setLeftPath('/mobile/chat/self/')
+        setLeftPath('/chat/self/mylist/')
         setTitle('请输入PushKey');
     }, [])
 
@@ -41,7 +41,7 @@ export const PushDeer = () => {
             {location.state &&
                 <InputText2 showMask minWidth='300' defaultValue={pushKey} onChangeValue={(value) => { setPushKey(value) }} >
                     <InputText2.Left icon='key' />
-                    <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/mobile/chat/self/'); }} />
+                    <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/chat/self/mylist/'); }} />
                 </InputText2>
             }
         </Group>

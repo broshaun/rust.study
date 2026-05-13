@@ -6,29 +6,30 @@ import { useMutation } from '@tanstack/react-query';
 import { Group } from "@mantine/core";
 
 
-export const PushDeer = () => {
+export const Nikename = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
-    const [pushKey, setPushKey] = useState(location.state?.pushKey)
+    const [name, setName] = useState()
 
     const setLeftPath = useAppBar((state) => state.setLeftPath);
     const setTitle = useAppBar((state) => state.setTitle);
     useEffect(() => {
-        setLeftPath('/mobile/chat/self/')
-        setTitle('请输入PushKey');
+        setLeftPath('/chat/self/mylist/')
+        setTitle('修改昵称');
     }, [])
 
+
     const { mutateAsync: update, isPending: loading } = useMutation({
-        mutationFn: async (push_key) => {
-            if (!push_key) {
-                throw new Error('请输入推送码');
+        mutationFn: async (nikename) => {
+            if (!nikename) {
+                throw new Error('请输入昵称');
             }
-            const results = await apiLogin.post('PATCH', { push_key });
-            if (!results) {
+            const res = await apiLogin.post('PATCH', { nikename });
+            if (!res) {
                 throw new Error('请求失败');
             }
-            const { code, message } = results;
+            const { code, message } = res;
             if (code !== 200) {
                 throw new Error(message || '更新失败');
             }
@@ -36,12 +37,13 @@ export const PushDeer = () => {
         },
     });
 
+
     return <Suspense fallback={<div>加载中...</div>}>
-         <Group p={25}>
+        <Group p={25}>
             {location.state &&
-                <InputText2 showMask minWidth='300' defaultValue={pushKey} onChangeValue={(value) => { setPushKey(value) }} >
-                    <InputText2.Left icon='key' />
-                    <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/mobile/chat/self/'); }} />
+                <InputText2 defaultValue={location.state?.nikename} onChangeValue={(value) => { setName(value) }}>
+                    <InputText2.Left icon='bookmark-square' />
+                    <InputText2.Right label='确定' onClick={() => { update(name); navigate('/chat/self/mylist/'); }} />
                 </InputText2>
             }
         </Group>
