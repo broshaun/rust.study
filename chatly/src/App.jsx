@@ -1,8 +1,11 @@
 import { createHashRouter, RouterProvider, Navigate } from "react-router";
 import Home from "pages/home";
-import { useToken } from "hooks";
-import { RsMobile } from "pages/mobile";
 
+import { RsMobile } from "pages/mobile";
+import { useWinSize, useToken } from 'hooks';
+
+
+// const { isMobile } = useWinSize()
 
 const App = () => {
   const { remainSeconds } = useToken();

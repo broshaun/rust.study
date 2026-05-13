@@ -2,15 +2,15 @@
 import { Modal } from "components";
 import React, { useMemo, useState } from "react"
 import { useNavigate } from 'react-router';
-import { useWinSize, useToken } from 'hooks';
-import { useHttpClient2,useImgApiBase } from 'hooks/http';
+
+import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { TextField, Divider, XBox, SafeAvatar } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query'
 import { useLocalStorage } from "@mantine/hooks";
 import { Button, Stack, Center, Title } from "@mantine/core";
 
 
-export function LogOn() {
+export function Login() {
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
@@ -19,10 +19,9 @@ export function LogOn() {
     const [password, setPassword] = useState("")
 
     const { http } = useHttpClient2('/rpc/chat/login/')
-    // const { endpoint } = useHttpClient2('/imgs/')
     const { joinPath } = useImgApiBase('avatar')
     const { setToken } = useToken()
-    const { isMobile } = useWinSize()
+
 
     const avatar_url = useMemo(() => {
         return joinPath(avatar)
@@ -43,11 +42,8 @@ export function LogOn() {
                 const { data } = results;
                 setAvatar(data?.user?.avatar_url);
                 setToken(data?.login_token, data?.login_expired);
-                if (isMobile) {
-                    navigate("/chat/mobile/dialog/");
-                } else {
-                    navigate("/chat/dialog/");
-                }
+                navigate("/mobile/chat/");
+
             },
             onError: (error) => {
                 setMsg(error?.message || "登录失败，请稍后重试");

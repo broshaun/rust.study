@@ -11,7 +11,7 @@ import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react
 
 
 
-export function Chat() {
+export function ChatShell() {
 
 
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import { Outlet, Navigate } from "react-router";
-import { LogOn } from "./login2";
-import { Register } from "./register2";
+import { Login } from "./login";
+import { Register } from "./register";
 import { Settings } from "./settings";
 import { Agent } from "./settings/agent";
 import { MyList } from "./settings/setist";
@@ -18,7 +18,7 @@ export const RsUser = [
     children: [
       {
         index: true,
-        element: <LogOn />,
+        element: <Login />,
       },
       {
         path: "register",
