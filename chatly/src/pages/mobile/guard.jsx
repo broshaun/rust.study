@@ -3,7 +3,7 @@ import { useNavigate, Outlet } from 'react-router';
 
 import { useHttpClient2 } from 'hooks/http';
 import { useToken } from "hooks/store"
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -17,7 +17,7 @@ export function ChatGuard() {
 
   const { remainSeconds } = useToken()
   const { http: httpMsg } = useHttpClient2('/rpc/chat/msg/single/');
-  const { db, userId, isReady } = useUserDB(account);
+  const  db = getUserDB(account);
 
   useQuery({
     queryKey: ['poll-message'],

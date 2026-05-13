@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, Suspense, useRef } from "react
 import { useNavigate } from 'react-router';
 import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useWinSize } from 'hooks';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { liveQuery } from 'dexie';
 import { Divider } from 'components/flutter';
 import { Friend } from 'components/chat';
@@ -23,7 +23,7 @@ export const Item = () => {
     const { http } = useHttpClient2('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
     const { winHeight } = useWinSize()
-    const { db, userId, isReady } = useUserDB(account);
+    const db = getUserDB(account);
 
 
 

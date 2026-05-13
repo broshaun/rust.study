@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useWinSize, useMsgState } from 'hooks';
@@ -17,7 +17,7 @@ export const Item = () => {
     const [account] = useLocalStorage({ key: 'savedAccount' })
     const { joinPath } = useImgApiBase('/avatar/')
     const { winHeight } = useWinSize()
-    const { db } = useUserDB(account);
+    const  db  = getUserDB(account);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
@@ -53,7 +53,7 @@ export const Item = () => {
         setCurrent({ 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName })
 
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/chat/message')
+            navigate('/mobile/chat/message')
         })
     }, [navigate, db])
 
@@ -64,7 +64,7 @@ export const Item = () => {
                 db.table('message').where('uid').equals(row?.uid).delete()
                 db.table('friends').update(item.id, { 'signal': 'old', 'dialog': 0 })
             })
-            navigate('/chat/mobile/dialog/')
+            navigate('/mobile/chat/dialog')
         }
     }, [db])
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useWinSize } from 'hooks';
 import { useHttpClient2 } from 'hooks/http';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { SafeAvatar, Divider } from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
@@ -21,7 +21,7 @@ export function Detail() {
   const [account] = useLocalStorage({ key: 'savedAccount' })
   const [friend, setFriend] = useState(location.state?.select);
 
-  const { db, userId, isReady } = useUserDB(account);
+  const db = getUserDB(account);
 
   useEffect(() => {
     setFriend(location.state?.select)

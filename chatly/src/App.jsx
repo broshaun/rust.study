@@ -11,7 +11,7 @@ const App = () => {
   const { remainSeconds } = useToken();
   const router = createHashRouter([
     {
-      path: "/",
+      index: true,
       // element: remainSeconds > 0 ? <Navigate to="/chat" replace /> : <Navigate to="/user/login" replace />,
       element: <Navigate to="/mobile/chat" replace />,
     },
@@ -19,8 +19,10 @@ const App = () => {
       path: "apps",
       element: <Home />,
     },
-    ...RsMobile,
-
+    {
+      path: "mobile",
+      children: RsMobile
+    },
   ]);
 
   return <RouterProvider router={router} />;

@@ -1,33 +1,51 @@
 import { Outlet, Navigate } from "react-router";
+import { Main } from "./main"
+import { Caller } from "./caller";
+import { Receiver } from "./receiver";
 import { Msg } from "./msg";
-import { P2PPcmVoiceTest, Tools } from "./tools";
-
-
-export const Msgs = () => {
-    return <Outlet />
-}
+import { Tools } from "./tools/main";
+import { P2PPcmVoiceTest } from "./tools/ui/P2PPcmVoiceTest"
+import { Test } from "./tools/Test";
+// import { P2PCallReceiver } from "./tools/P2PCallReceiver";
 
 
 export const RsMsgs = [
     {
-        path: 'message', element: <Msgs />,
+        path: 'message', element: <Main />,
         children: [
-            { 
-                index: true, 
-                element: <Msg /> 
+            {
+                index: true,
+                element: <Navigate to="msg" replace />
             },
-            { 
-                path: "tools", 
-                element: <Tools /> 
+            {
+                path: "msg",
+                element: <Msg />,
+                children: [
+                    {
+                        path: "tools",
+                        element: <Tools />
+                    },
+                ]
             },
-            { 
-                path: "phone", 
-                element: <P2PPcmVoiceTest /> 
+            {
+                path: "phone",
+                element: <P2PPcmVoiceTest />
+            },
+            {
+                path: "test",
+                element: <Test />
+            },
+            
+            {
+                path: "caller",
+                element: <Caller />
+            },
+            {
+                path: "receiver",
+                element: <Receiver />
             }
         ]
     }
-
-
 ];
 
 

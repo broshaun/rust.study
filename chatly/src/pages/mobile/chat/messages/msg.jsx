@@ -36,7 +36,7 @@ export function Msg() {
     useEffect(() => {
         // console.log('current', current)
         setTitle(current?.displayName)
-        setLeftPath('/chat/mobile/dialog/')
+        setLeftPath('/mobile/chat/dialog/')
     }, [current])
 
 

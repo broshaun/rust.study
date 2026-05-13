@@ -1,5 +1,5 @@
 import { ActionIcon } from "@mantine/core";
-import { IconChevronLeft, IconPhone, IconPhoneCheck } from '@tabler/icons-react';
+import { IconChevronLeft, IconPhone, IconPhoneCheck, IconPhoneOutgoing, IconFlask, IconPhoneIncoming } from '@tabler/icons-react';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { useNavigate, Outlet, useOutlet, useOutletContext } from 'react-router';
 import { ImageUpload } from "components/flutter";
@@ -12,11 +12,10 @@ import { useAppBar } from "components";
 export function Tools() {
     const navigate = useNavigate();
     // const { setSendText, uploadRef } = useOutletContext();
-    const { winHeight, isMobile } = useWinSize()
 
     const setLeftPath = useAppBar((state) => state.setLeftPath);
     useEffect(() => {
-        setLeftPath('/chat/message/')
+        setLeftPath('/mobile/chat/message/')
     }, [])
 
 
@@ -30,13 +29,22 @@ export function Tools() {
         </ImageUpload> */}
 
 
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { isMobile ? navigate('/chat/phone') : navigate('/chat/dialog/phone') }}>
+        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/phone') }}>
             <IconPhoneCheck />
         </ActionIcon>
 
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { isMobile ? navigate('/chat/phone') : navigate('/chat/dialog/phone') }}>
-            <IconPhone />
+        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/test') }}>
+            <IconFlask />
         </ActionIcon>
 
+        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/caller') }}>
+            <IconPhoneOutgoing />
+        </ActionIcon>
+
+
+        <ActionIcon variant="subtle" color="gray" title="接收通话" onClick={() => { navigate('/mobile/chat/message/receiver') }}>
+            <IconPhoneIncoming />
+        </ActionIcon>
+    
     </div>
 }

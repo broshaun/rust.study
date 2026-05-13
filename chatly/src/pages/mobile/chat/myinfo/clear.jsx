@@ -1,7 +1,7 @@
 import React, { useState, Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { Modal } from 'components';
-import { deleteUserDB } from 'hooks/db';
+import { deleteUserDB } from 'hooks/db/DBUser';
 import { clearAllImageCache } from "hooks/http";
 
 

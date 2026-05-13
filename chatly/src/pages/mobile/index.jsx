@@ -15,45 +15,38 @@ import { RsUser } from "./auth/user";
 
 export const RsMobile = [
     {
-        path: "mobile",
+        path: "chat",
+        element: <ChatGuard />,
         children: [
             {
-                path: "chat",
-                element: <ChatGuard />,
-                children: [
-                    {
-                        index: true,
-                        element: <Navigate to="dialog" replace />,
-                    },
-                    {
-                        element: <ChatShell />,
-                        children: [
-                            ...RsFriend,
-                            ...RsDialog,
-                            ...RsMyInfo,
-                            ...RsMsgs,
-                            ...RsTest
-                        ]
-                    },
-
-                ],
+                index: true,
+                element: <Navigate to="dialog" replace />,
             },
             {
-                path: "auth",
-                element: <AuthShell />,
+                element: <ChatShell />,
                 children: [
-                    {
-                        index: true,
-                        element: <Navigate to="user" replace />,
-                    },
-                    ...RsUser
+                    ...RsFriend,
+                    ...RsDialog,
+                    ...RsMyInfo,
+                    ...RsMsgs,
+                    ...RsTest
                 ]
-
-
-            }
+            },
 
         ],
     },
+    {
+        path: "auth",
+        element: <AuthShell />,
+        children: [
+            {
+                index: true,
+                element: <Navigate to="user" replace />,
+            },
+            ...RsUser
+        ]
 
+
+    }
 ];
 

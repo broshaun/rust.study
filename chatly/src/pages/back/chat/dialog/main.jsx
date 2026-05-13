@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useOutlet } from 'react-router';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { useWinSize, useMsgState } from 'hooks';
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
@@ -20,11 +20,8 @@ export const Mian = () => {
 
     const { joinPath } = useImgApiBase('/avatar/')
     const { winHeight, isMobile } = useWinSize()
-    const { db, userId, isReady } = useUserDB(account);
-
+    const  db = getUserDB(account);
     const setCurrent = useMsgState((s) => s.setCurrent);
-
-
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({

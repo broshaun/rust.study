@@ -4,7 +4,7 @@ import { useWinSize, useDateTime } from 'hooks';
 import { AppBar, useAppBar } from "components";
 import { IconTabler } from 'components/flutter';
 import { liveQuery } from 'dexie';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react";
@@ -25,7 +25,7 @@ export function Chat() {
   const [account] = useLocalStorage({ key: 'savedAccount' })
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
-  const { db } = useUserDB(account);
+  const db  = getUserDB(account);
 
   const items = useMemo(() => {
     return [

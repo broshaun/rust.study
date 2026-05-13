@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useOutlet } from 'react-router';
 import { useHttpClient2, useImgApiBase } from 'hooks/http';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { useWinSize } from 'hooks'
 import { liveQuery } from 'dexie'
 import { Divider, Right } from 'components/flutter';
@@ -23,7 +23,7 @@ export const Main = () => {
     const { http } = useHttpClient2('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
     const { winHeight } = useWinSize()
-    const { db, userId, isReady } = useUserDB(account);
+    const db = getUserDB(account);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => {

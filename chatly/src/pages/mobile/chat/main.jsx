@@ -4,7 +4,7 @@ import { useWinSize, useDateTime } from 'hooks';
 import { AppBar, useAppBar } from "components";
 import { IconTabler } from 'components/flutter';
 import { liveQuery } from 'dexie';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react";
@@ -17,7 +17,7 @@ export function ChatShell() {
   const navigate = useNavigate();
   const isShowBack = useAppBar((state) => state.leftPath !== null);
 
-  const setTitle = useAppBar((state) => state.setTitle);
+  // const setTitle = useAppBar((state) => state.setTitle);
   // const setLeftPath = useAppBar((state) => state.setLeftPath);
   // setTitle('主页')
 
@@ -25,14 +25,14 @@ export function ChatShell() {
   const [account] = useLocalStorage({ key: 'savedAccount' })
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
-  const { db } = useUserDB(account);
+  const  db  = getUserDB(account);
 
   const items = useMemo(() => {
     return [
       { key: 'test', icon: <IconTabler icon={IconFlask} label='测试' labelPos='bottom' onClick={() => { navigate('/mobile/chat/test/') }} /> },
       { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { navigate('/mobile/chat/dialog/'); setDot(false); }} dot={dot} /> },
       { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
-      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self//'); }} /> },
+      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, dot]);
 

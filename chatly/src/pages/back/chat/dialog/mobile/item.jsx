@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useWinSize, useMsgState } from 'hooks';
@@ -17,7 +17,7 @@ export const Item = () => {
     const [account] = useLocalStorage({ key: 'savedAccount' })
     const { joinPath } = useImgApiBase('/avatar/')
     const { winHeight } = useWinSize()
-    const { db } = useUserDB(account);
+    const db  = getUserDB(account);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({

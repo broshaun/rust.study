@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useHttpClient2, useImgApiBase } from 'hooks/http';
 import { useDateTime } from 'hooks';
 import { useMutation } from '@tanstack/react-query';
-import { useUserDB } from 'hooks/db';
+import { getUserDB } from "hooks/db/DBUser";
 import { useLocalStorage } from '@mantine/hooks';
 
 
@@ -15,7 +15,7 @@ export const Main = () => {
      * 个人数据库
      */
     const [account] = useLocalStorage({ key: 'savedAccount' });
-    const { db } = useUserDB(account);
+    const db = getUserDB(account);
     const { getDateTimeStr } = useDateTime();
 
     /**
@@ -26,7 +26,7 @@ export const Main = () => {
         {
             mutationFn: async ({ uid, msgText }) => {
 
-                console.log('发送测试。。。',uid, msgText)
+                console.log('发送测试。。。', uid, msgText)
                 http.requestBodyJson('PUT', { user_id: uid, msg: msgText })
                     .then((results) => {
                         if (!results) return;
