@@ -1,14 +1,20 @@
 import { Outlet, useNavigate, useOutletContext } from 'react-router';
-import { P2PCallCaller } from "./ui";
+import { P2PCallCaller } from "./ui/P2PCallCaller";
+import { currentChat } from 'utils';
 
 
 
 export function Caller() {
-
+  const navigate = useNavigate();
   const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, db } = useOutletContext();
 
   const handleStartCall = (ticket) => {
-    console.log('ticket',ticket)
+    console.log('开启通话,ticket:',ticket)
+  }
+
+  const handleStopCall =() =>{
+    console.log("123挂断退出")
+    navigate('/mobile/chat/message/msg/')
   }
 
 
@@ -24,7 +30,8 @@ export function Caller() {
 
   return <div>
     <P2PCallCaller
-      onTicket={handleStartCall}
+      onStartCall={handleStartCall}
+      onStopCall={handleStopCall}
     />
   </div>
 

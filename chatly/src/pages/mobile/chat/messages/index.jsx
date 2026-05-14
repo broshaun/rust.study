@@ -5,7 +5,6 @@ import { Receiver } from "./receiver";
 import { Msg } from "./msg";
 import { Tools } from "./tools/main";
 import { P2PPcmVoiceTest } from "./ui/P2PPcmVoiceTest"
-// import { P2PCallReceiver } from "./tools/P2PCallReceiver";
 
 
 export const RsMsgs = [
@@ -27,7 +26,7 @@ export const RsMsgs = [
                 ]
             },
             {
-                path: "phone",
+                path: "test",
                 element: <P2PPcmVoiceTest />
             },
             {

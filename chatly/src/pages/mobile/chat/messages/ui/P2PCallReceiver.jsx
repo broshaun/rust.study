@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActionIcon,
   Avatar,
@@ -18,71 +18,127 @@ import {
   IconVolume,
   IconVolumeOff,
 } from "@tabler/icons-react";
-import { Channel, invoke } from "@tauri-apps/api/core";
+import { invoke, Channel } from "@tauri-apps/api/core";
+import { usePcmCapture, usePcmPlayback } from "utils";
 
-import { usePcmCapture } from "utils";
-import { usePcmPlayback } from "utils";
 
 const STATE_UI = {
-  Idle: {
-    text: "空闲",
-    color: "gray",
-    desc: "等待发起语音通话",
-    bg: "linear-gradient(135deg,#f1f3f5,#ffffff)",
-    shadow: "0 0 0 18px rgba(134,142,150,.08)",
-  },
-  Calling: {
-    text: "呼叫中",
-    color: "yellow",
-    desc: "正在等待对方接入...",
-    bg: "linear-gradient(135deg,#fff3bf,#fff9db)",
-    shadow: "0 0 0 18px rgba(252,196,25,.12)",
-  },
-  Connected: {
-    text: "已连通",
-    color: "green",
-    desc: "",
-    bg: "linear-gradient(135deg,#d3f9d8,#ebfbee)",
-    shadow: "0 0 0 18px rgba(64,192,87,.12)",
-  },
-  Disconnected: {
-    text: "已断开",
-    color: "red",
-    desc: "当前连接已断开",
-    bg: "linear-gradient(135deg,#ffe3e3,#fff5f5)",
-    shadow: "0 0 0 18px rgba(250,82,82,.10)",
-  },
+  Idle: ["空闲", "blue", "等待发起语音通话"],
+  Calling: ["呼叫中", "yellow", ""],
+  Connected: ["已连通", "green", ""],
+  Disconnected: ["已断开", "red", "当前连接已断开"],
 };
 
-function formatCallTime(seconds) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
+const formatTime = (seconds) => {
+  const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const s = String(seconds % 60).padStart(2, "0");
+  return `${m}:${s}`;
+};
 
-  const mm = String(m).padStart(2, "0");
-  const ss = String(s).padStart(2, "0");
+function CircleButton({
+  active,
+  onClick,
+  ActiveIcon,
+  InactiveIcon,
+  activeColor,
+  inactiveColor = "gray",
+  size = 54,
+  iconSize = 25,
+}) {
+  const Icon = active ? ActiveIcon : InactiveIcon;
 
-  return h > 0 ? `${String(h).padStart(2, "0")}:${mm}:${ss}` : `${mm}:${ss}`;
+  return (
+    <ActionIcon
+      size={size}
+      radius="xl"
+      color={active ? activeColor : inactiveColor}
+      variant={active ? "filled" : "light"}
+      onClick={onClick}
+    >
+      <Icon size={iconSize} />
+    </ActionIcon>
+  );
 }
 
-function createAudioChannel(playback) {
-  const onData = new Channel();
+export function P2PCallReceiver({
+  avatar,
+  name = "Unknown User",
+  ticket,
+  onStopCall,
+}) {
 
-  onData.onmessage = (data) => {
-    playback.pushBytes(data);
+  const [nodeStatus, setNodeStatus] = useState("Idle");
+  const [seconds, setSeconds] = useState(0);
+  const [text, color, defaultDesc] = STATE_UI[nodeStatus] || STATE_UI.Idle;
+  const isInCall = nodeStatus === "Calling" || nodeStatus === "Connected";
+
+
+
+  const initCall = async () => {
+    const onData = new Channel();
+    onData.onmessage = (data) => {
+      const status = String(data);
+      console.log("当前节点状态", status);
+      setNodeStatus(status);
+    };
+
+    try {
+      const startRsp = await invoke("p2p_start");
+      console.log("启动节点:", startRsp);
+      const stateRsp = await invoke("p2p_state", { onData });
+      console.log("启动节点状态监听:", stateRsp);
+    } catch (err) {
+      console.error("启动节点失败:", err);
+    }
   };
 
-  return onData;
-}
+  const stopCall = async () => {
+    try {
+      const stopRsp = await invoke("p2p_stop");
+      console.log("关闭节点:", stopRsp);
+    } catch (err) {
+      console.error("关闭节点失败:", err);
+    } finally {
+      onStopCall?.()
+    }
+  };
 
-export function P2PCallReceiver({ ticket, avatar, name = "Unknown User" }) {
-  const playback = usePcmPlayback({
+
+  useEffect(() => {
+    console.log("打开界面，启动节点...");
+    initCall().catch((err) => console.error(err));
+  }, []);
+
+
+
+  useEffect(() => {
+    if (!isInCall) {
+      setSeconds(0);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setSeconds((value) => value + 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [isInCall]);
+
+  useEffect(() => {
+    if (nodeStatus === "Calling" && seconds >= 60) {
+      onStopCall?.();
+    }
+  }, [nodeStatus, seconds, onStopCall]);
+
+
+
+  const p2p_playback = usePcmPlayback({
     sampleRate: 48000,
     frameSamples: 480,
     defaultPlaying: false,
   });
 
-  const capture = usePcmCapture({
+  const p2p_capture = usePcmCapture({
     sampleRate: 48000,
     frameSamples: 480,
     onData: (bytes) => {
@@ -92,130 +148,54 @@ export function P2PCallReceiver({ ticket, avatar, name = "Unknown User" }) {
     },
   });
 
-  const [nodeStatus, setNodeStatus] = useState("Idle");
-  const [callSeconds, setCallSeconds] = useState(0);
 
-  
+  const handleTalk = async () => {
+    console.log("点击：讲话");
 
-  const ui = STATE_UI[nodeStatus] || {
-    text: nodeStatus,
-    color: "gray",
-    desc: "未知状态",
-    bg: STATE_UI.Idle.bg,
-    shadow: STATE_UI.Idle.shadow,
-  };
-
-  const canStartCall = nodeStatus === "Idle" || nodeStatus === "Disconnected";
-
-  const statusDesc = useMemo(() => {
-    if (nodeStatus === "Connected") return formatCallTime(callSeconds);
-    return ui.desc;
-  }, [nodeStatus, callSeconds, ui.desc]);
-
-  useEffect(() => {
-    const onData = new Channel();
-
-    onData.onmessage = (data) => {
-      const nextStatus = String(data || "Idle");
-      console.log("P2P 状态更新:", nextStatus);
-      setNodeStatus(nextStatus);
-    };
-
-    invoke("p2p_start")
-      .then((rsp) => {
-        console.log("p2p_start:", rsp);
-        return invoke("p2p_state", { onData });
-      })
-      .then((rsp) => {
-        console.log("p2p_state:", rsp);
-      })
-      .catch((err) => {
-        console.error("P2P 启动失败:", err);
-      });
-
-    return () => {
-      console.log("离开发起通话界面");
-
-      void capture.stopCapture().catch(console.error);
-      void playback.stop().catch(console.error);
-      void invoke("p2p_stop").catch(console.error);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (nodeStatus !== "Connected") {
-      setCallSeconds(0);
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      setCallSeconds((prev) => prev + 1);
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [nodeStatus]);
-
-  const handleStartCall = async () => {
     try {
-      console.log("点击：接受通话");
-
-      const rsp = await invoke("p2p_start_connect", {
-        onData: createAudioChannel(playback),
-        addr: ticket
-      });
-
-      console.log("p2p_start_connect:", rsp);
-
-      playback.start();
-      await capture.startCapture();
-    } catch (err) {
-      console.error("接受通话失败:", err);
-    }
-  };
-
-  const handleHangup = async () => {
-    try {
-      console.log("点击：挂断");
-      await capture.stopCapture();
-      await playback.stop();
-      await invoke("p2p_stop");
-
-      
-    } catch (err) {
-      console.error("挂断失败:", err);
-    }
-  };
-
-  const handleMicToggle = async () => {
-    try {
-      const shouldStop = capture.isCapturing;
-
+      const shouldStop = p2p_capture.isCapturing;
       if (shouldStop) {
-        await capture.stopCapture();
+        await p2p_capture.stopCapture();
         console.log("麦克风已关闭");
       } else {
-        await capture.startCapture();
+        await p2p_capture.startCapture();
         console.log("麦克风已开启");
       }
-
     } catch (err) {
-      console.error("麦克风切换失败:", err);
+      console.error(err);
     }
   };
 
-  const handleSpeakerToggle = async () => {
+  const handleSilent = async () => {
+    console.log("点击：静默");
     try {
-      const shouldStop = playback.isPlayingEnabled;
-
+      const shouldStop = p2p_playback.isPlayingEnabled;
       if (shouldStop) {
-        await playback.stop();
+        await p2p_playback.stop();
         console.log("扬声器已关闭");
       } else {
-        playback.start();
+        p2p_playback.start();
         console.log("扬声器已开启");
       }
     } catch (err) {
-      console.error("扬声器切换失败:", err);
+      console.error(err);
+    }
+  };
+
+
+  const startCall = async () => {
+    console.log("点击：接通");
+    const onData = new Channel();
+    onData.onmessage = (data) => {
+      p2p_playback.pushBytes(data);
+    };
+
+    try {
+      console.log("📡 建立接收通道...");
+      const rsp = await invoke("p2p_start_connect", { onData, addr: ticket });
+      console.log(rsp);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -237,21 +217,19 @@ export function P2PCallReceiver({ ticket, avatar, name = "Unknown User" }) {
           <Text fw={700} size="md">
             实时语音通话
           </Text>
-
-          <Badge color={ui.color} variant="light" size="md">
-            {ui.text}
+          <Badge color={color} variant="light" size="md">
+            {text}
           </Badge>
         </Group>
 
         <Stack align="center" gap="md">
           <Center
+            w={160}
+            h={160}
             style={{
-              width: 160,
-              height: 160,
               borderRadius: "50%",
-              background: ui.bg,
-              boxShadow: ui.shadow,
-              transition: "all .25s ease",
+              background: "linear-gradient(135deg,#f1f3f5,#ffffff)",
+              boxShadow: "0 0 0 18px rgba(134,142,150,.08)",
             }}
           >
             <Avatar src={avatar} radius="50%" size={122}>
@@ -263,54 +241,39 @@ export function P2PCallReceiver({ ticket, avatar, name = "Unknown User" }) {
             <Text fw={700} size="lg">
               {name}
             </Text>
-
             <Text size="sm" c="dimmed" ta="center">
-              {statusDesc}
+              {isInCall ? formatTime(seconds) : defaultDesc}
             </Text>
           </Stack>
         </Stack>
 
         <Group justify="center" gap="lg">
-          <ActionIcon
-            size={54}
-            radius="xl"
-            color={capture.isCapturing ? "green" : "gray"}
-            variant={capture.isCapturing ? "filled" : "light"}
-            onClick={handleMicToggle}
-          >
-            {capture.isCapturing ? (
-              <IconMicrophone size={25} />
-            ) : (
-              <IconMicrophoneOff size={25} />
-            )}
-          </ActionIcon>
+          <CircleButton
+            active={p2p_capture.isCapturing}
+            activeColor="green"
+            onClick={handleTalk}
+            ActiveIcon={IconMicrophone}
+            InactiveIcon={IconMicrophoneOff}
+          />
 
-          <ActionIcon
+          <CircleButton
+            active={isInCall}
+            activeColor="red"
+            inactiveColor="green"
+            onClick={isInCall ? stopCall : startCall}
+            ActiveIcon={IconPhoneOff}
+            InactiveIcon={IconPhoneCall}
             size={74}
-            radius="xl"
-            color={canStartCall ? "green" : "red"}
-            onClick={canStartCall ? handleStartCall : handleHangup}
-          >
-            {canStartCall ? (
-              <IconPhoneCall size={34} />
-            ) : (
-              <IconPhoneOff size={34} />
-            )}
-          </ActionIcon>
+            iconSize={34}
+          />
 
-          <ActionIcon
-            size={54}
-            radius="xl"
-            color={playback.isPlayingEnabled ? "blue" : "gray"}
-            variant={playback.isPlayingEnabled ? "filled" : "light"}
-            onClick={handleSpeakerToggle}
-          >
-            {playback.isPlayingEnabled ? (
-              <IconVolume size={25} />
-            ) : (
-              <IconVolumeOff size={25} />
-            )}
-          </ActionIcon>
+          <CircleButton
+            active={p2p_playback.isPlayingEnabled}
+            activeColor="blue"
+            onClick={handleSilent}
+            ActiveIcon={IconVolume}
+            InactiveIcon={IconVolumeOff}
+          />
         </Group>
       </Paper>
     </Container>

@@ -5,8 +5,8 @@ import { useNavigate, Outlet, useOutlet, useOutletContext } from 'react-router';
 import { ImageUpload } from "components/flutter";
 import { IconPhoto } from '@tabler/icons-react';
 import React, { useEffect } from "react"
-import { useWinSize } from "utils";
-import { currentAppBar } from "components";
+import { useWinSize, currentAppBar } from "utils";
+
 
 
 export function Tools() {
@@ -29,11 +29,11 @@ export function Tools() {
         </ImageUpload> */}
 
 
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/phone') }}>
-            <IconPhoneCheck />
-        </ActionIcon>
+        {/* <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/phone') }}>
+            <IconPhoneCheck />  
+        </ActionIcon> */}
 
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/test') }}>
+        <ActionIcon variant="subtle" color="gray" title="通话测试" onClick={() => { navigate('/mobile/chat/message/test') }}>
             <IconFlask />
         </ActionIcon>
 
