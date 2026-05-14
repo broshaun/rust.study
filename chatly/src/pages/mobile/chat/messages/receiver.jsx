@@ -1,4 +1,4 @@
-import { P2PCallReceiver } from "./tools/ui";
+import { P2PCallReceiver } from "./ui";
 
 
 

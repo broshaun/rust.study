@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { useHttpClient2 } from 'utils/hooks';
+import { useHttpClient, currentAppBar } from 'utils';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, Divider, NavLink } from '@mantine/core';
 import {
@@ -11,11 +11,10 @@ import {
     IconLogout,
     IconChevronRight
 } from '@tabler/icons-react';
-import { currentAppBar } from "components";
 import React, { useEffect } from "react";
 
 
-export const MyList = () => {
+export const Items = () => {
     const navigate = useNavigate();
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -25,7 +24,7 @@ export const MyList = () => {
         setTitle('我的信息');
     }, [])
 
-    const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
+    const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
     const { data: apiInfo = {}, isPending: loading, error, refetch } = useQuery(
         {
             queryKey: ['api-info'],

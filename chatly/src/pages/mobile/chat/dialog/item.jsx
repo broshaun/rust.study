@@ -1,14 +1,12 @@
 import React, { useEffect, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB } from "utils/db/DBUser";
+import { getUserDB, useImgApiBase } from "utils";
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
-import { useWinSize, currentChat } from 'utils';
+import { useWinSize, currentChat, currentAppBar } from 'utils';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { useImgApiBase } from "utils/hooks"
 import { ScrollArea, Box } from '@mantine/core';
-import { currentAppBar } from "components";
 
 
 export const Item = () => {
@@ -17,7 +15,7 @@ export const Item = () => {
     const [account] = useLocalStorage({ key: 'savedAccount' })
     const { joinPath } = useImgApiBase('/avatar/')
     const { winHeight } = useWinSize()
-    const  db  = getUserDB(account);
+    const db = getUserDB(account);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({
@@ -38,7 +36,7 @@ export const Item = () => {
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
-    
+
     useEffect(() => {
         setLeftPath(null)
         setTitle('消息列表');
@@ -50,6 +48,7 @@ export const Item = () => {
         if (!select?.id) return;
 
         const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
+
         setCurrent({ 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName })
 
         db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {

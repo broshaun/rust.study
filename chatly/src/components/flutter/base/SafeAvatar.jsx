@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { Box, Skeleton, Image, Center } from '@mantine/core';
-import { useImage } from 'utils/hooks';
+import { useImage } from 'utils';
 
 /**
  * SafeAvatar

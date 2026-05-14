@@ -4,7 +4,7 @@ import { NavLink, Stack } from '@mantine/core';
 import { IconRocket, IconChevronRight } from '@tabler/icons-react';
 
 
-export const MyList = () => {
+export const Items = () => {
     const navigate = useNavigate();
     const location = useLocation()
 
@@ -15,7 +15,7 @@ export const MyList = () => {
                 label="设置代理"
                 leftSection={<IconRocket size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/user/settings/agent/")}
+                onClick={() => navigate("/mobile/auth/user/agent/")}
             />
         </Stack>
     )

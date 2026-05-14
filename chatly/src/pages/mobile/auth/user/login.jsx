@@ -2,9 +2,9 @@
 import { Modal } from "components";
 import React, { useMemo, useState } from "react"
 import { useNavigate } from 'react-router';
-import { useToken } from "utils/storage"
-import { useHttpClient2, useImgApiBase } from 'utils/hooks';
-import { TextField, Divider, XBox, SafeAvatar } from 'components/flutter';
+import { useToken } from "utils"
+import { useHttpClient, useImgApiBase } from 'utils';
+import { TextField, Divider, SafeAvatar } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query'
 import { useLocalStorage } from "@mantine/hooks";
 import { Button, Stack, Center, Title } from "@mantine/core";
@@ -18,10 +18,9 @@ export function Login() {
     const [avatar, setAvatar] = useLocalStorage({ key: 'myAvatar' })
     const [password, setPassword] = useState("")
 
-    const { http } = useHttpClient2('/rpc/chat/login/')
+    const { http } = useHttpClient('/rpc/chat/login/')
     const { joinPath } = useImgApiBase('avatar')
     const { setToken } = useToken()
-
 
     const avatar_url = useMemo(() => {
         return joinPath(avatar)

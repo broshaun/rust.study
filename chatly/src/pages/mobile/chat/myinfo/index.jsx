@@ -1,5 +1,5 @@
 import { Outlet, Navigate } from "react-router";
-import { MyList } from "./mylist";
+import { Items } from "./items";
 import { Avatar2 } from "./avatar";
 import { Nikename } from "./nickname";
 import { Logout } from "./logout";
@@ -17,7 +17,7 @@ export const RsMyInfo = [
         children: [
             {
                 index: true,
-                element: <MyList />,
+                element: <Items />,
             },
             {
                 path: "image",

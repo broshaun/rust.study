@@ -1,7 +1,6 @@
 import { useMemo, useCallback } from "react";
 import { fetch } from "@tauri-apps/plugin-http";
-import { useApiBase } from "utils";
-import { useToken } from "utils";
+import { useApiBase, useToken } from "utils";
 
 /**
  * JSON 序列化转换器

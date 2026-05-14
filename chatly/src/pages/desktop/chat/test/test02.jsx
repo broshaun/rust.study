@@ -1,5 +1,5 @@
-import { usePcmCapture } from "utils/hooks/usePcmCapture";
-import { usePcmPlayback } from "utils/hooks/usePcmPlayback";
+import { usePcmCapture } from "utils";
+import { usePcmPlayback } from "utils";
 import { invoke, Channel } from '@tauri-apps/api/core';
 import React, { useState, useEffect, useRef } from 'react';
 

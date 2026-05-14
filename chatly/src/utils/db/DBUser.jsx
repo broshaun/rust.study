@@ -3,8 +3,10 @@ import Dexie from 'dexie';
 const dbCache = new Map();
 
 export const getUserDB = (userId) => {
+
   if (!userId) {
-    throw new Error('userId is required');
+    // throw new Error('userId is required');
+    return null
   }
   if (dbCache.has(userId)) {
     return dbCache.get(userId);

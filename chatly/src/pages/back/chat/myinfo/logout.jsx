@@ -1,13 +1,13 @@
 import React, { useState, Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { Modal } from 'components';
-import { useHttpClient2 } from 'utils/hooks';
+import { useHttpClient } from 'utils';
 import { useToken } from "utils"
 
 export const Logout = () => {
   const navigate = useNavigate();
   const { delToken } = useToken();
-  const { http } = useHttpClient2('/rpc/chat/login/')
+  const { http } = useHttpClient('/rpc/chat/login/')
   const [open, setOpen] = useState(true);
 
 

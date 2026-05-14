@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { useMutation } from '@tanstack/react-query'
 import { Modal } from "components";
-import { useHttpClient2 } from 'utils/hooks';
+import { useHttpClient } from 'utils';
 import { TextField, Divider } from 'components/flutter';
 import { Button, Stack, Center, Title } from "@mantine/core";
 
@@ -9,7 +9,7 @@ import { Button, Stack, Center, Title } from "@mantine/core";
 export function Register() {
     const [account, setAccount] = useState('')
     const [password, setPassword] = useState("")
-    const { http } = useHttpClient2('/rpc/chat/register/')
+    const { http } = useHttpClient('/rpc/chat/register/')
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
 

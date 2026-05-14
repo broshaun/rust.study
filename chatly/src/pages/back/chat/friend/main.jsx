@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useOutlet } from 'react-router';
-import { useHttpClient2, useImgApiBase } from 'utils/hooks';
-import { getUserDB } from "utils/db/DBUser";
+import { useHttpClient, useImgApiBase } from 'utils';
+import { getUserDB } from "utils";
 import { useWinSize } from 'utils'
 import { liveQuery } from 'dexie'
 import { Divider, Right } from 'components/flutter';
@@ -20,7 +20,7 @@ export const Main = () => {
     const [afriend, setAfriend] = useState(0);
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
-    const { http } = useHttpClient2('/rpc/chat/friend/')
+    const { http } = useHttpClient('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
     const { winHeight } = useWinSize()
     const db = getUserDB(account);

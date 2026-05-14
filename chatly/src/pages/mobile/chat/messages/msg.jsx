@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
-import { useWinSize, currentChat } from 'utils';
+import { useWinSize, currentChat, currentAppBar } from 'utils';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ScrollArea, Box, Textarea, Button } from "@mantine/core";
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Outlet, useNavigate, useOutletContext } from 'react-router';
-import { currentAppBar } from "components";
 
 
 export const parseMsgContent = (msg) => {

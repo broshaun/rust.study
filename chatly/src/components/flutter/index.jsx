@@ -8,15 +8,6 @@ export { Divider } from './layout/Divider'
 export {Right,Left }from './layout/align'
 
 
-// frame 骨架
-export { AppShell } from './frame/AppShell'
-export { AppBar } from './frame/AppBar'
-export { PCShell } from './frame/PCShell'
-export { Drawer } from './frame/Drawer'
-
-
-
-
 // base
 export { Button } from './base/Button';
 export { TextField } from './base/TextField';

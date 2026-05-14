@@ -1,9 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useMemo } from "react";
 import { useNavigate, Outlet } from 'react-router';
-
-import { useHttpClient2 } from 'utils/hooks';
-import { useToken } from "utils/store"
-import { getUserDB } from "utils/db/DBUser";
+import { useToken, getUserDB, useHttpClient } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -13,11 +10,14 @@ import { useLocalStorage } from '@mantine/hooks';
 export function ChatGuard() {
   const navigate = useNavigate();
 
-  const [account] = useLocalStorage({ key: 'savedAccount' })
-
+  const [userId] = useLocalStorage({ key: 'savedAccount' })
+  const  db = getUserDB(userId);
+  
   const { remainSeconds } = useToken()
-  const { http: httpMsg } = useHttpClient2('/rpc/chat/msg/single/');
-  const  db = getUserDB(account);
+  const { http: httpMsg } = useHttpClient('/rpc/chat/msg/single/');
+  
+
+
 
   useQuery({
     queryKey: ['poll-message'],

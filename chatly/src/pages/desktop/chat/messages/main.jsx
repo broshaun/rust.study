@@ -1,8 +1,8 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { useHttpClient2, useImgApiBase } from 'utils/hooks';
+import { useHttpClient, useImgApiBase } from 'utils';
 import { useDateTime } from 'utils';
 import { useMutation } from '@tanstack/react-query';
-import { getUserDB } from "utils/db/DBUser";
+import { getUserDB } from "utils";
 import { useLocalStorage } from '@mantine/hooks';
 
 
@@ -21,7 +21,7 @@ export const Main = () => {
     /**
      * 发送信息
      */
-    const { http } = useHttpClient2('/rpc/chat/msg/single/');
+    const { http } = useHttpClient('/rpc/chat/msg/single/');
     const { mutateAsync: fnSendMsg, isPending: loading } = useMutation(
         {
             mutationFn: async ({ uid, msgText }) => {
@@ -49,7 +49,7 @@ export const Main = () => {
      * 上传图片服务
      * 上传缓存30天图片
      */
-    const { http: httpImg30 } = useHttpClient2('/files/img30/');
+    const { http: httpImg30 } = useHttpClient('/files/img30/');
     const { mutateAsync: uploadImg30, isPending: img30loading } = useMutation(
         {
             mutationFn: async ({ file }) => {

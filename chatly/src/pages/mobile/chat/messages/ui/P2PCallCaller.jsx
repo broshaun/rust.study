@@ -20,8 +20,8 @@ import {
 } from "@tabler/icons-react";
 import { Channel, invoke } from "@tauri-apps/api/core";
 
-import { usePcmCapture } from "utils/hooks/usePcmCapture";
-import { usePcmPlayback } from "utils/hooks/usePcmPlayback";
+import { usePcmCapture } from "utils";
+import { usePcmPlayback } from "utils";
 
 const STATE_UI = {
   Idle: {
@@ -75,7 +75,7 @@ function createAudioChannel(playback) {
   return onData;
 }
 
-export function P2PCallReceiver({ ticket, avatar, name = "Unknown User" }) {
+export function P2PCallCaller({ onTicket, avatar, name = "Unknown User" }) {
   const playback = usePcmPlayback({
     sampleRate: 48000,
     frameSamples: 480,
@@ -157,19 +157,23 @@ export function P2PCallReceiver({ ticket, avatar, name = "Unknown User" }) {
 
   const handleStartCall = async () => {
     try {
-      console.log("点击：接受通话");
+      console.log("点击：发起通话");
 
-      const rsp = await invoke("p2p_start_connect", {
+      const ticket = String((await invoke("p2p_get_ticket")) || "");
+      console.log("p2p_get_ticket:", ticket);
+
+      onTicket?.(ticket);
+
+      const rsp = await invoke("p2p_start_accept", {
         onData: createAudioChannel(playback),
-        addr: ticket
       });
 
-      console.log("p2p_start_connect:", rsp);
+      console.log("p2p_start_accept:", rsp);
 
       playback.start();
       await capture.startCapture();
     } catch (err) {
-      console.error("接受通话失败:", err);
+      console.error("发起通话失败:", err);
     }
   };
 

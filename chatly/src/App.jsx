@@ -13,16 +13,14 @@ const App = () => {
     {
       index: true,
       // element: remainSeconds > 0 ? <Navigate to="/chat" replace /> : <Navigate to="/user/login" replace />,
-      element: <Navigate to="/mobile/chat" replace />,
+      element: <Navigate to="/mobile/auth" replace />,
     },
     {
       path: "apps",
       element: <Home />,
     },
-    {
-      path: "mobile",
-      children: RsMobile
-    },
+    ...RsMobile
+
   ]);
 
   return <RouterProvider router={router} />;

@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
 import { useWinSize, useDateTime } from 'utils';
-import { AppBar, currentAppBar } from "components";
+
 import { IconTabler } from 'components/flutter';
 import { liveQuery } from 'dexie';
-import { getUserDB } from "utils/db/DBUser";
+import { getUserDB } from "utils";
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react";
+import { GlobalAppBar, currentAppBar } from "utils";
 
 
 
@@ -57,7 +58,7 @@ export function ChatShell() {
       transitionDuration={0}
     >
       <AppShell.Header>
-        <AppBar />
+        <GlobalAppBar />
       </AppShell.Header>
       <AppShell.Main>
         <Outlet />

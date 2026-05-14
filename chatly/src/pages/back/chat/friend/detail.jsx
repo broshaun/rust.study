@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { useHttpClient2 } from 'utils/hooks';
-import { getUserDB } from "utils/db/DBUser";
+import { useHttpClient } from 'utils';
+import { getUserDB } from "utils";
 import { SafeAvatar, Divider } from 'components/flutter';
 import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
@@ -26,7 +26,7 @@ export function Detail() {
     setFriend(location.state?.select)
   }, [location.state?.select])
 
-  const { http: http2 } = useHttpClient2('/rpc/chat/friend/');
+  const { http: http2 } = useHttpClient('/rpc/chat/friend/');
 
 
   // 删除好友逻辑

@@ -1,15 +1,12 @@
 import { Outlet, Navigate } from "react-router";
 import { Login } from "./login";
 import { Register } from "./register";
-import { Settings } from "./settings";
-import { Agent } from "./settings/agent";
-import { MyList } from "./settings/setist";
-
-
+import { Agent } from "./agent";
+import { Items } from "./items";
 
 
 export const User = () => {
-    return <Outlet />
+  return <Outlet />
 }
 
 export const RsUser = [
@@ -25,19 +22,14 @@ export const RsUser = [
         element: <Register />,
       },
       {
-        path: "settings",
-        element: <Settings />,
-        children: [
-          {
-            path: "agent",
-            element: <Agent />
-          },
-          {
-            path: "setlist",
-            element: <MyList />
-          }
-        ]
+        path: "agent",
+        element: <Agent />
+      },
+      {
+        path: "items",
+        element: <Items />
       }
+
     ]
   }
 ];

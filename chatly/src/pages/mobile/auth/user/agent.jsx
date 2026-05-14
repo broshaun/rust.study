@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useHttpClient2 } from 'utils/hooks';
+import { useHttpClient } from 'utils';
 import { Modal, } from 'components';
 import { TextField, Divider, XBox } from 'components/flutter';
 import { useNavigate } from 'react-router';
@@ -13,7 +13,7 @@ export const Agent = () => {
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
 
-    const { http } = useHttpClient2('/rpc/chat/ping')
+    const { http } = useHttpClient('/rpc/chat/ping')
     const [isUpdate, setUpdate] = useState(false);
 
 

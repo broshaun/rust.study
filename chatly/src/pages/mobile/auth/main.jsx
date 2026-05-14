@@ -1,9 +1,8 @@
 import React, { useState } from "react"
 import { Outlet, useNavigate } from "react-router";
-import { AppBar, Divider, Icon } from 'components/flutter';
-import { Stack, Drawer, Title, AppShell } from "@mantine/core";
+import { Divider, Icon } from 'components/flutter';
+import { Stack, Drawer, Title, AppShell, Burger } from "@mantine/core";
 import { useDisclosure } from '@mantine/hooks';
-
 
 
 export function AuthShell() {
@@ -11,7 +10,7 @@ export function AuthShell() {
   const drawerMenu = [
     { key: 'login', display: true, icon: { name: 'user-circle', label: '登陆' }, onTap: () => { navigate('/mobile/auth/user/') } },
     { key: 'register', display: true, icon: { name: 'user-plus', label: '注册' }, onTap: () => { navigate('/mobile/auth/user/register/') } },
-    { key: 'settings', display: true, icon: { name: 'cog-6-tooth', label: '设置' }, onTap: () => { navigate('/mobile/auth/user/settings/setlist/') } },
+    { key: 'settings', display: true, icon: { name: 'cog-6-tooth', label: '设置' }, onTap: () => { navigate('/mobile/auth/user/items/') } },
   ];
 
   const [opened, { open, close }] = useDisclosure(false);
@@ -37,12 +36,9 @@ export function AuthShell() {
       </Stack>
     </Drawer>
 
-    <AppShell
-      padding={0}
-      header={{ height: 56 }}
-    >
-      <AppShell.Header>
-        <AppBar leading={<Icon name="menu" onClick={open} />} />
+    <AppShell padding={10} header={{ height: 45 }} >
+      <AppShell.Header >
+        <Burger onClick={open} color="gray" m="sm" />
       </AppShell.Header>
       <AppShell.Main>
         <Outlet />

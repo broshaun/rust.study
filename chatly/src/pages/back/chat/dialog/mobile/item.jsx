@@ -1,12 +1,12 @@
 import React, { useEffect, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB } from "utils/db/DBUser";
+import { getUserDB } from "utils";
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useWinSize, currentChat } from 'utils';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { useImgApiBase } from "utils/hooks"
+import { useImgApiBase } from "utils"
 import { ScrollArea, Box } from '@mantine/core';
 import { currentAppBar } from "components";
 

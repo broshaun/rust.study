@@ -1,7 +1,7 @@
 import { useState, Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { InputText2, currentAppBar } from 'components';
-import { useHttpClient2 } from 'utils/hooks';
+import { useHttpClient } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { Group } from "@mantine/core";
 
@@ -9,7 +9,7 @@ import { Group } from "@mantine/core";
 export const PushDeer = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
+    const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
     const [pushKey, setPushKey] = useState(location.state?.pushKey)
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);

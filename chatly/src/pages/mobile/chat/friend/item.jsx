@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { useHttpClient2, useImgApiBase } from 'utils/hooks';
-import { useWinSize } from 'utils';
-import { getUserDB } from "utils/db/DBUser";
+import { getUserDB, currentAppBar, useWinSize, useHttpClient, useImgApiBase } from "utils";
 import { liveQuery } from 'dexie';
 import { Divider } from 'components/flutter';
 import { Friend } from 'components/chat';
@@ -10,7 +8,6 @@ import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { Group, ScrollArea, Box, Indicator, ActionIcon } from '@mantine/core';
-import { currentAppBar } from "components";
 import { IconUserSearch } from "@tabler/icons-react";
 
 
@@ -20,10 +17,10 @@ export const Item = () => {
     const [afriend, setAfriend] = useState(0);
     const [account] = useLocalStorage({ key: 'savedAccount' })
 
-    const { http } = useHttpClient2('/rpc/chat/friend/')
+    const { http } = useHttpClient('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
     const { winHeight } = useWinSize()
-    const  db = getUserDB(account);
+    const db = getUserDB(account);
 
 
 

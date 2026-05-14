@@ -1,7 +1,7 @@
 import { useCallback, Suspense, useMemo, useEffect } from "react";
 import { useLocation } from 'react-router';
 import { ImageUpload, currentAppBar } from 'components';
-import { useHttpClient2, useImgApiBase } from 'utils/hooks';
+import { useHttpClient, useImgApiBase } from 'utils';
 import { useLocalStorage } from '@mantine/hooks';
 import { SafeAvatar, SizedBox } from 'components/flutter';
 import { Grid, Group, Center } from "@mantine/core";
@@ -15,8 +15,8 @@ export const Avatar2 = () => {
 
     // 持久化存储当前的头像路径
     const [avatar, setAvatar] = useLocalStorage({ key: 'myAvatar', defaultValue: location.state?.avatar_url });
-    const { http: httpFiles } = useHttpClient2('/files/avatar/');
-    const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
+    const { http: httpFiles } = useHttpClient('/files/avatar/');
+    const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
     const { joinPath } = useImgApiBase('avatar')
 
     // 拼接完整的 API 地址

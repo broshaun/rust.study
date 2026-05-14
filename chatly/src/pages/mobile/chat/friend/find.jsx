@@ -1,6 +1,6 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { InputText2, } from 'components';
-import { useHttpClient2, useImgApiBase } from 'utils/hooks';
+import { useHttpClient, useImgApiBase } from 'utils';
 import { UserInfoCard } from 'components/chat';
 import { Divider, SafeAvatar } from 'components/flutter';
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -10,7 +10,7 @@ import { currentAppBar } from "components";
 
 
 export const Find = () => {
-    const { http } = useHttpClient2('/rpc/chat/friend/')
+    const { http } = useHttpClient('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
     const [keyword, setKeyword] = useState();
     const [debouncedKeyword] = useDebouncedValue(keyword, 500);
