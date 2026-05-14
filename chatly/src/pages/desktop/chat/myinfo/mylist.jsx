@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { useHttpClient2 } from 'hooks/hook';
+import { useHttpClient2 } from 'utils/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, Divider, NavLink } from '@mantine/core';
 import {
@@ -11,15 +11,15 @@ import {
     IconLogout,
     IconChevronRight
 } from '@tabler/icons-react';
-import { useAppBar } from "components";
+import { currentAppBar } from "components";
 import React, { useEffect } from "react";
 
 
 export const MyList = () => {
     const navigate = useNavigate();
 
-    const setLeftPath = useAppBar((state) => state.setLeftPath);
-    const setTitle = useAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
         setLeftPath(null)
         setTitle('我的信息');

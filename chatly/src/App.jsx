@@ -2,7 +2,7 @@ import { createHashRouter, RouterProvider, Navigate } from "react-router";
 import Home from "pages/home";
 
 import { RsMobile } from "pages/mobile";
-import { useWinSize, useToken } from 'hooks';
+import { useWinSize, useToken } from 'utils';
 
 
 // const { isMobile } = useWinSize()

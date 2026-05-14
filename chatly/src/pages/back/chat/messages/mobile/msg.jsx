@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
-import { useWinSize, useMsgState } from 'hooks';
+import { useWinSize, currentChat } from 'utils';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ScrollArea, Box, Textarea, Button } from "@mantine/core";
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Outlet, useNavigate, useOutletContext } from 'react-router';
-import { useAppBar } from "components";
+import { currentAppBar } from "components";
 
 
 export const parseMsgContent = (msg) => {
@@ -30,10 +30,10 @@ export function Msg() {
     const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, db } = useOutletContext();
     const { winHeight } = useWinSize();
 
-    const setTitle = useAppBar((state) => state.setTitle);
-    const setLeftPath = useAppBar((state) => state.setLeftPath);
+    const setTitle = currentAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
     
-    const current = useMsgState((s) => s.current);
+    const current = currentChat((s) => s.current);
     useEffect(() => {
         // console.log('current', current)
         setTitle(current?.displayName)

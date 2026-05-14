@@ -15,8 +15,8 @@ import {
 } from "@mantine/core";
 import { invoke, Channel } from "@tauri-apps/api/core";
 
-import { usePcmCapture } from "hooks/hook/usePcmCapture";
-import { usePcmPlayback } from "hooks/hook/usePcmPlayback";
+import { usePcmCapture } from "utils/hooks/usePcmCapture";
+import { usePcmPlayback } from "utils/hooks/usePcmPlayback";
 
 export function P2PPcmVoiceTest() {
   const p2p_playback = usePcmPlayback({

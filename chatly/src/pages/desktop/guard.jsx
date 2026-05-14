@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useHttpClient2 } from 'hooks/hook';
-import { useToken } from "hooks/storage"
-import { getUserDB } from "hooks/db/DBUser";
+import { useHttpClient2 } from 'utils/hooks';
+import { useToken } from "utils/storage"
+import { getUserDB } from "utils/db/DBUser";
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 

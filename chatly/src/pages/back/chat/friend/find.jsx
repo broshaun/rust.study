@@ -1,12 +1,12 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { InputText2, } from 'components';
-import { useHttpClient2, useImgApiBase } from 'hooks/hook';
+import { useHttpClient2, useImgApiBase } from 'utils/hooks';
 import { UserInfoCard } from 'components/chat';
 import { Divider, SafeAvatar } from 'components/flutter';
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useDebouncedValue } from '@mantine/hooks';
 import { ScrollArea, Stack } from "@mantine/core";
-import { useAppBar } from "components";
+import { currentAppBar } from "components";
 
 
 export const Find = () => {
@@ -16,8 +16,8 @@ export const Find = () => {
     const [debouncedKeyword] = useDebouncedValue(keyword, 500);
 
 
-    const setLeftPath = useAppBar((state) => state.setLeftPath);
-    const setTitle = useAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
         setLeftPath('/chat/mobile/friend/')
         setTitle('好友查找');

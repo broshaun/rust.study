@@ -20,8 +20,8 @@ import {
 } from "@tabler/icons-react";
 import { Channel, invoke } from "@tauri-apps/api/core";
 
-import { usePcmCapture } from "hooks/hook/usePcmCapture";
-import { usePcmPlayback } from "hooks/hook/usePcmPlayback";
+import { usePcmCapture } from "utils/hooks/usePcmCapture";
+import { usePcmPlayback } from "utils/hooks/usePcmPlayback";
 
 const STATE_UI = {
   Idle: {

@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useOutlet } from 'react-router';
-import { useHttpClient2, useImgApiBase } from 'hooks/hook';
-import { getUserDB } from "hooks/db/DBUser";
-import { useWinSize } from 'hooks'
+import { useHttpClient2, useImgApiBase } from 'utils/hooks';
+import { getUserDB } from "utils/db/DBUser";
+import { useWinSize } from 'utils'
 import { liveQuery } from 'dexie'
 import { Divider, Right } from 'components/flutter';
 import { Friend } from 'components/chat';

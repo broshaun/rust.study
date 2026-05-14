@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
-import { useWinSize, useDateTime } from 'hooks';
-import { AppBar, useAppBar } from "components";
+import { useWinSize, useDateTime } from 'utils';
+import { AppBar, currentAppBar } from "components";
 import { IconTabler } from 'components/flutter';
 import { liveQuery } from 'dexie';
-import { getUserDB } from "hooks/db/DBUser";
+import { getUserDB } from "utils/db/DBUser";
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react";
@@ -15,10 +15,10 @@ export function Chat() {
 
 
   const navigate = useNavigate();
-  const isShowBack = useAppBar((state) => state.leftPath !== null);
+  const isShowBack = currentAppBar((state) => state.leftPath !== null);
 
-  const setTitle = useAppBar((state) => state.setTitle);
-  // const setLeftPath = useAppBar((state) => state.setLeftPath);
+  const setTitle = currentAppBar((state) => state.setTitle);
+  // const setLeftPath = currentAppBar((state) => state.setLeftPath);
   // setTitle('主页')
 
   const [dot, setDot] = useState(false)

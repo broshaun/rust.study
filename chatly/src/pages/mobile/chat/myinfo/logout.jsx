@@ -1,8 +1,8 @@
 import React, { useState, Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { Modal } from 'components';
-import { useHttpClient2 } from 'hooks/hook';
-import { useToken } from "hooks"
+import { useHttpClient2 } from 'utils/hooks';
+import { useToken } from "utils"
 
 export const Logout = () => {
   const navigate = useNavigate();

@@ -1,8 +1,8 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { useHttpClient2, useImgApiBase } from 'hooks/hook';
-import { useDateTime } from 'hooks';
+import { useHttpClient2, useImgApiBase } from 'utils/hooks';
+import { useDateTime } from 'utils';
 import { useMutation } from '@tanstack/react-query';
-import { getUserDB } from "hooks/db/DBUser";
+import { getUserDB } from "utils/db/DBUser";
 import { useLocalStorage } from '@mantine/hooks';
 
 

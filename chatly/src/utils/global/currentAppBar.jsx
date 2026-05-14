@@ -1,10 +1,9 @@
+import { create } from "zustand";
 import { Center, ActionIcon, Title, Grid } from "@mantine/core";
 import { IconChevronLeft, IconDots } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
-import { create } from "zustand";
 
-
-export const useAppBar = create((set) => ({
+export const currentAppBar = create((set) => ({
   title: "主页",
   leftPath: null,
   rightPath: null,
@@ -12,30 +11,23 @@ export const useAppBar = create((set) => ({
   setTitle: (title) => set({ title }),
   setLeftPath: (leftPath) => set({ leftPath }),
   setRightPath: (rightPath) => set({ rightPath }),
-  reset: () => set({ title: "", leftPath: null, rightPath: null }),
+  clearAppBar: () => set({ title: "", leftPath: null, rightPath: null }),
 }));
 
 
-export function AppBar() {
-  const navigate = useNavigate();
-  
-  const title = useAppBar((state) => state.title);
-  const leftPath = useAppBar((state) => state.leftPath);
-  const rightPath = useAppBar((state) => state.rightPath);
 
-  const handleBack = () => {
-    if (leftPath === "-1") {
-      navigate(-1);
-    } else if (leftPath) {
-      navigate(leftPath);
-    }
-  };
+export function GlobalAppBar() {
+  const navigate = useNavigate();
+  const title = currentAppBar((state) => state.title);
+  const leftPath = currentAppBar((state) => state.leftPath);
+  const rightPath = currentAppBar((state) => state.rightPath);
+
 
   return (
     <Grid p={15} align="center">
       <Grid.Col span={2} align="center">
         {leftPath && (
-          <ActionIcon variant="subtle" color="gray" onClick={handleBack}>
+          <ActionIcon variant="subtle" color="gray" onClick={() => navigate(leftPath)}>
             <IconChevronLeft size={24} />
           </ActionIcon>
         )}
@@ -59,3 +51,7 @@ export function AppBar() {
     </Grid>
   );
 }
+
+
+
+

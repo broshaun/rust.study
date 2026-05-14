@@ -1,7 +1,7 @@
 import { useState, Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
-import { InputText2, useAppBar } from 'components';
-import { useHttpClient2 } from 'hooks/hook';
+import { InputText2, currentAppBar } from 'components';
+import { useHttpClient2 } from 'utils/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { Group } from "@mantine/core";
 
@@ -12,8 +12,8 @@ export const PushDeer = () => {
     const { http: apiLogin } = useHttpClient2('/rpc/chat/login/');
     const [pushKey, setPushKey] = useState(location.state?.pushKey)
 
-    const setLeftPath = useAppBar((state) => state.setLeftPath);
-    const setTitle = useAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
         setLeftPath('/mobile/chat/self/')
         setTitle('请输入PushKey');

@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { useHttpClient2, useImgApiBase } from 'hooks/hook';
-import { useWinSize } from 'hooks';
-import { getUserDB } from "hooks/db/DBUser";
+import { useHttpClient2, useImgApiBase } from 'utils/hooks';
+import { useWinSize } from 'utils';
+import { getUserDB } from "utils/db/DBUser";
 import { liveQuery } from 'dexie';
 import { Divider } from 'components/flutter';
 import { Friend } from 'components/chat';
@@ -10,7 +10,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { Group, ScrollArea, Box, Indicator, ActionIcon } from '@mantine/core';
-import { useAppBar } from "components";
+import { currentAppBar } from "components";
 import { IconUserSearch } from "@tabler/icons-react";
 
 
@@ -83,8 +83,8 @@ export const Item = () => {
     );
 
 
-    const setLeftPath = useAppBar((state) => state.setLeftPath);
-    const setTitle = useAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');

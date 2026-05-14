@@ -1,13 +1,13 @@
 import React, { useEffect, Suspense, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useOutlet } from 'react-router';
-import { getUserDB } from "hooks/db/DBUser";
-import { useMsgState } from 'hooks/storage';
-import { useWinSize } from 'hooks/'
+import { getUserDB } from "utils/db/DBUser";
+import { currentChat } from 'utils/storage';
+import { useWinSize } from 'utils'
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { useImgApiBase } from "hooks/hook"
+import { useImgApiBase } from "utils/hooks"
 import { Grid, ScrollArea, Box, Paper } from '@mantine/core';
 
 
@@ -22,7 +22,7 @@ export const Mian = () => {
     const { joinPath } = useImgApiBase('/avatar/')
     const { winHeight, isMobile } = useWinSize()
     const  db = getUserDB(account);
-    const setCurrent = useMsgState((s) => s.setCurrent);
+    const setCurrent = currentChat((s) => s.setCurrent);
 
     const loadFriends = (rows) => {
         const formattedData = rows.map((row) => ({

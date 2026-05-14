@@ -1,7 +1,7 @@
 import { useCallback, Suspense, useMemo, useEffect } from "react";
 import { useLocation } from 'react-router';
-import { ImageUpload, useAppBar } from 'components';
-import { useHttpClient2, useImgApiBase } from 'hooks/hook';
+import { ImageUpload, currentAppBar } from 'components';
+import { useHttpClient2, useImgApiBase } from 'utils/hooks';
 import { useLocalStorage } from '@mantine/hooks';
 import { SafeAvatar, SizedBox } from 'components/flutter';
 import { Grid, Group, Center } from "@mantine/core";
@@ -38,8 +38,8 @@ export const Avatar2 = () => {
     }, [httpFiles, apiLogin, setAvatar]);
 
 
-    const setLeftPath = useAppBar((state) => state.setLeftPath);
-    const setTitle = useAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
         setLeftPath('/chat/self/mylist/')
         setTitle('上传头像');

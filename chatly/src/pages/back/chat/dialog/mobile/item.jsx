@@ -1,14 +1,14 @@
 import React, { useEffect, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB } from "hooks/db/DBUser";
+import { getUserDB } from "utils/db/DBUser";
 import { liveQuery } from 'dexie';
 import { DialogItem } from 'components/chat';
-import { useWinSize, useMsgState } from 'hooks';
+import { useWinSize, currentChat } from 'utils';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { useImgApiBase } from "hooks/hook"
+import { useImgApiBase } from "utils/hooks"
 import { ScrollArea, Box } from '@mantine/core';
-import { useAppBar } from "components";
+import { currentAppBar } from "components";
 
 
 export const Item = () => {
@@ -36,8 +36,8 @@ export const Item = () => {
         return () => sub.unsubscribe()
     }, [db])
 
-    const setLeftPath = useAppBar((state) => state.setLeftPath);
-    const setTitle = useAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setTitle = currentAppBar((state) => state.setTitle);
     
     useEffect(() => {
         setLeftPath(null)
@@ -45,7 +45,7 @@ export const Item = () => {
     }, [])
 
     // 打开聊天
-    const setCurrent = useMsgState((s) => s.setCurrent);
+    const setCurrent = currentChat((s) => s.setCurrent);
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
 

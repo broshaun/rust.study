@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { useMutation } from '@tanstack/react-query'
 import { Modal } from "components";
-import { useHttpClient2 } from 'hooks/hook';
+import { useHttpClient2 } from 'utils/hooks';
 import { TextField, Divider } from 'components/flutter';
 import { Button, Stack, Center, Title } from "@mantine/core";
 
