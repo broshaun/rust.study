@@ -12,7 +12,7 @@ export const getUserDB = (userId) => {
     return dbCache.get(userId);
   }
   const db = new Dexie(`chatDB_${userId}`);
-  db.version(11).stores({
+  db.version(12).stores({
     message: '++id, uid, timestamp',
     friends: 'id, uid, timestamp, dialog, signal, ask_state',
   });

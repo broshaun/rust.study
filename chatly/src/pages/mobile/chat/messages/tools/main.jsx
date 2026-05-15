@@ -1,11 +1,10 @@
 import { ActionIcon } from "@mantine/core";
-import { IconChevronLeft, IconPhone, IconPhoneCheck, IconPhoneOutgoing, IconFlask, IconPhoneIncoming } from '@tabler/icons-react';
+import { IconChevronLeft, IconPhone, IconPhoneCheck, IconPhoneOutgoing, IconFlask, IconPhoneIncoming, IconPhoto } from '@tabler/icons-react';
 import { MsgItem, ChatMsg } from 'components/chat';
 import { useNavigate, Outlet, useOutlet, useOutletContext } from 'react-router';
-import { ImageUpload } from "components/flutter";
-import { IconPhoto } from '@tabler/icons-react';
 import React, { useEffect } from "react"
 import { useWinSize, currentAppBar } from "utils";
+import { ImageUpload } from '../ui/ImageUpload'
 
 
 
@@ -21,12 +20,21 @@ export function Tools() {
 
     return <div>
 
-
-        {/* <ImageUpload ref={uploadRef} size={32} >
-            <ActionIcon variant="subtle" color="gray" title="发送图片">
-                <IconPhoto />
-            </ActionIcon>
+        {/* 
+        <ImageUpload size={32}
+        // ref={uploadRef}
+        >
         </ImageUpload> */}
+
+        <ActionIcon
+            variant="subtle"
+            color="gray"
+            title="发送图片"
+            onClick={() => { navigate('/mobile/chat/message/caller') }}
+        >
+            <IconPhoto />
+        </ActionIcon>
+
 
 
         {/* <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/phone') }}>
@@ -45,6 +53,6 @@ export function Tools() {
         <ActionIcon variant="subtle" color="gray" title="接收通话" onClick={() => { navigate('/mobile/chat/message/receiver') }}>
             <IconPhoneIncoming />
         </ActionIcon>
-    
+
     </div>
 }

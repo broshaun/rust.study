@@ -17,4 +17,3 @@ export { Text } from './base/Text'
 export { IconTabler } from './base/IconTabler'
 export { SafeAvatar } from './base/SafeAvatar'
 export { SafeImage } from "./base/SafeImage"
-export { default as ImageUpload } from "./base/ImageUpload"

@@ -3,7 +3,7 @@ import { Main } from "./main"
 import { Caller } from "./caller";
 import { Receiver } from "./receiver";
 import { Msg } from "./msg";
-import { Tools } from "./tools/main";
+// import { Tools } from "./tools/main";
 import { P2PPcmVoiceTest } from "./ui/P2PPcmVoiceTest"
 
 
@@ -13,17 +13,7 @@ export const RsMsgs = [
         children: [
             {
                 index: true,
-                element: <Navigate to="msg" replace />
-            },
-            {
-                path: "msg",
-                element: <Msg />,
-                children: [
-                    {
-                        path: "tools",
-                        element: <Tools />
-                    },
-                ]
+                element: <Msg />
             },
             {
                 path: "test",

@@ -33,9 +33,9 @@ export const Main = () => {
                         if (code === 200) {
                             db.table('message').put({
                                 uid: uid,
-                                msg: msgText,
+                                content: msgText,
                                 timestamp: getDateTimeStr(),
-                                signal: 'send'
+                                sentByMe: true
                             });
                         }
                     });

@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useOutletContext } from 'react-router';
 import { P2PCallCaller } from "./ui/P2PCallCaller";
-import { currentChat } from 'utils';
+import { currentAppBar, currentChat } from 'utils';
 
 
 
@@ -8,25 +8,27 @@ export function Caller() {
   const navigate = useNavigate();
   const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, db } = useOutletContext();
 
-  const handleStartCall = (ticket) => {
-    console.log('开启通话,ticket:',ticket)
-  }
+  const setLeftPath = currentAppBar((state) => state.setLeftPath);
+  setLeftPath('/mobile/chat/message/')
 
-  const handleStopCall =() =>{
-    console.log("123挂断退出")
-    navigate('/mobile/chat/message/msg/')
-  }
+  const current = currentChat((s) => s.current);
 
-
-  const senddd = async () => {
-        if (sendText) {
-            await fnSendMsg({ uid: current?.uid, msgText: sendText })
-        }
-        setSendText(() => "")
-        return 'ok'
+  const senddd = async (ticket) => {
+    if (ticket) {
+      await fnSendMsg({ uid: current?.uid, msgText: `[phone]${ticket}` })
     }
+  }
 
+  const handleStartCall = (ticket) => {
+    console.log('开启通话,ticket:', ticket)
+    senddd(ticket)
 
+  }
+
+  const handleStopCall = () => {
+    console.log("挂断退出")
+    navigate('/mobile/chat/message/')
+  }
 
   return <div>
     <P2PCallCaller

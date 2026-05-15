@@ -29,9 +29,9 @@ export function ChatGuard() {
           for (const item of data) {
             await db.message.put({
               uid: item.uid,
-              msg: item.msg,
+              content: item.msg,
               timestamp: item.timestamp,
-              signal: 'receive',
+              sentByMe: false,
             })
             await db.friends
               .where('uid')

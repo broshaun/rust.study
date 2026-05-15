@@ -23,7 +23,7 @@ import { usePcmCapture, usePcmPlayback } from "utils";
 
 
 const STATE_UI = {
-  Idle: ["空闲", "blue", "等待发起语音通话"],
+  Idle: ["空闲", "blue", "点击收听语音通话"],
   Calling: ["呼叫中", "yellow", ""],
   Connected: ["已连通", "green", ""],
   Disconnected: ["已断开", "red", "当前连接已断开"],

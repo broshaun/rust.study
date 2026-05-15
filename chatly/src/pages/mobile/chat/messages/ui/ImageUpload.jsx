@@ -6,7 +6,7 @@ import { Box } from "@mantine/core";
  * 1. 支持 Ref 获取 file: uploadRef.current.file
  * 2. 支持 onDirtyChange 回调实时感知是否有文件
  */
-const ImageUpload = memo(({
+export const ImageUpload = memo(({
   maxSize = 5,
   acceptTypes = ["image/jpeg", "image/png", "image/webp"],
   children,
