@@ -64,7 +64,7 @@ export function Detail() {
     const displayName = friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
     db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
     
-    navigate('/chat/message/', {
+    navigate('/mobile/chat/message/', {
       state: {
         uid: friend.uid,
         avatar_url: friend.avatar_url,

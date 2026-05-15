@@ -1,12 +1,11 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { InputText2, } from 'components';
-import { useHttpClient, useImgApiBase } from 'utils';
+import { useHttpClient, useImgApiBase, currentAppBar } from 'utils';
 import { UserInfoCard } from 'components/chat';
 import { Divider, SafeAvatar } from 'components/flutter';
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useDebouncedValue } from '@mantine/hooks';
 import { ScrollArea, Stack } from "@mantine/core";
-import { currentAppBar } from "components";
 
 
 export const Find = () => {
@@ -20,7 +19,7 @@ export const Find = () => {
     const setTitle = currentAppBar((state) => state.setTitle);
     
     useEffect(() => {
-        setLeftPath('/chat/mobile/friend/')
+        setLeftPath('/mobile/chat/friend/')
         setTitle('好友查找');
     }, [])
 

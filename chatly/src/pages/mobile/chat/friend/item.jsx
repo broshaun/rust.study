@@ -32,7 +32,7 @@ export const Item = () => {
     };
 
     const openMsgWindow = useCallback((select) => {
-        navigate('/chat/mobile/detail/', { state: { select } });
+        navigate('/mobile/chat/friend/detail/', { state: { select } });
     }, [navigate]);
 
     const { mutateAsync: runGetFriend } = useMutation(
@@ -125,7 +125,7 @@ export const Item = () => {
     return <Suspense fallback={<div>加载中...</div>}>
         <Group justify="flex-end" p={3}>
             <Indicator color="red" dot size={5} offset={5} disabled={!afriend}>
-                <ActionIcon variant="transparent" c="gray.6" color="gray" onClick={() => { navigate('/chat/mobile/find/') }}>
+                <ActionIcon variant="transparent" c="gray.6" color="gray" onClick={() => { navigate('/mobile/chat/friend/find/') }}>
                     <IconUserSearch size={20} />
                 </ActionIcon>
             </Indicator>
