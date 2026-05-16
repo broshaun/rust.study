@@ -1,6 +1,4 @@
 import { createHashRouter, RouterProvider, Navigate } from "react-router";
-import Home from "pages/home";
-
 import { RsMobile } from "pages/mobile";
 import { useWinSize, useToken } from 'utils';
 
@@ -14,10 +12,6 @@ const App = () => {
       index: true,
       // element: remainSeconds > 0 ? <Navigate to="/chat" replace /> : <Navigate to="/user/login" replace />,
       element: <Navigate to="/mobile/auth" replace />,
-    },
-    {
-      path: "apps",
-      element: <Home />,
     },
     ...RsMobile
 

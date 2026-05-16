@@ -5,14 +5,12 @@ export { YBox } from './layout/YBox'
 export { SizedBox } from './layout/SizedBox'
 export { Divider } from './layout/Divider'
 
-export {Right,Left }from './layout/align'
-
+export {Right,Left }from './layout/Align'
 
 // base
-export { Button } from './base/Button';
 export { TextField } from './base/TextField';
 export { IconSvg as Icon } from './base/IconSvg'
-export { Text } from './base/Text'
+
 
 export { IconTabler } from './base/IconTabler'
 export { SafeAvatar } from './base/SafeAvatar'

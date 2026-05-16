@@ -5,7 +5,7 @@ import { useLocalStorage } from '@mantine/hooks';
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { MsgItem, ChatMsg } from 'components/chat';
 import { Outlet, useNavigate, useOutletContext } from 'react-router';
-import { ChatBox } from "./ui/ChatBox";
+import { ChatBox } from "./UI/ChatBox";
 
 import { ActionIcon, ScrollArea, Box, Textarea, Button } from "@mantine/core";
 import { IconChevronLeft, IconPhone, IconPhoneCheck, IconPhoneOutgoing, IconFlask, IconPhoneIncoming, IconPhoto } from '@tabler/icons-react';

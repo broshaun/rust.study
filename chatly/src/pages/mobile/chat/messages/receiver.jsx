@@ -1,4 +1,4 @@
-import { P2PCallReceiver } from "./ui/P2PCallReceiver";
+import { P2PCallReceiver } from "./UI/P2PCallReceiver";
 import { Outlet, useNavigate, useOutletContext, useLocation } from 'react-router';
 import { currentChat } from 'utils';
 

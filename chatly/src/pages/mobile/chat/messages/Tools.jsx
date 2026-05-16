@@ -4,7 +4,7 @@ import { MsgItem, ChatMsg } from 'components/chat';
 import { useNavigate, Outlet, useOutlet, useOutletContext } from 'react-router';
 import React, { useEffect } from "react"
 import { useWinSize, currentAppBar } from "utils";
-import { ImageUpload } from '../ui/ImageUpload'
+import { ImageUpload } from './UI/ImageUpload'
 
 
 
