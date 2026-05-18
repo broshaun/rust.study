@@ -1,61 +1,84 @@
-import { ActionIcon } from "@mantine/core";
-import { IconChevronLeft, IconPhone, IconPhoneCheck, IconPhotoUp, IconPhoneOutgoing, IconFlask, IconPhoneIncoming, IconPhoto } from '@tabler/icons-react';
-import { MsgItem, ChatMsg } from 'components/chat';
-import { useNavigate, Outlet, useOutlet, useOutletContext } from 'react-router';
-import React, { useEffect } from "react"
-import { useWinSize, currentAppBar } from "utils";
-import { ImageUpload } from './UI/ImageUpload2'
+import React, { useEffect } from "react";
+import { useNavigate } from 'react-router';
+import { Group, ActionIcon, Text, UnstyledButton, Box } from "@mantine/core";
+import {
+    IconPhoto,
+    IconFlask,
+    IconPhotoUp,
+    IconPhoneOutgoing
+} from '@tabler/icons-react';
+import { currentAppBar } from "utils";
 
-
+// 静态配置移出组件，避免每次 Render 重复创建，提升性能
+const TOOLS_CONFIG = [
+    // { 
+    //     id: 'photo', 
+    //     icon: IconPhoto, 
+    //     label: '发送图片', 
+    //     path: '/mobile/chat/message/caller',
+    //     color: 'blue' 
+    // },
+    // { 
+    //     id: 'test', 
+    //     icon: IconFlask, 
+    //     label: '测试', 
+    //     path: '/mobile/chat/message/test',
+    //     color: 'grape' 
+    // },
+    { 
+        id: 'imgUp', 
+        icon: IconPhotoUp, 
+        label: '发送图片', 
+        path: '/mobile/chat/message/imgUp',
+        color: 'teal' 
+    },
+    { 
+        id: 'call', 
+        icon: IconPhoneOutgoing, 
+        label: '发起通话', 
+        path: '/mobile/chat/message/caller',
+        color: 'green' 
+    },
+];
 
 export function Tools() {
     const navigate = useNavigate();
-    // const { setSendText, uploadRef } = useOutletContext();
-
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
+
     useEffect(() => {
-        setLeftPath('/mobile/chat/message/')
-    }, [])
+        setLeftPath('/mobile/chat/message/');
+    }, [setLeftPath]);
 
-
-    return <div>
-
-        {/* 
-        <ImageUpload size={32}
-        // ref={uploadRef}
-        >
-        </ImageUpload> */}
-
-        <ActionIcon
-            variant="subtle"
-            color="gray"
-            title="发送图片"
-            onClick={() => { navigate('/mobile/chat/message/caller') }}
-        >
-            <IconPhoto />
-        </ActionIcon>
-
-
-
-
-
-        <ActionIcon variant="subtle" color="gray" title="测试" onClick={() => { navigate('/mobile/chat/message/test') }}>
-            <IconFlask />
-        </ActionIcon>
-
-
-        <ActionIcon variant="subtle" color="gray" title="上传图片" onClick={() => { navigate('/mobile/chat/message/imgUp') }}>
-            <IconPhotoUp />
-        </ActionIcon>
-
-
-        <ActionIcon variant="subtle" color="gray" title="发起通话" onClick={() => { navigate('/mobile/chat/message/caller') }}>
-            <IconPhoneOutgoing />
-        </ActionIcon>
-
-        {/* <ActionIcon variant="subtle" color="gray" title="接收通话" onClick={() => { navigate('/mobile/chat/message/receiver') }}>
-            <IconPhoneIncoming />
-        </ActionIcon> */}
-
-    </div>
+    return (
+        <Box p="xs" style={{ overflowX: 'auto' }}>
+            <Group justify="space-around" align="flex-start" wrap="nowrap" gap="sm">
+                {TOOLS_CONFIG.map(({ id, icon: Icon, label, path, color }) => (
+                    <UnstyledButton
+                        key={id}
+                        onClick={() => navigate(path)}
+                        style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            gap: '6px' // 文本与图标的间距
+                        }}
+                    >
+                        <ActionIcon
+                            component="div" // 避免 button 嵌套规范警告
+                            variant="light"
+                            color={color}
+                            size="xl"
+                            radius="md"
+                        >
+                            <Icon size={24} stroke={1.5} />
+                        </ActionIcon>
+                        
+                        <Text size="xs" fw={500} c="dimmed">
+                            {label}
+                        </Text>
+                    </UnstyledButton>
+                ))}
+            </Group>
+        </Box>
+    );
 }

@@ -4,7 +4,7 @@ import { Caller } from "./caller";
 import { Receiver } from "./receiver";
 import { Msg } from "./msg";
 import { P2PPcmVoiceTest } from "./UI/P2PPcmVoiceTest"
-import { ImagSend } from "./imgesend";
+import { ImagSend } from "./imgSend";
 
 
 export const RsMsgs = [

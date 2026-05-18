@@ -4,20 +4,36 @@ import { IconZoomIn, IconMaximize, IconRotateClockwise, IconDownload, IconX } fr
 import { useImage } from 'utils';
 
 export const SafeImage = memo(({
-  url, previewUrl, width, height, radius = 'sm', fit = 'fill',
-  autoUpdate = false, version, allowPreview = true, alt = 'Image', onDownload,
+  url, 
+  previewUrl, 
+  width, 
+  height, 
+  radius = 'sm', 
+  fit = 'fill',
+  autoUpdate = false, 
+  version, 
+  allowPreview = true, 
+  alt = 'Image', 
+  onDownload,
 }) => {
   const [opened, setOpened] = useState(false);
-  const [view, setView] = useState({ s: 1, x: 0, y: 0, r: 0 }); // s:缩放 x,y:位移 r:旋转
+  const [view, setView] = useState({ s: 1, x: 0, y: 0, r: 0 }); 
   const [isDrag, setIsDrag] = useState(false);
-  const [ratio, setRatio] = useState(null); // 图片原始宽高比
+  const [ratio, setRatio] = useState(null); 
 
   const dragStart = useRef({ x: 0, y: 0 });
   const lastVer = useRef(version);
   const lkdUrl = useRef(url || '');
+  const prevUrl = useRef(url); // 🌟 新增：追踪 URL 变化
 
-  // 版本锁定逻辑
-  if (!autoUpdate && lastVer.current !== version) {
+  // 🌟 核心修复：虚拟列表复用时的状态重置
+  if (url !== prevUrl.current) {
+    prevUrl.current = url;
+    lkdUrl.current = url || '';
+    setRatio(null);     // 强制重置比例，触发新骨架屏
+    setOpened(false);   // 防止滚动时别的图片自动弹窗
+  } else if (!autoUpdate && version !== undefined && lastVer.current !== version) {
+    // 版本锁定逻辑（仅在 URL 没变，但要求强制刷新版本时触发）
     lkdUrl.current = url || '';
     lastVer.current = version;
   }
@@ -27,12 +43,14 @@ export const SafeImage = memo(({
   const { src: pSrc, success: pSucc } = useImage(opened ? (previewUrl || finalUrl) : '');
 
   // 关闭预览时重置视图
-  useEffect(() => { if (!opened) setView({ s: 1, x: 0, y: 0, r: 0 }); }, [opened]);
+  useEffect(() => { 
+    if (!opened) setView({ s: 1, x: 0, y: 0, r: 0 }); 
+  }, [opened]);
 
-  // 核心逻辑：智能推算尺寸
+  // 尺寸推算
   const { w, h } = useMemo(() => {
     if (width !== undefined && height !== undefined) return { w: width, h: height };
-    const getNum = (val) => parseFloat(val) || 0; 
+    const getNum = (val) => parseFloat(val) || 0;
     if (width !== undefined) return { w: width, h: ratio ? getNum(width) / ratio : 50 };
     if (height !== undefined) return { w: ratio ? getNum(height) * ratio : 50, h: height };
     return { w: '100%', h: 'auto' };
@@ -42,20 +60,25 @@ export const SafeImage = memo(({
     <>
       <Box
         component={allowPreview ? UnstyledButton : 'div'}
-        onClick={() => allowPreview && setOpened(true)}
+        onClick={(e) => {
+          if (!allowPreview) return;
+          e.stopPropagation(); // 🌟 核心修复：阻止冒泡，防止触发聊天列表项的点击事件
+          e.preventDefault();
+          setOpened(true);
+        }}
         style={{
           width: w, height: h, position: 'relative', overflow: 'hidden', lineHeight: 0,
           borderRadius: typeof radius === 'number' ? radius : `var(--mantine-radius-${radius})`,
           backgroundColor: 'transparent', display: 'inline-block', verticalAlign: 'middle',
-          cursor: allowPreview ? 'zoom-in' : 'default'
+          cursor: allowPreview ? 'zoom-in' : 'default',
+          flexShrink: 0 // 防止在 Flex 布局中被异常挤压
         }}
       >
-        {/* 加载中或还未获取到比例时，展示骨架屏 */}
         {(loading || !ratio) && <Skeleton animate style={{ position: 'absolute', inset: 0, zIndex: 1 }} />}
-        
+
         {success && (
-          <Image 
-            src={src} 
+          <Image
+            src={src}
             alt={alt}
             onLoad={(e) => {
               const { naturalWidth, naturalHeight } = e.currentTarget;
@@ -71,9 +94,16 @@ export const SafeImage = memo(({
 
       {allowPreview && (
         <Modal
-          opened={opened} onClose={() => setOpened(false)} size="100%" padding={0} centered withCloseButton={false}
+          opened={opened} 
+          onClose={() => setOpened(false)} 
+          size="100%" padding={0} centered withCloseButton={false}
           overlayProps={{ blur: 15, opacity: 0.9, color: '#000' }}
-          styles={{ content: { background: 'transparent', height: '100vh', boxShadow: 'none' }, body: { height: '100%', display: 'flex', flexDirection: 'column', padding: 0 } }}
+          styles={{ 
+            content: { background: 'transparent', height: '100vh', boxShadow: 'none' }, 
+            body: { height: '100%', display: 'flex', flexDirection: 'column', padding: 0 } 
+          }}
+          // 🌟 防止 Modal 事件向上传递
+          onClick={(e) => e.stopPropagation()} 
         >
           <Box
             onWheel={e => setView(v => ({ ...v, s: Math.min(Math.max(v.s + (e.deltaY > 0 ? -0.2 : 0.2), 0.8), 5) }))}
@@ -94,7 +124,6 @@ export const SafeImage = memo(({
             )}
           </Box>
 
-          {/* 底部功能栏 */}
           <Box py="md" style={{ flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
             <Group gap={8} px={12} py={4} wrap="nowrap" style={{ backgroundColor: 'rgba(40,40,40,0.8)', borderRadius: 8, backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <ActionIcon variant="subtle" color="gray.2" size="md" onClick={() => setView(v => ({ ...v, s: Math.min(v.s + 0.5, 5) }))}><IconZoomIn size={18} /></ActionIcon>

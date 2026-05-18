@@ -13,7 +13,6 @@ import {
 import { IconSend, IconPlus } from '@tabler/icons-react';
 import { MsgItem } from './MsgItem';
 
-
 // 定义 ChatBox.Tools 子组件
 const ChatBoxTools = ({ children }) => {
   return (
@@ -33,8 +32,9 @@ export function ChatBox({
   height = 600,
   children,
 }) {
+
   const [input, setInput] = useState('');
-  const [showTools, setShowTools] = useState(false); // 控制工具栏展开状态
+  const [showTools, setShowTools] = useState(false);
   const viewportRef = useRef(null);
 
   const rowVirtualizer = useVirtualizer({
@@ -42,6 +42,9 @@ export function ChatBox({
     getScrollElement: () => viewportRef.current,
     estimateSize: () => 70,
     overscan: 10,
+    // 🌟 核心修改：告诉虚拟列表使用消息的 id 作为唯一标识
+    // fallback 为 index 防止因为意外情况（如某条消息缺失 id）导致的报错
+    getItemKey: (index) => messages[index]?.id ?? index,
   });
 
   const handleSend = useCallback(() => {
@@ -110,7 +113,7 @@ export function ChatBox({
 
             return (
               <div
-                key={virtualRow.key}
+                key={virtualRow.key} 
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
                 style={{
@@ -123,13 +126,8 @@ export function ChatBox({
                 }}
               >
                 <MsgItem
-                  timestamp={msg.timestamp}
-                  position={msg.sentByMe ? 'right' : 'left'}
-                  msgType={msg.type}
-                  msgText={msg.content}
+                  msg = {msg}
                   avatarSrc={msg.sentByMe ? senderAvatarSrc : receiverAvatarSrc}
-                  showAvatar={showAvatar}
-                  showTime={showAvatar}
                 />
               </div>
             );
@@ -171,8 +169,6 @@ export function ChatBox({
             <IconSend size={18} />
           </ActionIcon>
         </Group>
-
-
 
         {/* 动态渲染工具栏，带有平滑折叠动画 */}
         {toolsComponent && (

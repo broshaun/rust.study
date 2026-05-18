@@ -1,196 +1,151 @@
 import React, {
-  useState,
   useRef,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useState,
   memo,
 } from 'react';
-
-import {
-  Group,
-  ActionIcon,
-  Image,
-  Paper,
-  Text,
-  Tooltip,
-} from '@mantine/core';
-
-import {
-  IconPhotoPlus,
-  IconCheck,
-  IconX,
-} from '@tabler/icons-react';
+import { Stack, Group, ActionIcon, Image, Paper, Text, Tooltip } from '@mantine/core';
+import { IconPhotoPlus, IconX, IconSend } from '@tabler/icons-react';
 
 export const ImgUp = memo(({
   ref,
-  onConfirm,
+  onClick,
+  onClear,
   maxSize = 5,
+  maxCount = 9,
+  maxWidth = 240,
   acceptTypes = ['image/jpeg', 'image/png'],
-  previewWidth = 48,
-  onError,
+  height = 48,
+  multiple = true,
 }) => {
   const inputRef = useRef(null);
-
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
   const [errorText, setErrorText] = useState('');
-
-  useImperativeHandle(ref, () => ({
-    file,
-    clear,
-  }));
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
+  const [isPending, setIsPending] = useState(false);
+  const [previews, setPreviews] = useState([]); 
 
   const clear = useCallback(() => {
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
-
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    setFile(null);
-    setPreviewUrl('');
+    if (inputRef.current) inputRef.current.value = '';
+    setPreviews(prev => {
+      prev.forEach(p => URL.revokeObjectURL(p.url));
+      return [];
+    });
     setErrorText('');
-  }, [previewUrl]);
+    onClear?.();
+  }, [onClear]);
 
-  const validate = useCallback(
-    (f) => {
-      if (!acceptTypes.includes(f.type)) {
-        const msg = '仅支持 JPG / PNG';
-
-        setErrorText(msg);
-        onError?.({
-          type: 'format',
-          message: msg,
-        });
-
-        return false;
-      }
-
-      if (f.size > maxSize * 1024 * 1024) {
-        const msg = `图片不能超过 ${maxSize}MB`;
-
-        setErrorText(msg);
-
-        onError?.({
-          type: 'size',
-          message: msg,
-        });
-
-        return false;
-      }
-
-      return true;
-    },
-    [acceptTypes, maxSize, onError]
-  );
-
-  const openFilePicker = useCallback(() => {
-    clear();
-    inputRef.current?.click();
-  }, [clear]);
-
-  const onChange = useCallback(
-    (e) => {
-      const f = e.target.files?.[0];
-
-      if (!f) return;
-
+  useImperativeHandle(ref, () => ({
+    clear,
+    clearError: () => setErrorText(''),
+    open: () => {
       setErrorText('');
-
-      if (!validate(f)) return;
-
-      const url = URL.createObjectURL(f);
-
-      setFile(f);
-      setPreviewUrl(url);
+      inputRef.current?.click();
     },
-    [validate]
-  );
+  }), [clear]);
 
-  const confirm = useCallback(async () => {
-    if (!file) return;
+  useEffect(() => {
+    return () => previews.forEach(p => URL.revokeObjectURL(p.url));
+  }, [previews]);
 
-    try {
-      await onConfirm?.(file);
-      clear();
-    } catch (e) {
-      setErrorText('发送失败');
+  const onChange = useCallback((e) => {
+    const files = [...(e.target.files || [])];
+    if (!files.length) return;
+    if (inputRef.current) inputRef.current.value = '';
+
+    let err = '';
+    const newPreviews = files.filter(f => {
+      if (!acceptTypes.includes(f.type)) { err = `格式不支持: ${f.name}`; return false; }
+      if (f.size > maxSize * 1024 * 1024) { err = `超出大小: ${f.name}`; return false; }
+      return true;
+    }).map(file => ({ url: URL.createObjectURL(file), file }));
+
+    if (err) setErrorText(err); else setErrorText('');
+
+    if (newPreviews.length > 0) {
+      setPreviews(prev => {
+        const total = [...prev, ...newPreviews];
+        if (total.length > maxCount) {
+          setErrorText(`最多只能选择 ${maxCount} 张图片`);
+          total.slice(maxCount).forEach(p => URL.revokeObjectURL(p.url));
+          return total.slice(0, maxCount);
+        }
+        return total;
+      });
     }
-  }, [file, onConfirm, clear]);
+  }, [acceptTypes, maxSize, maxCount]);
+
+  const removeSingleImage = useCallback((url) => {
+    URL.revokeObjectURL(url);
+    setPreviews(prev => {
+      const next = prev.filter(p => p.url !== url);
+      if (!next.length) onClear?.();
+      return next;
+    });
+  }, [onClear]);
+
+  const handleConfirm = useCallback(async () => {
+    if (!previews.length) return;
+    setIsPending(true);
+    try {
+      await onClick?.(previews.map(p => p.file));
+      clear(); 
+    } catch {
+      setErrorText('操作失败，请重试');
+    } finally {
+      setIsPending(false);
+    }
+  }, [previews, onClick, clear]);
+
+  const hasImgs = previews.length > 0;
+  const canAdd = previews.length < maxCount;
+  const uiSize = height + 4;
 
   return (
-    <Group gap="xs" align="center">
+    <Stack gap="xs" align="flex-start">
       <input
         ref={inputRef}
         type="file"
         hidden
+        multiple={multiple}
         accept={acceptTypes.join(',')}
         onChange={onChange}
       />
 
-      {!previewUrl ? (
-        <Tooltip label="发送图片">
-          <ActionIcon
-            variant="light"
-            radius="xl"
-            size="lg"
-            onClick={openFilePicker}
-          >
-            <IconPhotoPlus size={20} />
-          </ActionIcon>
-        </Tooltip>
-      ) : (
-        <>
-          <Paper
-            radius="md"
-            withBorder
-            p={4}
-          >
-            <Image
-              src={previewUrl}
-              w={previewWidth}
-              h={previewWidth}
-              radius="md"
-              fit="cover"
-            />
+      {previews.map(p => (
+        <Group key={p.url} gap="sm" wrap="nowrap">
+          <Paper radius="sm" withBorder p={2} display="flex">
+            <Image src={p.url} h={height} w="auto" maw={maxWidth} fit="contain" radius="sm" />
           </Paper>
+          <Tooltip label="移除图片" position="right">
+            <ActionIcon color="red" variant="light" radius="sm" size={uiSize} disabled={isPending} onClick={() => removeSingleImage(p.url)}>
+              <IconX size={height * 0.45} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      ))}
 
-          <ActionIcon
-            color="green"
-            variant="filled"
-            radius="xl"
-            onClick={confirm}
-          >
-            <IconCheck size={18} />
-          </ActionIcon>
+      {errorText && <Text size="xs" c="red" fw={500}>{errorText}</Text>}
 
-          <ActionIcon
-            color="red"
-            variant="light"
-            radius="xl"
-            onClick={clear}
-          >
-            <IconX size={18} />
-          </ActionIcon>
-        </>
-      )}
+      <Group gap="sm">
+        {canAdd && (
+          <Tooltip label={hasImgs ? "继续添加图片" : "选择图片"} position="bottom">
+            <ActionIcon variant="light" radius="sm" size={uiSize} disabled={isPending} onClick={() => inputRef.current?.click()}>
+              <IconPhotoPlus size={height * 0.55} />
+            </ActionIcon>
+          </Tooltip>
+        )}
 
-      {errorText && (
-        <Text size="xs" c="red">
-          {errorText}
-        </Text>
-      )}
-    </Group>
+        {hasImgs && (
+          <Tooltip label="确认发送" position="bottom">
+            <ActionIcon variant="filled" radius="sm" size={uiSize} loading={isPending} onClick={handleConfirm}>
+              <IconSend size={height * 0.5} stroke={1.5} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </Group>
+    </Stack>
   );
 });
+
+ImgUp.displayName = 'ImgUp';
