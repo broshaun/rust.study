@@ -14,21 +14,6 @@ import { IconSend, IconPlus } from '@tabler/icons-react';
 import { MsgItem } from './MsgItem';
 
 
-// export const parseMsgContent = (msg) => {
-//     if (typeof msg !== 'string') {
-//         return { type: 'text', content: '' };
-//     }
-//     if (msg.startsWith('[image]')) {
-//         return { type: 'image', content: msg.slice(7), };
-//     }
-//     if (msg.startsWith('[phone]')) {
-//         const raw = msg.slice(7).trim();
-//         return { type: 'phone', content: msg, json: JSON.parse(raw) };
-//     }
-//     return { type: 'text', content: msg, };
-// };
-
-
 // 定义 ChatBox.Tools 子组件
 const ChatBoxTools = ({ children }) => {
   return (
@@ -140,6 +125,7 @@ export function ChatBox({
                 <MsgItem
                   timestamp={msg.timestamp}
                   position={msg.sentByMe ? 'right' : 'left'}
+                  msgType={msg.type}
                   msgText={msg.content}
                   avatarSrc={msg.sentByMe ? senderAvatarSrc : receiverAvatarSrc}
                   showAvatar={showAvatar}

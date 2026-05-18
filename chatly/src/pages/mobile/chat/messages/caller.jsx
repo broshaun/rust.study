@@ -6,22 +6,22 @@ import { currentAppBar, currentChat } from 'utils';
 
 export function Caller() {
   const navigate = useNavigate();
-  const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, db } = useOutletContext();
+  const { fnSendMsg, joinPathImg30, joinPathAvatar, db } = useOutletContext();
 
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   setLeftPath('/mobile/chat/message/')
 
   const current = currentChat((s) => s.current);
 
-  const senddd = async (ticket) => {
+  const msgPhoneSend = async (ticket) => {
     if (ticket) {
-      await fnSendMsg({ uid: current?.uid, msgText: `[phone]${ticket}` })
+      await fnSendMsg({ uid: current?.uid, msgType: 'phone', msgText: ticket })
     }
   }
 
   const handleStartCall = (ticket) => {
     console.log('开启通话,ticket:', ticket)
-    senddd(ticket)
+    msgPhoneSend(ticket)
 
   }
 

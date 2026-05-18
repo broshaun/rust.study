@@ -1,98 +1,196 @@
-import React, { useCallback, useRef, useState, useEffect, memo, useImperativeHandle } from "react";
-import { Box } from "@mantine/core";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  memo,
+} from 'react';
 
-/**
- * ImageUpload - React 19 
- * 1. 支持 Ref 获取 file: uploadRef.current.file
- * 2. 支持 onDirtyChange 回调实时感知是否有文件
- */
-export const ImageUpload = memo(({
+import {
+  Group,
+  ActionIcon,
+  Image,
+  Paper,
+  Text,
+  Tooltip,
+} from '@mantine/core';
+
+import {
+  IconPhotoPlus,
+  IconCheck,
+  IconX,
+} from '@tabler/icons-react';
+
+export const ImgUp = memo(({
+  ref,
+  onConfirm,
   maxSize = 5,
-  acceptTypes = ["image/jpeg", "image/png", "image/webp"],
-  children,
-  size = 32,
+  acceptTypes = ['image/jpeg', 'image/png'],
+  previewWidth = 48,
   onError,
-  onDirtyChange, // 🌟 新增：(isDirty: boolean) => void
-  ref, 
 }) => {
   const inputRef = useRef(null);
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
 
-  // 暴露 API
+  const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [errorText, setErrorText] = useState('');
+
   useImperativeHandle(ref, () => ({
-    file, 
-    clear: () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl("");
-      setFile(null);
-      onDirtyChange?.(false); // 🌟 清除时通知父组件
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }), [file, previewUrl, onDirtyChange]);
+    file,
+    clear,
+  }));
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   }, [previewUrl]);
 
-  const handleFile = useCallback((e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
+  const clear = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
 
-    if (!acceptTypes.includes(f.type)) {
-      onError?.({ type: "format", message: "格式不支持" });
-    } else if (f.size > maxSize * 1024 * 1024) {
-      onError?.({ type: "size", message: `不能超过${maxSize}MB` });
-    } else {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setFile(null);
+    setPreviewUrl('');
+    setErrorText('');
+  }, [previewUrl]);
+
+  const validate = useCallback(
+    (f) => {
+      if (!acceptTypes.includes(f.type)) {
+        const msg = '仅支持 JPG / PNG';
+
+        setErrorText(msg);
+        onError?.({
+          type: 'format',
+          message: msg,
+        });
+
+        return false;
+      }
+
+      if (f.size > maxSize * 1024 * 1024) {
+        const msg = `图片不能超过 ${maxSize}MB`;
+
+        setErrorText(msg);
+
+        onError?.({
+          type: 'size',
+          message: msg,
+        });
+
+        return false;
+      }
+
+      return true;
+    },
+    [acceptTypes, maxSize, onError]
+  );
+
+  const openFilePicker = useCallback(() => {
+    clear();
+    inputRef.current?.click();
+  }, [clear]);
+
+  const onChange = useCallback(
+    (e) => {
+      const f = e.target.files?.[0];
+
+      if (!f) return;
+
+      setErrorText('');
+
+      if (!validate(f)) return;
+
       const url = URL.createObjectURL(f);
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+
       setFile(f);
       setPreviewUrl(url);
-      onDirtyChange?.(true); // 🌟 选图成功后通知父组件
+    },
+    [validate]
+  );
+
+  const confirm = useCallback(async () => {
+    if (!file) return;
+
+    try {
+      await onConfirm?.(file);
+      clear();
+    } catch (e) {
+      setErrorText('发送失败');
     }
-    e.target.value = "";
-  }, [acceptTypes, maxSize, onError, previewUrl, onDirtyChange]);
+  }, [file, onConfirm, clear]);
 
   return (
-    <Box
-      component="span"
-      onClick={() => inputRef.current?.click()}
-      style={{
-        display: "inline-flex",
-        cursor: "pointer",
-        width: size,
-        height: size,
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        borderRadius: "4px",
-        border: previewUrl ? "1px solid var(--mantine-color-default-border)" : "none",
-        backgroundColor: "var(--mantine-color-gray-0)",
-      }}
-    >
+    <Group gap="xs" align="center">
       <input
         ref={inputRef}
         type="file"
-        accept={acceptTypes.join(",")}
-        onChange={handleFile}
-        style={{ display: "none" }}
+        hidden
+        accept={acceptTypes.join(',')}
+        onChange={onChange}
       />
 
-      {previewUrl ? (
-        <img
-          src={previewUrl}
-          alt="preview"
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
+      {!previewUrl ? (
+        <Tooltip label="发送图片">
+          <ActionIcon
+            variant="light"
+            radius="xl"
+            size="lg"
+            onClick={openFilePicker}
+          >
+            <IconPhotoPlus size={20} />
+          </ActionIcon>
+        </Tooltip>
       ) : (
-        children
+        <>
+          <Paper
+            radius="md"
+            withBorder
+            p={4}
+          >
+            <Image
+              src={previewUrl}
+              w={previewWidth}
+              h={previewWidth}
+              radius="md"
+              fit="cover"
+            />
+          </Paper>
+
+          <ActionIcon
+            color="green"
+            variant="filled"
+            radius="xl"
+            onClick={confirm}
+          >
+            <IconCheck size={18} />
+          </ActionIcon>
+
+          <ActionIcon
+            color="red"
+            variant="light"
+            radius="xl"
+            onClick={clear}
+          >
+            <IconX size={18} />
+          </ActionIcon>
+        </>
       )}
-    </Box>
+
+      {errorText && (
+        <Text size="xs" c="red">
+          {errorText}
+        </Text>
+      )}
+    </Group>
   );
 });
-
-ImageUpload.displayName = "ImageUpload";
-
-export default ImageUpload;

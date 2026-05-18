@@ -1,14 +1,25 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { useHttpClient, useImgApiBase } from 'utils';
-import { useDateTime,getUserDB } from 'utils';
+import { useHttpClient, useImgApiBase, currentAppBar, currentChat } from 'utils';
+import { useDateTime, getUserDB } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
+import { useEffect } from "react"
 
 
 
 export const Main = () => {
-    const { joinPath: joinPathImg30 } = useImgApiBase('/img30/')
-    const { joinPath: joinPathAvatar } = useImgApiBase('/avatar/')
+
+
+    const setTitle = currentAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const current = currentChat((s) => s.current);
+    useEffect(() => {
+        setTitle(current?.displayName)
+        setLeftPath('/mobile/chat/message/')
+    }, [current])
+
+
+    const { joinPath: joinPathAvatar } = useImgApiBase('/files/avatar/')
 
     /** 账号对应信息
      * 个人数据库
@@ -21,47 +32,41 @@ export const Main = () => {
      * 发送信息
      */
     const { http } = useHttpClient('/rpc/chat/msg/single/');
-    const { mutateAsync: fnSendMsg, isPending: loading } = useMutation(
+    const { mutateAsync: fnSendMsg, isPending } = useMutation(
         {
-            mutationFn: async ({ uid, msgText }) => {
+            mutationFn: async ({ uid, msgType, msgText }) => {
+                console.log('msgType:', msgType);
+                console.log('发送文本...', uid, msgText);
 
-                console.log('发送测试。。。', uid, msgText)
-                http.requestBodyJson('PUT', { user_id: uid, msg: msgText })
+                http.requestBodyJson('PUT', { user_id: uid, msg_type: msgType, msg_text: msgText })
                     .then((results) => {
                         if (!results) return;
                         const { code } = results;
                         if (code === 200) {
                             db.table('message').put({
                                 uid: uid,
+                                type: msgType,
                                 content: msgText,
                                 timestamp: getDateTimeStr(),
                                 sentByMe: true
                             });
                         }
                     });
+
                 return 'ok';
             },
-        }
-    );
+            onError: (error) => {
+                console.error(error);
+            },
 
-    /**
-     * 上传图片服务
-     * 上传缓存30天图片
-     */
-    const { http: httpImg30 } = useHttpClient('/files/img30/');
-    const { mutateAsync: uploadImg30, isPending: img30loading } = useMutation(
-        {
-            mutationFn: async ({ file }) => {
-                const { code, data } = await httpImg30.uploadFiles(file);
-                if (code === 200 && data) {
-                    return data;
-                }
-                return;
+            onSuccess: (data) => {
+                console.log(data);
             },
         }
     );
 
-    return <Outlet context={{ fnSendMsg, loading, uploadImg30, joinPathImg30, joinPathAvatar, db }} />
+
+    return <Outlet context={{ fnSendMsg, joinPathAvatar, db }} />
 
 }
 

@@ -3,8 +3,8 @@ import { Main } from "./main"
 import { Caller } from "./caller";
 import { Receiver } from "./receiver";
 import { Msg } from "./msg";
-// import { Tools } from "./tools/main";
 import { P2PPcmVoiceTest } from "./UI/P2PPcmVoiceTest"
+import { ImagSend } from "./imgesend";
 
 
 export const RsMsgs = [
@@ -26,7 +26,11 @@ export const RsMsgs = [
             {
                 path: "receiver",
                 element: <Receiver />
-            }
+            },
+            {
+                path: "imgUp",
+                element: <ImagSend />
+            },
         ]
     }
 ];

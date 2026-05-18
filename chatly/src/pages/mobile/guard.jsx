@@ -29,7 +29,8 @@ export function ChatGuard() {
           for (const item of data) {
             await db.message.put({
               uid: item.uid,
-              content: item.msg,
+              type: item.msg_type,
+              content: item.msg_text,
               timestamp: item.timestamp,
               sentByMe: false,
             })

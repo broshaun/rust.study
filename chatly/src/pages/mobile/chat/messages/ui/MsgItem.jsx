@@ -1,8 +1,10 @@
 import { Group, Paper, Text, Stack, Box } from '@mantine/core';
-import { SafeAvatar } from 'components/flutter'; // 🌟 引入你的自定义组件
-import { ActionIcon, ScrollArea, Box, Textarea, Button } from "@mantine/core";
-import { IconChevronLeft, IconPhone, IconPhoneCheck, IconPhoneOutgoing, IconFlask, IconPhoneIncoming, IconPhoto } from '@tabler/icons-react';
-import { Outlet, useNavigate, useOutletContext } from 'react-router';
+import { SafeAvatar,SafeImage } from 'components/flutter';
+import { ActionIcon, Box } from "@mantine/core";
+import { IconPhoneIncoming, IconPhoneOff } from '@tabler/icons-react';
+import { useNavigate } from 'react-router';
+import { useState, useEffect } from "react";
+
 // ==========================================
 // 1. 内容渲染子组件
 // ==========================================
@@ -12,30 +14,68 @@ const TextContent = ({ content }) => (
   </Text>
 );
 
-const PhoneContent = ({ content }) => {
+
+const ImageContent = ({ content }) => (
+  <SafeImage
+    url={content}
+    previewUrl={content}
+    height={50}
+    radius={0}
+    allowPreview
+  />
+);
+
+const PhoneContent = ({ content, timestamp }) => {
   const navigate = useNavigate();
+
+  // 解析传入的呼叫时间戳
+  const callTime = new Date(timestamp.replace(' ', 'T')).getTime();
+
+  // 根据当前时间初始化是否过期
+  const [isExpired, setIsExpired] = useState(() => {
+    return Date.now() - callTime > 60000;
+  });
+
+  useEffect(() => {
+    // 如果初始化时就已经过期了，不需要启动定时器
+    if (isExpired) return;
+
+    // 计算距离过期的剩余时间（毫秒）
+    const remainingTime = 60000 - (Date.now() - callTime);
+
+    // 如果剩余时间大于 0，设置一个精准的定时器
+    if (remainingTime > 0) {
+      const timer = setTimeout(() => {
+        setIsExpired(true);
+      }, remainingTime);
+
+      // 组件卸载或参数变化时清除定时器，防止内存泄漏
+      return () => clearTimeout(timer);
+    } else {
+      setIsExpired(true);
+    }
+  }, [callTime, isExpired]);
+
+  const handleConnect = () => {
+    if (isExpired) return;
+    navigate('/mobile/chat/message/receiver', { state: { ticket: content } });
+  };
+
   return (
-    <ActionIcon variant="subtle" color="gray" title="接收通话" onClick={() => { navigate('/mobile/chat/message/receiver', { state: { ticket: content } }) }}>
-      <IconPhoneIncoming />
+    <ActionIcon 
+      variant="subtle" 
+      color={isExpired ? "red" : "gray"} 
+      title={isExpired ? "通话已超时" : "接收通话"} 
+      disabled={isExpired}
+      onClick={handleConnect}
+    >
+      {isExpired ? <IconPhoneOff /> : <IconPhoneIncoming />}
     </ActionIcon>
-  )
+  );
 };
 
 
 
-export const parseMsgContent = (msg) => {
-  if (typeof msg !== 'string') {
-    return { type: 'text', content: '' };
-  }
-  if (msg.startsWith('[image]')) {
-    return { type: 'image', content: msg.slice(7), };
-  }
-  if (msg.startsWith('[phone]')) {
-    const content = msg.slice(7).trim();
-    return { type: 'phone', content: content };
-  }
-  return { type: 'text', content: 'msg', };
-};
 
 
 // ==========================================
@@ -71,23 +111,23 @@ export function MsgItem({
   timestamp,
   position,
   msgText,
+  msgType,
   avatarSrc,
   showAvatar = true,
   showTime = true,
   ref
 }) {
 
-
   const isRight = position === 'right';
-  const { type: msgType, content } = parseMsgContent(msgText);
-
   const renderContent = () => {
     switch (msgType) {
       case 'phone':
-        return <PhoneContent content={content} />
+        return <PhoneContent content={msgText} timestamp={timestamp} />
+      case 'image':
+        return <ImageContent content={msgText}/>
       case 'text':
       default:
-        return <TextContent content={content} />;
+        return <TextContent content={msgText} />;
     }
   };
 

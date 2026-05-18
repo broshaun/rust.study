@@ -2,30 +2,26 @@ import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useWinSize, currentChat, currentAppBar, useImgApiBase, useHttpClient } from 'utils';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { MsgItem, ChatMsg } from 'components/chat';
-import { Outlet, useNavigate, useOutletContext } from 'react-router';
-import { ChatBox } from "./UI/ChatBox";
-
-import { ActionIcon, ScrollArea, Box, Textarea, Button } from "@mantine/core";
-import { IconChevronLeft, IconPhone, IconPhoneCheck, IconPhoneOutgoing, IconFlask, IconPhoneIncoming, IconPhoto } from '@tabler/icons-react';
+import { useNavigate, useOutletContext } from 'react-router';
+import { ChatBox } from "./UI/ChatBox"
+import { Tools } from "./tools";
 
 
 
 export function Msg() {
     const navigate = useNavigate();
     const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
-    const { fnSendMsg, loading, joinPathImg30, joinPathAvatar, db } = useOutletContext();
+    const { fnSendMsg, joinPathAvatar, db } = useOutletContext();
     const { winHeight } = useWinSize();
 
-    const setTitle = currentAppBar((state) => state.setTitle);
-    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    // const setTitle = currentAppBar((state) => state.setTitle);
+    // const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const current = currentChat((s) => s.current);
-    useEffect(() => {
-        // console.log('current', current)
-        setTitle(current?.displayName)
-        setLeftPath('/mobile/chat/dialog/')
-    }, [current])
+    // useEffect(() => {
+    //     // console.log('current', current)
+    //     setTitle(current?.displayName)
+    //     setLeftPath('/mobile/chat/dialog/')
+    // }, [current])
 
 
 
@@ -75,9 +71,9 @@ export function Msg() {
 
 
 
-    const msgsend = async (sendText) => {
+    const msgTextSend = async (sendText) => {
         if (sendText) {
-            await fnSendMsg({ uid: current?.uid, msgText: sendText })
+            await fnSendMsg({ uid: current?.uid, msgType:'text', msgText: sendText })
         }
     }
 
@@ -88,11 +84,12 @@ export function Msg() {
             messages={msgs}
             senderAvatarSrc={senderAvatarSrc}
             receiverAvatarSrc={receiverAvatarSrc}
-            onSend={(v) => { msgsend(v) }}
+            onSend={(v) => { msgTextSend(v) }}
             onOpenTools={() => { console.log("打开工具栏") }}
         >
             <ChatBox.Tools>
-                <ActionIcon variant="subtle" color="gray" title="通话测试" onClick={() => { navigate('/mobile/chat/message/test') }}>
+                <Tools/>
+                {/* <ActionIcon variant="subtle" color="gray" title="通话测试" onClick={() => { navigate('/mobile/chat/message/test') }}>
                     <IconFlask />
                 </ActionIcon>
 
@@ -102,7 +99,7 @@ export function Msg() {
 
                 <ActionIcon variant="subtle" color="gray" title="接收通话" onClick={() => { navigate('/mobile/chat/message/receiver') }}>
                     <IconPhoneIncoming />
-                </ActionIcon>
+                </ActionIcon> */}
             </ChatBox.Tools>
         </ChatBox>
 
