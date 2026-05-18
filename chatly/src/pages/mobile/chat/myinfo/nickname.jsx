@@ -1,10 +1,10 @@
 import { useState, Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
-import { InputText2, currentAppBar } from 'components';
+import { InputText2,  } from 'components';
 import { useHttpClient } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { Group } from "@mantine/core";
-
+import { currentAppBar } from "utils";
 
 export const Nikename = () => {
     const navigate = useNavigate();
