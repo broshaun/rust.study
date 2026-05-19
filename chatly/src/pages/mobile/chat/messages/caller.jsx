@@ -31,6 +31,8 @@ export function Caller() {
 
   return <div>
     <P2PCallCaller
+      avatar={current?.avatar_url}
+      name={current?.displayName}
       onStartCall={handleStartCall}
       onStopCall={handleStopCall}
     />

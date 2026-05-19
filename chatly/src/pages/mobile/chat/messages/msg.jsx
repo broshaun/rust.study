@@ -34,7 +34,8 @@ export function Msg() {
     useEffect(() => {
         if (!db) return;
         const sub = liveQuery(
-            () => db.table('message').where('uid').equals(current?.uid).reverse().toArray()
+            () => db.table('message').where('uid').equals(current?.uid).toArray()
+            // () => db.table('message').where('uid').equals(current?.uid).reverse().toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
