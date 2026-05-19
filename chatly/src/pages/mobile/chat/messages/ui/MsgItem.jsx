@@ -1,7 +1,7 @@
 import React, { useState, useEffect, memo } from "react";
 import { useNavigate } from 'react-router';
 import { Group, Paper, Text, Stack, Box, ActionIcon } from '@mantine/core';
-import { IconPhoneIncoming, IconPhoneOff } from '@tabler/icons-react';
+import { IconPhoneIncoming, IconPhoneOff,IconPhoneOutgoing } from '@tabler/icons-react';
 import { SafeAvatar, SafeImage } from 'components/flutter';
 
 // ==========================================
@@ -23,20 +23,27 @@ const ImageContent = memo(({ content }) => (
   />
 ));
 
-const PhoneContent = memo(({ content, timestamp }) => {
+const PhoneContent = memo(({ content, timestamp, sentByMe }) => {
   const navigate = useNavigate();
+
+
+  console.log('sentByMe',sentByMe)
+  // 强转布尔值，防止父组件传递过来的是字符串 "true" 导致判断失效
+  const isSentByMe = sentByMe === true || String(sentByMe).toLowerCase() === 'true';
 
   // 跨端安全的日期解析
   const safeTimestamp = timestamp?.replace(/-/g, '/').replace('T', ' ') || '';
   const callTime = new Date(safeTimestamp).getTime();
 
-  const [isExpired, setIsExpired] = useState(() => Date.now() - callTime > 60000);
+  // 增加 isNaN 防护，避免时间解析失败导致状态卡死
+  const [isExpired, setIsExpired] = useState(() => {
+    if (isNaN(callTime)) return true; 
+    return Date.now() - callTime > 60000;
+  });
 
   useEffect(() => {
     if (isExpired || isNaN(callTime)) return;
-
     const remainingTime = 60000 - (Date.now() - callTime);
-
     if (remainingTime > 0) {
       const timer = setTimeout(() => setIsExpired(true), remainingTime);
       return () => clearTimeout(timer);
@@ -45,15 +52,43 @@ const PhoneContent = memo(({ content, timestamp }) => {
     }
   }, [callTime, isExpired]);
 
+  // ================= 核心渲染逻辑拆分 =================
+
+  // 1. 我发出的通话：不需要 ActionIcon 行为，直接返回静态包裹的 IconPhoneOutgoing
+  if (isSentByMe) {
+    return (
+      <div 
+        title="语音通话"
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          // color: 'gray', 
+          padding: '4px', // 模拟 ActionIcon 的内边距，保持 UI 对齐美观
+          cursor: 'default' // 鼠标指针保持常规状态
+        }}
+      >
+        <IconPhoneOutgoing size={20} />
+      </div>
+    );
+  }
+
+  // 2. 对方发出的通话：保留 ActionIcon 组件，根据是否超时动态渲染状态
   return (
     <ActionIcon
       variant="subtle"
-      color={isExpired ? "red" : "gray"}
-      title={isExpired ? "通话已超时" : "接收通话"}
+      color={isExpired ? "red" : "green"}
+      title={isExpired ? "通话已超时" : "点击接收通话"}
       disabled={isExpired}
-      onClick={() => !isExpired && navigate('/mobile/chat/message/receiver', { state: { ticket: content } })}
+      onClick={(e) => {
+        // 阻止事件冒泡，防止点击穿透触发外层气泡组件的意外行为
+        e.stopPropagation(); 
+        if (!isExpired) {
+          navigate('/mobile/chat/message/receiver', { state: { ticket: content } });
+        }
+      }}
     >
-      {isExpired ? <IconPhoneOff /> : <IconPhoneIncoming />}
+      {isExpired ? <IconPhoneOff size={20} /> : <IconPhoneIncoming size={20} />}
     </ActionIcon>
   );
 });
@@ -96,6 +131,7 @@ export const MsgItem = memo(({
   ref 
 }) => {
   if (!msg) return null;
+  // console.log("msg",msg)
 
   const { timestamp, type, content, sentByMe } = msg;
   const isRight = sentByMe === true;
@@ -132,7 +168,7 @@ export const MsgItem = memo(({
           px={type === 'image' ? 0 : 'sm'}
           py={type === 'image' ? 0 : 8}
         >
-          <ContentComponent content={content} timestamp={timestamp} />
+          <ContentComponent content={content} timestamp={timestamp} sentByMe={sentByMe}/>
         </Paper>
 
         <Text size="10px" c="dimmed" px={4}>
