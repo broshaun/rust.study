@@ -1,17 +1,16 @@
 import { useState, Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { InputText2 } from 'components';
-import { useHttpClient } from 'utils';
+import { useHttpClient, currentAppBar } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { Group } from "@mantine/core";
-import { currentAppBar } from 'utils';
+import { PushdeerEditPage } from "./UI/PushdeerEditPahe";
 
 
 export const PushDeer = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
-    const [pushKey, setPushKey] = useState(location.state?.pushKey)
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -20,7 +19,7 @@ export const PushDeer = () => {
         setTitle('请输入PushKey');
     }, [])
 
-    const { mutateAsync: update, isPending: loading } = useMutation({
+    const { mutateAsync: pushKeyEdit, isPending } = useMutation({
         mutationFn: async (push_key) => {
             if (!push_key) {
                 throw new Error('请输入推送码');
@@ -35,17 +34,13 @@ export const PushDeer = () => {
             }
             return 'ok';
         },
+        onSuccess: () => {
+            navigate('/mobile/chat/self/')
+        }
     });
 
     return <Suspense fallback={<div>加载中...</div>}>
-         <Group p={25}>
-            {location.state &&
-                <InputText2 showMask minWidth='300' defaultValue={pushKey} onChangeValue={(value) => { setPushKey(value) }} >
-                    <InputText2.Left icon='key' />
-                    <InputText2.Right label='确定' onClick={() => { update(pushKey); navigate('/mobile/chat/self/'); }} />
-                </InputText2>
-            }
-        </Group>
+        <PushdeerEditPage value={location.state?.pushKey} onClick={(key) => { pushKeyEdit(key) }} />
     </Suspense>
 
 

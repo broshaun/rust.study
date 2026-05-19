@@ -13,24 +13,17 @@ import { GlobalAppBar, currentAppBar } from "utils";
 
 
 export function ChatShell() {
-
-
   const navigate = useNavigate();
   const isShowBack = currentAppBar((state) => state.leftPath !== null);
-
-  // const setTitle = currentAppBar((state) => state.setTitle);
-  // const setLeftPath = currentAppBar((state) => state.setLeftPath);
-  // setTitle('主页')
 
   const [dot, setDot] = useState(false)
   const [account] = useLocalStorage({ key: 'savedAccount' })
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
-  const  db  = getUserDB(account);
+  const db = getUserDB(account);
 
   const items = useMemo(() => {
     return [
-      { key: 'test', icon: <IconTabler icon={IconFlask} label='测试' labelPos='bottom' onClick={() => { navigate('/mobile/chat/test/') }} /> },
       { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { navigate('/mobile/chat/dialog/'); setDot(false); }} dot={dot} /> },
       { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
       { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
@@ -48,7 +41,6 @@ export function ChatShell() {
   }, [db])
 
   const visibleItems = items; // 如果有 display: false 的需求，在此过滤
-
 
   return (
     <AppShell

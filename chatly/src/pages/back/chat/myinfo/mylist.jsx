@@ -26,7 +26,7 @@ export const MyList = () => {
     }, [])
 
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
-    const { data: apiInfo = {}, isPending: loading, error, refetch } = useQuery(
+    const { data: apiInfo = {}, isPending, error, refetch } = useQuery(
         {
             queryKey: ['api-info'],
             queryFn: async () => {

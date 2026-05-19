@@ -1,16 +1,14 @@
-import { useState, Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
-import { InputText2,  } from 'components';
-import { useHttpClient } from 'utils';
+import { useHttpClient, currentAppBar } from 'utils';
 import { useMutation } from '@tanstack/react-query';
-import { Group } from "@mantine/core";
-import { currentAppBar } from "utils";
+import { NicknameEditPage } from "./UI/NicknameEditPage";
+
 
 export const Nikename = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
-    const [name, setName] = useState()
+
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -19,8 +17,8 @@ export const Nikename = () => {
         setTitle('修改昵称');
     }, [])
 
-
-    const { mutateAsync: update, isPending: loading } = useMutation({
+    const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
+    const { mutateAsync: nameEdit, isPending: loading } = useMutation({
         mutationFn: async (nikename) => {
             if (!nikename) {
                 throw new Error('请输入昵称');
@@ -35,18 +33,14 @@ export const Nikename = () => {
             }
             return 'ok';
         },
+        onSuccess: () => {
+            navigate('/mobile/chat/self/')
+        }
     });
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <Group p={25}>
-            {location.state &&
-                <InputText2 defaultValue={location.state?.nikename} onChangeValue={(value) => { setName(value) }}>
-                    <InputText2.Left icon='bookmark-square' />
-                    <InputText2.Right label='确定' onClick={() => { update(name); navigate('/mobile/chat/self/'); }} />
-                </InputText2>
-            }
-        </Group>
+        <NicknameEditPage value={location.state?.nikename} onClick={(text) => { nameEdit(text) }} />
     </Suspense>
 
 

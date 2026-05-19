@@ -26,8 +26,7 @@ const ImageContent = memo(({ content }) => (
 const PhoneContent = memo(({ content, timestamp, sentByMe }) => {
   const navigate = useNavigate();
 
-
-  console.log('sentByMe',sentByMe)
+  // console.log('sentByMe',sentByMe)
   // 强转布尔值，防止父组件传递过来的是字符串 "true" 导致判断失效
   const isSentByMe = sentByMe === true || String(sentByMe).toLowerCase() === 'true';
 
