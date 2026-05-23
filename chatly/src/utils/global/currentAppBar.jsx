@@ -6,12 +6,14 @@ import { useNavigate } from "react-router";
 export const currentAppBar = create((set) => ({
   title: "主页",
   leftPath: null,
+  rightIcon: <IconDots />,
   rightPath: null,
 
   setTitle: (title) => set({ title }),
   setLeftPath: (leftPath) => set({ leftPath }),
+  setRightIcon: (rightIcon) => set({ rightIcon }),
   setRightPath: (rightPath) => set({ rightPath }),
-  clearAppBar: () => set({ title: "", leftPath: null, rightPath: null }),
+  clearAppBar: () => set({ title: "", leftPath: null, rightIcon: null, rightPath: null }),
 }));
 
 
@@ -20,15 +22,17 @@ export function GlobalAppBar() {
   const navigate = useNavigate();
   const title = currentAppBar((state) => state.title);
   const leftPath = currentAppBar((state) => state.leftPath);
+  const rightIcon = currentAppBar((state) => state.rightIcon);
   const rightPath = currentAppBar((state) => state.rightPath);
 
 
+
   return (
-    <Grid p={15} align="center">
+    <Grid p={10} align="center">
       <Grid.Col span={2} align="center">
         {leftPath && (
           <ActionIcon variant="subtle" color="gray" onClick={() => navigate(leftPath)}>
-            <IconChevronLeft size={24} />
+            <IconChevronLeft />
           </ActionIcon>
         )}
       </Grid.Col>
@@ -44,14 +48,13 @@ export function GlobalAppBar() {
       <Grid.Col span={2} align="center">
         {rightPath && (
           <ActionIcon variant="subtle" color="gray" onClick={() => navigate(rightPath)}>
-            <IconDots size={24} />
+            {rightIcon}
           </ActionIcon>
         )}
       </Grid.Col>
     </Grid>
   );
 }
-
 
 
 

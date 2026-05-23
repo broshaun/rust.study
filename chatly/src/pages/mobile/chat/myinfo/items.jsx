@@ -19,9 +19,11 @@ export const Items = () => {
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
     useEffect(() => {
         setLeftPath(null)
         setTitle('我的信息');
+        setRightPath(null);
     }, [])
 
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');

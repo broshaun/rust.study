@@ -8,6 +8,7 @@ import { RsMsgs } from "./chat/messages";
 import { RsTest } from "./chat/test";
 import { AuthShell } from "./auth/main";
 import { RsUser } from "./auth/user";
+import { RsGroup } from "./chat/group";
 
 
 export const RsMobile = [
@@ -26,6 +27,7 @@ export const RsMobile = [
                         element: <ChatShell />,
                         children: [
                             ...RsFriend,
+                            ...RsGroup,
                             ...RsDialog,
                             ...RsMyInfo,
                             ...RsMsgs,

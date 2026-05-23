@@ -2,11 +2,10 @@ import React, { useEffect, useCallback, Suspense, useRef } from "react";
 import { useNavigate } from 'react-router';
 import { getUserDB, useImgApiBase } from "utils";
 import { liveQuery } from 'dexie';
-import { DialogItem } from 'components/chat';
 import { useWinSize, currentChat, currentAppBar } from 'utils';
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { ScrollArea, Box } from '@mantine/core';
+import { DialogItem } from "./UI/DialogItem";
 
 
 export const Item = () => {
@@ -36,10 +35,12 @@ export const Item = () => {
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
 
     useEffect(() => {
-        setLeftPath(null)
+        setLeftPath(null);
         setTitle('消息列表');
+        setRightPath(null);
     }, [])
 
     // 打开聊天
@@ -68,41 +69,26 @@ export const Item = () => {
     }, [db])
 
 
-    const containerRef = useRef(null);
-    const rowVirtualizer = useVirtualizer({
-        count: dialog.length,
-        getScrollElement: () => containerRef.current,
-        estimateSize: () => 50,
-        overscan: 5,
-        useFlushSync: false,
-    });
-
-
-    return <Suspense fallback={<div>加载中...</div>}>
-        {/* <Icon name='magnifying-glass' /> */}
-        {/* <Divider fade /> */}
-        <ScrollArea viewportRef={containerRef} h={winHeight - 100} w="100%" scrollbars="y" type="never" style={{ overflowX: 'hidden' }}>
-            <Box px={12}>
-                <Box style={{
-                    height: rowVirtualizer.getTotalSize(),
-                    position: "relative",
-                    width: "100%",
-                }}>
-                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                        const dg = dialog[virtualRow.index];
-                        if (!dg) return null;
-                        return <DialogItem
+    return (
+        <Suspense fallback={<div>加载中...</div>}>
+            <ScrollArea
+                w="100%"
+                scrollbars="y"
+                type="never"
+                style={{ overflowX: "hidden" }}
+            >
+                <Box px={12}>
+                    {dialog.map((dg) => (
+                        // <div>123</div>
+                        <DialogItem
                             key={dg.id}
                             data={dg}
-                            virtualRow={virtualRow}
                             onSelect={openMsgWindow}
-                            onClear={(p) => handleClear(p)}
+                            onClear={handleClear}
                         />
-                    })}
+                    ))}
                 </Box>
-            </Box>
-        </ScrollArea>
-
-
-    </Suspense>
+            </ScrollArea>
+        </Suspense>
+    );
 }

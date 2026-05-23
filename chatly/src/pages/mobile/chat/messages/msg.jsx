@@ -10,10 +10,13 @@ import { Tools } from "./tools";
 export function Msg() {
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
+
     const current = currentChat((s) => s.current);
     useEffect(() => {
         setTitle(current?.displayName)
         setLeftPath('/mobile/chat/dialog/')
+        setRightPath(null)
     }, [])
 
     const { fnSendMsg, db } = useOutletContext();
@@ -59,7 +62,7 @@ export function Msg() {
             senderAvatarSrc={senderAvatarSrc}
             receiverAvatarSrc={receiverAvatarSrc}
             onSend={(v) => { msgTextSend(v) }}
-            onOpenTools={() => { console.log("打开工具栏") }}
+            // onOpenTools={() => { console.log("打开工具栏") }}
         >
             <ChatBox.Tools>
                 <Tools />

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Group, ActionIcon, Text, UnstyledButton, Box } from "@mantine/core";
 import {
     IconPhoto,
+    IconMoodSmile,
     IconFlask,
     IconPhotoUp,
     IconPhoneOutgoing
@@ -18,13 +19,13 @@ const TOOLS_CONFIG = [
     //     path: '/mobile/chat/message/caller',
     //     color: 'blue' 
     // },
-    // { 
-    //     id: 'test', 
-    //     icon: IconFlask, 
-    //     label: '测试', 
-    //     path: '/mobile/chat/message/test',
-    //     color: 'grape' 
-    // },
+    { 
+        id: 'smile', 
+        icon: IconMoodSmile, 
+        label: '表情', 
+        path: '/mobile/chat/message/smile',
+        color: 'grape' 
+    },
     { 
         id: 'imgUp', 
         icon: IconPhotoUp, 

@@ -5,6 +5,7 @@ import { Receiver } from "./receiver";
 import { Msg } from "./msg";
 import { P2PPcmVoiceTest } from "./UI/P2PPcmVoiceTest"
 import { ImagSend } from "./imgSend";
+import { Smile } from "./smile";
 
 
 export const RsMsgs = [
@@ -30,6 +31,10 @@ export const RsMsgs = [
             {
                 path: "imgUp",
                 element: <ImagSend />
+            },
+            {
+                path: "smile",
+                element: <Smile />
             },
         ]
     }

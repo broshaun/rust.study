@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
-import { useWinSize, useDateTime } from 'utils';
+import { useWinSize, useDateTime, GlobalAppBar, currentAppBar, getUserDB } from 'utils';
 
 import { IconTabler } from 'components/flutter';
 import { liveQuery } from 'dexie';
-import { getUserDB } from "utils";
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
-import { IconMessage, IconUsers, IconUser, IconFlask } from "@tabler/icons-react";
-import { GlobalAppBar, currentAppBar } from "utils";
+import { IconMessage, IconUsers, IconUser, IconFlask, IconUserCircle } from "@tabler/icons-react";
+
 
 
 
@@ -25,8 +24,9 @@ export function ChatShell() {
   const items = useMemo(() => {
     return [
       { key: 'news', icon: <IconTabler icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { navigate('/mobile/chat/dialog/'); setDot(false); }} dot={dot} /> },
-      { key: 'friend', icon: <IconTabler icon={IconUsers} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
-      { key: 'self', icon: <IconTabler icon={IconUser} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
+      { key: 'friend', icon: <IconTabler icon={IconUser} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
+      { key: 'group', icon: <IconTabler icon={IconUsers} label='群聊' onClick={() => { navigate('/mobile/chat/group/') }} /> },
+      { key: 'self', icon: <IconTabler icon={IconUserCircle} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, dot]);
 

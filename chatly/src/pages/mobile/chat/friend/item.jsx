@@ -2,13 +2,12 @@ import React, { useEffect, useState, useCallback, Suspense, useRef } from "react
 import { useNavigate } from 'react-router';
 import { getUserDB, currentAppBar, useWinSize, useHttpClient, useImgApiBase } from "utils";
 import { liveQuery } from 'dexie';
-import { Divider } from 'components/flutter';
-import { Friend } from 'components/chat';
 import { useMutation } from '@tanstack/react-query'
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { Group, ScrollArea, Box, Indicator, ActionIcon } from '@mantine/core';
-import { IconUserSearch } from "@tabler/icons-react";
+import { IconUserSearch, IconCirclePlus } from "@tabler/icons-react";
+import { Friend } from "./UI/Friend";
 
 
 export const Item = () => {
@@ -80,11 +79,15 @@ export const Item = () => {
     );
 
 
-    const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setRightIcon = currentAppBar((state) => state.setRightIcon);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');
+        setRightIcon(<IconCirclePlus />)
+        setRightPath('/mobile/chat/friend/find/')
     }, [])
 
     useEffect(() => {
@@ -122,34 +125,21 @@ export const Item = () => {
     });
 
 
-    return <Suspense fallback={<div>加载中...</div>}>
-        <Group justify="flex-end" p={3}>
-            <Indicator color="red" dot size={5} offset={5} disabled={!afriend}>
-                <ActionIcon variant="transparent" c="gray.6" color="gray" onClick={() => { navigate('/mobile/chat/friend/find/') }}>
-                    <IconUserSearch size={20} />
-                </ActionIcon>
-            </Indicator>
-        </Group>
-
-        <Divider spacing={5} fade />
-
-        <ScrollArea viewportRef={parentRef} h={winHeight - 26} style={{ width: '100%' }}>
-            <Box px={12}>
-                <Box style={{
-                    height: rowVirtualizer.getTotalSize(),
-                    position: "relative",
-                    width: "100%",
-                    boxSizing: 'border-box',
-                }}>
-                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                        const friend = friends[virtualRow.index];
-                        if (!friend) return;
-                        return <Friend key={friend.id} data={friend} virtualRow={virtualRow} onSelect={(value) => { openMsgWindow(value) }} />
-                    })}
+    return (
+        <Suspense fallback={<div>加载中...</div>}>
+            <ScrollArea style={{ width: "100%" }}>
+                <Box px={12}>
+                    {friends.map((friend) => (
+                        <Friend
+                            key={friend.id}
+                            data={friend}
+                            onSelect={openMsgWindow}
+                        />
+                    ))}
                 </Box>
-            </Box>
-        </ScrollArea>
-    </Suspense >
+            </ScrollArea>
+        </Suspense>
+    );
 
 }
 

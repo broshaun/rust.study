@@ -15,12 +15,16 @@ export const Find = () => {
     const [debouncedKeyword] = useDebouncedValue(keyword, 500);
 
 
-    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+
     const setTitle = currentAppBar((state) => state.setTitle);
-    
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setRightIcon = currentAppBar((state) => state.setRightIcon);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
     useEffect(() => {
         setLeftPath('/mobile/chat/friend/')
         setTitle('好友查找');
+        setRightIcon(null)
+        setRightPath(null)
     }, [])
 
 
