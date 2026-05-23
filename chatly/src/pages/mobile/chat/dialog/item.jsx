@@ -79,7 +79,6 @@ export const Item = () => {
             >
                 <Box px={12}>
                     {dialog.map((dg) => (
-                        // <div>123</div>
                         <DialogItem
                             key={dg.id}
                             data={dg}

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import { getUserDB, currentAppBar, useWinSize, useHttpClient, useImgApiBase } from "utils";
 import { liveQuery } from 'dexie';
 import { useMutation } from '@tanstack/react-query'
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { Group, ScrollArea, Box, Indicator, ActionIcon } from '@mantine/core';
 import { IconUserSearch, IconCirclePlus } from "@tabler/icons-react";
@@ -115,14 +114,6 @@ export const Item = () => {
     }, [db])
 
 
-    const parentRef = useRef(null);
-    const rowVirtualizer = useVirtualizer({
-        count: friends.length,
-        getScrollElement: () => parentRef.current,
-        estimateSize: () => 50,
-        overscan: 5,
-        useFlushSync: false,
-    });
 
 
     return (
