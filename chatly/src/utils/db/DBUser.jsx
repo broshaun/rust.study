@@ -15,7 +15,7 @@ export const getUserDB = (userId) => {
   db.version(12).stores({
     message: '++id, uid, timestamp',
     friends: 'id, uid, timestamp, dialog, signal, ask_state',
-    groups: 'id',
+    gmsgs: '++id, uid, group_id, timestamp',
   });
   dbCache.set(userId, db);
   return db;

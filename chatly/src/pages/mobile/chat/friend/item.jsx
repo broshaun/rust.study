@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB, currentAppBar, useWinSize, useHttpClient, useImgApiBase } from "utils";
+import { getUserDB, currentAppBar, useHttpClient, useImgApiBase } from "utils";
 import { liveQuery } from 'dexie';
 import { useMutation } from '@tanstack/react-query'
 import { useListState, useLocalStorage } from '@mantine/hooks';
@@ -17,7 +17,6 @@ export const Item = () => {
 
     const { http } = useHttpClient('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
-    const { winHeight } = useWinSize()
     const db = getUserDB(account);
 
 

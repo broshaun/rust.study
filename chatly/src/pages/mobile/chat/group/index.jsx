@@ -1,7 +1,8 @@
 import { Outlet, Navigate } from "react-router";
 import { Item } from "./item";
-// import { Detail } from "./detail";
-// import { Find } from "./find";
+import { Update } from "./update";
+import { AddMember } from "./addMember";
+import { Msg } from "./msg";
 
 
 export const Group = () => {
@@ -13,17 +14,29 @@ export const RsGroup = [
     {
         path: "group", element: <Group />,
         children: [
-            {   
+            {
                 index: true,
                 element: <Item />
             },
+            {
+                path: "update",
+                element: <Update />
+            },
+            {
+                path: "addg",
+                element: <AddMember />
+            },
+            {
+                path: "msgs",
+                element: <Msg />
+            },
             // {
-            //     path: "detail",
-            //     element: <Detail />
+            //     path: "imgUp",
+            //     element: <ImagSend />
             // },
             // {
-            //     path: "find",
-            //     element: <Find />
+            //     path: "smile",
+            //     element: <Smile />
             // },
         ]
     }
