@@ -2,8 +2,9 @@ import React, { useState } from "react"
 import { useMutation } from '@tanstack/react-query'
 import { Modal } from "components";
 import { useHttpClient } from 'utils';
-import { TextField, Divider } from 'components/flutter';
+import {  Divider } from 'components/flutter';
 import { Button, Stack, Center, Title } from "@mantine/core";
+import { TextField } from "./UI/TextField";
 
 
 export function Register() {

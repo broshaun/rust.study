@@ -8,7 +8,6 @@ export { Divider } from './layout/Divider'
 export {Right,Left }from './layout/Align'
 
 // base
-export { TextField } from './base/TextField';
 export { IconSvg as Icon } from './base/IconSvg'
 
 

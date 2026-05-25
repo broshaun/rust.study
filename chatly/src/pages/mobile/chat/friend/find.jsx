@@ -1,19 +1,17 @@
 import React, { useState, Suspense, useEffect } from "react";
-import { InputText2, } from 'components';
 import { useHttpClient, useImgApiBase, currentAppBar } from 'utils';
-import { UserInfoCard } from 'components/chat';
 import { Divider, SafeAvatar } from 'components/flutter';
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useDebouncedValue } from '@mantine/hooks';
 import { ScrollArea, Stack } from "@mantine/core";
+import { TextInput, ActionIcon } from "@mantine/core";
+import { IconSearch } from "@tabler/icons-react";
+import { UserInfoCard } from "./UI/UserInfoCard";
 
 
 export const Find = () => {
     const { http } = useHttpClient('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
-    const [keyword, setKeyword] = useState();
-    const [debouncedKeyword] = useDebouncedValue(keyword, 500);
-
+    const [keywordEmail, setKeywordEmail] = useState();
 
 
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -54,7 +52,7 @@ export const Find = () => {
         }
     );
     const handleEmailChange = (value) => {
-        setKeyword(value);
+        setKeywordEmail(value);
     };
 
     // 好友请求
@@ -99,9 +97,19 @@ export const Find = () => {
         <ScrollArea h="100%" type="auto">
             <Stack gap={10} p={10}>
 
-                <InputText2 placeholder="搜索好友" onChangeValue={handleEmailChange}>
-                    <InputText2.Right icon='magnifying-glass-circle' onClick={() => run({ email: debouncedKeyword })} />
-                </InputText2>
+                <TextInput
+                    placeholder="搜索好友"
+                    value={keywordEmail}
+                    onChange={(e) => handleEmailChange(e.currentTarget.value)}
+                    rightSection={
+                        <ActionIcon
+                            variant="subtle"
+                            onClick={() => run({ email: keywordEmail })}
+                        >
+                            <IconSearch size={18} />
+                        </ActionIcon>
+                    }
+                />
 
                 <Divider />
                 {!loading && Object.keys(findByUser || {}).length !== 0 &&

@@ -1,6 +1,5 @@
 import { useState, Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
-import { InputText2 } from 'components';
 import { useHttpClient, currentAppBar } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { Group } from "@mantine/core";

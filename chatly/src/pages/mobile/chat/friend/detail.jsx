@@ -1,20 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useWinSize } from 'utils';
-import { useHttpClient } from 'utils';
+import { useHttpClient, currentAppBar } from 'utils';
 import { getUserDB } from "utils";
 import { SafeAvatar, Divider } from 'components/flutter';
-import { InfoTile } from 'components/chat';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Center, Stack, Group, Title } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
-
+import { InfoTile } from "./UI/InfoTile";
 
 
 /**
  * 好友详情页面
  */
 export function Detail() {
+  const setTitle = currentAppBar((state) => state.setTitle);
+  const setLeftPath = currentAppBar((state) => state.setLeftPath);
+  const setRightIcon = currentAppBar((state) => state.setRightIcon);
+  const setRightPath = currentAppBar((state) => state.setRightPath);
+  useEffect(() => {
+    setLeftPath('/mobile/chat/friend/')
+    setTitle('好友信息');
+    setRightIcon(null)
+    setRightPath(null)
+  }, [])
+
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -63,7 +74,7 @@ export function Detail() {
     if (!friend?.id) return;
     const displayName = friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
     db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
-    
+
     navigate('/mobile/chat/message/', {
       state: {
         uid: friend.uid,

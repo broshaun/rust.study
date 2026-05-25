@@ -123,4 +123,3 @@ export const InfoTile = memo(({ icon, label, value, onConfirm, style }) => {
   );
 });
 
-export default InfoTile;

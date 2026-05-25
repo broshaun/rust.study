@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useHttpClient } from 'utils';
 import { Modal, } from 'components';
-import { TextField, Divider, XBox } from 'components/flutter';
+import {  Divider, XBox } from 'components/flutter';
 import { useNavigate } from 'react-router';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query'
 import { Button } from "@mantine/core";
+import { TextField } from "./UI/TextField";
+
 
 export const Agent = () => {
     const navigate = useNavigate();
