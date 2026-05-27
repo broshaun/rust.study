@@ -5,18 +5,17 @@ import { useState, useEffect } from "react";
 
 
 export function Smile() {
-
-    const { fnSendMsg, isPending } = useOutletContext();
+    const { db, mutation } = useOutletContext();
     const current = currentChat((s) => s.current);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     useEffect(() => {
-        setLeftPath('/mobile/chat/message/')
+        setLeftPath('/mobile/chat/group/msgs/')
     }, [])
 
     const navigate = useNavigate();
     const sendSmile = async (text) => {
-        await fnSendMsg({ uid: current?.uid, msgType: 'text', msgText: text });
-        navigate('/mobile/chat/message/');
+        await mutation.mutateAsync({ group_id: current?.id, msgType: 'text', msgText: text });
+        navigate('/mobile/chat/group/msgs/');
     }
 
     return <div>

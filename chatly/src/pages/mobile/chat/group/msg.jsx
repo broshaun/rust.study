@@ -52,8 +52,6 @@ export function Msg() {
     }, [current?.id, db]);
 
 
-    
-
     const msgTextSend = async (sendText) => {
         if (sendText) {
             await mutation.mutateAsync({ group_id: current?.id, msgType: 'text', msgText: sendText })

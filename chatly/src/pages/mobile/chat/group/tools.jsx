@@ -12,34 +12,21 @@ import { currentAppBar } from "utils";
 
 // 静态配置移出组件，避免每次 Render 重复创建，提升性能
 const TOOLS_CONFIG = [
-    // { 
-    //     id: 'photo', 
-    //     icon: IconPhoto, 
-    //     label: '发送图片', 
-    //     path: '/mobile/chat/message/caller',
-    //     color: 'blue' 
-    // },
     { 
         id: 'smile', 
         icon: IconMoodSmile, 
         label: '表情', 
-        path: '/mobile/chat/message/smile',
+        path: '/mobile/chat/group/smile',
         color: 'grape' 
     },
     { 
         id: 'imgUp', 
         icon: IconPhotoUp, 
         label: '发送图片', 
-        path: '/mobile/chat/message/imgUp',
+        path: '/mobile/chat/group/imgUp',
         color: 'teal' 
     },
-    { 
-        id: 'call', 
-        icon: IconPhoneOutgoing, 
-        label: '发起通话', 
-        path: '/mobile/chat/message/caller',
-        color: 'green' 
-    },
+
 ];
 
 export function Tools() {

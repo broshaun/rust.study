@@ -6,12 +6,12 @@ import { ImgUp } from './UI/ImageUpload';
 
 
 export function ImagSend() {
-    const { fnSendMsg, isPending } = useOutletContext();
+    const { db, mutation } = useOutletContext();
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const current = currentChat((s) => s.current);
     useEffect(() => {
-        setLeftPath('/mobile/chat/message/')
+        setLeftPath('/mobile/chat/group/msgs/')
     }, [])
 
 
@@ -56,7 +56,7 @@ export function ImagSend() {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
                 const imageSrc = joinPathImg30(imgFileName);
-                await fnSendMsg({ uid: current?.uid, msgType: 'image', msgText: imageSrc });
+                await mutation.mutateAsync({ group_id: current?.id, msgType: 'image', msgText: imageSrc });
             }
         } catch (error) {
             console.error(error);
@@ -65,11 +65,11 @@ export function ImagSend() {
 
     useEffect(() => {
         console.log('isUploadingStart',isUploadingStart)
-        console.log('!isPending',!isPending)
-        if (isUploadingStart && !isPending) {
-            navigate('/mobile/chat/message/');
+        console.log('!isPending',!mutation.isPending)
+        if (isUploadingStart && !mutation.isPending) {
+            navigate('/mobile/chat/group/');
         }
-    }, [isPending]);
+    }, [mutation.isPending]);
 
     return <div style={{ padding: '20px' }}>
         <ImgUp height={48} onClick={upImg} />

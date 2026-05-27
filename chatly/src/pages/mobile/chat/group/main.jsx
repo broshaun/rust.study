@@ -33,6 +33,9 @@ export const Group = () => {
         },
     });
     // mutation.mutateAsync({})
+    // mutation.isPending
+    // mutation.isSuccess
+    // mutation.isError
 
     return <Outlet context={{ db, mutation }} />
 

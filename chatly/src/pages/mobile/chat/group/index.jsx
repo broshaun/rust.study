@@ -4,6 +4,8 @@ import { Update } from "./update";
 import { AddMember } from "./addMember";
 import { Msg } from "./msg";
 import { Group } from "./main";
+import { ImagSend } from "./imgSend";
+import { Smile } from "./smile";
 
 
 export const RsGroup = [
@@ -26,14 +28,14 @@ export const RsGroup = [
                 path: "msgs",
                 element: <Msg />
             },
-            // {
-            //     path: "imgUp",
-            //     element: <ImagSend />
-            // },
-            // {
-            //     path: "smile",
-            //     element: <Smile />
-            // },
+            {
+                path: "imgUp",
+                element: <ImagSend />
+            },
+            {
+                path: "smile",
+                element: <Smile />
+            },
         ]
     }
 ];
