@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useToken, getUserDB, useHttpClient } from "utils"
+import { useToken, getUserDB, useHttpClient, useGroupStore,useDateTime } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -8,13 +8,12 @@ import { useLocalStorage } from '@mantine/hooks';
 
 
 export function ChatGuard() {
+  const setGroup = useGroupStore((state) => state.setGroup);
+  const dt = useDateTime();
   const navigate = useNavigate();
-
   const [userId] = useLocalStorage({ key: 'savedAccount' })
   const db = getUserDB(userId);
-
   const { remainSeconds } = useToken()
-
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
 
   const fetchGroupMsgs = async () => {
@@ -31,14 +30,12 @@ export function ChatGuard() {
           group_id: item.group_id
         }))
       );
-
-      const setGroup = useGroupStore((state) => state.setGroup);
       new Set(data.map(item => item.group_id)).forEach((group_id) => {
         setGroup(group_id, {
           signal: "news",
-          timestamp: new Date().toISOString()
-        })
-      })
+          timestamp: dt.getDateTimeStr()
+        });
+      });
       
     }
   }

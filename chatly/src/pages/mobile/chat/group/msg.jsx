@@ -4,6 +4,7 @@ import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./tools";
+import { useOutletContext } from "react-router";
 
 
 export function Msg() {
@@ -19,7 +20,11 @@ export function Msg() {
     }, [])
 
 
+    
+
     const { winHeight } = useWinSize();
+
+    const { mutation } = useOutletContext();
 
     // const receiverAvatarSrc = useMemo(() => {
     //     return current?.avatar_url
@@ -52,7 +57,7 @@ export function Msg() {
 
     const msgTextSend = async (sendText) => {
         if (sendText) {
-            // await fnSendMsg({ uid: current?.uid, msgType: 'text', msgText: sendText })
+            await mutation.mutateAsync({ group_id: current?.id, msgType: 'text', msgText: sendText })
         }
     }
 

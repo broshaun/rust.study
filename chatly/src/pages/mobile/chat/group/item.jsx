@@ -19,6 +19,7 @@ const groups = [
 ];
 
 export const Item = () => {
+    const setGroup = useGroupStore((state) => state.setGroup);
     const setCurGroup = currentGroup((state) => state.setCurrent);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     setRightIcon(<IconCirclePlus />)
@@ -55,7 +56,6 @@ export const Item = () => {
                 group_name: item.group_name,
                 group_avatar: item.group_avatar,
                 group_notice: item.group_notice,
-                hasNews: item.signal === "old",
             }))
     });
 
@@ -63,14 +63,18 @@ export const Item = () => {
     const onSelect = (value) => {
         console.log("选中的群为", value)
         setCurGroup(value)
+
+
+        setGroup(value?.id, { signal: "old" })
         navigate('/mobile/chat/group/msgs')
+
     }
 
     const onAvatarClick = (value) => {
         // console.log("点击群组头像", value)
         setCurGroup(value)
         navigate('/mobile/chat/group/update')
-        
+
     }
 
     const syncGroups = useGroupStore((state) => state.syncGroups);
@@ -79,6 +83,8 @@ export const Item = () => {
     }, [groups]);
 
     const groupState = useGroupStore((state) => state.groups);
+
+    console.log('groupState', groupState)
 
 
     if (!groupState.length) {
@@ -99,7 +105,7 @@ export const Item = () => {
                 <GroupItem
                     key={group.id}
                     data={group}
-                    hasNews={group.signal === "new"}
+                    hasNews={group?.signal === "news"}
                     onSelect={onSelect}
                     onAvatarClick={onAvatarClick}
                 />

@@ -47,6 +47,8 @@ export const Group = () => {
             },
         }
     );
+    // mutation.mutateAsync({})
+
 
     return <Outlet context={{ db, mutation }} />
 

@@ -2,7 +2,6 @@ import { memo, useCallback } from "react";
 import {
   UnstyledButton,
   Group,
-  Stack,
   Text,
   Box,
 } from "@mantine/core";
@@ -12,15 +11,13 @@ export const GroupItem = memo(function GroupItem({
   data,
   onSelect,
   onAvatarClick,
-  height = 52,
-
-  // true = 绿色，false = 灰色
-  hasNews = false,
+  height = 56,
 }) {
   if (!data) return null;
 
   const name = data.group_name || "未命名群聊";
-  const notice = data.group_notice || "暂无群公告";
+  const hasNews = data.signal === "news";
+  const time = data.timestamp || "";
 
   const handleSelect = useCallback(() => {
     onSelect?.(data);
@@ -39,24 +36,17 @@ export const GroupItem = memo(function GroupItem({
       onClick={handleSelect}
       h={height}
       w="100%"
-      px={6}
+      px={8}
       pos="relative"
       style={{
-        borderRadius: 10,
-        // 添加默认边框和背景、边框的颜色过渡效果
-        border: "1px solid var(--mantine-color-gray-2)",
-        transition: "background-color 0.15s ease, border-color 0.15s ease",
+        transition: "background-color 0.15s ease",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor =
           "var(--mantine-color-gray-0)";
-        // 鼠标移入时稍微加深边框颜色（可选，若不需要保持 gray-2 即可）
-        e.currentTarget.style.borderColor = "var(--mantine-color-gray-3)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.backgroundColor = "transparent";
-        // 鼠标移出时恢复默认边框颜色
-        e.currentTarget.style.borderColor = "var(--mantine-color-gray-2)";
       }}
     >
       {/* 右上角状态灯 */}
@@ -76,34 +66,44 @@ export const GroupItem = memo(function GroupItem({
       <Group wrap="nowrap" gap={10} h="100%">
         <SafeAvatar
           url={data.group_avatar}
-          size={34}
+          size={36}
           radius={8}
           cover
           onClick={handleAvatarClick}
         />
 
-        <Box flex={1} miw={0}>
-          <Stack gap={2}>
-            <Text
-              size="sm"
-              fw={500}
-              c="var(--text-primary)"
-              truncate
-              lh={1.15}
-            >
-              {name}
-            </Text>
+        <Box
+          flex={1}
+          miw={0}
+          h="100%"
+          style={{
+            borderBottom: "1px solid var(--mantine-color-gray-2)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            size="sm"
+            fw={600}
+            truncate
+            lh={1.2}
+          >
+            {name}
+          </Text>
 
+          {!!time && (
             <Text
               size="11px"
-              c="var(--text-secondary)"
-              opacity={0.68}
+              c="dimmed"
+              opacity={0.7}
               truncate
-              lh={1.15}
+              mt={3}
+              lh={1.2}
             >
-              {notice}
+              {time}
             </Text>
-          </Stack>
+          )}
         </Box>
       </Group>
     </UnstyledButton>

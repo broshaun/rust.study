@@ -3,11 +3,7 @@ import { Item } from "./item";
 import { Update } from "./update";
 import { AddMember } from "./addMember";
 import { Msg } from "./msg";
-
-
-export const Group = () => {
-    return <Outlet />
-}
+import { Group } from "./main";
 
 
 export const RsGroup = [
