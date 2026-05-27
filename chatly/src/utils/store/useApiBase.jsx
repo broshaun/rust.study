@@ -16,7 +16,7 @@ const safeJoin = (...parts) => {
 };
 
 export function useApiBase(path = "") {
-  const [apiBase, setApiBase] = useLocalStorage({ key: "apiBase", defaultValue: "http://192.168.2.2:5015" });
+  const [apiBase, setApiBase] = useLocalStorage({ key: "apiBase", defaultValue: "http://192.168.2.1:5015" });
   const base = apiBase || "";
   const joinPath = (subPath = "") => safeJoin(base, path, subPath);
   return { apiBase: base, setApiBase, joinPath };

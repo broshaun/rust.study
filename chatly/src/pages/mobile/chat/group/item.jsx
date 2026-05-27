@@ -1,4 +1,4 @@
-import { useHttpClient, currentAppBar,currentGroup } from "utils";
+import { useHttpClient, currentAppBar, currentGroup, useGroupStore } from "utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { IconCirclePlus } from "@tabler/icons-react";
@@ -19,7 +19,7 @@ const groups = [
 ];
 
 export const Item = () => {
-    const  setCurGroup = currentGroup((state) => state.setCurrent);
+    const setCurGroup = currentGroup((state) => state.setCurrent);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     setRightIcon(<IconCirclePlus />)
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -30,13 +30,12 @@ export const Item = () => {
     }, [])
 
 
+
+
     const { http } = useHttpClient('/rpc/chat/msg/group/')
-
-
     const {
         data: groups = [],
         isLoading,
-        isFetching,
         error,
         refetch,
     } = useQuery({
@@ -50,25 +49,39 @@ export const Item = () => {
         },
         staleTime: 1000 * 60 * 5, // 5分钟内认为缓存有效
         gcTime: 1000 * 60 * 30, // 缓存保留30分钟
+        select: (data) =>
+            data.map((item) => ({
+                id: item.id,
+                group_name: item.group_name,
+                group_avatar: item.group_avatar,
+                group_notice: item.group_notice,
+                hasNews: item.signal === "old",
+            }))
     });
 
     const navigate = useNavigate();
     const onSelect = (value) => {
-        // console.log("选中的群为", value)
+        console.log("选中的群为", value)
+        setCurGroup(value)
         navigate('/mobile/chat/group/msgs')
     }
 
     const onAvatarClick = (value) => {
         // console.log("点击群组头像", value)
-        navigate('/mobile/chat/group/update')
         setCurGroup(value)
+        navigate('/mobile/chat/group/update')
+        
     }
 
+    const syncGroups = useGroupStore((state) => state.syncGroups);
+    useEffect(() => {
+        syncGroups(groups)
+    }, [groups]);
+
+    const groupState = useGroupStore((state) => state.groups);
 
 
-    console.log('groups', groups)
-
-    if (!groups.length) {
+    if (!groupState.length) {
         return (
             <Center py="xl">
                 <Stack gap={6} align="center" opacity={0.6}>
@@ -82,10 +95,11 @@ export const Item = () => {
     }
     return (
         <Box>
-            {groups.map((group) => (
+            {groupState.map((group) => (
                 <GroupItem
                     key={group.id}
                     data={group}
+                    hasNews={group.signal === "new"}
                     onSelect={onSelect}
                     onAvatarClick={onAvatarClick}
                 />

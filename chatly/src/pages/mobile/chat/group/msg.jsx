@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react"
-import { useWinSize, currentChat, currentAppBar, useImgApiBase } from 'utils';
+import { useWinSize, currentChat, currentAppBar, useImgApiBase, currentGroup, getUserDB } from 'utils';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
-import { useOutletContext } from 'react-router';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./tools";
 
@@ -12,39 +11,41 @@ export function Msg() {
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-    const current = currentChat((s) => s.current);
+    const current = currentGroup((s) => s.current);
     useEffect(() => {
-        setTitle(current?.displayName)
-        setLeftPath('/mobile/chat/dialog/')
+        setTitle(current?.group_name)
+        setLeftPath('/mobile/chat/group/')
         setRightPath(null)
     }, [])
 
-    // const { fnSendMsg, db } = useOutletContext();
+
     const { winHeight } = useWinSize();
 
-    const receiverAvatarSrc = useMemo(() => {
-        return current?.avatar_url
-    }, [current?.avatar_url]);
+    // const receiverAvatarSrc = useMemo(() => {
+    //     return current?.avatar_url
+    // }, [current?.avatar_url]);
 
-    const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
-    const { joinPath: joinPathAvatar } = useImgApiBase('/files/avatar/')
-    const senderAvatarSrc = useMemo(() => {
-        if (!myAvatar) return "";
-        return joinPathAvatar(myAvatar)
-    }, [myAvatar]);
+    // const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
+    // const { joinPath: joinPathAvatar } = useImgApiBase('/files/avatar/')
+    // const senderAvatarSrc = useMemo(() => {
+    //     if (!myAvatar) return "";
+    //     return joinPathAvatar(myAvatar)
+    // }, [myAvatar]);
 
+     const [account] = useLocalStorage({ key: 'savedAccount' });
+    const db = getUserDB(account);
     const [msgs, setMsgs] = useState([]);
-    // useEffect(() => {
-    //     if (!db) return;
-    //     const sub = liveQuery(
-    //         () => db.table('message').where('uid').equals(current?.uid).toArray()
-    //         // () => db.table('message').where('uid').equals(current?.uid).reverse().toArray()
-    //     ).subscribe({
-    //         next: rows => setMsgs(rows),
-    //         error: console.error
-    //     });
-    //     return () => sub.unsubscribe();
-    // }, [current?.uid, db]);
+    useEffect(() => {
+        if (!db) return;
+        const sub = liveQuery(
+            () => db.table('gmsgs').where('group_id').equals(current?.id).toArray()
+            // () => db.table('message').where('uid').equals(current?.uid).reverse().toArray()
+        ).subscribe({
+            next: rows => setMsgs(rows),
+            error: console.error
+        });
+        return () => sub.unsubscribe();
+    }, [current?.id, db]);
 
 
     
@@ -60,8 +61,8 @@ export function Msg() {
         <ChatBox
             height={winHeight - 55}
             messages={msgs}
-            senderAvatarSrc={senderAvatarSrc}
-            receiverAvatarSrc={receiverAvatarSrc}
+            // senderAvatarSrc={senderAvatarSrc}
+            // receiverAvatarSrc={receiverAvatarSrc}
             onSend={(v) => { msgTextSend(v) }}
             // onOpenTools={() => { console.log("打开工具栏") }}
         >

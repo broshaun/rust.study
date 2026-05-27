@@ -13,6 +13,9 @@ export const GroupItem = memo(function GroupItem({
   onSelect,
   onAvatarClick,
   height = 52,
+
+  // true = 绿色，false = 灰色
+  hasNews = false,
 }) {
   if (!data) return null;
 
@@ -37,18 +40,39 @@ export const GroupItem = memo(function GroupItem({
       h={height}
       w="100%"
       px={6}
+      pos="relative"
       style={{
         borderRadius: 10,
-        transition: "background-color 0.15s ease",
+        // 添加默认边框和背景、边框的颜色过渡效果
+        border: "1px solid var(--mantine-color-gray-2)",
+        transition: "background-color 0.15s ease, border-color 0.15s ease",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor =
           "var(--mantine-color-gray-0)";
+        // 鼠标移入时稍微加深边框颜色（可选，若不需要保持 gray-2 即可）
+        e.currentTarget.style.borderColor = "var(--mantine-color-gray-3)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.backgroundColor = "transparent";
+        // 鼠标移出时恢复默认边框颜色
+        e.currentTarget.style.borderColor = "var(--mantine-color-gray-2)";
       }}
     >
+      {/* 右上角状态灯 */}
+      <Box
+        pos="absolute"
+        top={8}
+        right={8}
+        w={6}
+        h={6}
+        bg={hasNews ? "green" : "gray.5"}
+        style={{
+          borderRadius: "50%",
+          transition: "background-color 0.2s ease",
+        }}
+      />
+
       <Group wrap="nowrap" gap={10} h="100%">
         <SafeAvatar
           url={data.group_avatar}

@@ -18,20 +18,19 @@ export const Group = () => {
      * 发送信息
      */
     const { http } = useHttpClient('/rpc/chat/msg/group/');
-    const { mutateAsync: fnSendMsg, isPending } = useMutation(
+    // const { mutateAsync: fnSendMsg, isPending } = useMutation(
+    const mutation = useMutation(
         {
-            mutationFn: async ({ uid, msgType, msgText }) => {
-                console.log('msgType:', msgType);
-                console.log('发送文本...', uid, msgText);
+            mutationFn: async ({ group_id, msgType, msgText }) => {
                 const results = await http.requestBodyJson('group_send', {
-                    user_id: uid,
+                    group_id: group_id,
                     msg_type: msgType,
                     msg_text: msgText
                 });
                 if (!results) return;
                 if (results?.code === 200) {
-                    db.table('message').put({
-                        uid: uid,
+                    db.table('gmsgs').put({
+                        group_id: group_id,
                         type: msgType,
                         content: msgText,
                         timestamp: getDateTimeStr(),
@@ -43,14 +42,13 @@ export const Group = () => {
             onError: (error) => {
                 console.error(error);
             },
-
             onSuccess: (data) => {
                 console.log(data);
             },
         }
     );
 
-    return <Outlet context={{ fnSendMsg, db, isPending }} />
+    return <Outlet context={{ db, mutation }} />
 
 }
 

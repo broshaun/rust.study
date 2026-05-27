@@ -25,7 +25,7 @@
       "identifier": "http:default",
       "allow": [
         {
-          "url": "http://192.168.2.2:5015"
+          "url": "http://192.168.2.1:5015"
         },
             {
           "url": "http://192.168.2.2:9000"
