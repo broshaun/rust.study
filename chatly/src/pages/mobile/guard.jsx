@@ -22,11 +22,12 @@ export function ChatGuard() {
     if (code === 200 && Array.isArray(data) && data.length > 0) {
       await db.table('gmsgs').bulkPut(
         data.map((item) => ({
-          uid: item.uid,
+          avatar_url: item.avatar_url,
+          nikename: item.nikename,
           type: item.msg_type,
           content: item.msg_text,
           timestamp: item.timestamp,
-          sentByMe: false,
+          sentByMe: item.sentByMe,
           group_id: item.group_id
         }))
       );

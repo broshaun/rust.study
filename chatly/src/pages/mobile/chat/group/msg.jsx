@@ -24,7 +24,7 @@ export function Msg() {
 
     const { winHeight } = useWinSize();
 
-    const { mutation } = useOutletContext();
+    const { db, mutation } = useOutletContext();
 
     // const receiverAvatarSrc = useMemo(() => {
     //     return current?.avatar_url
@@ -37,8 +37,7 @@ export function Msg() {
     //     return joinPathAvatar(myAvatar)
     // }, [myAvatar]);
 
-     const [account] = useLocalStorage({ key: 'savedAccount' });
-    const db = getUserDB(account);
+
     const [msgs, setMsgs] = useState([]);
     useEffect(() => {
         if (!db) return;
@@ -66,10 +65,8 @@ export function Msg() {
         <ChatBox
             height={winHeight - 55}
             messages={msgs}
-            // senderAvatarSrc={senderAvatarSrc}
-            // receiverAvatarSrc={receiverAvatarSrc}
             onSend={(v) => { msgTextSend(v) }}
-            // onOpenTools={() => { console.log("打开工具栏") }}
+            onOpenTools={() => { console.log("打开工具栏") }}
         >
             <ChatBox.Tools>
                 <Tools />

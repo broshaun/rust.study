@@ -12,11 +12,11 @@ export const getUserDB = (userId) => {
     return dbCache.get(userId);
   }
   const db = new Dexie(`chatDB_${userId}`);
-  db.version(12).stores({
+  db.version(13).stores({
     message: '++id, uid, timestamp',
     friends: 'id, uid, timestamp, dialog, signal, ask_state',
     group: 'id, group_id, timestamp, dialog, signal, ask_state',
-    gmsgs: '++id, uid, group_id, timestamp',
+    gmsgs: '++id, group_id, timestamp',
   });
   dbCache.set(userId, db);
   return db;
