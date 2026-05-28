@@ -1,11 +1,11 @@
 import { useHttpClient, currentAppBar, currentGroup, useGroupStore } from "utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { IconCirclePlus } from "@tabler/icons-react";
 import { Box, Text, Center, Stack } from "@mantine/core";
 import { IconUsers } from "@tabler/icons-react";
 import { GroupItem } from "./UI/GroupItem";
 import { useNavigate } from "react-router";
+import { useLocalStorage } from '@mantine/hooks';
 
 
 
@@ -19,15 +19,20 @@ const groups = [
 ];
 
 export const Item = () => {
+    const [userId] = useLocalStorage({ key: 'savedAccount' })
     const setGroup = useGroupStore((state) => state.setGroup);
     const setCurGroup = currentGroup((state) => state.setCurrent);
-    const setRightIcon = currentAppBar((state) => state.setRightIcon);
-    setRightIcon(<IconCirclePlus />)
-    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+
     const setTitle = currentAppBar((state) => state.setTitle);
+    const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setRightIcon = currentAppBar((state) => state.setRightIcon);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
+    
     useEffect(() => {
+        setTitle('群聊')
         setLeftPath(null)
-        setTitle('群聊');
+        setRightIcon(null)
+        setRightPath(null)
     }, [])
 
 
@@ -40,7 +45,7 @@ export const Item = () => {
         error,
         refetch,
     } = useQuery({
-        queryKey: ["my_group_list"],
+        queryKey: ["my_group_list", userId],
         queryFn: async () => {
             const results = await http.requestBodyJson("my_group_list");
             if (!results) throw new Error("获取失败");
@@ -63,8 +68,6 @@ export const Item = () => {
     const onSelect = (value) => {
         console.log("选中的群为", value)
         setCurGroup(value)
-
-
         setGroup(value?.id, { signal: "old" })
         navigate('/mobile/chat/group/msgs')
 
@@ -84,7 +87,7 @@ export const Item = () => {
 
     const groupState = useGroupStore((state) => state.groups);
 
-    console.log('groupState', groupState)
+    // console.log('groupState', groupState)
 
 
     if (!groupState.length) {

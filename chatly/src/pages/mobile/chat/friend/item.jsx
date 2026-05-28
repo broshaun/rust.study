@@ -47,7 +47,7 @@ export const Item = () => {
                     db.table('friends').get(element?.id).then((row) => {
                         if (row) {
                             db.table('friends').update(row?.id, {
-                                'uid': element?.user_id,
+                                'uid': element?.uid,
                                 'avatar_url': element?.avatar_url,
                                 'email': element?.email,
                                 'remark': element?.remark,
@@ -57,7 +57,7 @@ export const Item = () => {
                         } else {
                             db.table('friends').put({
                                 'id': element?.id,
-                                'uid': element?.user_id,
+                                'uid': element?.uid,
                                 'avatar_url': element?.avatar_url,
                                 'email': element?.email,
                                 'remark': element?.remark,

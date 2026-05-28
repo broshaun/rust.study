@@ -129,8 +129,11 @@ export const MsgItem = memo(({
   avatarSrc,
   ref 
 }) => {
+
+  
   if (!msg) return null;
   // console.log("msg",msg)
+  console.log("avatarSrc",avatarSrc)
 
   const { timestamp, type, content, sentByMe } = msg;
   const isRight = sentByMe === true;

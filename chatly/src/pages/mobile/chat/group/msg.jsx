@@ -5,18 +5,22 @@ import { useLocalStorage } from '@mantine/hooks';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./tools";
 import { useOutletContext } from "react-router";
+import { IconDots } from "@tabler/icons-react";
 
 
 export function Msg() {
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
+
+    const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
     const current = currentGroup((s) => s.current);
     useEffect(() => {
         setTitle(current?.group_name)
         setLeftPath('/mobile/chat/group/')
-        setRightPath(null)
+        setRightIcon(<IconDots />)
+        setRightPath('/mobile/chat/group/gusr/')
     }, [])
 
 

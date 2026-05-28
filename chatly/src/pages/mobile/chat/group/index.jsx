@@ -1,11 +1,13 @@
-import { Outlet, Navigate } from "react-router";
-import { Item } from "./item";
-import { Update } from "./update";
-import { AddMember } from "./addMember";
+import { Item } from "./group_item";
+import { Update } from "./group_update";
+import { AddMember } from "./group_user_add";
+import { DelMember } from "./group_user_remove";
 import { Msg } from "./msg";
 import { Group } from "./main";
 import { ImagSend } from "./imgSend";
 import { Smile } from "./smile";
+import { GroupUsers } from "./group_users";
+
 
 
 export const RsGroup = [
@@ -25,6 +27,10 @@ export const RsGroup = [
                 element: <AddMember />
             },
             {
+                path: "delgusr",
+                element: <DelMember />
+            },
+            {
                 path: "msgs",
                 element: <Msg />
             },
@@ -36,6 +42,10 @@ export const RsGroup = [
                 path: "smile",
                 element: <Smile />
             },
+            {
+                path: "gusr",
+                element: <GroupUsers />
+            }
         ]
     }
 ];

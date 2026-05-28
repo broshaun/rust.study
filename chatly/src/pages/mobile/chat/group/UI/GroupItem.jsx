@@ -15,6 +15,8 @@ export const GroupItem = memo(function GroupItem({
 }) {
   if (!data) return null;
 
+  // console.log('data',data)
+
   const name = data.group_name || "未命名群聊";
   const hasNews = data.signal === "news";
   const time = data.timestamp || "";

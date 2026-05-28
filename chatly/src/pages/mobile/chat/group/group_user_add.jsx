@@ -1,12 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@mantine/hooks";
-import { GroupAddMember } from "./UI/GroupAdd";
-import { getUserDB, currentGroup, useHttpClient } from "utils";
+import { getUserDB, currentGroup, useHttpClient, currentAppBar } from "utils";
 import { useMutation } from "@tanstack/react-query";
-
-
+import { useNavigate } from "react-router";
+import { GroupMemberSelector } from "./UI/GroupMemberSelector";
 
 export const AddMember = () => {
+  const navigate = useNavigate();
+  const setTitle = currentAppBar((state) => state.setTitle);
+  const setLeftPath = currentAppBar((state) => state.setLeftPath);
+  const setRightIcon = currentAppBar((state) => state.setRightIcon);
+  const setRightPath = currentAppBar((state) => state.setRightPath);
+  useEffect(() => {
+    setLeftPath('/mobile/chat/group/gusr/')
+    // setTitle('');
+    setRightIcon(null)
+    setRightPath(null)
+  }, [])
+
+
 
   const { http } = useHttpClient('/rpc/chat/msg/group/');
   const [account] = useLocalStorage({ key: "savedAccount" });
@@ -67,7 +79,7 @@ export const AddMember = () => {
     },
     onSuccess: (data) => {
       console.log("修改成功:", data);
-      // navigate('/mobile/chat/group/',)
+      
     },
     onError: (error) => {
       console.error("修改失败:", error);
@@ -75,15 +87,18 @@ export const AddMember = () => {
   });
 
   const group = currentGroup((state) => state.current)
-  const handleConfirm = useCallback((value) => {
-    console.log("确认添加:", value);
-    console.log('group++++', group)
-
-    addgusr({group_id:group.id,uids:value})
-  }, [group]);
+  const handleConfirm = useCallback(async (value) => {
+    const list = value?.users || []
+    console.log('list+++',list)
+    const uids = list.map(item => item.uid);
+    console.log('uids+++',uids)
+    await addgusr({ group_id: group.id, uids: uids })
+    navigate('/mobile/chat/group/gusr/')
+  }, [group,navigate,addgusr]);
 
   return (
-    <GroupAddMember
+    <GroupMemberSelector
+      mode="add"
       users={friends}
       onConfirm={handleConfirm}
     />

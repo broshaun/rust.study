@@ -3,7 +3,7 @@ import { currentAppBar, useHttpClient,currentGroup } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation } from "@tanstack/react-query";
-import { IconCirclePlus } from "@tabler/icons-react";
+
 
 
 export const Update = () => {
@@ -14,8 +14,8 @@ export const Update = () => {
     useEffect(() => {
         setLeftPath('/mobile/chat/group/')
         setTitle('群聊');
-        setRightIcon(<IconCirclePlus />)
-        setRightPath('/mobile/chat/group/addg/')
+        setRightIcon(null)
+        setRightPath(null)
     }, [])
 
 
