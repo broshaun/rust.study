@@ -10,7 +10,7 @@ import {
   Box,
   Avatar,
 } from "@mantine/core";
-import { IconUpload } from "@tabler/icons-react";
+import { IconUpload, IconTrash } from "@tabler/icons-react";
 import { SafeAvatar } from "components/flutter";
 
 export function GroupEdit({
@@ -19,6 +19,7 @@ export function GroupEdit({
   group_avatar = "",
   group_notice = "",
   onClick,
+  onDelete, // 👈 父组件传进来的解散回调
   loading = false,
 }) {
   const [form, setForm] = useState({
@@ -87,18 +88,9 @@ export function GroupEdit({
             }}
           >
             {preview ? (
-              <Avatar
-                src={preview}
-                size={72}
-                radius={8}
-              />
+              <Avatar src={preview} size={72} radius={8} />
             ) : (
-              <SafeAvatar
-                url={group_avatar}
-                size={72}
-                radius={8}
-                cover
-              />
+              <SafeAvatar url={group_avatar} size={72} radius={8} cover />
             )}
           </Box>
 
@@ -142,7 +134,13 @@ export function GroupEdit({
           onChange={(e) => updateField("group_notice", e.currentTarget.value)}
         />
 
-        <Group justify="flex-end" mt="sm">
+        {/* 底部操作栏 */}
+        <Group justify="space-between" mt="sm">
+          {/* 直接触发父组件的 onDelete 回调，并把当前群 id 传过去 */}
+          <Button onClick={() => onDelete?.(form.id)} px="xl">
+            解散群聊
+          </Button>
+
           <Button loading={loading} onClick={() => onClick?.(form)} px="xl">
             确认修改
           </Button>

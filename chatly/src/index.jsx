@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "@mantine/core/styles.css";
 import { MantineProvider } from "@mantine/core";
+import { ModalsProvider } from '@mantine/modals';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import App from "./App";
@@ -30,7 +31,9 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <MantineProvider theme={theme} defaultColorScheme="auto">
-        <App />
+        <ModalsProvider>
+          <App />
+        </ModalsProvider>
       </MantineProvider>
     </QueryClientProvider>
   </React.StrictMode>

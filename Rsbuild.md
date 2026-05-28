@@ -62,7 +62,7 @@ For iOS development, run:
   pnpm add react-router
   pnpm add dexie dexie-react-hooks
   pnpm add zustand
-  pnpm add @mantine/hooks @mantine/core @tabler/icons-react
+  pnpm add @mantine/hooks @mantine/core @mantine/modals @tabler/icons-react
   pnpm add @tanstack/react-query
   pnpm add @tanstack/react-virtual
 ```

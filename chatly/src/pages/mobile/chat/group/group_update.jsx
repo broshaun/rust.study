@@ -1,9 +1,9 @@
 import { GroupEdit } from "./UI/GroupEdit";
-import { currentAppBar, useHttpClient,currentGroup } from "utils";
+import { currentAppBar, useHttpClient, currentGroup } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation } from "@tanstack/react-query";
-
+import { modals } from '@mantine/modals';
 
 
 export const Update = () => {
@@ -59,12 +59,40 @@ export const Update = () => {
 
 
 
+    // const handleDeleteGroup = (groupId) => {
+    //     modals.openConfirmModal({
+    //       title: '解散群聊',
+    //       children: <div style={{ fontSize: '14px' }}>你确定要解散这个群组吗？</div>,
+    //       labels: { confirm: '确定解散', cancel: '再想想' },
+    //       confirmProps: { color: 'red' },
+    //       onConfirm: () => {
+    //           console.log("执行解散后端 API", groupId);
+    //           // 在这里调用你的删除接口，比如 deleteGroup(groupId)
+    //       },
+    //     });
+    // };
+
+    const handleDeleteGroup = (groupId) => {
+        modals.openConfirmModal({
+            title: '解散群聊',
+            children: <div style={{ fontSize: '14px' }}>你确定要解散这个群组吗？</div>,
+            labels: { confirm: '确定解散', cancel: '再想想' },
+            centered: true,
+            onConfirm: () => {
+                console.log("执行解散后端 API", groupId);
+                // deleteGroup(groupId);
+            },
+        });
+    };
+
+
     return <div>
         <GroupEdit
             id={group.id}
             group_name={group.group_name}
             group_avatar={group.group_avatar}
             group_notice={group.group_notice}
+            onDelete={(select) => { console.log('select', select); handleDeleteGroup(select) }}
             onClick={(value) => {
                 uploadFile(value?.group_avatar).then((avatar_url) => {
                     updateGroup({
