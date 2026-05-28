@@ -8,8 +8,10 @@ export const Group = () => {
     /** 账号对应信息
      * 个人数据库
      */
+    const [avatar] = useLocalStorage({ key: 'myAvatar' })
     const [account] = useLocalStorage({ key: 'savedAccount' });
     const db = getUserDB(account);
+    const dt = useDateTime();
 
     /**
      * 发送信息
@@ -22,8 +24,18 @@ export const Group = () => {
                 msg_type: msgType,
                 msg_text: msgText
             });
-            if (!results) return;
-            return 'ok';
+            if (results?.code === 200) {
+                db.table('gmsgs').put({
+                    group_id: group_id,
+                    nikename: '我自己',
+                    type: msgType,
+                    content: msgText,
+                    timestamp: dt.getDateTimeStr(),
+                    sentByMe: true,
+                    avatar_url: avatar,
+                });
+            };
+            return results?.message
         },
         onError: (error) => {
             console.error(error);

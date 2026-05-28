@@ -1,20 +1,17 @@
 import { useNavigate, useOutletContext } from 'react-router';
 import { useState, useEffect } from "react";
 import { useMutation } from '@tanstack/react-query';
-import { currentChat, useHttpClient, useImgApiBase, currentAppBar } from 'utils';
+import { currentGroup, useHttpClient, useImgApiBase, currentAppBar } from 'utils';
 import { ImgUp } from './UI/ImageUpload';
 
 
 export function ImagSend() {
     const { db, mutation } = useOutletContext();
-
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
-    const current = currentChat((s) => s.current);
+    const current = currentGroup((s) => s.current);
     useEffect(() => {
         setLeftPath('/mobile/chat/group/msgs/')
     }, [])
-
-
 
     const { joinPath: joinPathImg30 } = useImgApiBase('/img30/'); // 获取MinIo真实图片URL
     /**
@@ -64,10 +61,9 @@ export function ImagSend() {
     };
 
     useEffect(() => {
-        console.log('isUploadingStart',isUploadingStart)
-        console.log('!isPending',!mutation.isPending)
+
         if (isUploadingStart && !mutation.isPending) {
-            navigate('/mobile/chat/group/');
+            navigate('/mobile/chat/group/msgs/');
         }
     }, [mutation.isPending]);
 

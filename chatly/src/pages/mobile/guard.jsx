@@ -27,7 +27,7 @@ export function ChatGuard() {
           type: item.msg_type,
           content: item.msg_text,
           timestamp: item.timestamp,
-          sentByMe: item.sentByMe,
+          sentByMe: false,
           group_id: item.group_id
         }))
       );

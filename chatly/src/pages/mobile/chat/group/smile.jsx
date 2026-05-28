@@ -1,12 +1,12 @@
 import { EmojiList } from "./UI/EmojiList";
-import { currentAppBar, currentChat } from 'utils';
+import { currentAppBar, currentGroup } from 'utils';
 import { useNavigate, useOutletContext } from 'react-router';
 import { useState, useEffect } from "react";
 
 
 export function Smile() {
     const { db, mutation } = useOutletContext();
-    const current = currentChat((s) => s.current);
+    const current = currentGroup((s) => s.current);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     useEffect(() => {
         setLeftPath('/mobile/chat/group/msgs/')
