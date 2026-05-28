@@ -27,7 +27,7 @@ export const Item = () => {
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
-    
+
     useEffect(() => {
         setTitle('群聊')
         setLeftPath(null)
@@ -39,30 +39,26 @@ export const Item = () => {
 
 
     const { http } = useHttpClient('/rpc/chat/msg/group/')
-    const {
-        data: groups = [],
-        isLoading,
-        error,
-        refetch,
-    } = useQuery({
-        queryKey: ["my_group_list", userId],
-        queryFn: async () => {
-            const results = await http.requestBodyJson("my_group_list");
-            if (!results) throw new Error("获取失败");
-            const { code, data, message } = results;
-            if (code !== 200) throw new Error(message);
-            return data || [];
-        },
-        staleTime: 1000 * 60 * 5, // 5分钟内认为缓存有效
-        gcTime: 1000 * 60 * 30, // 缓存保留30分钟
-        select: (data) =>
-            data.map((item) => ({
-                id: item.id,
-                group_name: item.group_name,
-                group_avatar: item.group_avatar,
-                group_notice: item.group_notice,
-            }))
-    });
+    const { data: groups = [] } = useQuery
+        ({
+            queryKey: ["my_group_list", userId],
+            queryFn: async () => {
+                const results = await http.requestBodyJson("my_group_list");
+                if (!results) throw new Error("获取失败");
+                const { code, data, message } = results;
+                if (code !== 200) throw new Error(message);
+                return data || [];
+            },
+            staleTime: 1000 * 60 * 5, // 5分钟内认为缓存有效
+            gcTime: 1000 * 60 * 30, // 缓存保留30分钟
+            select: (data) =>
+                data.map((item) => ({
+                    id: item.id,
+                    group_name: item.group_name,
+                    group_avatar: item.group_avatar,
+                    group_notice: item.group_notice,
+                }))
+        });
 
     const navigate = useNavigate();
     const onSelect = (value) => {
@@ -80,6 +76,9 @@ export const Item = () => {
 
     }
 
+
+    console.log('groups', groups)
+
     const syncGroups = useGroupStore((state) => state.syncGroups);
     useEffect(() => {
         syncGroups(groups)
@@ -87,7 +86,7 @@ export const Item = () => {
 
     const groupState = useGroupStore((state) => state.groups);
 
-    // console.log('groupState', groupState)
+    console.log('groupState', groupState)
 
 
     if (!groupState.length) {
