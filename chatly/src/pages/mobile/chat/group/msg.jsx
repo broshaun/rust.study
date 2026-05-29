@@ -23,25 +23,8 @@ export function Msg() {
         setRightPath('/mobile/chat/group/gusr/')
     }, [])
 
-
-    
-
     const { winHeight } = useWinSize();
-
     const { db, mutation } = useOutletContext();
-
-    // const receiverAvatarSrc = useMemo(() => {
-    //     return current?.avatar_url
-    // }, [current?.avatar_url]);
-
-    // const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
-    // const { joinPath: joinPathAvatar } = useImgApiBase('/files/avatar/')
-    // const senderAvatarSrc = useMemo(() => {
-    //     if (!myAvatar) return "";
-    //     return joinPathAvatar(myAvatar)
-    // }, [myAvatar]);
-
-
     const [msgs, setMsgs] = useState([]);
     useEffect(() => {
         if (!db) return;

@@ -7,7 +7,7 @@ import { Group } from "./main";
 import { ImagSend } from "./imgSend";
 import { Smile } from "./smile";
 import { GroupUsers } from "./group_users";
-
+import { CreateGroup } from "./group_add";
 
 
 export const RsGroup = [
@@ -23,7 +23,7 @@ export const RsGroup = [
                 element: <Update />
             },
             {
-                path: "addg",
+                path: "addgusr",
                 element: <AddMember />
             },
             {
@@ -45,7 +45,11 @@ export const RsGroup = [
             {
                 path: "gusr",
                 element: <GroupUsers />
-            }
+            },
+            {
+                path: "addg",
+                element: <CreateGroup />
+            },
         ]
     }
 ];

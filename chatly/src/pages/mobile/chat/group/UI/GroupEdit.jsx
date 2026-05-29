@@ -1,17 +1,59 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Stack,
-  TextInput,
-  Textarea,
-  Group,
+  Avatar,
+  Box,
   Button,
   FileButton,
+  Group,
+  Stack,
   Text,
-  Box,
-  Avatar,
+  Textarea,
+  TextInput,
 } from "@mantine/core";
-import { IconUpload, IconTrash } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { IconUpload } from "@tabler/icons-react";
 import { SafeAvatar } from "components/flutter";
+
+function DeleteGroupContent({ groupInfo, onDelete }) {
+  const [value, setValue] = useState("");
+
+  const matched = value.trim() === groupInfo.group_name;
+
+  return (
+    <Stack gap="md">
+      <Text size="sm" c="dimmed">
+        请输入群名称以确认解散：
+      </Text>
+
+      <Text fw={700} c="red">
+        {groupInfo.group_name}
+      </Text>
+
+      <TextInput
+        placeholder="请输入群名称"
+        value={value}
+        onChange={(e) => setValue(e.currentTarget.value)}
+      />
+
+      <Group justify="flex-end">
+        <Button variant="default" onClick={() => modals.closeAll()}>
+          取消
+        </Button>
+
+        <Button
+          color="red"
+          disabled={!matched}
+          onClick={() => {
+            onDelete?.(groupInfo);
+            modals.closeAll();
+          }}
+        >
+          确认
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
 
 export function GroupEdit({
   id,
@@ -19,7 +61,7 @@ export function GroupEdit({
   group_avatar = "",
   group_notice = "",
   onClick,
-  onDelete, // 👈 父组件传进来的解散回调
+  onDelete,
   loading = false,
 }) {
   const [form, setForm] = useState({
@@ -32,80 +74,79 @@ export function GroupEdit({
   const [preview, setPreview] = useState("");
 
   useEffect(() => {
-    setForm({
-      id,
-      group_name,
-      group_avatar,
-      group_notice,
-    });
-
+    setForm({ id, group_name, group_avatar, group_notice });
     setPreview("");
   }, [id, group_name, group_avatar, group_notice]);
 
   useEffect(() => {
     return () => {
-      if (preview?.startsWith("blob:")) {
-        URL.revokeObjectURL(preview);
-      }
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
     };
   }, [preview]);
+
+  const updateField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleAvatarChange = (file) => {
     if (!file) return;
 
-    if (preview?.startsWith("blob:")) {
-      URL.revokeObjectURL(preview);
-    }
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
 
-    const previewUrl = URL.createObjectURL(file);
-
-    setPreview(previewUrl);
-
-    setForm((prev) => ({
-      ...prev,
-      group_avatar: file,
-    }));
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    updateField("group_avatar", file);
   };
 
-  const updateField = (key, value) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  const handleSubmit = () => {
+    const name = form.group_name?.trim();
+    if (!name) return;
+
+    onClick?.({
+      ...form,
+      group_name: name,
+    });
+  };
+
+  const openDeleteModal = () => {
+    modals.open({
+      title: "解散群聊",
+      centered: true,
+      children: <DeleteGroupContent groupInfo={form} onDelete={onDelete} />,
+    });
   };
 
   return (
-    <Box p={10} w="100%">
-      <Stack gap="md">
-        <Group wrap="nowrap" gap="sm">
+    <Box p="md" w="100%" h="100%">
+      <Stack h="100%" gap="md">
+        <Group wrap="nowrap" gap="md">
           <Box
             w={72}
             h={72}
             style={{
-              overflow: "hidden",
-              borderRadius: 8,
               flexShrink: 0,
+              overflow: "hidden",
+              borderRadius: 12,
             }}
           >
             {preview ? (
-              <Avatar src={preview} size={72} radius={8} />
+              <Avatar src={preview} size={72} radius={12} />
             ) : (
-              <SafeAvatar url={group_avatar} size={72} radius={8} cover />
+              <SafeAvatar url={form.group_avatar} size={72} radius={12} cover />
             )}
           </Box>
 
-          <Stack gap={4}>
+          <Stack gap={6}>
             <FileButton
-              onChange={handleAvatarChange}
               accept="image/png,image/jpeg,image/webp"
+              onChange={handleAvatarChange}
             >
               {(props) => (
                 <Button
                   {...props}
                   size="xs"
-                  leftSection={<IconUpload size={14} />}
                   variant="light"
-                  w="fit-content"
+                  leftSection={<IconUpload size={14} />}
                 >
                   更换头像
                 </Button>
@@ -121,7 +162,7 @@ export function GroupEdit({
         <TextInput
           label="群名称"
           placeholder="请输入群名称"
-          value={form.group_name}
+          value={form.group_name || ""}
           onChange={(e) => updateField("group_name", e.currentTarget.value)}
         />
 
@@ -130,21 +171,42 @@ export function GroupEdit({
           placeholder="请输入群公告"
           minRows={4}
           autosize
-          value={form.group_notice}
+          value={form.group_notice || ""}
           onChange={(e) => updateField("group_notice", e.currentTarget.value)}
         />
 
-        {/* 底部操作栏 */}
-        <Group justify="space-between" mt="sm">
-          {/* 直接触发父组件的 onDelete 回调，并把当前群 id 传过去 */}
-          <Button onClick={() => onDelete?.(form.id)} px="xl">
-            解散群聊
-          </Button>
+        <Button
+          fullWidth
+          loading={loading}
+          disabled={!form.group_name?.trim()}
+          onClick={handleSubmit}
+        >
+          确认修改
+        </Button>
 
-          <Button loading={loading} onClick={() => onClick?.(form)} px="xl">
-            确认修改
-          </Button>
-        </Group>
+        <Box mt="auto" pt={40}>
+          <Box
+            pt="md"
+            style={{
+              borderTop: "1px solid var(--mantine-color-gray-2)",
+            }}
+          >
+            <Text
+              ta="center"
+              c="red"
+              size="sm"
+              fw={500}
+              onClick={openDeleteModal}
+              style={{
+                cursor: "pointer",
+                userSelect: "none",
+                lineHeight: 2.2,
+              }}
+            >
+              解散群聊
+            </Text>
+          </Box>
+        </Box>
       </Stack>
     </Box>
   );

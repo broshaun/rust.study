@@ -8,7 +8,7 @@ export const Group = () => {
     /** 账号对应信息
      * 个人数据库
      */
-    const [avatar] = useLocalStorage({ key: 'myAvatar' })
+    const [currentUser] = useLocalStorage({ key: 'current_user' })
     const [account] = useLocalStorage({ key: 'savedAccount' });
     const db = getUserDB(account);
     const dt = useDateTime();
@@ -32,7 +32,7 @@ export const Group = () => {
                     content: msgText,
                     timestamp: dt.getDateTimeStr(),
                     sentByMe: true,
-                    avatar_url: avatar,
+                    avatar_url: currentUser?.avatar_url,
                 });
             };
             return results?.message

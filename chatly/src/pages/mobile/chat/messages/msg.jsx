@@ -26,12 +26,13 @@ export function Msg() {
         return current?.avatar_url
     }, [current?.avatar_url]);
 
-    const [myAvatar] = useLocalStorage({ key: 'myAvatar' });
+    const [currentUser] = useLocalStorage({ key: 'current_user' })
+    
     const { joinPath: joinPathAvatar } = useImgApiBase('/files/avatar/')
     const senderAvatarSrc = useMemo(() => {
-        if (!myAvatar) return "";
-        return joinPathAvatar(myAvatar)
-    }, [myAvatar]);
+        if (!currentUser?.avatar_url) return "";
+        return joinPathAvatar(currentUser?.avatar_url)
+    }, [currentUser?.avatar_url]);
 
     const [msgs, setMsgs] = useState([]);
     useEffect(() => {

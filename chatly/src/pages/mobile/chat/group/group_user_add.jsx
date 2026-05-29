@@ -1,72 +1,35 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocalStorage } from "@mantine/hooks";
+import { useLocalStorage, useListState } from "@mantine/hooks";
 import { getUserDB, currentGroup, useHttpClient, currentAppBar } from "utils";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./UI/GroupMemberSelector";
 
 export const AddMember = () => {
-  const navigate = useNavigate();
-  const setTitle = currentAppBar((state) => state.setTitle);
+
+  // const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
   const setRightPath = currentAppBar((state) => state.setRightPath);
   useEffect(() => {
-    setLeftPath('/mobile/chat/group/gusr/')
     // setTitle('');
+    setLeftPath('/mobile/chat/group/gusr/')
     setRightIcon(null)
     setRightPath(null)
   }, [])
 
-
-
   const { http } = useHttpClient('/rpc/chat/msg/group/');
   const [account] = useLocalStorage({ key: "savedAccount" });
-  const [friends, setFriends] = useState([]);
+  const db = getUserDB(account);
 
+  const [friends, handlers] = useListState([]);
   useEffect(() => {
-    let cancelled = false;
+    if (!db) return;
+    db.table("friends").where("ask_state").equals("agree").toArray().then((list) => {
+      handlers.setState(list)
+    })
+  }, [db]);
 
-    const loadFriends = async () => {
-      if (!account) {
-        setFriends([]);
-        return;
-      }
-
-      try {
-        const db = getUserDB(account);
-        if (!db) return;
-
-        const list = await db
-          .table("friends")
-          .where("ask_state")
-          .equals("agree")
-          .toArray();
-
-        if (!cancelled) {
-          setFriends(list);
-        }
-      } catch (err) {
-        console.error("加载好友失败:", err);
-        if (!cancelled) {
-          setFriends([]);
-        }
-      }
-    };
-
-    loadFriends();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [account]);
-
-
-
-
-
-
-  // 删除好友逻辑
   const { mutateAsync: addgusr } = useMutation({
     mutationFn: async ({ group_id, uids }) => {
       if (!group_id) return;
@@ -79,7 +42,7 @@ export const AddMember = () => {
     },
     onSuccess: (data) => {
       console.log("修改成功:", data);
-      
+
     },
     onError: (error) => {
       console.error("修改失败:", error);
@@ -87,14 +50,13 @@ export const AddMember = () => {
   });
 
   const group = currentGroup((state) => state.current)
+  const navigate = useNavigate();
   const handleConfirm = useCallback(async (value) => {
     const list = value?.users || []
-    console.log('list+++',list)
     const uids = list.map(item => item.uid);
-    console.log('uids+++',uids)
     await addgusr({ group_id: group.id, uids: uids })
     navigate('/mobile/chat/group/gusr/')
-  }, [group,navigate,addgusr]);
+  }, [group, navigate, addgusr]);
 
   return (
     <GroupMemberSelector

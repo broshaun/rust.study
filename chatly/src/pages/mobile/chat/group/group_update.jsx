@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { modals } from '@mantine/modals';
 import { useLocalStorage } from "@mantine/hooks";
+import { Stack, Text, TextInput } from "@mantine/core";
 
 export const Update = () => {
 
@@ -49,12 +50,13 @@ export const Update = () => {
             if (code !== 200) {
                 throw new Error(message || "修改群信息失败");
             }
-            await queryClient.invalidateQueries({queryKey: ["my_group_list", userId]});
             return data || true;
         },
         onSuccess: (data) => {
             console.log("修改成功:", data);
-            navigate('/mobile/chat/group/');
+            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
+                navigate('/mobile/chat/group/');
+            })
         },
         onError: (error) => {
             console.error("修改失败:", error);
@@ -75,7 +77,9 @@ export const Update = () => {
         },
         onSuccess: (data) => {
             console.log(data);
-            navigate('/mobile/chat/group/',)
+            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
+                navigate('/mobile/chat/group/');
+            })
         },
         onError: (error) => {
             console.error(error);
@@ -83,19 +87,21 @@ export const Update = () => {
     });
 
 
-    const handleDeleteGroup = (groupId) => {
-        modals.openConfirmModal({
-            title: '解散群聊',
-            children: <div style={{ fontSize: '14px' }}>你确定要解散这个群组吗？</div>,
-            labels: { confirm: '确定解散', cancel: '再想想' },
-            centered: true,
-            onConfirm: () => {
-                console.log("执行解散后端 API", groupId);
-                deteteGroup({ id: groupId })
 
-            },
+    const handleUpdateGroup = async (value) => {
+        const avatarUrl =
+            value.group_avatar instanceof File
+                ? await uploadFile(value.group_avatar)
+                : value.group_avatar;
+
+        updateGroup({
+            id: value.id,
+            group_name: value.group_name,
+            group_avatar: avatarUrl,
+            group_notice: value.group_notice,
         });
     };
+
 
 
     return <div>
@@ -104,18 +110,12 @@ export const Update = () => {
             group_name={group.group_name}
             group_avatar={group.group_avatar}
             group_notice={group.group_notice}
-            onDelete={(select) => { console.log('select', select); handleDeleteGroup(select) }}
-            onClick={(value) => {
-                uploadFile(value?.group_avatar).then((avatar_url) => {
-                    updateGroup({
-                        id: value.id,
-                        group_name: value.group_name,
-                        group_avatar: avatar_url,
-                        group_notice: value.group_notice
-                    });
-
-                })
+            onDelete={(value) => {
+                deteteGroup({
+                    id: value.id,
+                });
             }}
+            onClick={handleUpdateGroup}
         />
     </div>
 }

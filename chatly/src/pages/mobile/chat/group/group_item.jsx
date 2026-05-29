@@ -6,7 +6,7 @@ import { IconUsers } from "@tabler/icons-react";
 import { GroupItem } from "./UI/GroupItem";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
-
+import { IconCirclePlus } from "@tabler/icons-react";
 
 
 const groups = [
@@ -31,12 +31,9 @@ export const Item = () => {
     useEffect(() => {
         setTitle('群聊')
         setLeftPath(null)
-        setRightIcon(null)
-        setRightPath(null)
+        setRightIcon(<IconCirclePlus/>)
+        setRightPath('/mobile/chat/group/addg/')
     }, [])
-
-
-
 
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const { data: groups = [] } = useQuery
@@ -62,22 +59,15 @@ export const Item = () => {
 
     const navigate = useNavigate();
     const onSelect = (value) => {
-        console.log("选中的群为", value)
         setCurGroup(value)
         setGroup(value?.id, { signal: "old" })
         navigate('/mobile/chat/group/msgs')
-
     }
 
     const onAvatarClick = (value) => {
-        // console.log("点击群组头像", value)
         setCurGroup(value)
         navigate('/mobile/chat/group/update')
-
     }
-
-
-    console.log('groups', groups)
 
     const syncGroups = useGroupStore((state) => state.syncGroups);
     useEffect(() => {
@@ -85,9 +75,6 @@ export const Item = () => {
     }, [groups]);
 
     const groupState = useGroupStore((state) => state.groups);
-
-    console.log('groupState', groupState)
-
 
     if (!groupState.length) {
         return (

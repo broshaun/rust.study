@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@mantine/hooks";
 import { getUserDB, currentGroup, useHttpClient, currentAppBar } from "utils";
-import { useMutation,useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./UI/GroupMemberSelector";
 
 export const DelMember = () => {
-  const navigate = useNavigate();
+  
   // const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -17,8 +17,6 @@ export const DelMember = () => {
     setRightIcon(null)
     setRightPath(null)
   }, [])
-
-
 
   const { http } = useHttpClient('/rpc/chat/msg/group/');
   const [account] = useLocalStorage({ key: "savedAccount" });
@@ -31,7 +29,7 @@ export const DelMember = () => {
   } = useQuery({
     queryKey: ["group_user_list", account],
     queryFn: async () => {
-      const results = await http.requestBodyJson("group_user_list",{"group_id": group.id});
+      const results = await http.requestBodyJson("group_user_list", { "group_id": group.id });
       if (!results) throw new Error("获取失败");
       const { code, data, message } = results;
       if (code !== 200) throw new Error(message);
@@ -49,10 +47,6 @@ export const DelMember = () => {
       }))
   });
 
-
-
-
-  // 删除好友逻辑
   const { mutateAsync: delgusr } = useMutation({
     mutationFn: async ({ ids }) => {
       if (!ids) return;
@@ -72,16 +66,13 @@ export const DelMember = () => {
     },
   });
 
-
+  const navigate = useNavigate();
   const handleConfirm = useCallback(async (value) => {
     const list = value?.users || []
-    console.log('list---', list)
-
     const ids = list.map(item => item.id);
-    console.log('ids',ids)
-    // await delgusr({ ids: ids })
-    // navigate('/mobile/chat/group/gusr/')
-  }, [navigate, delgusr]);
+    await delgusr({ ids: ids })
+    navigate('/mobile/chat/group/gusr/')
+  }, [navigate]);
 
   return (
     <GroupMemberSelector

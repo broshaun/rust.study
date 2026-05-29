@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { currentAppBar, useHttpClient, currentGroup } from "utils"
 import { useEffect } from "react";
 import { useLocalStorage } from '@mantine/hooks';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 
 export const GroupUsers = () => {
@@ -46,21 +46,39 @@ export const GroupUsers = () => {
             }
         );
 
-    // const members = [
-    //     {
-    //         "id": "6a1679a2195e658e1594d160",
-    //         "user_id": "6a1678614ad4463c12acf445",
-    //         "nikename": "Shaun",
-    //         "ask_state": "agreed",
-    //         "avatar_url": "ea4086dd1ec9a9baeff9af843dba75a0.jpg"
-    //     }
-    // ]
+    // const queryClient = useQueryClient();
+    // const { mutateAsync: leaveGroup } = useMutation({
+    //     mutationFn: async ({ id }) => {
+    //         console.log('griup(d',id)
+    //         // const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
+
+    //         const { code, message, data } = results;
+    //         if (code !== 200) {
+    //             throw new Error(message);
+    //         }
+    //         return data;
+    //     },
+    //     onSuccess: (data) => {
+    //         console.log("离开群聊:", data);
+    //         queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
+    //             navigate('/mobile/chat/group/');
+    //         })
+    //     },
+    //     onError: (error) => {
+    //         console.error(error);
+    //     },
+    // });
 
     return <div>
         <GroupMemberList
             members={members}
-            onAddMember={() => navigate('/mobile/chat/group/addg/')}
+            onAddMember={() => navigate('/mobile/chat/group/addgusr/')}
             onRemoveMember={() => navigate('/mobile/chat/group/delgusr/')}
+            onExitGroup={() => {
+                console.log("退出群聊:");
+                console.log('curgroup?.id ',curgroup )
+                // leaveGroup({ id: curgroup?.id })
+            }}
         />
     </div>
 

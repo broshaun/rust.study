@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react"
 import { useNavigate } from 'react-router';
 import { useToken } from "utils"
 import { useHttpClient, useImgApiBase } from 'utils';
-import {  Divider, SafeAvatar } from 'components/flutter';
+import { Divider, SafeAvatar } from 'components/flutter';
 import { useMutation } from '@tanstack/react-query'
 import { useLocalStorage } from "@mantine/hooks";
 import { Button, Stack, Center, Title } from "@mantine/core";
@@ -16,7 +16,7 @@ export function Login() {
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
     const [account, setAccount] = useLocalStorage({ key: 'savedAccount' })
-    const [avatar, setAvatar] = useLocalStorage({ key: 'myAvatar' })
+    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' })
     const [password, setPassword] = useState("")
 
     const { http } = useHttpClient('/rpc/chat/login/')
@@ -24,8 +24,8 @@ export function Login() {
     const { setToken } = useToken()
 
     const avatar_url = useMemo(() => {
-        return joinPath(avatar)
-    }, [avatar])
+        return joinPath(currentUser?.avatar_url)
+    }, [currentUser?.avatar_url])
 
 
     const { mutateAsync: login } = useMutation(
@@ -40,8 +40,8 @@ export function Login() {
             },
             onSuccess: (results) => {
                 const { data } = results;
-                setAvatar(data?.user?.avatar_url);
                 setToken(data?.login_token, data?.login_expired);
+                setCurrentUser(data?.user);
                 navigate("/mobile/chat/");
 
             },

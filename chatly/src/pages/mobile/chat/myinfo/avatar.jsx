@@ -14,16 +14,17 @@ export const Avatar2 = () => {
     const location = useLocation();
 
     // 持久化存储当前的头像路径
-    const [avatar, setAvatar] = useLocalStorage({ key: 'myAvatar', defaultValue: location.state?.avatar_url });
+    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user'});
+
     const { http: httpFiles } = useHttpClient('/files/avatar/');
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
     const { joinPath } = useImgApiBase('avatar')
 
     // 拼接完整的 API 地址
     const avatarSrc = useMemo(() => {
-        if (!avatar) return "";
-        return joinPath(avatar)
-    }, [avatar]);
+        if (!currentUser?.avatar_url) return "";
+        return joinPath(currentUser.avatar_url)
+    }, [currentUser?.avatar_url]);
 
     /**
      * 上传并更新头像
@@ -33,9 +34,12 @@ export const Avatar2 = () => {
         httpFiles.uploadFiles(file).then((results) => {
             if (!results?.data) return;
             apiLogin.post('PATCH', { avatar_url: results.data });
-            setAvatar(results.data);
+            setCurrentUser(p=>({
+                ...p,
+                avatar_url:results.data
+            }));
         });
-    }, [httpFiles, apiLogin, setAvatar]);
+    }, [httpFiles, apiLogin]);
 
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
