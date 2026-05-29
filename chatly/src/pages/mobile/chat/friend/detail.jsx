@@ -29,7 +29,7 @@ export function Detail() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [account] = useLocalStorage({ key: 'savedAccount' })
+  const [account] = useLocalStorage({ key: 'current_account' })
   const [friend, setFriend] = useState(location.state?.select);
 
   const db = getUserDB(account);

@@ -6,7 +6,7 @@ import { IconUsers } from "@tabler/icons-react";
 import { GroupItem } from "./UI/GroupItem";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
-import { IconCirclePlus } from "@tabler/icons-react";
+import { IconMailExclamation } from "@tabler/icons-react";
 
 
 const groups = [
@@ -19,7 +19,7 @@ const groups = [
 ];
 
 export const Item = () => {
-    const [userId] = useLocalStorage({ key: 'savedAccount' })
+    const [userId] = useLocalStorage({ key: 'current_account' })
     const setGroup = useGroupStore((state) => state.setGroup);
     const setCurGroup = currentGroup((state) => state.setCurrent);
 
@@ -31,8 +31,8 @@ export const Item = () => {
     useEffect(() => {
         setTitle('群聊')
         setLeftPath(null)
-        setRightIcon(<IconCirclePlus/>)
-        setRightPath('/mobile/chat/group/addg/')
+        setRightIcon(<IconMailExclamation/>)
+        setRightPath('/mobile/chat/group/ingmsg/')
     }, [])
 
     const { http } = useHttpClient('/rpc/chat/msg/group/')

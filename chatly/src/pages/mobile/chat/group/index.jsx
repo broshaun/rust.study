@@ -8,6 +8,7 @@ import { ImagSend } from "./imgSend";
 import { Smile } from "./smile";
 import { GroupUsers } from "./group_users";
 import { CreateGroup } from "./group_add";
+import  {InviteGroup} from "./group_invite"
 
 
 export const RsGroup = [
@@ -49,6 +50,10 @@ export const RsGroup = [
             {
                 path: "addg",
                 element: <CreateGroup />
+            },
+            {
+                path: "ingmsg",
+                element: <InviteGroup />
             },
         ]
     }

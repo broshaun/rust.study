@@ -9,7 +9,7 @@ export const Group = () => {
      * 个人数据库
      */
     const [currentUser] = useLocalStorage({ key: 'current_user' })
-    const [account] = useLocalStorage({ key: 'savedAccount' });
+    const [account] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(account);
     const dt = useDateTime();
 

@@ -15,7 +15,7 @@ export function Login() {
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [msg, setMsg] = useState('');
-    const [account, setAccount] = useLocalStorage({ key: 'savedAccount' })
+    const [account, setAccount] = useLocalStorage({ key: 'current_account' })
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' })
     const [password, setPassword] = useState("")
 

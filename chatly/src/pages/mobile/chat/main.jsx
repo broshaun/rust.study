@@ -16,7 +16,7 @@ export function ChatShell() {
   const isShowBack = currentAppBar((state) => state.leftPath !== null);
 
   const [dot, setDot] = useState(false)
-  const [account] = useLocalStorage({ key: 'savedAccount' })
+  const [account] = useLocalStorage({ key: 'current_account' })
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
   const db = getUserDB(account);

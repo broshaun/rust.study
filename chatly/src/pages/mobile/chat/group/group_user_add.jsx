@@ -19,7 +19,7 @@ export const AddMember = () => {
   }, [])
 
   const { http } = useHttpClient('/rpc/chat/msg/group/');
-  const [account] = useLocalStorage({ key: "savedAccount" });
+  const [account] = useLocalStorage({ key: "current_account" });
   const db = getUserDB(account);
 
   const [friends, handlers] = useListState([]);

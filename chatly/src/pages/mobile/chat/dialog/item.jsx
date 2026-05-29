@@ -11,7 +11,7 @@ import { DialogItem } from "./UI/DialogItem";
 export const Item = () => {
     const navigate = useNavigate()
     const [dialog, handlers] = useListState([]);
-    const [account] = useLocalStorage({ key: 'savedAccount' })
+    const [account] = useLocalStorage({ key: 'current_account' })
     const { joinPath } = useImgApiBase('/avatar/')
     const { winHeight } = useWinSize()
     const db = getUserDB(account);

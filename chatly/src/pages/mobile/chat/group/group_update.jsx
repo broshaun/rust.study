@@ -23,7 +23,7 @@ export const Update = () => {
 
 
     const navigate = useNavigate();
-    const [userId] = useLocalStorage({ key: 'savedAccount' })
+    const [userId] = useLocalStorage({ key: 'current_account' })
     const group = currentGroup((state) => state.current)
 
     const { http } = useHttpClient('/rpc/chat/msg/group/');

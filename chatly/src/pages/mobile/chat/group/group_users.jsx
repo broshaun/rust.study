@@ -21,8 +21,9 @@ export const GroupUsers = () => {
     }, [])
 
     const { http } = useHttpClient('/rpc/chat/msg/group/')
-    const [userId] = useLocalStorage({ key: 'savedAccount' })
+    const [userId] = useLocalStorage({ key: 'current_account' })
     const curgroup = currentGroup((state) => state.current)
+    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' }) 
     const { data: members = [], isLoading, error, refetch } = useQuery
         (
             {
@@ -46,38 +47,38 @@ export const GroupUsers = () => {
             }
         );
 
-    // const queryClient = useQueryClient();
-    // const { mutateAsync: leaveGroup } = useMutation({
-    //     mutationFn: async ({ id }) => {
-    //         console.log('griup(d',id)
-    //         // const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
-
-    //         const { code, message, data } = results;
-    //         if (code !== 200) {
-    //             throw new Error(message);
-    //         }
-    //         return data;
-    //     },
-    //     onSuccess: (data) => {
-    //         console.log("离开群聊:", data);
-    //         queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
-    //             navigate('/mobile/chat/group/');
-    //         })
-    //     },
-    //     onError: (error) => {
-    //         console.error(error);
-    //     },
-    // });
-
+    const queryClient = useQueryClient();
+    const { mutateAsync: leaveGroup } = useMutation({
+        mutationFn: async ({ id }) => {
+            const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
+            const { code, message, data } = results;
+            if (code !== 200) {
+                throw new Error(message);
+            }
+            return data;
+        },
+        onSuccess: (data) => {
+            console.log(data);
+            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
+                navigate('/mobile/chat/group/');
+            })
+        },
+        onError: (error) => {
+            console.error(error);
+        },
+    });
+    console.log('members',members)
     return <div>
         <GroupMemberList
             members={members}
             onAddMember={() => navigate('/mobile/chat/group/addgusr/')}
             onRemoveMember={() => navigate('/mobile/chat/group/delgusr/')}
             onExitGroup={() => {
-                console.log("退出群聊:");
-                console.log('curgroup?.id ',curgroup )
-                // leaveGroup({ id: curgroup?.id })
+                // console.log("退出群聊:");
+                // console.log('curgroup?.id ',curgroup )
+                // console.log('currentUser',currentUser)
+                const id = members.find(item => item.user_id === currentUser?.id)?.id;
+                leaveGroup({ id })
             }}
         />
     </div>

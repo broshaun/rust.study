@@ -11,7 +11,7 @@ export function ChatGuard() {
   const setGroup = useGroupStore((state) => state.setGroup);
   const dt = useDateTime();
   const navigate = useNavigate();
-  const [userId] = useLocalStorage({ key: 'savedAccount' })
+  const [userId] = useLocalStorage({ key: 'current_account' })
   const db = getUserDB(userId);
   const { remainSeconds } = useToken()
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');

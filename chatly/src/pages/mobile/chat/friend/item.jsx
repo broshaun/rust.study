@@ -13,7 +13,7 @@ export const Item = () => {
     const navigate = useNavigate();
     const [friends, handlers] = useListState([]);
     const [afriend, setAfriend] = useState(0);
-    const [account] = useLocalStorage({ key: 'savedAccount' })
+    const [account] = useLocalStorage({ key: 'current_account' })
 
     const { http } = useHttpClient('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')

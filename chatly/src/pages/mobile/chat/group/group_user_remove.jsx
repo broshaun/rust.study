@@ -19,7 +19,7 @@ export const DelMember = () => {
   }, [])
 
   const { http } = useHttpClient('/rpc/chat/msg/group/');
-  const [account] = useLocalStorage({ key: "savedAccount" });
+  const [account] = useLocalStorage({ key: "current_account" });
   const group = currentGroup((state) => state.current)
   const {
     data: gusrlist = [],

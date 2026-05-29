@@ -10,7 +10,7 @@ export const Main = () => {
     /** 账号对应信息
      * 个人数据库
      */
-    const [account] = useLocalStorage({ key: 'savedAccount' });
+    const [account] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(account);
     const { getDateTimeStr } = useDateTime();
 

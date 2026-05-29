@@ -13,14 +13,14 @@ export function CreateGroup() {
     const setRightPath = currentAppBar((state) => state.setRightPath);
     useEffect(() => {
         setTitle('创建群聊');
-        setLeftPath('/mobile/chat/group/')
+        setLeftPath('/mobile/chat/group/ingmsg/')
         setRightIcon(null)
         setRightPath(null)
     }, [])
 
     const queryClient = useQueryClient();
     const navigate = useNavigate();
-    const [userId] = useLocalStorage({ key: 'savedAccount' })
+    const [userId] = useLocalStorage({ key: 'current_account' })
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const { mutateAsync: createGroup } = useMutation({
         mutationFn: async ({ group_name }) => {
