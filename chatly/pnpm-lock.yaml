@@ -17,9 +17,6 @@ importers:
       '@mantine/hooks':
         specifier: ^8.3.17
         version: 8.3.17(react@19.2.4)
-      '@mantine/modals':
-        specifier: ^9.2.2
-        version: 9.2.2(@mantine/core@8.3.17(@mantine/hooks@8.3.17(react@19.2.4))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@mantine/hooks@8.3.17(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tabler/icons-react':
         specifier: ^3.40.0
         version: 3.40.0(react@19.2.4)
@@ -194,14 +191,6 @@ packages:
     resolution: {integrity: sha512-MqVw4ad0qrcY7IgVk8+GJh7qCRIwLXTfEtGeXwmaZagMDn2YB8EUtrnuZO2be5bi3yketWtOPYvl3adh05hZRg==}
     peerDependencies:
       react: ^18.x || ^19.x
-
-  '@mantine/modals@9.2.2':
-    resolution: {integrity: sha512-OiLHaDrHw7ArCBXzxap+lsMdGwLiyOWD+HQ9pqwwyczmvwcgVgqcFi4gq4eOs8GGZc/e6WaQ0uKbYvlVBgK5wA==}
-    peerDependencies:
-      '@mantine/core': 9.2.2
-      '@mantine/hooks': 9.2.2
-      react: ^19.2.0
-      react-dom: ^19.2.0
 
   '@module-federation/error-codes@0.22.0':
     resolution: {integrity: sha512-xF9SjnEy7vTdx+xekjPCV5cIHOGCkdn3pIxo9vU7gEZMIw0SvAEdsy6Uh17xaCpm8V0FWvR0SZoK9Ik6jGOaug==}
@@ -791,13 +780,6 @@ snapshots:
   '@mantine/hooks@8.3.17(react@19.2.4)':
     dependencies:
       react: 19.2.4
-
-  '@mantine/modals@9.2.2(@mantine/core@8.3.17(@mantine/hooks@8.3.17(react@19.2.4))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@mantine/hooks@8.3.17(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@mantine/core': 8.3.17(@mantine/hooks@8.3.17(react@19.2.4))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@mantine/hooks': 8.3.17(react@19.2.4)
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
 
   '@module-federation/error-codes@0.22.0': {}
 

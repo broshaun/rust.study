@@ -31,7 +31,7 @@ export const Item = () => {
     useEffect(() => {
         setTitle('群聊')
         setLeftPath(null)
-        setRightIcon(<IconMailExclamation/>)
+        setRightIcon(<IconMailExclamation />)
         setRightPath('/mobile/chat/group/ingmsg/')
     }, [])
 

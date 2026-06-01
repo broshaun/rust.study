@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export const GroupUsers = () => {
     const navigate = useNavigate();
 
-    const setTitle = currentAppBar((state) => state.setTitle);
+    // const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
@@ -20,16 +20,17 @@ export const GroupUsers = () => {
         setRightPath(null)
     }, [])
 
+
+    const current_group = currentGroup((state) => state.current)
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const curgroup = currentGroup((state) => state.current)
-    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' }) 
+    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' })
     const { data: members = [], isLoading, error, refetch } = useQuery
         (
             {
                 queryKey: ["group_user_list", userId],
                 queryFn: async () => {
-                    const results = await http.requestBodyJson("group_user_list", { "group_id": curgroup?.id });
+                    const results = await http.requestBodyJson("group_user_list", { "group_id": current_group?.id });
                     const { code, data, message } = results;
                     if (code !== 200) throw new Error(message);
                     return data || [];
@@ -75,7 +76,7 @@ export const GroupUsers = () => {
             onRemoveMember={() => navigate('/mobile/chat/group/delgusr/')}
             onExitGroup={() => {
                 // console.log("退出群聊:");
-                // console.log('curgroup?.id ',curgroup )
+                // console.log('current_group?.id ',current_group )
                 // console.log('currentUser',currentUser)
                 const id = members.find(item => item.user_id === currentUser?.id)?.id;
                 leaveGroup({ id })
