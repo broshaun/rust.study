@@ -5,18 +5,18 @@ import {
   Button,
   FileButton,
   Group,
+  Modal,
   Stack,
   Text,
   Textarea,
   TextInput,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { IconUpload } from "@tabler/icons-react";
 import { SafeAvatar } from "components";
 
-function DeleteGroupContent({ groupInfo, onDelete }) {
+// 删除群确认内容组件
+function DeleteGroupContent({ groupInfo, onDelete, onClose }) {
   const [value, setValue] = useState("");
-
   const matched = value.trim() === groupInfo.group_name;
 
   return (
@@ -36,7 +36,7 @@ function DeleteGroupContent({ groupInfo, onDelete }) {
       />
 
       <Group justify="flex-end">
-        <Button variant="default" onClick={() => modals.closeAll()}>
+        <Button variant="default" onClick={onClose}>
           取消
         </Button>
 
@@ -45,7 +45,7 @@ function DeleteGroupContent({ groupInfo, onDelete }) {
           disabled={!matched}
           onClick={() => {
             onDelete?.(groupInfo);
-            modals.closeAll();
+            onClose();
           }}
         >
           确认
@@ -55,6 +55,7 @@ function DeleteGroupContent({ groupInfo, onDelete }) {
   );
 }
 
+// 群编辑主组件
 export function GroupEdit({
   id,
   group_name = "",
@@ -72,6 +73,9 @@ export function GroupEdit({
   });
 
   const [preview, setPreview] = useState("");
+
+  // 解散弹窗状态
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
 
   useEffect(() => {
     setForm({ id, group_name, group_avatar, group_notice });
@@ -105,14 +109,6 @@ export function GroupEdit({
     onClick?.({
       ...form,
       group_name: name,
-    });
-  };
-
-  const openDeleteModal = () => {
-    modals.open({
-      title: "解散群聊",
-      centered: true,
-      children: <DeleteGroupContent groupInfo={form} onDelete={onDelete} />,
     });
   };
 
@@ -196,7 +192,7 @@ export function GroupEdit({
               c="red"
               size="sm"
               fw={500}
-              onClick={openDeleteModal}
+              onClick={() => setDeleteModalOpened(true)}
               style={{
                 cursor: "pointer",
                 userSelect: "none",
@@ -208,6 +204,20 @@ export function GroupEdit({
           </Box>
         </Box>
       </Stack>
+
+      {/* 解散群聊 Modal（替换了 modals.open） */}
+      <Modal
+        opened={deleteModalOpened}
+        onClose={() => setDeleteModalOpened(false)}
+        title="解散群聊"
+        centered
+      >
+        <DeleteGroupContent
+          groupInfo={form}
+          onDelete={onDelete}
+          onClose={() => setDeleteModalOpened(false)}
+        />
+      </Modal>
     </Box>
   );
 }

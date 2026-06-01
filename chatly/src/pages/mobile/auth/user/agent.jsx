@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useHttpClient } from 'utils';
-import { Modal } from 'components'; // 依然使用上一轮为你像素级复刻的 iOS 质感 Modal
+import { Modal } from 'components';
 import { useNavigate } from 'react-router';
 import { useLocalStorage } from '@mantine/hooks';
 import { useMutation } from '@tanstack/react-query';

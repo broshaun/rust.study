@@ -3,7 +3,7 @@ import { useWinSize, currentChat, currentAppBar, useImgApiBase, currentGroup, ge
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
 import { ChatBox } from "./UI/ChatBox"
-import { Tools } from "./tools";
+import { Tools } from "./msg_tools";
 import { useOutletContext } from "react-router";
 import { IconDots } from "@tabler/icons-react";
 

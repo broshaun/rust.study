@@ -3,12 +3,10 @@ import { currentAppBar, useHttpClient, currentGroup } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { modals } from '@mantine/modals';
 import { useLocalStorage } from "@mantine/hooks";
-import { Stack, Text, TextInput } from "@mantine/core";
+
 
 export const Update = () => {
-
     const queryClient = useQueryClient();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -20,7 +18,6 @@ export const Update = () => {
         setRightIcon(null)
         setRightPath(null)
     }, [])
-
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })

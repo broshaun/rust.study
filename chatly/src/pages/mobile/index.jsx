@@ -16,6 +16,19 @@ export const RsMobile = [
         path: "mobile",
         children: [
             {
+                path: "auth",
+                element: <AuthShell />,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to="user" replace />,
+                    },
+                    ...RsUser
+                ]
+
+
+            },
+            {
                 path: "chat",
                 element: <ChatGuard />,
                 children: [
@@ -37,19 +50,7 @@ export const RsMobile = [
 
                 ],
             },
-            {
-                path: "auth",
-                element: <AuthShell />,
-                children: [
-                    {
-                        index: true,
-                        element: <Navigate to="user" replace />,
-                    },
-                    ...RsUser
-                ]
 
-
-            }
         ]
     },
 

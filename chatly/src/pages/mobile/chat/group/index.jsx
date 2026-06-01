@@ -2,10 +2,10 @@ import { Item } from "./group_item";
 import { Update } from "./group_update";
 import { AddMember } from "./group_user_add";
 import { DelMember } from "./group_user_remove";
-import { Msg } from "./msg";
-import { Group } from "./main";
-import { ImagSend } from "./imgSend";
-import { Smile } from "./smile";
+import { Msg } from "./msg_text_send";
+import { Group } from "./group";
+import { ImagSend } from "./msg_img_send";
+import { Smile } from "./msg_smile_send";
 import { GroupUsers } from "./group_users";
 import { CreateGroup } from "./group_add";
 import  {InviteGroup} from "./group_invite"
