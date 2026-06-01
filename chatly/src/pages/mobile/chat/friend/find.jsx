@@ -1,30 +1,27 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { useHttpClient, useImgApiBase, currentAppBar } from 'utils';
-import { Divider, SafeAvatar } from 'components/flutter';
+import { SafeAvatar } from 'components'; // 保留 SafeAvatar
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ScrollArea, Stack } from "@mantine/core";
-import { TextInput, ActionIcon } from "@mantine/core";
+import { ScrollArea, Stack, Divider, TextInput, ActionIcon } from "@mantine/core"; // 引入原生 Divider
 import { IconSearch } from "@tabler/icons-react";
 import { UserInfoCard } from "./UI/UserInfoCard";
-
 
 export const Find = () => {
     const { http } = useHttpClient('/rpc/chat/friend/')
     const { joinPath } = useImgApiBase('avatar')
     const [keywordEmail, setKeywordEmail] = useState();
 
-
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
+
     useEffect(() => {
         setLeftPath('/mobile/chat/friend/')
         setTitle('好友查找');
         setRightIcon(null)
         setRightPath(null)
     }, [])
-
 
     // 查找好友
     const { data: findByUser, isPending: loading, mutateAsync: run } = useMutation(
@@ -51,12 +48,13 @@ export const Find = () => {
             },
         }
     );
+
     const handleEmailChange = (value) => {
         setKeywordEmail(value);
     };
 
     // 好友请求
-    const { data: askFriends, isPending: loading2 } = useQuery(
+    const { data: askFriends = [], isPending: loading2 } = useQuery(
         {
             queryKey: ['ask-friends'],
             queryFn: async () => {
@@ -64,7 +62,6 @@ export const Find = () => {
                     const { code, data } = await http.requestBodyJson('GET', {
                         ask_state: 'await',
                     });
-
                     if (code === 200) {
                         return data?.detail || [];
                     }
@@ -76,12 +73,11 @@ export const Find = () => {
             },
         });
 
-    // 通过请求
+    // 通过/拒绝请求
     const { mutateAsync: isPass } = useMutation(
         {
             mutationFn: async ({ id, ask_state }) => {
-                console.log('id, ask_state', id, ask_state)
-                if (!id && ask_state) return;
+                if (!id || !ask_state) return;
                 const { code, message, data } = await http.requestBodyJson('PATCH', {
                     id, ask_state,
                 });
@@ -91,71 +87,76 @@ export const Find = () => {
         }
     );
 
+    return (
+        <Suspense fallback={<div>加载中...</div>}>
+            <ScrollArea h="100%" type="auto">
+                <Stack gap={10} p={10}>
+                    <TextInput
+                        placeholder="搜索好友"
+                        value={keywordEmail}
+                        onChange={(e) => handleEmailChange(e.currentTarget.value)}
+                        rightSection={
+                            <ActionIcon
+                                variant="subtle"
+                                onClick={() => run({ email: keywordEmail })}
+                            >
+                                <IconSearch size={18} />
+                            </ActionIcon>
+                        }
+                    />
 
-    return <Suspense fallback={<div>加载中...</div>}>
+                    {/* 🔥 替换为原生渐变淡化 Divider */}
+                    <Divider 
+                        styles={{
+                            root: {
+                                border: 'none',
+                                height: '1px',
+                                opacity: 0.3,
+                                backgroundImage: 'linear-gradient(to right, transparent, light-dark(rgba(0,0,0,0.8), rgba(255,255,255,0.8)) 50%, transparent)'
+                            }
+                        }} 
+                    />
 
-        <ScrollArea h="100%" type="auto">
-            <Stack gap={10} p={10}>
-
-                <TextInput
-                    placeholder="搜索好友"
-                    value={keywordEmail}
-                    onChange={(e) => handleEmailChange(e.currentTarget.value)}
-                    rightSection={
-                        <ActionIcon
-                            variant="subtle"
-                            onClick={() => run({ email: keywordEmail })}
+                    {!loading && findByUser && Object.keys(findByUser).length !== 0 && (
+                        <UserInfoCard
+                            background="#FFF9E8"
+                            title='用户信息'
+                            actionText='添加'
+                            onAction={(type) => {
+                                if (type === 'accept') { addFriend({ user_id: findByUser?.id }) }
+                            }}
                         >
-                            <IconSearch size={18} />
-                        </ActionIcon>
-                    }
-                />
+                            <UserInfoCard.Avatar>
+                                <SafeAvatar size={60} stretch={true} url={joinPath(findByUser?.avatar_url)} />
+                            </UserInfoCard.Avatar>
+                            <UserInfoCard.Info>{findByUser}</UserInfoCard.Info>
+                        </UserInfoCard>
+                    )}
 
-                <Divider />
-                {!loading && Object.keys(findByUser || {}).length !== 0 &&
-                    <UserInfoCard
-                        background="#FFF9E8"
-                        title='用户信息'
-                        actionText='添加'
-                        onAction={(type) => {
-                            if (type === 'accept') { addFriend({ user_id: findByUser?.id }) }
-                        }}
-                    >
-                        <UserInfoCard.Avatar>
-                            <SafeAvatar size={60} stretch={true} url={joinPath(findByUser?.avatar_url)} />
-                        </UserInfoCard.Avatar>
-                        <UserInfoCard.Info>{findByUser}</UserInfoCard.Info>
-                    </UserInfoCard>
-
-                }
-
-                {!loading2 && askFriends.map(user => {
-                    return <UserInfoCard
-                        background="#FFF9E8"
-                        title="好友请求"
-                        actionText="通过"
-                        refuseText="拒绝"
-                        onAction={(type) => {
-                            if (type === 'accept') {
-                                console.log('通过。。。')
-                                return isPass({ id: user?.id, ask_state: 'agree' });
-                            }
-                            if (type === 'refuse') {
-                                return isPass({ id: user?.id, ask_state: 'refuse' });
-                            }
-                        }}
-                    >
-                        <UserInfoCard.Avatar>
-                            <SafeAvatar size={60} stretch={true} url={joinPath(user?.avatar_url)} />
-                        </UserInfoCard.Avatar>
-                        <UserInfoCard.Info>{user}</UserInfoCard.Info>
-                    </UserInfoCard>
-                }
-
-                )}
-
-            </Stack>
-        </ScrollArea>
-    </Suspense>
-}
-
+                    {!loading2 && askFriends.map(user => (
+                        <UserInfoCard
+                            key={user.id}
+                            background="#FFF9E8"
+                            title="好友请求"
+                            actionText="通过"
+                            refuseText="拒绝"
+                            onAction={(type) => {
+                                if (type === 'accept') {
+                                    return isPass({ id: user?.id, ask_state: 'agree' });
+                                }
+                                if (type === 'refuse') {
+                                    return isPass({ id: user?.id, ask_state: 'refuse' });
+                                }
+                            }}
+                        >
+                            <UserInfoCard.Avatar>
+                                <SafeAvatar size={60} stretch={true} url={joinPath(user?.avatar_url)} />
+                            </UserInfoCard.Avatar>
+                            <UserInfoCard.Info>{user}</UserInfoCard.Info>
+                        </UserInfoCard>
+                    ))}
+                </Stack>
+            </ScrollArea>
+        </Suspense>
+    );
+};

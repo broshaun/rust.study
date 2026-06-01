@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconUpload } from "@tabler/icons-react";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar } from "components";
 
 function DeleteGroupContent({ groupInfo, onDelete }) {
   const [value, setValue] = useState("");

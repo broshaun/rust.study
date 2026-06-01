@@ -6,7 +6,7 @@ import {
   IconPhoneOff,
   IconPhoneOutgoing,
 } from "@tabler/icons-react";
-import { SafeAvatar, SafeImage } from "components/flutter";
+import { SafeAvatar, SafeImage } from "components";
 
 const TextContent = memo(({ content }) => (
   <Text

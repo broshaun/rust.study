@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { useWinSize } from 'utils';
 import { useHttpClient, currentAppBar } from 'utils';
 import { getUserDB } from "utils";
-import { SafeAvatar, Divider } from 'components/flutter';
+import { SafeAvatar } from 'components'; 
 import { useMutation } from '@tanstack/react-query';
-import { Button, Center, Stack, Group, Title } from '@mantine/core';
+import { Button, Center, Stack, Group, Title, Divider } from '@mantine/core'; // 仅引入 Divider
 import { useLocalStorage } from '@mantine/hooks';
 import { InfoTile } from "./UI/InfoTile";
 
-
-/**
- * 好友详情页面
- */
 export function Detail() {
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
   const setRightPath = currentAppBar((state) => state.setRightPath);
+
   useEffect(() => {
     setLeftPath('/mobile/chat/friend/')
     setTitle('好友信息');
@@ -25,13 +21,10 @@ export function Detail() {
     setRightPath(null)
   }, [])
 
-
   const navigate = useNavigate();
   const location = useLocation();
-
   const [account] = useLocalStorage({ key: 'current_account' })
   const [friend, setFriend] = useState(location.state?.select);
-
   const db = getUserDB(account);
 
   useEffect(() => {
@@ -39,17 +32,13 @@ export function Detail() {
   }, [location.state?.select])
 
   const { http: http2 } = useHttpClient('/rpc/chat/friend/');
-  const { isMobile } = useWinSize();
 
-
-  // 删除好友逻辑
+  // 删除好友
   const { mutateAsync: delFid } = useMutation({
     mutationFn: async (id) => {
       if (!id) return;
-      const results = await http2.requestBodyJson('DELETE', { id });
-      if (!results) return;
+      await http2.requestBodyJson('DELETE', { id });
       const row = await db.table('friends').get(id);
-
       await Promise.all([
         db.table('message').where('uid').equals(row?.uid).delete(),
         db.table('friends').delete(id),
@@ -58,80 +47,85 @@ export function Detail() {
     },
   });
 
-  // 更新备注逻辑
+  // 更新备注
   const { mutateAsync: updRemark } = useMutation({
     mutationFn: async ({ id, remark }) => {
       if (!id) return;
-      const results = await http2.requestBodyJson('PATCH', { id, remark });
-      if (!results) return;
+      await http2.requestBodyJson('PATCH', { id, remark });
       await db.table('friends').update(id, { remark });
       return 'ok';
     },
   });
 
-  // 发起聊天跳转
   function openMsgWindow(friend) {
     if (!friend?.id) return;
     const displayName = friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
     db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
-
     navigate('/mobile/chat/message/', {
-      state: {
-        uid: friend.uid,
-        avatar_url: friend.avatar_url,
-        displayName,
-      },
+      state: { uid: friend.uid, avatar_url: friend.avatar_url, displayName },
     });
   }
 
-  return <Stack p={20} >
-    <Center>
-      <SafeAvatar
-        url={friend?.avatar_url}
-        size={80}           // 稍微加大尺寸，显得大气
-        radius={8}          // 建议给一点圆角（如8px），比纯直角更有现代感
-        cover={true}        // 核心：保持比例裁剪，不变形
-        autoUpdate
+  return (
+    <Stack p={20}>
+      <Center>
+        <SafeAvatar
+          url={friend?.avatar_url}
+          size={80}
+          radius={8} // 保持你原来的 8px
+          cover={true}
+          autoUpdate
+        />
+      </Center>
+
+      <Title order={5}>账户信息</Title>
+
+      {/* 🔥 严格照搬你要求的“两边淡化”设计，厚度 1px，透明度 0.3 */}
+      <Divider 
+        styles={{
+          root: {
+            border: 'none',
+            height: '1px',
+            opacity: 0.3, // 保持你原来的透明度参数
+            backgroundImage: 'linear-gradient(to right, transparent, light-dark(rgba(0,0,0,0.8), rgba(255,255,255,0.8)) 50%, transparent)'
+          }
+        }} 
       />
-    </Center>
 
-    <Title order={5}>账户信息</Title>
-
-    <Divider fade />
-
-    <InfoTile icon="IconId" label="名称" value={friend?.nikename} />
-    <InfoTile icon="mail" label="邮箱" value={friend?.email} />
-    <InfoTile
-      icon="IconUserEdit"
-      label="备注"
-      value={friend?.remark}
-      onConfirm={(remark) => {
-        setFriend((p) => ({ ...p, remark }));
-        updRemark({ id: friend?.id, remark });
-      }}
-    />
-
-    <Group p={10} gap={25} justify="center" wrap="nowrap">
-      <Button
-        variant="filled"
-        color="indigo"
-        radius="md"
-        onClick={() => openMsgWindow(friend)}
-      >
-        发起聊天
-      </Button>
-
-      <Button
-        variant="filled"
-        color="orange"
-        radius="md"
-        onClick={() => {
-          delFid(friend?.id).then(() => { navigate('/chat/mobile/friend/') })
+      <InfoTile icon="IconId" label="名称" value={friend?.nikename} />
+      <InfoTile icon="mail" label="邮箱" value={friend?.email} />
+      <InfoTile
+        icon="IconUserEdit"
+        label="备注"
+        value={friend?.remark}
+        onConfirm={(remark) => {
+          setFriend((p) => ({ ...p, remark }));
+          updRemark({ id: friend?.id, remark });
         }}
-      >
-        删除好友
-      </Button>
-    </Group>
-  </Stack>
+      />
 
+      {/* 保持原样：gap=25, justify=center, 不使用 flex=1 */}
+      <Group p={10} gap={25} justify="center" wrap="nowrap">
+        <Button
+          variant="filled"
+          color="indigo"
+          radius="md"
+          onClick={() => openMsgWindow(friend)}
+        >
+          发起聊天
+        </Button>
+
+        <Button
+          variant="filled"
+          color="orange"
+          radius="md"
+          onClick={() => {
+            delFid(friend?.id).then(() => { navigate('/mobile/chat/friend/') })
+          }}
+        >
+          删除好友
+        </Button>
+      </Group>
+    </Stack>
+  );
 }

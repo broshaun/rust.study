@@ -11,7 +11,7 @@ import {
   Paper,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar } from "components";
 
 const MODE_CONFIG = {
   add: {

@@ -1,97 +1,85 @@
-import { Box, Button, Group, Stack, Text, Paper, Badge } from "@mantine/core";
-import { SafeAvatar } from "components/flutter";
+import { useState } from "react";
+import { Box, Button, Group, Stack, Text, Paper, Badge, Divider } from "@mantine/core";
+import { SafeAvatar } from "components";
 
-function InviteGroupCard({ data, onAccept, onReject, loading = false }) {
-  const state = data?.ask_state;
+// 统一样式常量
+const BTN_STYLES = {
+  root: {
+    transition: "none",
+    height: '24px',
+    padding: '0 12px',
+    fontSize: '11px',
+    "&:hover": { backgroundColor: "var(--button-bg, inherit)" },
+    "&:active": { opacity: 0.7 },
+  },
+};
 
-  const badgeMap = {
-    invite: { label: "待处理", color: "blue" },
-    agreed: { label: "已同意", color: "green" },
-    rejected: { label: "已拒绝", color: "gray" },
+function InviteGroupCard({ data, onAccept, onReject, loading }) {
+  const [status, setStatus] = useState(null); // 'agreed' | 'rejected' | null
+
+  const handleAction = async (type) => {
+    setStatus(type);
+    const callback = type === "agreed" ? onAccept : onReject;
+    try { await callback?.(data); } catch (e) { /* setStatus(null); */ }
   };
 
-  const badge = badgeMap[state];
-  const isPending = state === "invite";
+  const isDone = status !== null;
 
   return (
-    <Paper p="xs" radius="md" withBorder>
-      <Group wrap="nowrap" gap="sm" align="center">
-        <SafeAvatar url={data?.group_avatar} size={42} radius={9} />
-
-        <Box flex={1} style={{ minWidth: 0 }}>
-          <Group justify="space-between" wrap="nowrap" gap={6}>
-            <Text fw={600} size="sm" truncate>
-              {data?.group_name || "未知群聊"}
-            </Text>
-
-            {badge && (
-              <Badge size="xs" variant="light" color={badge.color}>
-                {badge.label}
-              </Badge>
-            )}
-          </Group>
-
-          <Group gap={5} mt={3} wrap="nowrap">
-            <SafeAvatar url={data?.avatar_url} size={16} radius="xl" />
-
-            <Text size="xs" c="dimmed" truncate>
-              {data?.nikename || "未知用户"} 邀请你加入群聊
-            </Text>
-          </Group>
-        </Box>
-      </Group>
-
-      {isPending && (
-        <Group justify="flex-end" gap={6} mt={8}>
-          <Button
-            size="compact-xs"
-            variant="default"
-            disabled={loading}
-            onClick={() => onReject?.(data)}
-          >
-            拒绝
-          </Button>
-
-          <Button
-            size="compact-xs"
-            loading={loading}
-            onClick={() => onAccept?.(data)}
-          >
-            同意
-          </Button>
+    <Paper p={12} radius="md" withBorder bg={isDone ? "gray.0" : "white"}>
+      <Stack gap={8}>
+        {/* 顶部：群名 & 时间 */}
+        <Group justify="space-between" wrap="nowrap">
+          <Text fz="xs" fw={700} c="blue.8" truncate>【{data?.group_name || "未知群聊"}】</Text>
+          <Text fz={10} c="gray.6">{data?.created_at}</Text>
         </Group>
-      )}
+
+        <Divider color="gray.1" />
+
+        {/* 内容主体 */}
+        <Group wrap="nowrap" gap={12} align="center">
+          <SafeAvatar url={data?.group_avatar} size={40} radius={6} />
+
+          <Stack gap={6} flex={1} style={{ minWidth: 0 }}>
+            {/* 邀请文案 */}
+            <Group gap={6} wrap="nowrap">
+              <SafeAvatar url={data?.avatar_url} size={14} radius="xl" />
+              <Text fz={13} c="dark.8" truncate>
+                <Box component="span" fw={600} c="black">{data?.nikename || "用户"}</Box>
+                <Box component="span" c="gray.6"> 邀请您进入群聊</Box>
+              </Text>
+            </Group>
+
+            {/* 操作区 */}
+            <Group gap={6} grow={!isDone} justify="flex-end">
+              {!isDone ? (
+                <>
+                  <Button variant="light" color="red" styles={BTN_STYLES} disabled={loading} onClick={() => handleAction("rejected")}>拒绝</Button>
+                  <Button variant="filled" color="blue" styles={BTN_STYLES} loading={loading} onClick={() => handleAction("agreed")}>同意</Button>
+                </>
+              ) : (
+                <Badge size="xs" variant="light" color={status === 'agreed' ? 'green' : 'gray'} h={18} fz={10}>
+                  {status === 'agreed' ? '已同意' : '已拒绝'}
+                </Badge>
+              )}
+            </Group>
+          </Stack>
+        </Group>
+      </Stack>
     </Paper>
   );
 }
 
-export function GroupInviteMessageList({
-  data = [],
-  loading = false,
-  onAccept,
-  onReject,
-}) {
+export function GroupInviteMessageList({ data = [], loading, onAccept, onReject }) {
   if (!data.length) {
-    return (
-      <Box p="lg">
-        <Text ta="center" size="sm" c="dimmed">
-          暂无入群邀请
-        </Text>
-      </Box>
-    );
+    return <Text ta="center" py={50} fz="xs" c="dimmed">暂无群聊邀请</Text>;
   }
 
   return (
-    <Box p="xs">
-      <Stack gap="xs">
+    <Box p="sm">
+      <Stack gap={10}>
         {data.map((item) => (
-          <InviteGroupCard
-            key={item.id}
-            data={item}
-            loading={loading}
-            onAccept={onAccept}
-            onReject={onReject}
-          />
+          <InviteGroupCard key={item.id} data={item} loading={loading} onAccept={onAccept} onReject={onReject} />
         ))}
       </Stack>
     </Box>

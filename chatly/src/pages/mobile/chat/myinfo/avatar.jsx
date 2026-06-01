@@ -1,11 +1,12 @@
 import { useCallback, Suspense, useMemo, useEffect } from "react";
 import { useLocation } from 'react-router';
-import { ImageUpload,  } from 'components';
+
 import { useHttpClient, useImgApiBase } from 'utils';
 import { useLocalStorage } from '@mantine/hooks';
-import { SafeAvatar, SizedBox } from 'components/flutter';
+import { SafeAvatar, SizedBox } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
+import { ImageUpload } from "./UI/ImageUpload";
 
 /**
  * Avatar2 - 用户头像设置与大图预览页面

@@ -1,7 +1,7 @@
 import React, { useEffect, Children, isValidElement } from "react";
 import styles from './Modal.module.css';
 
-export default function Modal({ visible, children }) {
+export function Modal({ visible, children }) {
   useEffect(() => {
     if (visible) {
       const originalOverflow = document.body.style.overflow;

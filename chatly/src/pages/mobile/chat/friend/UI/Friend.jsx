@@ -1,5 +1,5 @@
 import { memo, useCallback } from "react";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar } from "components";
 
 export const Friend = memo(function Friend({
   data,

@@ -2,7 +2,7 @@ import React, { useState, useEffect, memo } from "react";
 import { useNavigate } from 'react-router';
 import { Group, Paper, Text, Stack, Box, ActionIcon } from '@mantine/core';
 import { IconPhoneIncoming, IconPhoneOff,IconPhoneOutgoing } from '@tabler/icons-react';
-import { SafeAvatar, SafeImage } from 'components/flutter';
+import { SafeAvatar, SafeImage } from 'components';
 
 // ==========================================
 // 1. 内容渲染子组件

@@ -1,7 +1,11 @@
 import { GroupInviteMessageList } from "./UI/InviteGroupCard";
 import { currentAppBar, useHttpClient } from "utils";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { IconCirclePlus } from "@tabler/icons-react";
+import { useNavigate } from "react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocalStorage } from "@mantine/hooks";
+
 
 
 export function InviteGroup() {
@@ -36,7 +40,34 @@ export function InviteGroup() {
     }, [])
 
 
+    const queryClient = useQueryClient();
+    const [userId] = useLocalStorage({ key: 'current_account' })
+    const updateGroupAskState = useMutation({
+        mutationFn: async ({ id, ask_state }) => {
+            const results = await http.requestBodyJson(
+                "group_ask_state",
+                { id, ask_state }
+            );
+
+            if (results?.code !== 200) {
+                throw new Error(results?.message);
+            }
+
+            return results.data;
+        },
+        onSuccess: (data) => {
+            console.log("操作成功:", data);
+            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] })
+        }
+    });
+
+
+
+
     return <div>
-        <GroupInviteMessageList data={data} loading={loading} />
+        <GroupInviteMessageList data={data} loading={loading}
+            onAccept={(value) => { updateGroupAskState.mutate({ "id": value?.id, "ask_state": "agreed" }) }}
+            onReject={(value) => { updateGroupAskState.mutate({ "id": value?.id, "ask_state": "refuse" }) }}
+        />
     </div>
 }

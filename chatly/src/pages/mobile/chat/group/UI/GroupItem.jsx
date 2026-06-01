@@ -5,7 +5,7 @@ import {
   Text,
   Box,
 } from "@mantine/core";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar } from "components";
 
 export const GroupItem = memo(function GroupItem({
   data,

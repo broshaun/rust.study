@@ -72,3 +72,8 @@ For iOS development, run:
   pnpm tauri add http
   pnpm tauri add fs
 ```
+
+
+
+
+手机端不需要悬浮提示

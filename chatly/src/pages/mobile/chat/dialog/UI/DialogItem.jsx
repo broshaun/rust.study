@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from "react";
 import { useApiBase } from "utils";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar } from "components";
 
 const WEEK_DAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 const DAY_MS = 86400000;

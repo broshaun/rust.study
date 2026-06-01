@@ -1,6 +1,6 @@
 import { Box, Group, Text, UnstyledButton, Stack } from "@mantine/core";
 import { IconPlus, IconMinus } from "@tabler/icons-react";
-import { SafeAvatar } from "components/flutter";
+import { SafeAvatar } from "components";
 
 function GroupMemberCard({ memberData }) {
   return (
