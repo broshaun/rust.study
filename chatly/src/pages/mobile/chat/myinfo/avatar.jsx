@@ -3,7 +3,7 @@ import { useLocation } from 'react-router';
 
 import { useHttpClient, useImgApiBase } from 'utils';
 import { useLocalStorage } from '@mantine/hooks';
-import { SafeAvatar, SizedBox } from 'components';
+import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./UI/ImageUpload";
@@ -65,8 +65,7 @@ export const Avatar2 = () => {
             </Grid>
 
 
-            <SizedBox height={10} />
-            <Center>
+            <Center mt={10}>
                 <SafeAvatar
                     url={avatarSrc}
                     size={320}

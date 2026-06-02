@@ -1,6 +1,6 @@
 import React from "react"
 import { Outlet, useNavigate } from "react-router";
-import { IconLable } from 'components'; // 🔥 切换为刚优化好的 IconLable
+import { IconLabel } from 'components'; // 🔥 切换为刚优化好的 IconLable
 import { Stack, Drawer, Title, AppShell, Burger, Divider } from "@mantine/core";
 import { useDisclosure } from '@mantine/hooks';
 
@@ -41,7 +41,7 @@ export function AuthShell() {
         {/* Drawer 内部菜单列表 */}
         <Stack padding={10} gap={10}>
           {drawerMenu.filter(i => i.display !== false).map((item) =>
-            <IconLable
+            <IconLabel
               key={item.key}
               name={item.icon.name}
               label={item.icon.label}

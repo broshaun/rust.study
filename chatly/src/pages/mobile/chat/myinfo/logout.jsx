@@ -1,10 +1,10 @@
 import React, { useState, Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { Modal2 as Modal } from 'components';
+import { Modal } from 'components';
 import { useHttpClient } from 'utils';
 import { useToken } from "utils"
 
-im
+
 
 export const Logout = () => {
   const navigate = useNavigate();

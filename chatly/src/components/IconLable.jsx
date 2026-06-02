@@ -1,7 +1,8 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import * as TablerIcons from "@tabler/icons-react";
 
-export const IconLable = memo(({
+
+export const IconLabel = memo(({
   name,
   icon: IconComponent,
   size = 24,
@@ -10,7 +11,7 @@ export const IconLable = memo(({
   labelPos = "bottom",
   color,
   activeColor = "var(--mantine-color-blue-7, #1971c2)",
-  defaultGray = "light-dark(#495057, #ced4da)", // 支持暗色模式
+  defaultGray = "light-dark(#495057, #ced4da)",
   active = false,
   onClick,
   dot = false,
@@ -18,11 +19,15 @@ export const IconLable = memo(({
   style,
   ...others
 }) => {
-  const SelectedIcon = IconComponent || TablerIcons[name] || TablerIcons.IconHelp;
-  const currentColor = active ? activeColor : (color || defaultGray);
+
+  const SelectedIcon = useMemo(() => {
+    return IconComponent || TablerIcons[name] || TablerIcons.IconHelp;
+  }, [IconComponent, name]);
+
   const isBottom = labelPos === "bottom";
   const hasBadge = dot || (badgeContent !== null && badgeContent !== 0);
 
+  // 键盘无障碍事件处理
   const handleKeyDown = (e) => {
     if (onClick && ["Enter", " "].includes(e.key)) {
       e.preventDefault();
@@ -45,12 +50,14 @@ export const IconLable = memo(({
         gap: isBottom ? 5 : 8,
         cursor: onClick ? "pointer" : "default",
         userSelect: "none",
-        color: currentColor,
+        // 精简：将颜色和字重直接交由 CSS 变量控制，避免频繁计算内联样式样式串
+        color: active ? activeColor : (color || defaultGray),
         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         ...style,
       }}
     >
       <div style={{ position: "relative", display: "flex", flexShrink: 0 }}>
+        {/* 精简：color="currentColor" 让图标直接继承父级最外层 div 的 color */}
         <SelectedIcon size={size} color="currentColor" stroke={stroke} />
 
         {hasBadge && (
@@ -77,7 +84,7 @@ export const IconLable = memo(({
               zIndex: 1,
             }}
           >
-            {badgeContent && (badgeContent > 99 ? "99+" : badgeContent)}
+            {badgeContent > 99 ? "99+" : badgeContent}
           </span>
         )}
       </div>
@@ -95,3 +102,5 @@ export const IconLable = memo(({
     </div>
   );
 });
+
+IconLabel.displayName = "IconLabel";
