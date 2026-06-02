@@ -68,7 +68,7 @@ export const GroupUsers = () => {
             console.error(error);
         },
     });
-    // console.log('members',members)
+    console.log('members',members)
     return <div>
         <GroupMemberList
             members={members}

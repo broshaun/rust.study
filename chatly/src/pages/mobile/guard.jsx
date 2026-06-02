@@ -12,6 +12,9 @@ export function ChatGuard() {
   const dt = useDateTime();
   const navigate = useNavigate();
   const [userId] = useLocalStorage({ key: 'current_account' })
+
+  console.log('userId++',userId)
+
   const db = getUserDB(userId);
   const { remainSeconds } = useToken()
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
@@ -80,6 +83,7 @@ export function ChatGuard() {
       await fetchGroupMsgs();
       return 'ok';
     },
+    enabled: !!userId,
     refetchInterval: 2000,
     refetchIntervalInBackground: false,
   })

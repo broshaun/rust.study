@@ -10,7 +10,7 @@ import { TextField } from "./UI/TextField";
 
 export function Login() {
     const navigate = useNavigate();
-    const [account, setAccount] = useLocalStorage({ key: 'current_account' });
+    const [account, setAccount] = useLocalStorage({ key: 'current_account', defaultValue: "" });
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
     const [password, setPassword] = useState("");
 

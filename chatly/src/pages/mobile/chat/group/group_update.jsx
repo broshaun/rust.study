@@ -1,5 +1,5 @@
 import { GroupEdit } from "./UI/GroupEdit";
-import { currentAppBar, useHttpClient, currentGroup } from "utils";
+import { currentAppBar, useHttpClient, currentGroup, useImgApiBase } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +21,7 @@ export const Update = () => {
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const group = currentGroup((state) => state.current)
+    
 
     const { http } = useHttpClient('/rpc/chat/msg/group/');
     const { http: httpFiles } = useHttpClient('/files/avatar/');
@@ -84,7 +84,7 @@ export const Update = () => {
     });
 
 
-
+    const { joinPath } = useImgApiBase('avatar')
     const handleUpdateGroup = async (value) => {
         const avatarUrl =
             value.group_avatar instanceof File
@@ -100,6 +100,8 @@ export const Update = () => {
     };
 
 
+    const group = currentGroup((state) => state.current)
+    console.log('group++',group)
 
     return <div>
         <GroupEdit
