@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useToken, getUserDB, useHttpClient, useGroupStore,useDateTime } from "utils"
+import { useToken, getUserDB, useHttpClient, useStoreGroup,useDateTime } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -8,7 +8,7 @@ import { useLocalStorage } from '@mantine/hooks';
 
 
 export function ChatGuard() {
-  const setGroup = useGroupStore((state) => state.setGroup);
+  const setGroup = useStoreGroup((state) => state.setGroup);
   const dt = useDateTime();
   const navigate = useNavigate();
   const [userId] = useLocalStorage({ key: 'current_account' })

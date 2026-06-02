@@ -1,4 +1,4 @@
-import { useHttpClient, currentAppBar, currentGroup, useGroupStore } from "utils";
+import { useHttpClient, currentAppBar, currentGroup, useStoreGroup } from "utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Box, Text, Center, Stack } from "@mantine/core";
@@ -20,7 +20,7 @@ const groups = [
 
 export const Item = () => {
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const setGroup = useGroupStore((state) => state.setGroup);
+    const setGroup = useStoreGroup((state) => state.setGroup);
     const setCurGroup = currentGroup((state) => state.setCurrent);
 
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -69,12 +69,12 @@ export const Item = () => {
         navigate('/mobile/chat/group/update')
     }
 
-    const syncGroups = useGroupStore((state) => state.syncGroups);
+    const syncGroups = useStoreGroup((state) => state.syncGroups);
     useEffect(() => {
         syncGroups(groups)
     }, [groups]);
 
-    const groupState = useGroupStore((state) => state.groups);
+    const groupState = useStoreGroup((state) => state.groups);
 
     if (!groupState.length) {
         return (

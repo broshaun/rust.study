@@ -8,7 +8,7 @@ import { ImagSend } from "./msg_img_send";
 import { Smile } from "./msg_smile_send";
 import { GroupUsers } from "./group_users";
 import { CreateGroup } from "./group_add";
-import  {InviteGroup} from "./group_invite"
+import { InviteGroup } from "./group_invite"
 
 
 export const RsGroup = [
