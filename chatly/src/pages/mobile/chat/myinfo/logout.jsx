@@ -1,8 +1,8 @@
-import React, { useState, Suspense } from "react";
+import React, { Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { Modal } from 'components';
-import { useHttpClient } from 'utils';
-import { useToken } from "utils"
+import { useHttpClient, useToken, currentModal, GlobalModal } from 'utils';
+import { useEffect } from "react";
+
 
 
 
@@ -10,10 +10,6 @@ export const Logout = () => {
   const navigate = useNavigate();
   const { delToken } = useToken();
   const { http } = useHttpClient('/rpc/chat/login/')
-  const [open, setOpen] = useState(true);
-
-
-
 
   const logout = () => {
     http.post('DELETE').catch(console.error);
@@ -21,14 +17,21 @@ export const Logout = () => {
     navigate('/mobile/auth/user', { replace: true });
   }
 
+  const { open } = currentModal();
+  useEffect(() => {
+    open({
+      title: "登出",
+      message: "退出当前账户？",
+      onConfirm: () => {
+        console.log("确认退出");
+        logout();
+      },
+      onCancel: () => {
+        navigate("/mobile/chat/self", { replace: true });
+      }
+    });
+  }, [open, navigate]);
 
-  return <Suspense>
-    <Modal visible={open}>
-      <Modal.Title>登出</Modal.Title>
-      <Modal.Message>退出当前账户？</Modal.Message>
-      <Modal.Confirm onClick={() => { setOpen(false); logout(); }}>确定</Modal.Confirm>
-      <Modal.Cancel onClick={() => { setOpen(false); navigate('/mobile/chat/self/') }}>取消</Modal.Cancel>
-    </Modal>
-  </Suspense>
+  return <Suspense fallback={<div>加载中...</div>} />
 }
 

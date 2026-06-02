@@ -1,12 +1,14 @@
-import { Outlet, Navigate } from "react-router";
+import { Outlet } from "react-router";
 import { Login } from "./login";
 import { Register } from "./register";
-import { Agent } from "./agent";
-import { Items } from "./items";
+import { GlobalModal } from "utils";
 
 
 export const User = () => {
-  return <Outlet />
+  return <div>
+    <GlobalModal />
+    <Outlet />
+  </div>
 }
 
 export const RsUser = [
@@ -21,15 +23,6 @@ export const RsUser = [
         path: "register",
         element: <Register />,
       },
-      {
-        path: "agent",
-        element: <Agent />
-      },
-      {
-        path: "items",
-        element: <Items />
-      }
-
     ]
   }
 ];

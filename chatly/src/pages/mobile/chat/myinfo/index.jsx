@@ -5,10 +5,14 @@ import { Logout } from "./logout";
 import { PushDeer } from "./pushdeer";
 import { ClearLogs } from "./clear";
 import { Nikename } from "./nickname";
+import { GlobalModal } from "utils";
 
 
 export const MyInfo = () => {
-    return <Outlet />
+    return <div>
+        <GlobalModal />
+        <Outlet />
+    </div>
 }
 
 export const RsMyInfo = [

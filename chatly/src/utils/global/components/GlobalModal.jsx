@@ -2,17 +2,33 @@ import { Modal, Button, Group, Text, Title } from "@mantine/core";
 import { currentModal } from "utils";
 
 export function GlobalModal() {
-  const modal = currentModal();
+  const {
+    visible,
+    title,
+    message,
+    confirmText,
+    cancelText,
+    onConfirm,
+    onCancel,
+    close,
+  } = currentModal();
 
-  const close = (callback) => {
-    callback?.();
-    modal.closeModal();
+  const hasCancel = typeof onCancel === "function";
+
+  const handleCancel = async () => {
+    await onCancel?.();
+    close();
+  };
+
+  const handleConfirm = async () => {
+    await onConfirm?.();
+    close();
   };
 
   return (
     <Modal
-      opened={modal.visible}
-      onClose={() => close(modal.onCancel)}
+      opened={visible}
+      onClose={hasCancel ? handleCancel : close}
       centered
       withCloseButton={false}
       size={320}
@@ -20,25 +36,41 @@ export function GlobalModal() {
       padding={0}
       overlayProps={{ backgroundOpacity: 0.35, blur: 14 }}
     >
-      {modal.title && (
-        <Title order={5} ta="center" fw={600} fz={16} py={8} bg="gray.0" style={{ borderBottom: "1px solid #e5e7eb" }}>
-          {modal.title}
+      {title && (
+        <Title
+          order={5}
+          ta="center"
+          fw={600}
+          fz={16}
+          py={8}
+          bg="gray.0"
+          style={{ borderBottom: "1px solid #e5e7eb" }}
+        >
+          {title}
         </Title>
       )}
 
-      {modal.message && (
+      {message && (
         <Text fz={13} c="dimmed" ta="center" lh={1.4} px={16} py={12}>
-          {modal.message}
+          {message}
         </Text>
       )}
 
       <Group justify="center" gap="md" px="md" pb="md">
-        <Button variant="default" size="xs" w={100} h={32} onClick={() => close(modal.onCancel)}>
-          {modal.cancelText}
-        </Button>
+        {hasCancel && (
+          <Button
+            variant="default"
+            size="xs"
+            w={100}
+            h={32}
+            onClick={handleCancel}
+          >
+            {cancelText}
+          </Button>
+        )}
 
-        <Button variant="default" size="xs" w={100} h={32} onClick={() => close(modal.onConfirm)}>
-          {modal.confirmText}
+        <Button size="xs" w={100} h={32} onClick={handleConfirm}>
+          {confirmText}
         </Button>
       </Group>
     </Modal>

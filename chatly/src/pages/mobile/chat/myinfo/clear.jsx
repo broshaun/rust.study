@@ -1,37 +1,36 @@
-import React, { useState, Suspense } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { Modal } from 'components';
-import { deleteUserDB } from 'utils';
+import { deleteUserDB, currentModal } from 'utils';
 import { clearAllImageCache } from "utils";
+import { useLocalStorage } from "@mantine/hooks";
 
 
 
 export const ClearLogs = () => {
+    const [account] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
-    const [open, setOpen] = useState(true);
-
-
-
     const clear = async (click) => {
         await clearAllImageCache();
         if (click) {
-            deleteUserDB().then(console.log('记录清空'))
-            navigate('/mobile/chat/self/');
-        } else {
-            navigate('/mobile/chat/self/')
+            deleteUserDB(account).then(console.log('记录清空'))
         }
-        setOpen(false)
+        navigate('/mobile/chat/self/')
 
     }
+    const { open } = currentModal();
+    useEffect(() => {
+        open({
+            title: "聊天记录",
+            message: "确定清空所有聊天记录?",
+            onConfirm: async () => {
+                await clear(true)
+            },
+            onCancel: async () => {
+                await clear(false)
+            }
+        });
+    }, [open, navigate]);
 
-
-    return <Suspense>
-        <Modal visible={open}>
-            <Modal.Title>聊天记录</Modal.Title>
-            <Modal.Message>确定清空所有聊天记录</Modal.Message>
-            <Modal.Confirm onClick={() => { clear(true) }}>确定</Modal.Confirm>
-            <Modal.Cancel onClick={() => { clear(false) }}>取消</Modal.Cancel>
-        </Modal>
-    </Suspense>
+    return <Suspense fallback={<div>加载中...</div>} />
 }
 

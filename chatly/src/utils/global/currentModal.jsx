@@ -1,37 +1,37 @@
 import { create } from "zustand";
-export { GlobalModal } from "./components/GlobalModal"
 
 
-export const currentModal = create((set) => ({
+export { GlobalModal } from "./components/GlobalModal";
+const initialState = {
   visible: false,
-  title: "标题",
-  message: "提示消息",
+  title: "",
+  message: "",
   confirmText: "确定",
   cancelText: "取消",
   onConfirm: null,
   onCancel: null,
-
-  openModal: (options = {}) =>
+};
+export const currentModal = create((set) => ({
+  ...initialState,
+  open: (options = {}) =>
     set({
+      ...initialState,
+      ...options,
       visible: true,
-      title: options.title || "",
-      message: options.message || "",
       confirmText: options.confirmText || "确定",
       cancelText: options.cancelText || "取消",
-      onConfirm: options.onConfirm || null,
-      onCancel: options.onCancel || null,
     }),
-
-  closeModal: () =>
-    set({
-      visible: false,
-      title: "",
-      message: "",
-      confirmText: "确定",
-      cancelText: "取消",
-      onConfirm: null,
-      onCancel: null,
-    }),
+  close: () => set(initialState),
 }));
 
 
+// 组件里使用
+// const { open } = currentModal();
+// open({
+//   title: "退出群聊",
+//   message: "确定退出该群聊吗？",
+//   onConfirm() {
+//     console.log("确认退出");
+//   },
+// });
+// return <GlobalModal />

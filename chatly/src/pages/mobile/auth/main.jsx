@@ -1,6 +1,6 @@
 import React from "react"
 import { Outlet, useNavigate } from "react-router";
-import { IconLabel } from 'components'; // 🔥 切换为刚优化好的 IconLable
+import { IconLabel } from 'components';
 import { Stack, Drawer, Title, AppShell, Burger, Divider } from "@mantine/core";
 import { useDisclosure } from '@mantine/hooks';
 
@@ -10,7 +10,7 @@ export function AuthShell() {
   const drawerMenu = [
     { key: 'login', display: true, icon: { name: 'IconUserCircle', label: '登陆' }, onTap: () => { navigate('/mobile/auth/user/') } },
     { key: 'register', display: true, icon: { name: 'IconUserPlus', label: '注册' }, onTap: () => { navigate('/mobile/auth/user/register/') } },
-    { key: 'settings', display: true, icon: { name: 'IconSettings', label: '设置' }, onTap: () => { navigate('/mobile/auth/user/items/') } },
+    // { key: 'settings', display: true, icon: { name: 'IconSettings', label: '设置' }, onTap: () => { navigate('/mobile/auth/user/items/') } },
   ];
 
   const [opened, { open, close }] = useDisclosure(false);
@@ -26,7 +26,6 @@ export function AuthShell() {
       <Drawer opened={opened} onClose={close} size={120} withCloseButton={false}>
         <Title order={4} mb="md">导航</Title>
         
-        {/* 两边淡化渐变分割线 */}
         <Divider 
           mb="md"
           styles={{
@@ -38,7 +37,6 @@ export function AuthShell() {
           }} 
         />
         
-        {/* Drawer 内部菜单列表 */}
         <Stack padding={10} gap={10}>
           {drawerMenu.filter(i => i.display !== false).map((item) =>
             <IconLabel
@@ -46,8 +44,8 @@ export function AuthShell() {
               name={item.icon.name}
               label={item.icon.label}
               onClick={() => handleItemClick(item)}
-              labelPos='right' // 横向排列标签
-              size={20}        // 侧边栏菜单图标建议 20-22px，看起来更精致
+              labelPos='right'
+              size={20}
             />
           )}
         </Stack>

@@ -53,7 +53,9 @@ export function ChatShell() {
         <GlobalAppBar />
       </AppShell.Header>
       <AppShell.Main>
+    
         <Outlet />
+
       </AppShell.Main>
       <AppShell.Footer>
         <Group h="100%" grow gap={1} >
