@@ -1,88 +1,87 @@
 import { useEffect, useState } from "react";
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 
-const MEMORY_CACHE = new Map();
+const IMAGE_CACHE = new Map();
+const IMAGE_TASKS = new Map();
 
-export function useCachedImage(url) {
-    const [state, setState] = useState(() => {
-        const cached = url ? MEMORY_CACHE.get(url) : null;
+async function loadCachedImage(url) {
+  if (IMAGE_CACHE.has(url)) return IMAGE_CACHE.get(url);
+  if (IMAGE_TASKS.has(url)) return IMAGE_TASKS.get(url);
 
-        return cached
-            ? { src: cached, loading: false, error: null, success: true }
-            : { src: "", loading: false, error: null, success: false };
+  const task = invoke("get_cached_image", { url })
+    .then(({ path }) => {
+      const src = convertFileSrc(path);
+      IMAGE_CACHE.set(url, src);
+      IMAGE_TASKS.delete(url);
+      return src;
+    })
+    .catch((error) => {
+      IMAGE_TASKS.delete(url);
+      throw error;
     });
 
-    useEffect(() => {
-        if (!url) {
-            setState({ src: "", loading: false, error: null, success: false });
-            return;
+  IMAGE_TASKS.set(url, task);
+  return task;
+}
+
+export function useCachedImage(url) {
+  const [state, setState] = useState({
+    src: url ? IMAGE_CACHE.get(url) || "" : "",
+    loading: false,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!url) {
+      setState({ src: "", loading: false, error: null });
+      return;
+    }
+
+    if (IMAGE_CACHE.has(url)) {
+      setState({ src: IMAGE_CACHE.get(url), loading: false, error: null });
+      return;
+    }
+
+    let alive = true;
+
+    setState({ src: "", loading: true, error: null });
+
+    loadCachedImage(url)
+      .then((src) => {
+        if (alive) setState({ src, loading: false, error: null });
+      })
+      .catch((error) => {
+        if (alive) {
+          setState({
+            src: "",
+            loading: false,
+            error: error?.message || String(error),
+          });
         }
+      });
 
-        const cached = MEMORY_CACHE.get(url);
-        if (cached) {
-            setState({ src: cached, loading: false, error: null, success: true });
-            return;
-        }
+    return () => {
+      alive = false;
+    };
+  }, [url]);
 
-        let cancelled = false;
-
-        async function load() {
-            setState((prev) => ({
-                ...prev,
-                loading: true,
-                error: null,
-                success: false,
-            }));
-
-            try {
-                const result = await invoke("get_cached_image", { url });
-
-                const src = convertFileSrc(result.path);
-
-                MEMORY_CACHE.set(url, src);
-
-                if (!cancelled) {
-                    setState({
-                        src,
-                        loading: false,
-                        error: null,
-                        success: true,
-                    });
-                }
-            } catch (e) {
-                if (!cancelled) {
-                    setState({
-                        src: "",
-                        loading: false,
-                        error: e?.message || String(e) || "Load failed",
-                        success: false,
-                    });
-                }
-            }
-        }
-
-        load();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [url]);
-
-    return state;
+  return {
+    ...state,
+    success: !!state.src && !state.error,
+  };
 }
 
 export async function clearAllImageCache() {
-    MEMORY_CACHE.clear();
-    await invoke("clear_image_cache");
+  IMAGE_CACHE.clear();
+  IMAGE_TASKS.clear();
+  await invoke("clear_image_cache");
 }
 
+export function Avatar({ url }) {
+  const { src, loading, error } = useCachedImage(url);
 
+  if (loading) return <div>Loading...</div>;
+  if (error || !src) return <div>No image</div>;
 
-export const Avatar = ({ url }) => {
-    const { src, loading, error } = useCachedImage(url);
-
-    if (loading) return <div>Loading...</div>;
-    if (error || !src) return <div>No image</div>;
-
-    return <img src={src} alt="" />;
+  return <img src={src} alt="" />;
 }

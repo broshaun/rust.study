@@ -1,9 +1,13 @@
 use regex::Regex;
 use serde::Serialize;
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::LazyLock};
 use tauri::{AppHandle, Manager};
 
 const CACHE_DIR: &str = "images";
+
+static IMAGE_NAME_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)^[a-f0-9]{32}\.(jpg|jpeg|png|webp|gif)$").unwrap()
+});
 
 #[derive(Serialize)]
 pub struct CachedImage {
@@ -11,42 +15,33 @@ pub struct CachedImage {
     pub file_name: String,
 }
 
-fn valid_image_file_name(file_name: &str) -> bool {
-    let re = Regex::new(r"(?i)^[a-f0-9]{32}\.(jpg|jpeg|png|webp|gif)$").unwrap();
-    re.is_match(file_name)
+fn file_name_from_url(url: &str) -> Result<String, String> {
+    let file_name = url
+        .split('?')
+        .next()
+        .and_then(|s| s.rsplit('/').next())
+        .filter(|name| IMAGE_NAME_RE.is_match(name))
+        .ok_or("Invalid image url or file name")?;
+
+    Ok(file_name.to_string())
 }
 
-fn get_file_name(url: &str) -> Result<String, String> {
-    let clean_url = url.split('?').next().unwrap_or(url);
-    let file_name = clean_url
-        .split('/')
-        .last()
-        .ok_or("Invalid image url")?
-        .to_string();
-
-    if !valid_image_file_name(&file_name) {
-        return Err("Invalid image file name".into());
-    }
-
-    Ok(file_name)
-}
-
-fn cache_dir(app: &AppHandle) -> Result<PathBuf, String> {
+fn image_cache_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_data_dir()
-        .map(|p| p.join(CACHE_DIR))
+        .map(|dir| dir.join(CACHE_DIR))
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn get_cached_image(app: AppHandle, url: String) -> Result<CachedImage, String> {
-    let file_name = get_file_name(&url)?;
-    let dir = cache_dir(&app)?;
+    let file_name = file_name_from_url(&url)?;
+    let dir = image_cache_dir(&app)?;
     let file_path = dir.join(&file_name);
 
-    if file_path.exists() {
+    if tokio::fs::metadata(&file_path).await.is_ok() {
         return Ok(CachedImage {
-            path: file_path.to_string_lossy().to_string(),
+            path: file_path.to_string_lossy().into_owned(),
             file_name,
         });
     }
@@ -61,37 +56,41 @@ pub async fn get_cached_image(app: AppHandle, url: String) -> Result<CachedImage
         return Err(format!("HTTP {}", response.status()));
     }
 
-    let content_type = response
+    let is_image = response
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
+        .is_some_and(|v| v.starts_with("image/"));
 
-    if !content_type.starts_with("image/") {
+    if !is_image {
         return Err("Response is not an image".into());
     }
 
     let bytes = response.bytes().await.map_err(|e| e.to_string())?;
 
-    tokio::fs::write(&file_path, bytes)
+    let tmp_path = file_path.with_extension("tmp");
+
+    tokio::fs::write(&tmp_path, bytes)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    tokio::fs::rename(&tmp_path, &file_path)
         .await
         .map_err(|e| e.to_string())?;
 
     Ok(CachedImage {
-        path: file_path.to_string_lossy().to_string(),
+        path: file_path.to_string_lossy().into_owned(),
         file_name,
     })
 }
 
 #[tauri::command]
 pub async fn clear_image_cache(app: AppHandle) -> Result<(), String> {
-    let dir = cache_dir(&app)?;
+    let dir = image_cache_dir(&app)?;
 
-    if dir.exists() {
-        tokio::fs::remove_dir_all(dir)
-            .await
-            .map_err(|e| e.to_string())?;
+    match tokio::fs::remove_dir_all(dir).await {
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(e.to_string()),
     }
-
-    Ok(())
 }
