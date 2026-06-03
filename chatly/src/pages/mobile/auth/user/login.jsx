@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from 'react-router';
 import { useToken } from "utils";
-import { useHttpClient, currentModal } from 'utils';
+import { useHttpClient, currentModal, useDateTime } from 'utils';
 import { SafeAvatar } from 'components';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from "@mantine/hooks";
@@ -16,7 +16,7 @@ export function Login() {
 
     const { http } = useHttpClient('/rpc/chat/login/');
     const { setToken } = useToken();
-
+    const dt = useDateTime();
 
     const { open, close } = currentModal();
     const { mutateAsync: login } = useMutation({
@@ -24,14 +24,13 @@ export function Login() {
             if (!account || !password) throw new Error("请输入账号密码 ...");
             const results = await http.post("POST", { email: account, pass_word: password });
             if (!results) throw new Error("登录失败，请稍后重试");
-            const { code, message } = results;
+            const { code, data, message } = results;
             if (code !== 200) throw new Error(message || "登录失败");
-            return results;
+            return data
         },
-        onSuccess: (results) => {
-            const { data } = results;
+        onSuccess: (data) => {
             setToken(data?.login_token, data?.login_expired);
-            setCurrentUser(data?.user);
+            setCurrentUser({ ...data?.user, timestamp: dt.getDateTimeStr() });
             navigate("/mobile/chat/");
         },
         onError: (error) => {
@@ -54,7 +53,7 @@ export function Login() {
                         size={75}
                         radius={100}
                         cover={true}
-                        autoUpdate
+                        version={currentUser?.timestamp}
                     />
                 </Center>
 

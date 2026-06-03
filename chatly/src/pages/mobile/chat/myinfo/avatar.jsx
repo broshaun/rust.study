@@ -9,7 +9,7 @@ import { ImageUpload } from "./UI/ImageUpload";
  * Avatar2 - 用户头像设置与大图预览页面
  */
 export const Avatar2 = () => {
-    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user'});
+    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
     const { http: httpFiles } = useHttpClient('/files/avatar/');
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
     /**
@@ -20,9 +20,9 @@ export const Avatar2 = () => {
         httpFiles.uploadFiles(file).then((results) => {
             if (!results?.data) return;
             apiLogin.post('PATCH', { avatar_url: results.data });
-            setCurrentUser(p=>({
+            setCurrentUser(p => ({
                 ...p,
-                avatar_url:results.data
+                avatar_url: results.data
             }));
         });
     }, [httpFiles, apiLogin]);
@@ -33,6 +33,9 @@ export const Avatar2 = () => {
         setLeftPath('/mobile/chat/self/')
         setTitle('上传头像');
     }, [])
+
+    console.log('currentUser+++', currentUser)
+
 
     return (
         <Suspense fallback={<div>加载中...</div>}>
@@ -51,10 +54,10 @@ export const Avatar2 = () => {
 
             <Center mt={10}>
                 <SafeAvatar
-                    url={currentUser.avatar_url}
+                    url={currentUser?.avatar_url}
                     size={320}
                     radius={12}
-                    autoUpdate
+                    version={currentUser?.timestamp}
                 />
             </Center>
             <Group p={20} justify="center">

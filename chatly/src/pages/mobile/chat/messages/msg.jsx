@@ -45,6 +45,9 @@ export function Msg() {
         }
     }
 
+
+    console.log('msgs++',msgs)
+
     return <div>
         <ChatBox
             height={winHeight - 55}

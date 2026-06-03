@@ -17,15 +17,8 @@ function getRadius(radius) {
   return RADIUS[radius] ?? radius;
 }
 
-/**
- * SafeAvatar
- *
- * 基于 useCachedImage 的头像组件。
- * - 图片自动缓存到本地
- * - url 会通过 useImgApiBase("avatar") 拼接
- * - 仅 version 变化时重新渲染
- */
 const IMAGE_BASE_PATH = "avatar";
+
 function SafeAvatarComponent({
   url,
   size = 40,
@@ -102,7 +95,14 @@ function SafeAvatarComponent({
     </Box>
   );
 }
-
+/**
+ * SafeAvatar
+ *
+ * 基于 useCachedImage 的头像组件。
+ * - 图片自动缓存到本地
+ * - url 会通过 useImgApiBase("avatar") 拼接
+ * - 仅 version 变化时重新渲染
+ */
 export const SafeAvatar = memo(
   SafeAvatarComponent,
   (prev, next) => prev.version === next.version

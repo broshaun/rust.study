@@ -20,14 +20,6 @@ import { useCachedImage, useImgApiBase } from "utils";
 
 const IMAGE_BASE_PATH = "images";
 
-/**
- * SafeImage
- *
- * 基于 useCachedImage 的安全图片组件。
- * - 图片自动缓存到本地
- * - url / previewUrl 会通过 useImgApiBase 拼接
- * - 仅 version 变化时重新渲染
- */
 function SafeImageComponent({
   url,
   previewUrl,
@@ -337,6 +329,14 @@ function SafeImageComponent({
   );
 }
 
+/**
+ * SafeImage
+ *
+ * 基于 useCachedImage 的安全图片组件。
+ * - 图片自动缓存到本地
+ * - url / previewUrl 会通过 useImgApiBase 拼接
+ * - 仅 version 变化时重新渲染
+ */
 export const SafeImage = memo(
   SafeImageComponent,
   (prev, next) => prev.version === next.version
