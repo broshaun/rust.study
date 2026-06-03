@@ -2,6 +2,11 @@ import { useCachedImage } from "./UI/images";
 
 function Avatar({ url }) {
   const { src, loading, error } = useCachedImage(url);
+
+    console.log("src",src)
+    console.log("loading",loading)
+    console.log("error",error)
+
   if (loading) return <div>Loading...</div>;
   if (error || !src) return <div>No image</div>;
 
