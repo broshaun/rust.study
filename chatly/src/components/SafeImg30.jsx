@@ -18,7 +18,7 @@ import {
 } from "@tabler/icons-react";
 import { useCachedImage, useImgApiBase } from "utils";
 
-const IMAGE_BASE_PATH = "images";
+const IMAGE_BASE_PATH = '/img30/';
 
 /**
  * SafeImage
@@ -337,9 +337,9 @@ function SafeImageComponent({
   );
 }
 
-export const SafeImage = memo(
+export const SafeImg30 = memo(
   SafeImageComponent,
   (prev, next) => prev.version === next.version
 );
 
-SafeImage.displayName = "SafeImage";
+SafeImg30.displayName = "SafeImg30";

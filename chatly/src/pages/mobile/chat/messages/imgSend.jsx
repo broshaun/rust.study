@@ -1,22 +1,18 @@
 import { useNavigate, useOutletContext } from 'react-router';
 import { useState, useEffect } from "react";
 import { useMutation } from '@tanstack/react-query';
-import { currentChat, useHttpClient, useImgApiBase, currentAppBar } from 'utils';
+import { currentChat, useHttpClient, currentAppBar } from 'utils';
 import { ImgUp } from './UI/ImageUpload';
 
 
 export function ImagSend() {
     const { fnSendMsg, isPending } = useOutletContext();
-
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const current = currentChat((s) => s.current);
     useEffect(() => {
         setLeftPath('/mobile/chat/message/')
     }, [])
 
-
-
-    const { joinPath: joinPathImg30 } = useImgApiBase('/img30/'); // 获取MinIo真实图片URL
     /**
      * 上传图片服务
      * 上传缓存30天图片
@@ -55,8 +51,7 @@ export function ImagSend() {
         try {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
-                const imageSrc = joinPathImg30(imgFileName);
-                await fnSendMsg({ uid: current?.uid, msgType: 'image', msgText: imageSrc });
+                await fnSendMsg({ uid: current?.uid, msgType: 'image', msgText: imgFileName });
             }
         } catch (error) {
             console.error(error);

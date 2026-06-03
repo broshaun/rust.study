@@ -1,7 +1,7 @@
 import { useNavigate, useOutletContext } from 'react-router';
 import { useState, useEffect } from "react";
 import { useMutation } from '@tanstack/react-query';
-import { currentGroup, useHttpClient, useImgApiBase, currentAppBar } from 'utils';
+import { currentGroup, useHttpClient, currentAppBar } from 'utils';
 import { ImgUp } from './UI/ImageUpload';
 
 
@@ -12,13 +12,11 @@ export function ImagSend() {
     useEffect(() => {
         setLeftPath('/mobile/chat/group/msgs/')
     }, [])
-
-    const { joinPath: joinPathImg30 } = useImgApiBase('/img30/'); // 获取MinIo真实图片URL
     /**
      * 上传图片服务
      * 上传缓存30天图片
      */
-    const { http: httpImg30 } = useHttpClient('/files/img30/'); // 保存图片的路由路径
+    const { http: httpImg30 } = useHttpClient('/files/img30/');
     const { mutateAsync: uploadImg30 } = useMutation(
         {
             mutationFn: async ({ file }) => {
@@ -52,8 +50,7 @@ export function ImagSend() {
         try {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
-                const imageSrc = joinPathImg30(imgFileName);
-                await mutation.mutateAsync({ group_id: current?.id, msgType: 'image', msgText: imageSrc });
+                await mutation.mutateAsync({ group_id: current?.id, msgType: 'image', msgText: imgFileName });
             }
         } catch (error) {
             console.error(error);

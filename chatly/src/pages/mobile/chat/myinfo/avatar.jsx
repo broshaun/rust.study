@@ -1,32 +1,17 @@
-import { useCallback, Suspense, useMemo, useEffect } from "react";
-import { useLocation } from 'react-router';
-
-import { useHttpClient, useImgApiBase } from 'utils';
+import { useCallback, Suspense, useEffect } from "react";
+import { useHttpClient, } from 'utils';
 import { useLocalStorage } from '@mantine/hooks';
 import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./UI/ImageUpload";
-
 /**
  * Avatar2 - 用户头像设置与大图预览页面
  */
 export const Avatar2 = () => {
-    const location = useLocation();
-
-    // 持久化存储当前的头像路径
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user'});
-
     const { http: httpFiles } = useHttpClient('/files/avatar/');
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
-    const { joinPath } = useImgApiBase('avatar')
-
-    // 拼接完整的 API 地址
-    const avatarSrc = useMemo(() => {
-        if (!currentUser?.avatar_url) return "";
-        return joinPath(currentUser.avatar_url)
-    }, [currentUser?.avatar_url]);
-
     /**
      * 上传并更新头像
      */
@@ -41,7 +26,6 @@ export const Avatar2 = () => {
             }));
         });
     }, [httpFiles, apiLogin]);
-
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -67,7 +51,7 @@ export const Avatar2 = () => {
 
             <Center mt={10}>
                 <SafeAvatar
-                    url={avatarSrc}
+                    url={currentUser.avatar_url}
                     size={320}
                     radius={12}
                     autoUpdate

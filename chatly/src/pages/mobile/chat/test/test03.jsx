@@ -1,4 +1,4 @@
-import { useCachedImage } from "./UI/images";
+import { useCachedImage } from "utils";
 
 function Avatar({ url }) {
   const { src, loading, error } = useCachedImage(url);

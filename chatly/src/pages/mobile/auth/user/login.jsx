@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from 'react-router';
 import { useToken } from "utils";
-import { useHttpClient, useImgApiBase, currentModal } from 'utils';
+import { useHttpClient, currentModal } from 'utils';
 import { SafeAvatar } from 'components';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from "@mantine/hooks";
@@ -15,12 +15,8 @@ export function Login() {
     const [password, setPassword] = useState("");
 
     const { http } = useHttpClient('/rpc/chat/login/');
-    const { joinPath } = useImgApiBase('avatar');
     const { setToken } = useToken();
 
-    const avatar_url = useMemo(() => {
-        return joinPath(currentUser?.avatar_url);
-    }, [currentUser?.avatar_url]);
 
     const { open, close } = currentModal();
     const { mutateAsync: login } = useMutation({
@@ -54,7 +50,7 @@ export function Login() {
 
                 <Center>
                     <SafeAvatar
-                        url={avatar_url}
+                        url={currentUser?.avatar_url}
                         size={75}
                         radius={100}
                         cover={true}

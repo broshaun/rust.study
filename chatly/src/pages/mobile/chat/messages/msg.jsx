@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react"
-import { useWinSize, currentChat, currentAppBar, useImgApiBase } from 'utils';
+import React, { useState, useEffect } from "react"
+import { useWinSize, currentChat, currentAppBar } from 'utils';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from '@mantine/hooks';
 import { useOutletContext } from 'react-router';
@@ -21,19 +21,8 @@ export function Msg() {
 
     const { fnSendMsg, db } = useOutletContext();
     const { winHeight } = useWinSize();
-
-    const receiverAvatarSrc = useMemo(() => {
-        return current?.avatar_url
-    }, [current?.avatar_url]);
-
     const [currentUser] = useLocalStorage({ key: 'current_user' })
     
-    const { joinPath: joinPathAvatar } = useImgApiBase('/files/avatar/')
-    const senderAvatarSrc = useMemo(() => {
-        if (!currentUser?.avatar_url) return "";
-        return joinPathAvatar(currentUser?.avatar_url)
-    }, [currentUser?.avatar_url]);
-
     const [msgs, setMsgs] = useState([]);
     useEffect(() => {
         if (!db) return;
@@ -60,10 +49,10 @@ export function Msg() {
         <ChatBox
             height={winHeight - 55}
             messages={msgs}
-            senderAvatarSrc={senderAvatarSrc}
-            receiverAvatarSrc={receiverAvatarSrc}
+            senderAvatarSrc={currentUser?.avatar_url}
+            receiverAvatarSrc={current?.avatar_url}
             onSend={(v) => { msgTextSend(v) }}
-            // onOpenTools={() => { console.log("打开工具栏") }}
+            onOpenTools={() => { console.log("打开工具栏") }}
         >
             <ChatBox.Tools>
                 <Tools />

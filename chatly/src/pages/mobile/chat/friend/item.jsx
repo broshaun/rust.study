@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB, currentAppBar, useHttpClient, useImgApiBase } from "utils";
+import { getUserDB, currentAppBar, useHttpClient } from "utils";
 import { liveQuery } from 'dexie';
 import { useMutation } from '@tanstack/react-query'
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { Group, ScrollArea, Box, Indicator, ActionIcon } from '@mantine/core';
-import { IconUserSearch, IconCirclePlus } from "@tabler/icons-react";
+import { ScrollArea, Box } from '@mantine/core';
+import { IconCirclePlus } from "@tabler/icons-react";
 import { Friend } from "./UI/Friend";
 
 
@@ -16,17 +16,7 @@ export const Item = () => {
     const [account] = useLocalStorage({ key: 'current_account' })
 
     const { http } = useHttpClient('/rpc/chat/friend/')
-    const { joinPath } = useImgApiBase('avatar')
     const db = getUserDB(account);
-
-
-
-    const loadFriends = (rows) => {
-        const formattedData = rows.map((row) => ({
-            ...row, avatar_url: joinPath(row.avatar_url)
-        }));
-        handlers.setState(formattedData);
-    };
 
     const openMsgWindow = useCallback((select) => {
         navigate('/mobile/chat/friend/detail/', { state: { select } });
@@ -95,7 +85,7 @@ export const Item = () => {
         const sub = liveQuery(
             () => db.table('friends').where('ask_state').equals('agree').toArray()
         ).subscribe({
-            next: rows => loadFriends(rows),
+            next: rows => handlers.setState(rows),
             error: console.error
         })
 

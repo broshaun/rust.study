@@ -1,8 +1,8 @@
-import React, { useEffect, useCallback, Suspense, useRef } from "react";
+import React, { useEffect, useCallback, Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB, useImgApiBase } from "utils";
+import { getUserDB } from "utils";
 import { liveQuery } from 'dexie';
-import { useWinSize, currentChat, currentAppBar } from 'utils';
+import { currentChat, currentAppBar } from 'utils';
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { ScrollArea, Box } from '@mantine/core';
 import { DialogItem } from "./UI/DialogItem";
@@ -12,23 +12,14 @@ export const Item = () => {
     const navigate = useNavigate()
     const [dialog, handlers] = useListState([]);
     const [account] = useLocalStorage({ key: 'current_account' })
-    const { joinPath } = useImgApiBase('/avatar/')
-    const { winHeight } = useWinSize()
     const db = getUserDB(account);
-
-    const loadFriends = (rows) => {
-        const formattedData = rows.map((row) => ({
-            ...row, avatar_url: joinPath(row.avatar_url)
-        }));
-        handlers.setState(formattedData);
-    };
 
     useEffect(() => {
         if (!db) return;
         const sub = liveQuery(
             () => db.table('friends').where('dialog').equals(1).toArray()
         ).subscribe({
-            next: rows => loadFriends(rows),
+            next: rows => handlers.setState(rows),
         })
         return () => sub.unsubscribe()
     }, [db])

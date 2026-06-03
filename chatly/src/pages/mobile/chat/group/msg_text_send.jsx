@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react"
-import { useWinSize, currentChat, currentAppBar, useImgApiBase, currentGroup, getUserDB } from 'utils';
+import React, { useState, useEffect } from "react"
+import { useWinSize, currentAppBar, currentGroup } from 'utils';
 import { liveQuery } from 'dexie';
-import { useLocalStorage } from '@mantine/hooks';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./msg_tools";
 import { useOutletContext } from "react-router";

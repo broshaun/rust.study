@@ -1,16 +1,14 @@
 import React, { useState, Suspense, useEffect } from "react";
-import { useHttpClient, useImgApiBase, currentAppBar } from 'utils';
-import { SafeAvatar } from 'components'; // 保留 SafeAvatar
+import { useHttpClient, currentAppBar } from 'utils';
+import { SafeAvatar } from 'components';
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ScrollArea, Stack, Divider, TextInput, ActionIcon } from "@mantine/core"; // 引入原生 Divider
+import { ScrollArea, Stack, Divider, TextInput, ActionIcon } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import { UserInfoCard } from "./UI/UserInfoCard";
 
 export const Find = () => {
     const { http } = useHttpClient('/rpc/chat/friend/')
-    const { joinPath } = useImgApiBase('avatar')
     const [keywordEmail, setKeywordEmail] = useState();
-
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -127,7 +125,7 @@ export const Find = () => {
                             }}
                         >
                             <UserInfoCard.Avatar>
-                                <SafeAvatar size={60} stretch={true} url={joinPath(findByUser?.avatar_url)} />
+                                <SafeAvatar size={60} stretch={true} url={findByUser?.avatar_url} />
                             </UserInfoCard.Avatar>
                             <UserInfoCard.Info>{findByUser}</UserInfoCard.Info>
                         </UserInfoCard>
@@ -150,7 +148,7 @@ export const Find = () => {
                             }}
                         >
                             <UserInfoCard.Avatar>
-                                <SafeAvatar size={60} stretch={true} url={joinPath(user?.avatar_url)} />
+                                <SafeAvatar size={60} stretch={true} url={user?.avatar_url} />
                             </UserInfoCard.Avatar>
                             <UserInfoCard.Info>{user}</UserInfoCard.Info>
                         </UserInfoCard>

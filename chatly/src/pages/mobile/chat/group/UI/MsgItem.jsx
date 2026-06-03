@@ -6,7 +6,7 @@ import {
   IconPhoneOff,
   IconPhoneOutgoing,
 } from "@tabler/icons-react";
-import { SafeAvatar, SafeImage } from "components";
+import { SafeAvatar, SafeImg30 } from "components";
 
 const TextContent = memo(({ content }) => (
   <Text
@@ -23,7 +23,7 @@ const TextContent = memo(({ content }) => (
 ));
 
 const ImageContent = memo(({ content }) => (
-  <SafeImage
+  <SafeImg30
     url={content}
     previewUrl={content}
     height={50}

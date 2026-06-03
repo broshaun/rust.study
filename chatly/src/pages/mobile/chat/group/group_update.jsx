@@ -1,5 +1,5 @@
 import { GroupEdit } from "./UI/GroupEdit";
-import { currentAppBar, useHttpClient, currentGroup, useImgApiBase } from "utils";
+import { currentAppBar, useHttpClient, currentGroup } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -84,7 +84,6 @@ export const Update = () => {
     });
 
 
-    const { joinPath } = useImgApiBase('avatar')
     const handleUpdateGroup = async (value) => {
         const avatarUrl =
             value.group_avatar instanceof File
