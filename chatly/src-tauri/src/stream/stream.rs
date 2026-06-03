@@ -1,7 +1,8 @@
 use anyhow::{anyhow, Context, Result};
 use iroh::endpoint::{presets, Endpoint};
 use iroh_tickets::endpoint::EndpointTicket;
-use tokio::sync::{mpsc, oneshot, watch};
+use std::sync::Arc;
+use tokio::sync::{mpsc, oneshot, watch, Mutex};
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
 
@@ -36,7 +37,6 @@ impl Task {
     pub async fn stop(&self) {
         self.token.cancel();
         self.task.close();
-        // self.task.wait().await;
     }
 
     pub fn info(&self) -> String {
@@ -54,7 +54,6 @@ impl Task {
 
         self.task.spawn(async move {
             let res = P2PNode::new().await;
-
             while let Ok(ref node) = res {
                 tokio::select! {
                     _ = token.cancelled() => {
@@ -86,7 +85,6 @@ impl Task {
                                 if let Err(e) = reply.send(node) {
                                     eprintln!("start_connect error: {:?}", e);
                                 };
-
                             },
                         }
                     },
@@ -107,24 +105,26 @@ pub enum P2PState {
 #[derive(Clone, Debug)]
 pub struct P2PChannel {
     // 内存 -> 网络 (Flume -> Iroh)
-    outgoing_tx: flume::Sender<Vec<u8>>,
-    outgoing_rx: flume::Receiver<Vec<u8>>,
+    outgoing_tx: mpsc::Sender<Vec<u8>>,
+    outgoing_rx: Arc<Mutex<mpsc::Receiver<Vec<u8>>>>,
+    
     // 网络 -> 内存 (Iroh -> Flume)
-    incoming_rx: flume::Receiver<Vec<u8>>,
-    incoming_tx: flume::Sender<Vec<u8>>,
+    incoming_tx: mpsc::Sender<Vec<u8>>,
+    incoming_rx: Arc<Mutex<mpsc::Receiver<Vec<u8>>>>,
+
     token: CancellationToken,
 }
 
 impl P2PChannel {
     fn new() -> Self {
-        let (outgoing_tx, outgoing_rx) = flume::bounded::<Vec<u8>>(10);
-        let (incoming_tx, incoming_rx) = flume::bounded::<Vec<u8>>(10);
+        let (outgoing_tx, outgoing_rx) = mpsc::channel::<Vec<u8>>(10);
+        let (incoming_tx, incoming_rx) = mpsc::channel::<Vec<u8>>(10);
         let token = CancellationToken::new();
         P2PChannel {
             outgoing_tx,
-            outgoing_rx,
+            outgoing_rx: Arc::new(Mutex::new(outgoing_rx)),
             incoming_tx,
-            incoming_rx,
+            incoming_rx: Arc::new(Mutex::new(incoming_rx)),
             token,
         }
     }
@@ -137,7 +137,7 @@ impl P2PChannel {
         if self.token.is_cancelled() {
             return Err(anyhow!("未打开通道"));
         }
-        self.outgoing_tx.send_async(data).await?;
+        self.outgoing_tx.send(data).await?;
         return Ok(());
     }
 
@@ -145,11 +145,8 @@ impl P2PChannel {
         if self.token.is_cancelled() {
             return None;
         }
-        let rx = self.incoming_rx.clone();
-        let Ok(msg) = rx.recv_async().await else {
-            return None;
-        };
-        return Some(msg);
+        let mut rx = self.incoming_rx.lock().await;
+        rx.recv().await
     }
 
     async fn bind_io_loop(
@@ -174,7 +171,7 @@ impl P2PChannel {
                         match res.unwrap() {
                             Some(n) => {
                                 let data = buf[..n].to_vec();
-                                tx.send_async(data).await.unwrap();
+                                tx.send(data).await.unwrap();
                             }
                             None => {
                                 break;
@@ -194,9 +191,19 @@ impl P2PChannel {
                     _ = atoken.cancelled() => {
                         break;
                     },
-                    Ok(msg) = rx.recv_async() => {
-                        quic_send.write_all(&msg).await.unwrap();
-                    },
+                    msg = async {
+                        let mut rx = rx.lock().await;
+                        rx.recv().await
+                    } => {
+                        match msg {
+                            Some(msg) => {
+                                if quic_send.write_all(&msg).await.is_err() {
+                                    break;
+                                }
+                            }
+                            None => break,
+                        }
+                    }
                 }
             }
             quic_send.finish().unwrap();
@@ -211,7 +218,6 @@ impl P2PChannel {
 pub struct P2PNode {
     pub endpoint: Endpoint,
     pub channel: P2PChannel,
-    // pub state: Arc<RwLock<P2PState>>,
     pub state_tx: watch::Sender<P2PState>,
     pub state_rx: watch::Receiver<P2PState>,
 }

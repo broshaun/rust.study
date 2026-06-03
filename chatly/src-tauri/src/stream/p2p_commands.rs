@@ -1,7 +1,6 @@
 use super::stream::{Cmd, Task};
-use async_lock::RwLock;
 use tauri::{ipc::Channel, Emitter};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{mpsc, oneshot, RwLock};
 
 pub struct AppState {
     pub tx: RwLock<Option<mpsc::Sender<Cmd>>>,
