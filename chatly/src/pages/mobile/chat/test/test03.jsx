@@ -1,6 +1,12 @@
+import { useCachedImage } from "./UI/images";
 
-import { Avatar } from "./UI/images";
+function Avatar({ url }) {
+  const { src, loading, error } = useCachedImage(url);
+  if (loading) return <div>Loading...</div>;
+  if (error || !src) return <div>No image</div>;
 
+  return <img src={src} alt="" />;
+}
 
 
 export const AvTest = () =>{

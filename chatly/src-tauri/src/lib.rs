@@ -30,7 +30,7 @@ pub fn run() {
             // p2p_commands::p2p_recv,
             p2p_commands::send_to_this_window,
 
-            image_cache::get_cached_image,
+            image_cache::get_image_cached,
             image_cache::clear_image_cache,
             
         ])
