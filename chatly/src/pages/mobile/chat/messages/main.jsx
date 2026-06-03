@@ -10,6 +10,7 @@ export const Main = () => {
     /** 账号对应信息
      * 个人数据库
      */
+    const [currentUser] = useLocalStorage({ key: 'current_user' })
     const [account] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(account);
     const { getDateTimeStr } = useDateTime();
@@ -32,10 +33,12 @@ export const Main = () => {
                 if (results?.code === 200) {
                     db.table('message').put({
                         uid: uid,
+                        nikename: '我自己',
                         type: msgType,
                         content: msgText,
                         timestamp: getDateTimeStr(),
-                        sentByMe: true
+                        sentByMe: true,
+                        avatar_url: currentUser?.avatar_url,
                     });
                 }
                 return 'ok';
