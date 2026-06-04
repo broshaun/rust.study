@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useHttpClient, currentAppBar } from 'utils';
 import { getUserDB } from "utils";
-import { SafeAvatar } from 'components'; 
 import { useMutation } from '@tanstack/react-query';
-import { Button, Center, Stack, Group, Title, Divider } from '@mantine/core'; // 仅引入 Divider
 import { useLocalStorage } from '@mantine/hooks';
-import { InfoTile } from "./UI/InfoTile";
+import { FriendInfo } from "./UI/FriendInfoUI";
+
 
 export function Detail() {
   const setTitle = currentAppBar((state) => state.setTitle);
@@ -67,65 +66,26 @@ export function Detail() {
   }
 
   return (
-    <Stack p={20}>
-      <Center>
-        <SafeAvatar
-          url={friend?.avatar_url}
-          size={80}
-          radius={8} // 保持你原来的 8px
-          cover={true}
-          autoUpdate
-        />
-      </Center>
 
-      <Title order={5}>账户信息</Title>
+    <FriendInfo
+      friend={friend}
+      onRemarkChange={(remark) => {
+        setFriend((p) => ({
+          ...p,
+          remark,
+        }));
 
-      {/* 🔥 严格照搬你要求的“两边淡化”设计，厚度 1px，透明度 0.3 */}
-      <Divider 
-        styles={{
-          root: {
-            border: 'none',
-            height: '1px',
-            opacity: 0.3, // 保持你原来的透明度参数
-            backgroundImage: 'linear-gradient(to right, transparent, light-dark(rgba(0,0,0,0.8), rgba(255,255,255,0.8)) 50%, transparent)'
-          }
-        }} 
-      />
-
-      <InfoTile icon="IconId" label="名称" value={friend?.nickname} />
-      <InfoTile icon="mail" label="邮箱" value={friend?.email} />
-      <InfoTile
-        icon="IconUserEdit"
-        label="备注"
-        value={friend?.remark}
-        onConfirm={(remark) => {
-          setFriend((p) => ({ ...p, remark }));
-          updRemark({ id: friend?.id, remark });
-        }}
-      />
-
-      {/* 保持原样：gap=25, justify=center, 不使用 flex=1 */}
-      <Group p={10} gap={25} justify="center" wrap="nowrap">
-        <Button
-          variant="filled"
-          color="indigo"
-          radius="md"
-          onClick={() => openMsgWindow(friend)}
-        >
-          发起聊天
-        </Button>
-
-        <Button
-          variant="filled"
-          color="orange"
-          radius="md"
-          onClick={() => {
-            delFid(friend?.id).then(() => { navigate('/mobile/chat/friend/') })
-          }}
-        >
-          删除好友
-        </Button>
-      </Group>
-    </Stack>
+        updRemark({
+          id: friend.id,
+          remark,
+        });
+      }}
+      onChat={openMsgWindow}
+      onDelete={(friend) => {
+        delFid(friend.id).then(() => {
+          navigate("/mobile/chat/friend/");
+        });
+      }}
+    />
   );
 }

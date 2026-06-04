@@ -1,11 +1,9 @@
-import React, { useEffect, useCallback, Suspense } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB } from "utils";
 import { liveQuery } from 'dexie';
-import { currentChat, currentAppBar } from 'utils';
+import { currentChat, currentAppBar, getUserDB } from 'utils';
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { ScrollArea, Box } from '@mantine/core';
-import { DialogItem } from "./UI/DialogItem";
+import { DialogList } from "./UI/DialogList";
 
 
 export const Item = () => {
@@ -61,24 +59,10 @@ export const Item = () => {
 
 
     return (
-        <Suspense fallback={<div>加载中...</div>}>
-            <ScrollArea
-                w="100%"
-                scrollbars="y"
-                type="never"
-                style={{ overflowX: "hidden" }}
-            >
-                <Box px={12}>
-                    {dialog.map((dg) => (
-                        <DialogItem
-                            key={dg.id}
-                            data={dg}
-                            onSelect={openMsgWindow}
-                            onClear={handleClear}
-                        />
-                    ))}
-                </Box>
-            </ScrollArea>
-        </Suspense>
+        <DialogList
+            dialogs={dialog}
+            onSelect={openMsgWindow}
+            onClear={handleClear}
+        />
     );
 }

@@ -1,12 +1,11 @@
-import React, { useEffect, useState, useCallback, Suspense } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from 'react-router';
 import { getUserDB, currentAppBar, useHttpClient } from "utils";
 import { liveQuery } from 'dexie';
 import { useMutation } from '@tanstack/react-query'
 import { useListState, useLocalStorage } from '@mantine/hooks';
-import { ScrollArea, Box } from '@mantine/core';
 import { IconCirclePlus } from "@tabler/icons-react";
-import { Friend } from "./UI/Friend";
+import { FriendList } from "./UI/FriendList";
 
 
 export const Item = () => {
@@ -106,19 +105,13 @@ export const Item = () => {
 
 
     return (
-        <Suspense fallback={<div>加载中...</div>}>
-            <ScrollArea style={{ width: "100%" }}>
-                <Box px={12}>
-                    {friends.map((friend) => (
-                        <Friend
-                            key={friend.id}
-                            data={friend}
-                            onSelect={openMsgWindow}
-                        />
-                    ))}
-                </Box>
-            </ScrollArea>
-        </Suspense>
+        <FriendList
+            friends={friends}
+            onItemClick={openMsgWindow}
+            // onAvatarClick={openProfile}
+        />
+
+
     );
 
 }

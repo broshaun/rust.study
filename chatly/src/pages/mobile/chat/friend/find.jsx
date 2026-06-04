@@ -1,10 +1,8 @@
-import React, { useState, Suspense, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useHttpClient, currentAppBar } from 'utils';
-import { SafeAvatar } from 'components';
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ScrollArea, Stack, Divider, TextInput, ActionIcon } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
-import { UserInfoCard } from "./UI/UserInfoCard";
+import { FriendFindUI } from "./UI/FriendFindUI";
+
 
 export const Find = () => {
     const { http } = useHttpClient('/rpc/chat/friend/')
@@ -86,75 +84,31 @@ export const Find = () => {
     );
 
     return (
-        <Suspense fallback={<div>加载中...</div>}>
-            <ScrollArea h="100%" type="auto">
-                <Stack gap={10} p={10}>
-                    <TextInput
-                        placeholder="搜索好友"
-                        value={keywordEmail}
-                        onChange={(e) => handleEmailChange(e.currentTarget.value)}
-                        rightSection={
-                            <ActionIcon
-                                variant="subtle"
-                                onClick={() => run({ email: keywordEmail })}
-                            >
-                                <IconSearch size={18} />
-                            </ActionIcon>
-                        }
-                    />
-
-                    {/* 🔥 替换为原生渐变淡化 Divider */}
-                    <Divider 
-                        styles={{
-                            root: {
-                                border: 'none',
-                                height: '1px',
-                                opacity: 0.3,
-                                backgroundImage: 'linear-gradient(to right, transparent, light-dark(rgba(0,0,0,0.8), rgba(255,255,255,0.8)) 50%, transparent)'
-                            }
-                        }} 
-                    />
-
-                    {!loading && findByUser && Object.keys(findByUser).length !== 0 && (
-                        <UserInfoCard
-                            background="#FFF9E8"
-                            title='用户信息'
-                            actionText='添加'
-                            onAction={(type) => {
-                                if (type === 'accept') { addFriend({ user_id: findByUser?.id }) }
-                            }}
-                        >
-                            <UserInfoCard.Avatar>
-                                <SafeAvatar size={60} stretch={true} url={findByUser?.avatar_url} />
-                            </UserInfoCard.Avatar>
-                            <UserInfoCard.Info>{findByUser}</UserInfoCard.Info>
-                        </UserInfoCard>
-                    )}
-
-                    {!loading2 && askFriends.map(user => (
-                        <UserInfoCard
-                            key={user.id}
-                            background="#FFF9E8"
-                            title="好友请求"
-                            actionText="通过"
-                            refuseText="拒绝"
-                            onAction={(type) => {
-                                if (type === 'accept') {
-                                    return isPass({ id: user?.id, ask_state: 'agree' });
-                                }
-                                if (type === 'refuse') {
-                                    return isPass({ id: user?.id, ask_state: 'refuse' });
-                                }
-                            }}
-                        >
-                            <UserInfoCard.Avatar>
-                                <SafeAvatar size={60} stretch={true} url={user?.avatar_url} />
-                            </UserInfoCard.Avatar>
-                            <UserInfoCard.Info>{user}</UserInfoCard.Info>
-                        </UserInfoCard>
-                    ))}
-                </Stack>
-            </ScrollArea>
-        </Suspense>
+        <FriendFindUI
+            keyword={keywordEmail}
+            loading={loading}
+            loadingRequest={loading2}
+            searchResult={findByUser}
+            requests={askFriends}
+            onKeywordChange={handleEmailChange}
+            onSearch={(email) => run({ email })}
+            onAddFriend={(userId) =>
+                addFriend({
+                    user_id: userId,
+                })
+            }
+            onAccept={(user) =>
+                isPass({
+                    id: user.id,
+                    ask_state: "agree",
+                })
+            }
+            onRefuse={(user) =>
+                isPass({
+                    id: user.id,
+                    ask_state: "refuse",
+                })
+            }
+        />
     );
 };
