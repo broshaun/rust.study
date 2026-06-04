@@ -33,12 +33,13 @@ export const Manage = () => {
 
 
     const { mutateAsync: updateGroup, isPending } = useMutation({
-        mutationFn: async ({ id, group_name, group_avatar, group_notice }) => {
+        mutationFn: async ({ id, group_name, group_avatar, group_notice, admin_invite_only }) => {
             if (!id) return;
             const payload = { id };
             if (group_name) payload.group_name = group_name;
             if (group_avatar) payload.group_avatar = group_avatar;
             if (group_notice) payload.group_notice = group_notice;
+            if (admin_invite_only) payload.admin_invite_only = admin_invite_only;
             const results = await http.requestBodyJson('update_group', payload)
             const { code, message, data } = results;
             if (code !== 200) {
@@ -83,7 +84,7 @@ export const Manage = () => {
 
 
     const handleUpdateGroup = async (value) => {
-        console.log('value',value)
+        console.log('value', value)
         await updateGroup({
             id: value.id,
             group_name: value.group_name,
@@ -94,6 +95,8 @@ export const Manage = () => {
     };
 
     const group = currentGroup((state) => state.current)
+
+    console.log('group',group)
 
     return <div>
 

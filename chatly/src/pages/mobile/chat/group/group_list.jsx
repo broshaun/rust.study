@@ -54,7 +54,8 @@ export const Item = () => {
                     group_avatar: item.group_avatar,
                     group_notice: item.group_notice,
                     administrator: item.administrator,
-                    updated_at: item.updated_at
+                    updated_at: item.updated_at,
+                    admin_invite_only: item.admin_invite_only,
                 }))
         });
 
