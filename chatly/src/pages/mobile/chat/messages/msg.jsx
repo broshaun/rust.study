@@ -46,14 +46,12 @@ export function Msg() {
     }
 
 
-    console.log('msgs++',msgs)
+    // console.log('msgs++',msgs)
 
     return <div>
         <ChatBox
             height={winHeight - 55}
             messages={msgs}
-            senderAvatarSrc={currentUser?.avatar_url}
-            receiverAvatarSrc={current?.avatar_url}
             onSend={(v) => { msgTextSend(v) }}
             onOpenTools={() => { console.log("打开工具栏") }}
         >
