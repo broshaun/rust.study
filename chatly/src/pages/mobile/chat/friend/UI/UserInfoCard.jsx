@@ -139,7 +139,7 @@ UserInfoCard.Avatar = ({ children }) => (
 UserInfoCard.Info = ({ children }) => {
   const isObj = typeof children === 'object' && children !== null;
   const name = isObj
-    ? (children?.remark || children?.nikename || children?.email || '未知')
+    ? (children?.remark || children?.nickname || children?.email || '未知')
     : children;
 
   // 提取背景图阴影逻辑的上下文（通常由父级继承，这里通过 textShadow 保证清晰度）

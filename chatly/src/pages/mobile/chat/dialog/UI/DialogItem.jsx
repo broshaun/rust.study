@@ -48,7 +48,7 @@ export const DialogItem = memo(function DialogItem({
   if (!data) return null;
 
   const hasNews = data.signal === "news";
-  const name = data.remark || data.nickname || data.nikename || data.email || "未知联系人";
+  const name = data.remark || data.nickname || data.nickname || data.email || "未知联系人";
   const email = data.email || "未绑定邮箱";
   const time = formatDialogTime(data.timestamp);
 

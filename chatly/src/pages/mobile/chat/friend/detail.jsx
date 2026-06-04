@@ -59,7 +59,7 @@ export function Detail() {
 
   function openMsgWindow(friend) {
     if (!friend?.id) return;
-    const displayName = friend.remark ?? friend.nikename ?? friend.email ?? friend.id;
+    const displayName = friend.remark ?? friend.nickname ?? friend.email ?? friend.id;
     db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
     navigate('/mobile/chat/message/', {
       state: { uid: friend.uid, avatar_url: friend.avatar_url, displayName },
@@ -92,7 +92,7 @@ export function Detail() {
         }} 
       />
 
-      <InfoTile icon="IconId" label="名称" value={friend?.nikename} />
+      <InfoTile icon="IconId" label="名称" value={friend?.nickname} />
       <InfoTile icon="mail" label="邮箱" value={friend?.email} />
       <InfoTile
         icon="IconUserEdit"

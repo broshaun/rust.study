@@ -33,7 +33,7 @@ export const Main = () => {
                 if (results?.code === 200) {
                     db.table('message').put({
                         uid: uid,
-                        nikename: '我自己',
+                        nickname: '我自己',
                         type: msgType,
                         content: msgText,
                         timestamp: getDateTimeStr(),

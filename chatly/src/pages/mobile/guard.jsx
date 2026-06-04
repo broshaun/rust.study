@@ -26,7 +26,7 @@ export function ChatGuard() {
       await db.table('gmsgs').bulkPut(
         data.map((item) => ({
           avatar_url: item.avatar_url,
-          nikename: item.nikename,
+          nickname: item.nickname,
           type: item.msg_type,
           content: item.msg_text,
           timestamp: item.timestamp,
@@ -53,7 +53,7 @@ export function ChatGuard() {
       await db.table('message').bulkPut(
         data.map((item) => ({
           avatar_url: item.avatar_url,
-          nikename: item.nikename,
+          nickname: item.nickname,
           uid: item.uid,
           type: item.msg_type,
           content: item.msg_text,

@@ -9,7 +9,7 @@ export const Friend = memo(function Friend({
 }) {
   if (!data) return null;
 
-  const name = data.remark || data.nickname || data.nikename || data.email || "未知好友";
+  const name = data.remark || data.nickname || data.nickname || data.email || "未知好友";
   const email = data.email || "未绑定邮箱";
 
   const handleSelect = useCallback(() => {

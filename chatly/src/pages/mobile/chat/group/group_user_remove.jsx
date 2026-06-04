@@ -41,7 +41,7 @@ export const DelMember = () => {
       data.map((item) => ({
         id: item.id,
         uid: item.user_id,
-        nikename: item.nikename,
+        nickname: item.nickname,
         ask_state: item.ask_state,
         avatar_url: item.avatar_url,
       }))

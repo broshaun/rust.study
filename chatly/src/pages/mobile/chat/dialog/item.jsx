@@ -39,7 +39,7 @@ export const Item = () => {
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
 
-        const displayName = select.remark ?? select.nikename ?? select.email ?? select.id;
+        const displayName = select.remark ?? select.nickname ?? select.email ?? select.id;
 
         setCurrent({ 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName })
 

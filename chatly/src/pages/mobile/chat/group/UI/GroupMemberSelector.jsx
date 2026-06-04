@@ -36,7 +36,7 @@ function getUserId(user) {
 
 function getUserName(user) {
   return (
-    user?.nikename ||
+    user?.nickname ||
     user?.nickname ||
     user?.remark ||
     user?.email ||
@@ -131,7 +131,7 @@ export function GroupMemberSelector({
       if (selectedIds.has(userId)) return true;
 
       return [
-        user?.nikename,
+        user?.nickname,
         user?.nickname,
         user?.remark,
         user?.email,

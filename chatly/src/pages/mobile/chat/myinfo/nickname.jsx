@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { NicknameEditPage } from "./UI/NicknameEditPage";
 
 
-export const Nikename = () => {
+export const nickname = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -19,11 +19,11 @@ export const Nikename = () => {
 
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
     const { mutateAsync: nameEdit, isPending: loading } = useMutation({
-        mutationFn: async (nikename) => {
-            if (!nikename) {
+        mutationFn: async (nickname) => {
+            if (!nickname) {
                 throw new Error('请输入昵称');
             }
-            const res = await apiLogin.post('PATCH', { nikename });
+            const res = await apiLogin.post('PATCH', { nickname });
             if (!res) {
                 throw new Error('请求失败');
             }
@@ -40,7 +40,7 @@ export const Nikename = () => {
 
 
     return <Suspense fallback={<div>加载中...</div>}>
-        <NicknameEditPage value={location.state?.nikename} onClick={(text) => { nameEdit(text) }} />
+        <NicknameEditPage value={location.state?.nickname} onClick={(text) => { nameEdit(text) }} />
     </Suspense>
 
 

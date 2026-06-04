@@ -57,7 +57,7 @@ export const Items = () => {
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
-                label={`昵称：${apiInfo?.nikename}`}
+                label={`昵称：${apiInfo?.nickname}`}
                 leftSection={<IconId size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
                 onClick={() => { navigate("/mobile/chat/self/name/", { state: apiInfo }); refetch(); }}

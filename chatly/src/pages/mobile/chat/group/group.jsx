@@ -27,7 +27,7 @@ export const Group = () => {
             if (results?.code === 200) {
                 db.table('gmsgs').put({
                     group_id: group_id,
-                    nikename: '我自己',
+                    nickname: '我自己',
                     type: msgType,
                     content: msgText,
                     timestamp: dt.getDateTimeStr(),

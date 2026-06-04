@@ -8,7 +8,7 @@ function GroupMemberCard({ memberData }) {
       <SafeAvatar url={memberData?.avatar_url} size={44} radius={10} />
 
       <Text size="xs" ta="center" truncate w="100%">
-        {memberData?.nikename || "未知用户"}
+        {memberData?.nickname || "未知用户"}
       </Text>
     </Stack>
   );

@@ -141,7 +141,7 @@ export const MsgItem = memo(({ msg, ref }) => {
     content = "",
     sentByMe,
     avatar_url,
-    nikename,
+    nickname,
   } = msg;
 
   const isRight = sentByMe === true || String(sentByMe).toLowerCase() === "true";
@@ -168,9 +168,9 @@ export const MsgItem = memo(({ msg, ref }) => {
       )}
 
       <Stack gap={4} align={isRight ? "flex-end" : "flex-start"}>
-        {!isRight && nikename && (
+        {!isRight && nickname && (
           <Text size="11px" c="dimmed" px={4}>
-            {nikename}
+            {nickname}
           </Text>
         )}
 

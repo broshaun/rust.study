@@ -41,7 +41,7 @@ export const Item = () => {
                                 'avatar_url': element?.avatar_url,
                                 'email': element?.email,
                                 'remark': element?.remark,
-                                'nikename': element?.nikename,
+                                'nickname': element?.nickname,
                                 'ask_state': element?.ask_state,
                             })
                         } else {
@@ -51,7 +51,7 @@ export const Item = () => {
                                 'avatar_url': element?.avatar_url,
                                 'email': element?.email,
                                 'remark': element?.remark,
-                                'nikename': element?.nikename,
+                                'nickname': element?.nickname,
                                 'ask_state': element?.ask_state,
                                 'signal': 'old',
                                 'dialog': 0,

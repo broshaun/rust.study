@@ -45,7 +45,7 @@ function InviteGroupCard({ data, onAccept, onReject, loading }) {
             <Group gap={6} wrap="nowrap">
               <SafeAvatar url={data?.avatar_url} size={14} radius="xl" />
               <Text fz={13} c="dark.8" truncate>
-                <Box component="span" fw={600} c="black">{data?.nikename || "用户"}</Box>
+                <Box component="span" fw={600} c="black">{data?.nickname || "用户"}</Box>
                 <Box component="span" c="gray.6"> 邀请您进入群聊</Box>
               </Text>
             </Group>
