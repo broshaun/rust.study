@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage, useListState } from "@mantine/hooks";
-import { getUserDB, currentGroup, useHttpClient, currentAppBar,currentModal } from "utils";
+import { getUserDB, currentGroup, useHttpClient, currentAppBar, currentModal } from "utils";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./UI/GroupMemberSelector";
@@ -38,7 +38,12 @@ export const AddMember = () => {
       const results = await http.requestBodyJson('group_user_add_list', { group_id, uids })
       const { code, message, data } = results;
       if (code !== 200) {
-        throw new Error(message);
+        open({
+          title: "邀请失败",
+          message: message,
+          onConfirm: () => close(),
+          onCancel: null
+        });
       }
       return data || true;
     },
@@ -48,13 +53,6 @@ export const AddMember = () => {
     },
     onError: (error) => {
       console.error("邀请失败:", error);
-      open({
-                title: "邀请失败",
-                message: error,
-                onConfirm: () => close(),
-                onCancel: null
-            });
-
     },
   });
 

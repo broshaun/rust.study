@@ -33,14 +33,14 @@ export const Manage = () => {
 
 
     const { mutateAsync: updateGroup, isPending } = useMutation({
-        mutationFn: async ({ id, group_name, group_avatar, group_notice, admin_invite_only }) => {
+        mutationFn: async ({ id, ...payload }) => {
             if (!id) return;
-            const payload = { id };
-            if (group_name) payload.group_name = group_name;
-            if (group_avatar) payload.group_avatar = group_avatar;
-            if (group_notice) payload.group_notice = group_notice;
-            if (admin_invite_only) payload.admin_invite_only = admin_invite_only;
-            const results = await http.requestBodyJson('update_group', payload)
+            Object.keys(payload).forEach((key) => {
+                if (payload[key] === undefined) {
+                    delete payload[key];
+                }
+            });
+            const results = await http.requestBodyJson('update_group', { id, ...payload })
             const { code, message, data } = results;
             if (code !== 200) {
                 throw new Error(message || "修改群信息失败");
@@ -96,7 +96,7 @@ export const Manage = () => {
 
     const group = currentGroup((state) => state.current)
 
-    console.log('group',group)
+    // console.log('group',group)
 
     return <div>
 
