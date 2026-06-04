@@ -6,7 +6,7 @@ import { useDisclosure } from '@mantine/hooks';
 
 export function AuthShell() {
   const navigate = useNavigate();
-  
+
   const drawerMenu = [
     { key: 'login', display: true, icon: { name: 'IconUserCircle', label: '登陆' }, onTap: () => { navigate('/mobile/auth/user/') } },
     { key: 'register', display: true, icon: { name: 'IconUserPlus', label: '注册' }, onTap: () => { navigate('/mobile/auth/user/register/') } },
@@ -14,7 +14,7 @@ export function AuthShell() {
   ];
 
   const [opened, { open, close }] = useDisclosure(false);
-  
+
   const handleItemClick = (item) => {
     if (!item) return;
     item.onTap();
@@ -25,8 +25,8 @@ export function AuthShell() {
     <React.Fragment>
       <Drawer opened={opened} onClose={close} size={120} withCloseButton={false}>
         <Title order={4} mb="md">导航</Title>
-        
-        <Divider 
+
+        <Divider
           mb="md"
           styles={{
             root: {
@@ -34,9 +34,9 @@ export function AuthShell() {
               height: '1px',
               backgroundImage: 'linear-gradient(to right, transparent, light-dark(rgba(0,0,0,0.15), rgba(255,255,255,0.15)) 50%, transparent)'
             }
-          }} 
+          }}
         />
-        
+
         <Stack padding={10} gap={10}>
           {drawerMenu.filter(i => i.display !== false).map((item) =>
             <IconLabel
