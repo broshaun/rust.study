@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import { useHttpClient, useDateTime, getUserDB, useStoreGroup } from 'utils';
+import { useHttpClient, useDateTime, getUserDB, useStoreGroup, GlobalModal } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -55,7 +55,11 @@ export const Group = () => {
     // mutation.isSuccess
     // mutation.isError
 
-    return <Outlet context={{ db, mutation }} />
+    return <div>
+        <GlobalModal />
+        <Outlet context={{ db, mutation }} />
+    </div>
+    
 
 }
 

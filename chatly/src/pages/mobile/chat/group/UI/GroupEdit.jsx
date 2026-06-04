@@ -6,6 +6,7 @@ import {
   Group,
   Modal,
   Stack,
+  Switch,
   Text,
   Textarea,
   TextInput,
@@ -18,6 +19,7 @@ const emptyGroup = {
   group_name: "",
   group_avatar: "",
   group_notice: "",
+  admin_invite_only: false,
 };
 
 const DeleteGroupContent = memo(function DeleteGroupContent({
@@ -82,12 +84,14 @@ export const GroupEdit = memo(function GroupEdit({
       group_name: group?.group_name || "",
       group_avatar: group?.group_avatar || "",
       group_notice: group?.group_notice || "",
+      admin_invite_only: group?.admin_invite_only ?? false,
     });
   }, [
     group?.id,
     group?.group_name,
     group?.group_avatar,
     group?.group_notice,
+    group?.admin_invite_only,
     group?.updated_at,
   ]);
 
@@ -120,6 +124,7 @@ export const GroupEdit = memo(function GroupEdit({
     await onSubmit?.({
       ...form,
       group_name: groupName,
+      admin_invite_only: !!form.admin_invite_only,
     });
   };
 
@@ -175,6 +180,15 @@ export const GroupEdit = memo(function GroupEdit({
           value={form.group_notice}
           disabled={loading}
           onChange={(e) => updateField("group_notice", e.currentTarget.value)}
+        />
+
+        <Switch
+          label="仅管理员可邀请新成员"
+          checked={!!form.admin_invite_only}
+          disabled={loading}
+          onChange={(e) =>
+            updateField("admin_invite_only", e.currentTarget.checked)
+          }
         />
 
         <Button

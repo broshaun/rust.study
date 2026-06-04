@@ -1,5 +1,5 @@
 import { Item } from "./group_list";
-import { Update } from "./group_update";
+import { Manage } from "./group_manage";
 import { AddMember } from "./group_user_add";
 import { DelMember } from "./group_user_remove";
 import { Msg } from "./msg_text_send";
@@ -21,7 +21,7 @@ export const RsGroup = [
             },
             {
                 path: "update",
-                element: <Update />
+                element: <Manage />
             },
             {
                 path: "addgusr",

@@ -24,7 +24,6 @@ export function CreateGroup() {
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const { mutateAsync: createGroup } = useMutation({
         mutationFn: async ({ group_name }) => {
-            console.log('group_name', group_name)
             const results = await http.requestBodyJson('create_group', { group_name })
             const { code, message, data } = results;
             if (code !== 200) {
@@ -33,7 +32,6 @@ export function CreateGroup() {
             return data || true;
         },
         onSuccess: (data) => {
-            console.log("创建成功:", data);
             queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
                 navigate('/mobile/chat/group/');
             })

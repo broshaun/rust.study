@@ -24,8 +24,8 @@ export const GroupUsers = () => {
     const current_group = currentGroup((state) => state.current)
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' })
-    const { data: members = [], isLoading, error, refetch } = useQuery
+    const [currentUser] = useLocalStorage({ key: 'current_user' })
+    const { data: members = [] } = useQuery
         (
             {
                 queryKey: ["group_user_list", userId],
@@ -68,16 +68,15 @@ export const GroupUsers = () => {
             console.error(error);
         },
     });
-    console.log('members',members)
+
+
+
     return <div>
         <GroupMemberList
             members={members}
             onAddMember={() => navigate('/mobile/chat/group/addgusr/')}
             onRemoveMember={() => navigate('/mobile/chat/group/delgusr/')}
             onExitGroup={() => {
-                // console.log("退出群聊:");
-                // console.log('current_group?.id ',current_group )
-                // console.log('currentUser',currentUser)
                 const id = members.find(item => item.user_id === currentUser?.id)?.id;
                 leaveGroup({ id })
             }}

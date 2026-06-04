@@ -2,7 +2,6 @@ import { GroupInviteMessageList } from "./UI/InviteGroupCard";
 import { currentAppBar, useHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconCirclePlus } from "@tabler/icons-react";
-import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
 
@@ -56,12 +55,10 @@ export function InviteGroup() {
             return results.data;
         },
         onSuccess: (data) => {
-            console.log("操作成功:", data);
+            // console.log("操作成功:", data);
             queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] })
         }
     });
-
-
 
 
     return <div>

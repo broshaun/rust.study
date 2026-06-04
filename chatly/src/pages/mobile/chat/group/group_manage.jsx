@@ -2,11 +2,11 @@ import { GroupEdit } from "./UI/GroupEdit";
 import { currentAppBar, useHttpClient, currentGroup } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
 
 
-export const Update = () => {
+export const Manage = () => {
     const queryClient = useQueryClient();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -21,10 +21,7 @@ export const Update = () => {
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
-
-
     const { http } = useHttpClient('/rpc/chat/msg/group/');
-
     const { http: httpFiles } = useHttpClient('/files/avatar/');
     const uploadFile = useCallback(async (file) => {
         if (!file) return;
@@ -84,38 +81,19 @@ export const Update = () => {
     });
 
 
-    const current_group = currentGroup((state) => state.current)
-    const { data:group, refetch } = useQuery
-        (
-            {
-                queryKey: ["group_get_by_id", current_group?.id],
-                queryFn: async () => {
-                    const results = await http.getById(current_group?.id);
-                    const { code, data, message } = results;
-                    if (code !== 200) throw new Error(message);
-                    return data || {};
-                },
-                staleTime: 1000 * 60 * 5,
-                gcTime: 1000 * 60 * 30,
-            }
-        );
-
 
     const handleUpdateGroup = async (value) => {
+        console.log('value',value)
         await updateGroup({
             id: value.id,
             group_name: value.group_name,
             group_avatar: value.group_avatar,
             group_notice: value.group_notice,
+            admin_invite_only: value.admin_invite_only,
         });
-        await refetch();
     };
 
-
-    // const group = currentGroup((state) => state.current)
-    console.log('group++',group)
-
-
+    const group = currentGroup((state) => state.current)
 
     return <div>
 

@@ -1,8 +1,6 @@
 import { useHttpClient, currentAppBar, currentGroup, useStoreGroup } from "utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Box, Text, Center, Stack } from "@mantine/core";
-import { IconUsers } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconMailExclamation } from "@tabler/icons-react";
@@ -20,6 +18,7 @@ const groups = [
 
 export const Item = () => {
     const [userId] = useLocalStorage({ key: 'current_account' })
+    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
     const setGroup = useStoreGroup((state) => state.setGroup);
     const setCurGroup = currentGroup((state) => state.setCurrent);
 
@@ -54,6 +53,8 @@ export const Item = () => {
                     group_name: item.group_name,
                     group_avatar: item.group_avatar,
                     group_notice: item.group_notice,
+                    administrator: item.administrator,
+                    updated_at: item.updated_at
                 }))
         });
 
@@ -65,8 +66,13 @@ export const Item = () => {
     }
 
     const openGroupInfo = (value) => {
-        setCurGroup(value)
-        navigate('/mobile/chat/group/update')
+        const list = value?.administrator || [];
+        if (list.includes(currentUser?.id)) {
+            console.log("是管理员");
+            setCurGroup(value)
+            navigate('/mobile/chat/group/update')
+        }
+
     }
 
     const syncGroups = useStoreGroup((state) => state.syncGroups);
@@ -76,8 +82,6 @@ export const Item = () => {
 
     const groupState = useStoreGroup((state) => state.groups);
 
-
-    // console.log('groupState++',groupState)
 
     return <GroupList
         groups={groupState}

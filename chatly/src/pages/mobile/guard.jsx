@@ -5,16 +5,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
 
-
-
 export function ChatGuard() {
   const setGroup = useStoreGroup((state) => state.setGroup);
   const dt = useDateTime();
+  
   const navigate = useNavigate();
   const [userId] = useLocalStorage({ key: 'current_account' })
-
-  console.log('userId++', userId)
-
   const db = getUserDB(userId);
   const { remainSeconds } = useToken()
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
