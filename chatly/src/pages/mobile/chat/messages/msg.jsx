@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useWinSize, currentChat, currentAppBar } from 'utils';
 import { liveQuery } from 'dexie';
-import { useLocalStorage } from '@mantine/hooks';
 import { useOutletContext } from 'react-router';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./tools";
@@ -21,14 +20,11 @@ export function Msg() {
 
     const { fnSendMsg, db } = useOutletContext();
     const { winHeight } = useWinSize();
-    const [currentUser] = useLocalStorage({ key: 'current_user' })
-    
     const [msgs, setMsgs] = useState([]);
     useEffect(() => {
         if (!db) return;
         const sub = liveQuery(
             () => db.table('message').where('uid').equals(current?.uid).toArray()
-            // () => db.table('message').where('uid').equals(current?.uid).reverse().toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
@@ -36,17 +32,11 @@ export function Msg() {
         return () => sub.unsubscribe();
     }, [current?.uid, db]);
 
-
-    
-
     const msgTextSend = async (sendText) => {
         if (sendText) {
             await fnSendMsg({ uid: current?.uid, msgType: 'text', msgText: sendText })
         }
     }
-
-
-    // console.log('msgs++',msgs)
 
     return <div>
         <ChatBox
