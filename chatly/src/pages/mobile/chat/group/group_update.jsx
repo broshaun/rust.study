@@ -2,7 +2,7 @@ import { GroupEdit } from "./UI/GroupEdit";
 import { currentAppBar, useHttpClient, currentGroup } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
 
 
@@ -21,11 +21,11 @@ export const Update = () => {
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
-    
+
 
     const { http } = useHttpClient('/rpc/chat/msg/group/');
-    const { http: httpFiles } = useHttpClient('/files/avatar/');
 
+    const { http: httpFiles } = useHttpClient('/files/avatar/');
     const uploadFile = useCallback(async (file) => {
         if (!file) return;
         const results = await httpFiles.uploadFiles(file);
@@ -35,7 +35,7 @@ export const Update = () => {
     }, [httpFiles]);
 
 
-    const { mutateAsync: updateGroup } = useMutation({
+    const { mutateAsync: updateGroup, isPending } = useMutation({
         mutationFn: async ({ id, group_name, group_avatar, group_notice }) => {
             if (!id) return;
             const payload = { id };
@@ -84,36 +84,48 @@ export const Update = () => {
     });
 
 
-    const handleUpdateGroup = async (value) => {
-        const avatarUrl =
-            value.group_avatar instanceof File
-                ? await uploadFile(value.group_avatar)
-                : value.group_avatar;
+    const current_group = currentGroup((state) => state.current)
+    const { data:group, refetch } = useQuery
+        (
+            {
+                queryKey: ["group_get_by_id", current_group?.id],
+                queryFn: async () => {
+                    const results = await http.getById(current_group?.id);
+                    const { code, data, message } = results;
+                    if (code !== 200) throw new Error(message);
+                    return data || {};
+                },
+                staleTime: 1000 * 60 * 5,
+                gcTime: 1000 * 60 * 30,
+            }
+        );
 
-        updateGroup({
+
+    const handleUpdateGroup = async (value) => {
+        await updateGroup({
             id: value.id,
             group_name: value.group_name,
-            group_avatar: avatarUrl,
+            group_avatar: value.group_avatar,
             group_notice: value.group_notice,
         });
+        await refetch();
     };
 
 
-    const group = currentGroup((state) => state.current)
+    // const group = currentGroup((state) => state.current)
     console.log('group++',group)
 
+
+
     return <div>
+
         <GroupEdit
-            id={group.id}
-            group_name={group.group_name}
-            group_avatar={group.group_avatar}
-            group_notice={group.group_notice}
-            onDelete={(value) => {
-                deteteGroup({
-                    id: value.id,
-                });
-            }}
-            onClick={handleUpdateGroup}
+            group={group}
+            loading={isPending}
+            onUploadAvatar={uploadFile}
+            onDelete={(value) => deteteGroup({ id: value.id })}
+            onSubmit={handleUpdateGroup}
         />
+
     </div>
 }

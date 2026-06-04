@@ -31,13 +31,14 @@ export function ChatGuard() {
           content: item.msg_text,
           timestamp: item.timestamp,
           sentByMe: false,
-          group_id: item.group_id
+          group_id: item.group_id,
         }))
       );
       new Set(data.map(item => item.group_id)).forEach((group_id) => {
         setGroup(group_id, {
           signal: "news",
-          timestamp: dt.getDateTimeStr()
+          timestamp: dt.getDateTimeStr(),
+
         });
       });
 

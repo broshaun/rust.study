@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Box, Text, Center, Stack } from "@mantine/core";
 import { IconUsers } from "@tabler/icons-react";
-import { GroupItem } from "./UI/GroupItem";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconMailExclamation } from "@tabler/icons-react";
+import { GroupList } from "./UI/GroupList";
 
 
 const groups = [
@@ -58,13 +58,13 @@ export const Item = () => {
         });
 
     const navigate = useNavigate();
-    const onSelect = (value) => {
+    const openGroup = (value) => {
         setCurGroup(value)
         setGroup(value?.id, { signal: "old" })
         navigate('/mobile/chat/group/msgs')
     }
 
-    const onAvatarClick = (value) => {
+    const openGroupInfo = (value) => {
         setCurGroup(value)
         navigate('/mobile/chat/group/update')
     }
@@ -76,29 +76,12 @@ export const Item = () => {
 
     const groupState = useStoreGroup((state) => state.groups);
 
-    if (!groupState.length) {
-        return (
-            <Center py="xl">
-                <Stack gap={6} align="center" opacity={0.6}>
-                    <IconUsers size={26} stroke={1.5} />
-                    <Text size="sm" c="dimmed">
-                        暂无群聊
-                    </Text>
-                </Stack>
-            </Center>
-        );
-    }
-    return (
-        <Box>
-            {groupState.map((group) => (
-                <GroupItem
-                    key={group.id}
-                    data={group}
-                    hasNews={group?.signal === "news"}
-                    onSelect={onSelect}
-                    onAvatarClick={onAvatarClick}
-                />
-            ))}
-        </Box>
-    );
+
+    // console.log('groupState++',groupState)
+
+    return <GroupList
+        groups={groupState}
+        onSelect={openGroup}
+        onAvatarClick={openGroupInfo}
+    />
 }

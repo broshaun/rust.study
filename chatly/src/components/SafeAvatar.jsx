@@ -2,6 +2,8 @@ import { memo } from "react";
 import { Box, Skeleton, Image, Center } from "@mantine/core";
 import { useCachedImage, useImgApiBase } from "utils";
 
+const IMAGE_BASE_PATH = "avatar";
+
 const RADIUS = {
   xs: 2,
   sm: 4,
@@ -17,15 +19,13 @@ function getRadius(radius) {
   return RADIUS[radius] ?? radius;
 }
 
-const IMAGE_BASE_PATH = "avatar";
-
 function SafeAvatarComponent({
   url,
   size = 40,
   radius = "circle",
   cover = true,
   stretch = false,
-  onClick,
+  version,
 }) {
   const { joinPath } = useImgApiBase(IMAGE_BASE_PATH);
 
@@ -43,7 +43,6 @@ function SafeAvatarComponent({
 
   return (
     <Box
-      onClick={onClick}
       style={{
         width: size,
         height: size,
@@ -52,7 +51,6 @@ function SafeAvatarComponent({
         position: "relative",
         overflow: "hidden",
         borderRadius: getRadius(radius),
-        cursor: onClick ? "pointer" : "default",
         boxSizing: "border-box",
         flexShrink: 0,
         background: "#f5f5f5",
@@ -95,17 +93,16 @@ function SafeAvatarComponent({
     </Box>
   );
 }
-/**
- * SafeAvatar
- *
- * 基于 useCachedImage 的头像组件。
- * - 图片自动缓存到本地
- * - url 会通过 useImgApiBase("avatar") 拼接
- * - 仅 version 变化时重新渲染
- */
+
 export const SafeAvatar = memo(
   SafeAvatarComponent,
-  (prev, next) => prev.version === next.version
+  (prev, next) =>
+    prev.url === next.url &&
+    prev.version === next.version &&
+    prev.size === next.size &&
+    prev.radius === next.radius &&
+    prev.cover === next.cover &&
+    prev.stretch === next.stretch
 );
 
 SafeAvatar.displayName = "SafeAvatar";

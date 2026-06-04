@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import { useHttpClient, useDateTime, getUserDB } from 'utils';
+import { useHttpClient, useDateTime, getUserDB, useStoreGroup } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -8,6 +8,7 @@ export const Group = () => {
     /** 账号对应信息
      * 个人数据库
      */
+    const setGroup = useStoreGroup((state) => state.setGroup);
     const [currentUser] = useLocalStorage({ key: 'current_user' })
     const [account] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(account);
@@ -33,6 +34,11 @@ export const Group = () => {
                     timestamp: dt.getDateTimeStr(),
                     sentByMe: true,
                     avatar_url: currentUser?.avatar_url,
+                });
+
+                setGroup(group_id, {
+                    signal: "old",
+                    timestamp: dt.getDateTimeStr()
                 });
             };
             return results?.message

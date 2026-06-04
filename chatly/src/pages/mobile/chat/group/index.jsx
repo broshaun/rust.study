@@ -1,4 +1,4 @@
-import { Item } from "./group_item";
+import { Item } from "./group_list";
 import { Update } from "./group_update";
 import { AddMember } from "./group_user_add";
 import { DelMember } from "./group_user_remove";

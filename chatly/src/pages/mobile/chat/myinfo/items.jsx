@@ -40,6 +40,9 @@ export const Items = () => {
             staleTime: 10,
         });
 
+
+    console.log('apiInfo',apiInfo)
+
     return (
 
         <Stack gap={0}>

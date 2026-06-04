@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import {
-  Avatar,
   Box,
   Button,
   FileButton,
@@ -14,10 +13,22 @@ import {
 import { IconUpload } from "@tabler/icons-react";
 import { SafeAvatar } from "components";
 
-// 删除群确认内容组件
-function DeleteGroupContent({ groupInfo, onDelete, onClose }) {
+const emptyGroup = {
+  id: "",
+  group_name: "",
+  group_avatar: "",
+  group_notice: "",
+};
+
+const DeleteGroupContent = memo(function DeleteGroupContent({
+  group,
+  onDelete,
+  onClose,
+}) {
   const [value, setValue] = useState("");
-  const matched = value.trim() === groupInfo.group_name;
+
+  const groupName = group?.group_name || "";
+  const matched = value.trim() === groupName;
 
   return (
     <Stack gap="md">
@@ -26,7 +37,7 @@ function DeleteGroupContent({ groupInfo, onDelete, onClose }) {
       </Text>
 
       <Text fw={700} c="red">
-        {groupInfo.group_name}
+        {groupName}
       </Text>
 
       <TextInput
@@ -43,9 +54,9 @@ function DeleteGroupContent({ groupInfo, onDelete, onClose }) {
         <Button
           color="red"
           disabled={!matched}
-          onClick={() => {
-            onDelete?.(groupInfo);
-            onClose();
+          onClick={async () => {
+            await onDelete?.(group);
+            onClose?.();
           }}
         >
           确认
@@ -53,62 +64,62 @@ function DeleteGroupContent({ groupInfo, onDelete, onClose }) {
       </Group>
     </Stack>
   );
-}
+});
 
-// 群编辑主组件
-export function GroupEdit({
-  id,
-  group_name = "",
-  group_avatar = "",
-  group_notice = "",
-  onClick,
-  onDelete,
+export const GroupEdit = memo(function GroupEdit({
+  group = emptyGroup,
   loading = false,
+  onUploadAvatar,
+  onSubmit,
+  onDelete,
 }) {
-  const [form, setForm] = useState({
-    id,
-    group_name,
-    group_avatar,
-    group_notice,
-  });
-
-  const [preview, setPreview] = useState("");
-
-  // 解散弹窗状态
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [form, setForm] = useState(emptyGroup);
+  const [deleteOpened, setDeleteOpened] = useState(false);
 
   useEffect(() => {
-    setForm({ id, group_name, group_avatar, group_notice });
-    setPreview("");
-  }, [id, group_name, group_avatar, group_notice]);
-
-  useEffect(() => {
-    return () => {
-      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
+    setForm({
+      id: group?.id || "",
+      group_name: group?.group_name || "",
+      group_avatar: group?.group_avatar || "",
+      group_notice: group?.group_notice || "",
+    });
+  }, [
+    group?.id,
+    group?.group_name,
+    group?.group_avatar,
+    group?.group_notice,
+    group?.updated_at,
+  ]);
 
   const updateField = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      if (prev[key] === value) return prev;
+
+      return {
+        ...prev,
+        [key]: value,
+      };
+    });
   };
 
-  const handleAvatarChange = (file) => {
-    if (!file) return;
+  const handleAvatarChange = async (file) => {
+    if (!file || !onUploadAvatar) return;
 
-    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    const avatarUrl = await onUploadAvatar(file);
 
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    updateField("group_avatar", file);
+    if (avatarUrl) {
+      updateField("group_avatar", avatarUrl);
+    }
   };
 
-  const handleSubmit = () => {
-    const name = form.group_name?.trim();
-    if (!name) return;
+  const handleSubmit = async () => {
+    const groupName = form.group_name?.trim();
 
-    onClick?.({
+    if (!groupName) return;
+
+    await onSubmit?.({
       ...form,
-      group_name: name,
+      group_name: groupName,
     });
   };
 
@@ -116,21 +127,13 @@ export function GroupEdit({
     <Box p="md" w="100%" h="100%">
       <Stack h="100%" gap="md">
         <Group wrap="nowrap" gap="md">
-          <Box
-            w={72}
-            h={72}
-            style={{
-              flexShrink: 0,
-              overflow: "hidden",
-              borderRadius: 12,
-            }}
-          >
-            {preview ? (
-              <Avatar src={preview} size={72} radius={12} />
-            ) : (
-              <SafeAvatar url={form.group_avatar} size={72} radius={12} cover />
-            )}
-          </Box>
+          <SafeAvatar
+            url={form.group_avatar}
+            size={72}
+            radius={12}
+            cover
+            version={group?.updated_at}
+          />
 
           <Stack gap={6}>
             <FileButton
@@ -143,6 +146,7 @@ export function GroupEdit({
                   size="xs"
                   variant="light"
                   leftSection={<IconUpload size={14} />}
+                  disabled={loading}
                 >
                   更换头像
                 </Button>
@@ -158,7 +162,8 @@ export function GroupEdit({
         <TextInput
           label="群名称"
           placeholder="请输入群名称"
-          value={form.group_name || ""}
+          value={form.group_name}
+          disabled={loading}
           onChange={(e) => updateField("group_name", e.currentTarget.value)}
         />
 
@@ -167,7 +172,8 @@ export function GroupEdit({
           placeholder="请输入群公告"
           minRows={4}
           autosize
-          value={form.group_notice || ""}
+          value={form.group_notice}
+          disabled={loading}
           onChange={(e) => updateField("group_notice", e.currentTarget.value)}
         />
 
@@ -192,7 +198,7 @@ export function GroupEdit({
               c="red"
               size="sm"
               fw={500}
-              onClick={() => setDeleteModalOpened(true)}
+              onClick={() => setDeleteOpened(true)}
               style={{
                 cursor: "pointer",
                 userSelect: "none",
@@ -205,19 +211,18 @@ export function GroupEdit({
         </Box>
       </Stack>
 
-      {/* 解散群聊 Modal（替换了 modals.open） */}
       <Modal
-        opened={deleteModalOpened}
-        onClose={() => setDeleteModalOpened(false)}
+        opened={deleteOpened}
+        onClose={() => setDeleteOpened(false)}
         title="解散群聊"
         centered
       >
         <DeleteGroupContent
-          groupInfo={form}
+          group={form}
           onDelete={onDelete}
-          onClose={() => setDeleteModalOpened(false)}
+          onClose={() => setDeleteOpened(false)}
         />
       </Modal>
     </Box>
   );
-}
+});
