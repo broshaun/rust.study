@@ -17,8 +17,8 @@ const groups = [
 ];
 
 export const Item = () => {
-    const [userId] = useLocalStorage({ key: 'current_account' })
-    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
+    
+    const [currentUser] = useLocalStorage({ key: 'current_user' });
     const setGroup = useStoreGroup((state) => state.setGroup);
     const setCurGroup = currentGroup((state) => state.setCurrent);
 
@@ -34,30 +34,26 @@ export const Item = () => {
         setRightPath('/mobile/chat/group/ingmsg/')
     }, [])
 
+    const [userId] = useLocalStorage({ key: 'current_account' })
     const { http } = useHttpClient('/rpc/chat/msg/group/')
-    const { data: groups = [] } = useQuery
-        ({
-            queryKey: ["my_group_list", userId],
-            queryFn: async () => {
-                const results = await http.requestBodyJson("my_group_list");
-                if (!results) throw new Error("获取失败");
-                const { code, data, message } = results;
-                if (code !== 200) throw new Error(message);
-                return data || [];
-            },
-            staleTime: 1000 * 60 * 5, // 5分钟内认为缓存有效
-            gcTime: 1000 * 60 * 30, // 缓存保留30分钟
-            select: (data) =>
-                data.map((item) => ({
-                    id: item.id,
-                    group_name: item.group_name,
-                    group_avatar: item.group_avatar,
-                    group_notice: item.group_notice,
-                    administrator: item.administrator,
-                    updated_at: item.updated_at,
-                    admin_invite_only: item.admin_invite_only,
-                }))
-        });
+
+    const syncGroups = useStoreGroup((state) => state.syncGroups);
+    const getGroups = async () => {
+        const results = await http.requestBodyJson("my_group_list");
+        if (!results) throw new Error("获取失败");
+        const { code, data, message } = results;
+        if (code === 200){
+            syncGroups(data)
+        }
+    }
+    useQuery({
+        queryKey: ["my_group_list", userId],
+        queryFn: getGroups,
+        staleTime: 1000 * 60 * 12,
+        gcTime: 1000 * 3600 * 24,
+        enabled: !!userId,
+        refetchOnWindowFocus: false,
+    });
 
     const navigate = useNavigate();
     const openGroup = (value) => {
@@ -69,21 +65,13 @@ export const Item = () => {
     const openGroupInfo = (value) => {
         const list = value?.administrator || [];
         if (list.includes(currentUser?.id)) {
-            console.log("是管理员");
             setCurGroup(value)
             navigate('/mobile/chat/group/update')
         }
-
     }
 
-    const syncGroups = useStoreGroup((state) => state.syncGroups);
-    useEffect(() => {
-        syncGroups(groups)
-    }, [groups]);
-
     const groupState = useStoreGroup((state) => state.groups);
-
-
+    // console.log('groupState++',groupState)
     return <GroupList
         groups={groupState}
         onSelect={openGroup}

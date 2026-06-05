@@ -1,19 +1,19 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useToken, getUserDB, useHttpClient, useStoreGroup, useDateTime } from "utils"
+import { useToken, getUserDB, useHttpClient, useDateTime } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
 
 export function ChatGuard() {
-  const setGroup = useStoreGroup((state) => state.setGroup);
   const dt = useDateTime();
-  
+
   const navigate = useNavigate();
   const [userId] = useLocalStorage({ key: 'current_account' })
   const db = getUserDB(userId);
   const { remainSeconds } = useToken()
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
+
 
   const fetchGroupMsgs = async () => {
     const results = await httpGMsg.requestBodyJson('group_receive')
@@ -34,7 +34,6 @@ export function ChatGuard() {
         setGroup(group_id, {
           signal: "news",
           timestamp: dt.getDateTimeStr(),
-
         });
       });
 
