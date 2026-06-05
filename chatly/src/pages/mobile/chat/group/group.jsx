@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router';
-import { useHttpClient, useDateTime, getUserDB, GlobalModal,useStoreGroup } from 'utils';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useHttpClient, useDateTime, getUserDB, GlobalModal, groupStore } from 'utils';
+import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
 
 
@@ -10,7 +10,6 @@ export const Group = () => {
     const db = getUserDB(userId);
     const dt = useDateTime();
 
-    const setGroup = useStoreGroup((state) => state.setGroup);
     const { http } = useHttpClient('/rpc/chat/msg/group/');
     const mutation = useMutation({
         mutationFn: async ({ group_id, msgType, msgText }) => {
@@ -29,12 +28,10 @@ export const Group = () => {
                     sentByMe: true,
                     avatar_url: currentUser?.avatar_url,
                 });
-
-                setGroup(group_id, {
+                groupStore.set(group_id, {
                     signal: "old",
                     timestamp: dt.getDateTimeStr()
-                });
-
+                })
             };
             return results?.message
         },
