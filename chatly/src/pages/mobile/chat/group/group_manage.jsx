@@ -48,7 +48,7 @@ export const Manage = () => {
             return data || true;
         },
         onSuccess: (data) => {
-            console.log("修改成功:", data);
+            // console.log("修改成功:", data);
             queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
                 navigate('/mobile/chat/group/');
             })

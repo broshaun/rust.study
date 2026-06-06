@@ -1,10 +1,11 @@
-import { useHttpClient, currentAppBar, currentGroup, groupStore } from "utils";
+import { useHttpClient, currentAppBar, currentGroup, groupStore, getUserDB, useDateTime } from "utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage, useListState } from '@mantine/hooks';
 import { IconMailExclamation } from "@tabler/icons-react";
 import { GroupList } from "./UI/GroupList";
+import { liveQuery } from 'dexie';
 
 
 const groups = [
@@ -34,7 +35,9 @@ export const Item = () => {
 
     const [userId] = useLocalStorage({ key: 'current_account' })
     const { http } = useHttpClient('/rpc/chat/msg/group/')
-    const { data: groupList = [] } = useQuery({
+
+
+    const { data: groupList, isSuccess } = useQuery({
         queryKey: ["my_group_list", userId],
         queryFn: async () => {
             const results = await http.requestBodyJson("my_group_list", {});
@@ -44,18 +47,14 @@ export const Item = () => {
             if (code !== 200) {
                 throw new Error(message || "获取群列表失败");
             }
+            console.log('results', results)
             return data || [];
         },
-        staleTime: 1000 * 60 * 12,
-        gcTime: 1000 * 3600 * 24,
+        staleTime: 1000 * 3600 * 1,
+        gcTime: 1000 * 3600 * 12,
         enabled: !!userId,
         refetchOnWindowFocus: false,
     });
-
-    useEffect(() => {
-        groupStore.sync(groupList)
-    }, [groupList]);
-
     const navigate = useNavigate();
     const openGroup = (value) => {
         setCurGroup(value)
@@ -71,12 +70,77 @@ export const Item = () => {
         }
     }
 
-    const groupState = groupStore.getList()
-    console.log('groupState++', groupState)
-    
-    return <GroupList
-        groups={groupState}
-        onSelect={openGroup}
-        onAvatarClick={openGroupInfo}
-    />
+
+    const [groupState, groupHandlers] = useListState([]);
+    const dt = useDateTime();
+    const db = getUserDB(userId);
+
+    useEffect(() => {
+        if (!isSuccess) return;
+
+        async function asyncDB() {
+            const table = db.table("groups");
+            const groups = await table.toArray();
+            const groupMap = Object.fromEntries(
+                groups.map(item => [item.id, item])
+            );
+
+            const data = [];
+            for (const item of groupList) {
+                let local = groupMap[item.id];
+                if (!local) {
+                    local = {
+                        id: item.id,
+                        signal: "old",
+                        timestamp: dt.getDateTimeStr(),
+                    };
+                    await table.put(local);
+                }
+                data.push({
+                    ...item,
+                    signal: local.signal,
+                    timestamp: local.timestamp,
+                });
+            }
+            return data;
+        }
+
+        asyncDB()
+            .then(groupHandlers.setState)
+            .catch(console.error);
+
+    }, [groupList]);
+
+
+    useEffect(() => {
+        if (!db) return;
+        const sub = liveQuery(
+            () => db.table("groups").toArray()
+        ).subscribe({
+            next: rows => {
+                const rowMap = Object.fromEntries(
+                    rows.map(item => [item.id, item])
+                );
+                groupHandlers.setState(prev =>
+                    prev.map(item => {
+                        const local = rowMap[item.id];
+                        if (!local || item.timestamp === local.timestamp) {
+                            return item;
+                        }
+                        return { ...item, ...local };
+                    })
+                );
+            },
+            error: console.error,
+        });
+        return () => sub.unsubscribe();
+    }, [db]);
+
+    return (
+        <GroupList
+            groups={groupState}
+            onSelect={openGroup}
+            onAvatarClick={openGroupInfo}
+        />
+    );
 }
