@@ -1,11 +1,11 @@
-import { useHttpClient, currentAppBar, currentGroup, groupStore, getUserDB, useDateTime } from "utils";
+import { useHttpClient, currentAppBar, currentChat, groupStore } from "utils";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { useLocalStorage, useListState } from '@mantine/hooks';
+import { useLocalStorage } from '@mantine/hooks';
 import { IconMailExclamation } from "@tabler/icons-react";
 import { GroupList } from "./UI/GroupList";
-import { liveQuery } from 'dexie';
+
 
 
 const groups = [
@@ -20,7 +20,6 @@ const groups = [
 export const Item = () => {
 
     const [currentUser] = useLocalStorage({ key: 'current_user' });
-    const setCurGroup = currentGroup((state) => state.setCurrent);
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -37,7 +36,7 @@ export const Item = () => {
     const navigate = useNavigate();
     // 打开群聊
     const openGroup = (value) => {
-        setCurGroup(value)
+        currentChat.getState().set('group', { id: value?.id, name: value?.group_name })
         groupStore.getState().set(value?.id, { signal: "old", unread: 0 });
         navigate('/mobile/chat/group/msgs')
     }
@@ -46,12 +45,10 @@ export const Item = () => {
     const openGroupInfo = (value) => {
         const list = value?.administrator || [];
         if (list.includes(currentUser?.id)) {
-            setCurGroup(value)
+            currentChat.getState().set('group', { id: value?.id })
             navigate('/mobile/chat/group/update')
         }
     }
-
-
 
     const [userId] = useLocalStorage({ key: 'current_account' })
     const { http } = useHttpClient('/rpc/chat/msg/group/')
@@ -62,7 +59,7 @@ export const Item = () => {
             if (!results) throw new Error("获取失败");
             const { code, data, message } = results;
             if (code !== 200) {
-                throw new Error(message || "获取群列表失败");
+                return []
             }
             return data || [];
         },

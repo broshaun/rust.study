@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage, useListState } from "@mantine/hooks";
-import { getUserDB, currentGroup, useHttpClient, currentAppBar, currentModal } from "utils";
+import { getUserDB, currentChat, useHttpClient, currentAppBar, currentModal } from "utils";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./UI/GroupMemberSelector";
@@ -56,15 +56,16 @@ export const AddMember = () => {
     },
   });
 
-  const group = currentGroup((state) => state.current)
   const navigate = useNavigate();
   const handleConfirm = useCallback(async (value) => {
-
-    const list = value?.users || []
-    const uids = list.map(item => item.uid);
-    await addgusr({ group_id: group.id, uids: uids })
+    const { id: groupId } = currentChat.getState().get("group");
+    if (!groupId) return;
+    const users = Array.isArray(value?.users) ? value.users : [];
+    const uids = users.map((item) => item.uid).filter(Boolean);
+    if (!uids.length) return;
+    await addgusr({ group_id: groupId, uids: uids })
     navigate('/mobile/chat/group/gusr/')
-  }, [group, navigate, addgusr]);
+  }, [navigate, addgusr]);
 
   return (
     <GroupMemberSelector

@@ -5,32 +5,29 @@ import { SafeAvatar } from "components";
 
 const DAY_MS = 86400000;
 
+/** 格式化群更新时间 */
 function formatGroupTime(timestamp) {
   if (!timestamp) return "";
 
   const date = new Date(
     typeof timestamp === "string" ? timestamp.replace(/-/g, "/") : timestamp
   );
-
   if (Number.isNaN(date.getTime())) return "";
 
   const now = new Date();
-
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
   const diffDays = Math.floor((today - target) / DAY_MS);
 
-  const time = date.toLocaleTimeString("zh-CN", {
+  const timeStr = date.toLocaleTimeString("zh-CN", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   });
 
-  if (diffDays === 0) return time;
-  if (diffDays === 1) return `昨天 ${time}`;
-  if (diffDays === 2) return `前天 ${time}`;
-
+  if (diffDays === 0) return timeStr;
+  if (diffDays === 1) return `昨天 ${timeStr}`;
+  if (diffDays === 2) return `前天 ${timeStr}`;
   if (date.getFullYear() === now.getFullYear()) {
     return `${date.getMonth() + 1}月${date.getDate()}日`;
   }
@@ -41,37 +38,29 @@ function formatGroupTime(timestamp) {
   )}月${String(date.getDate()).padStart(2, "0")}日`;
 }
 
+/** 单行群聊组件 */
 const GroupRow = memo(
-  function GroupRow({ group, version, onSelect, onAvatarClick }) {
+  function GroupRow({ group, onSelect, onAvatarClick }) {
     if (!group) return null;
 
-    const hasNews = group.signal === "news";
-    const time = formatGroupTime(group.timestamp);
+    const { group_name, group_avatar, signal, timestamp } = group;
+    const hasNews = signal === "news";
+    const time = formatGroupTime(timestamp);
 
     return (
-      <Box
-        w="100%"
-        px={8}
-        py={6}
-        style={{
-          borderRadius: 8,
-        }}
-      >
+      <Box w="100%" px={8} py={6} style={{ borderRadius: 8 }}>
         <Group wrap="nowrap" gap={10} align="stretch">
+          {/* 头像 */}
           <Box
             pos="relative"
             mt={3}
-            style={{
-              cursor: onAvatarClick ? "pointer" : "default",
-              flexShrink: 0,
-            }}
+            style={{ cursor: onAvatarClick ? "pointer" : "default", flexShrink: 0 }}
             onClick={(e) => {
               e.stopPropagation();
               onAvatarClick?.(group);
             }}
           >
-            <SafeAvatar url={group.group_avatar} size={38} radius={8} cover />
-
+            <SafeAvatar url={group_avatar} size={38} radius={8} cover />
             {hasNews && (
               <Box
                 pos="absolute"
@@ -89,6 +78,7 @@ const GroupRow = memo(
             )}
           </Box>
 
+          {/* 群名和时间 */}
           <Box
             flex={1}
             miw={0}
@@ -101,9 +91,8 @@ const GroupRow = memo(
             }}
           >
             <Text size="sm" fw={600} truncate pr={72} pt={4} lh={1.25}>
-              {group.group_name || "未命名群聊"}
+              {group_name || "未命名群聊"}
             </Text>
-
             {time && (
               <Text
                 pos="absolute"
@@ -122,23 +111,20 @@ const GroupRow = memo(
       </Box>
     );
   },
+  /** 只在 version 或事件函数变化时渲染 */
   (prev, next) =>
     prev.version === next.version &&
     prev.onSelect === next.onSelect &&
     prev.onAvatarClick === next.onAvatarClick
 );
 
-export const GroupList = memo(function GroupList({
-  groups = [],
-  onSelect,
-  onAvatarClick,
-}) {
+/** 群列表组件 */
+export const GroupList = memo(function GroupList({ groups = [], onSelect, onAvatarClick }) {
   if (!groups.length) {
     return (
       <Center py="xl">
         <Stack gap={6} align="center" opacity={0.6}>
           <IconUsers size={28} stroke={1.5} />
-
           <Text size="sm" c="dimmed">
             暂无群聊
           </Text>
@@ -153,7 +139,7 @@ export const GroupList = memo(function GroupList({
         <GroupRow
           key={group.id}
           group={group}
-          version={group?.timestamp}
+          version={group.version} // 父组件控制渲染
           onSelect={onSelect}
           onAvatarClick={onAvatarClick}
         />

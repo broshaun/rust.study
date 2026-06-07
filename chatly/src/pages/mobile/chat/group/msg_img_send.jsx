@@ -1,14 +1,14 @@
 import { useNavigate, useOutletContext } from 'react-router';
 import { useState, useEffect } from "react";
 import { useMutation } from '@tanstack/react-query';
-import { currentGroup, useHttpClient, currentAppBar } from 'utils';
+import { currentChat, useHttpClient, currentAppBar } from 'utils';
 import { ImgUp } from './UI/ImageUpload';
 
 
 export function ImagSend() {
     const { db, mutation } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
-    const current = currentGroup((s) => s.current);
+
     useEffect(() => {
         setLeftPath('/mobile/chat/group/msgs/')
     }, [])
@@ -46,11 +46,13 @@ export function ImagSend() {
     const navigate = useNavigate();
     const upImg = async (files) => {
         if (!files || files.length === 0) return;
+        const {id:groupId} = currentChat.getState().get('group')
+
         setIsUploadingStart(true);
         try {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
-                await mutation.mutateAsync({ group_id: current?.id, msgType: 'image', msgText: imgFileName });
+                await mutation.mutateAsync({ group_id: groupId, msgType: 'image', msgText: imgFileName });
             }
         } catch (error) {
             console.error(error);

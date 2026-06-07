@@ -19,6 +19,7 @@ export const FriendList = memo(function FriendList({
           <Friend
             key={friend.id}
             data={friend}
+            version={friend?.timestamp}
             onSelect={onItemClick}
             onAvatarClick={onAvatarClick}
           />

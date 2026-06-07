@@ -8,7 +8,9 @@ import { ImgUp } from './UI/ImageUpload';
 export function ImagSend() {
     const { fnSendMsg, isPending } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
-    const current = currentChat((s) => s.current);
+    const current_friend = currentChat(
+        (state) => state.current.get("friend")
+    );
     useEffect(() => {
         setLeftPath('/mobile/chat/message/')
     }, [])
@@ -51,7 +53,7 @@ export function ImagSend() {
         try {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
-                await fnSendMsg({ uid: current?.uid, msgType: 'image', msgText: imgFileName });
+                await fnSendMsg({ uid: current_friend?.uid, msgType: 'image', msgText: imgFileName });
             }
         } catch (error) {
             console.error(error);
@@ -59,8 +61,8 @@ export function ImagSend() {
     };
 
     useEffect(() => {
-        console.log('isUploadingStart',isUploadingStart)
-        console.log('!isPending',!isPending)
+        console.log('isUploadingStart', isUploadingStart)
+        console.log('!isPending', !isPending)
         if (isUploadingStart && !isPending) {
             navigate('/mobile/chat/message/');
         }

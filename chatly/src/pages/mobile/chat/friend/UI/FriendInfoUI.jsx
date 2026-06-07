@@ -104,7 +104,6 @@ export const FriendInfo = memo(function FriendInfo({
   onDelete,
 }) {
   if (!friend) return null;
-
   return (
     <Stack p={20}>
       <Center>

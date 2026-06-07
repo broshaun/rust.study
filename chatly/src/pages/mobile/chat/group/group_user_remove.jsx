@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@mantine/hooks";
-import { getUserDB, currentGroup, useHttpClient, currentAppBar } from "utils";
+import { currentChat, useHttpClient, currentAppBar } from "utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./UI/GroupMemberSelector";
@@ -20,16 +20,14 @@ export const DelMember = () => {
 
   const { http } = useHttpClient('/rpc/chat/msg/group/');
   const [account] = useLocalStorage({ key: "current_account" });
-  const group = currentGroup((state) => state.current)
   const {
     data: gusrlist = [],
-    isLoading,
-    error,
     refetch,
   } = useQuery({
     queryKey: ["group_user_list", account],
     queryFn: async () => {
-      const results = await http.requestBodyJson("group_user_list", { "group_id": group.id });
+      const {id:groupId} = currentChat.getState().get("group")
+      const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
       if (!results) throw new Error("获取失败");
       const { code, data, message } = results;
       if (code !== 200) throw new Error(message);
@@ -71,7 +69,9 @@ export const DelMember = () => {
     const list = value?.users || []
     const ids = list.map(item => item.id);
     await delgusr({ ids: ids })
-    navigate('/mobile/chat/group/gusr/')
+    await refetch()
+    await navigate('/mobile/chat/group/gusr/')
+
   }, [navigate]);
 
   return (

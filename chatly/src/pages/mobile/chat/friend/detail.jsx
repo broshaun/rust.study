@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { useHttpClient, currentAppBar } from 'utils';
+import { useHttpClient, currentAppBar, currentChat, friendStore } from 'utils';
 import { getUserDB } from "utils";
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
 import { FriendInfo } from "./UI/FriendInfoUI";
 
@@ -21,28 +21,45 @@ export function Detail() {
   }, [])
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const [account] = useLocalStorage({ key: 'current_account' })
-  const [friend, setFriend] = useState(location.state?.select);
-  const db = getUserDB(account);
+  const [userId] = useLocalStorage({ key: 'current_account' })
+  const db = getUserDB(userId);
 
-  useEffect(() => {
-    setFriend(location.state?.select)
-  }, [location.state?.select])
 
   const { http: http2 } = useHttpClient('/rpc/chat/friend/');
 
-  // 删除好友
+
+  const current_friend = currentChat(
+    (state) => state.current.get("friend")
+  );
+  const friendId = current_friend?.id
+
+  const { data: friend, refetch } = useQuery({
+    queryKey: ["get_friend", userId, friendId],
+    queryFn: async () => {
+      const results = await http2.getById(friendId);
+      if (!results) throw new Error("获取失败");
+      const { code, data, message } = results;
+      console.log('results', results)
+      if (code !== 200) {
+        return {}
+      }
+      return data || {};
+    },
+    staleTime: 1000 * 3600 * 1,
+    gcTime: 1000 * 3600 * 12,
+    enabled: !!userId && !!friendId,
+    refetchOnWindowFocus: false,
+  })
+
   const { mutateAsync: delFid } = useMutation({
     mutationFn: async (id) => {
       if (!id) return;
       await http2.requestBodyJson('DELETE', { id });
-      const row = await db.table('friends').get(id);
-      await Promise.all([
-        db.table('message').where('uid').equals(row?.uid).delete(),
-        db.table('friends').delete(id),
-      ]);
+      await db.table('message').where('id').equals(id).delete();
       return 'ok';
+    },
+    onSuccess: () => {
+      refetch()
     },
   });
 
@@ -51,30 +68,24 @@ export function Detail() {
     mutationFn: async ({ id, remark }) => {
       if (!id) return;
       await http2.requestBodyJson('PATCH', { id, remark });
-      await db.table('friends').update(id, { remark });
       return 'ok';
+    },
+    onSuccess: () => {
+      refetch()
     },
   });
 
   function openMsgWindow(friend) {
     if (!friend?.id) return;
-    const displayName = friend.remark ?? friend.nickname ?? friend.email ?? friend.id;
-    db.table('friends').update(friend.id, { signal: 'old', dialog: 1 });
-    navigate('/mobile/chat/message/', {
-      state: { uid: friend.uid, avatar_url: friend.avatar_url, displayName },
-    });
+    console.log('friend',friend)
+    friendStore.getState().set(friend?.id, { signal: 'old', dialog: 1 })
+    navigate('/mobile/chat/message/');
   }
 
   return (
-
     <FriendInfo
       friend={friend}
       onRemarkChange={(remark) => {
-        setFriend((p) => ({
-          ...p,
-          remark,
-        }));
-
         updRemark({
           id: friend.id,
           remark,

@@ -32,7 +32,7 @@ export function InviteGroup() {
     }, []);
 
     useEffect(() => {
-        setTitle('群消息')
+        setTitle('群邀请')
         setLeftPath('/mobile/chat/group/')
         setRightIcon(<IconCirclePlus />)
         setRightPath('/mobile/chat/group/addg/')

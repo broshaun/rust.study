@@ -7,7 +7,9 @@ import { useState, useEffect } from "react";
 export function Smile() {
 
     const { fnSendMsg, isPending } = useOutletContext();
-    const current = currentChat((s) => s.current);
+    const current = currentChat(
+        (state) => state.current.get("friend")
+    );
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     useEffect(() => {
         setLeftPath('/mobile/chat/message/')

@@ -1,6 +1,6 @@
 import { GroupMemberList } from "./UI/GroupMemberList"
 import { useNavigate } from "react-router";
-import { currentAppBar, useHttpClient, currentGroup } from "utils"
+import { currentAppBar, useHttpClient, currentChat } from "utils"
 import { useEffect } from "react";
 import { useLocalStorage } from '@mantine/hooks';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,20 +8,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const GroupUsers = () => {
     const navigate = useNavigate();
-
-    // const setTitle = currentAppBar((state) => state.setTitle);
+    const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
     useEffect(() => {
-        // setTitle('群聊');
+        setTitle('群成员');
         setLeftPath('/mobile/chat/group/msgs')
         setRightIcon(null)
         setRightPath(null)
     }, [])
 
-
-    const current_group = currentGroup((state) => state.current)
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const [userId] = useLocalStorage({ key: 'current_account' })
     const [currentUser] = useLocalStorage({ key: 'current_user' })
@@ -30,7 +27,8 @@ export const GroupUsers = () => {
             {
                 queryKey: ["group_user_list", userId],
                 queryFn: async () => {
-                    const results = await http.requestBodyJson("group_user_list", { "group_id": current_group?.id });
+                    const {id:groupId} = currentChat.getState().get('group')
+                    const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
                     const { code, data, message } = results;
                     if (code !== 200) throw new Error(message);
                     return data || [];
@@ -68,8 +66,6 @@ export const GroupUsers = () => {
             console.error(error);
         },
     });
-
-
 
     return <div>
         <GroupMemberList

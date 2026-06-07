@@ -1,70 +1,54 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from 'react-router';
-import { getUserDB, currentAppBar, useHttpClient } from "utils";
-import { liveQuery } from 'dexie';
-import { useMutation } from '@tanstack/react-query'
-import { useListState, useLocalStorage } from '@mantine/hooks';
+import { currentAppBar, useHttpClient, friendStore, currentChat } from "utils";
+import { useQuery } from '@tanstack/react-query'
+import { useLocalStorage } from '@mantine/hooks';
 import { IconCirclePlus } from "@tabler/icons-react";
 import { FriendList } from "./UI/FriendList";
 
 
 export const Item = () => {
     const navigate = useNavigate();
-    const [friends, handlers] = useListState([]);
-    const [afriend, setAfriend] = useState(0);
-    const [account] = useLocalStorage({ key: 'current_account' })
-
+    const [userId] = useLocalStorage({ key: 'current_account' })
     const { http } = useHttpClient('/rpc/chat/friend/')
-    const db = getUserDB(account);
 
     const openMsgWindow = useCallback((select) => {
-        navigate('/mobile/chat/friend/detail/', { state: { select } });
+        const displayName = select.remark ?? select.nickname ?? select.email ?? select.id;
+        currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
+        navigate('/mobile/chat/friend/detail/');
     }, [navigate]);
 
-    const { mutateAsync: runGetFriend } = useMutation(
-        {
-            mutationFn: async () => {
-                const results = await http.requestBodyJson("GET");
-                if (!results) throw new Error("获取失败");
-                const { code, data, message } = results;
-                if (code !== 200) throw new Error(message);
-                return data;
-            },
-            onSuccess: (data) => {
-                const list = data?.detail || []
-                list.forEach(element => {
-                    db.table('friends').get(element?.id).then((row) => {
-                        if (row) {
-                            db.table('friends').update(row?.id, {
-                                'uid': element?.uid,
-                                'avatar_url': element?.avatar_url,
-                                'email': element?.email,
-                                'remark': element?.remark,
-                                'nickname': element?.nickname,
-                                'ask_state': element?.ask_state,
-                            })
-                        } else {
-                            db.table('friends').put({
-                                'id': element?.id,
-                                'uid': element?.uid,
-                                'avatar_url': element?.avatar_url,
-                                'email': element?.email,
-                                'remark': element?.remark,
-                                'nickname': element?.nickname,
-                                'ask_state': element?.ask_state,
-                                'signal': 'old',
-                                'dialog': 0,
-                            })
-                        }
-                    })
-                });
-            },
-            onError: (error) => {
-                console.log(error?.message);
-            },
-        }
-    );
+    const getfriend = async () => {
+        const results = await http.requestBodyJson("GET");
+        if (!results) throw new Error("获取失败");
+        const { code, data, message } = results;
+        console.log('results', results)
+        if (code !== 200) {
+            console.log(message)
+            return []
+        };
+        return data?.detail || [];
+    }
 
+    const { data: friendList, isSuccess } = useQuery({
+        queryKey: ["my_friens", userId],
+        queryFn: getfriend,
+        staleTime: 0,
+        gcTime: 1000 * 3600 * 12,
+        enabled: !!userId,
+        refetchOnWindowFocus: false,
+    })
+    const friendsMap = friendStore((state) => state.friends);
+
+    // const awaitcut = friendsMap.filter((f) => f.ask_state === "await").count()
+
+    const finalFriends = useMemo(() => {
+        if (!isSuccess) return;
+        return friendList.map(g => ({
+            ...g,
+            ...friendsMap.get(g.id)
+        })).filter((f) => f.ask_state === "agree");
+    }, [friendList, friendsMap, isSuccess]);
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -77,38 +61,11 @@ export const Item = () => {
         setRightPath('/mobile/chat/friend/find/')
     }, [])
 
-    useEffect(() => {
-        if (!db) return;
-        runGetFriend()
-
-        const sub = liveQuery(
-            () => db.table('friends').where('ask_state').equals('agree').toArray()
-        ).subscribe({
-            next: rows => handlers.setState(rows),
-            error: console.error
-        })
-
-        const sub2 = liveQuery(
-            () => db.table('friends').where('ask_state').equals('await').count()
-        ).subscribe({
-            next: count => setAfriend(count),
-            error: console.error
-        })
-
-        return () => {
-            sub.unsubscribe()
-            sub2.unsubscribe()
-        }
-    }, [db])
-
-
-
-
     return (
         <FriendList
-            friends={friends}
+            friends={finalFriends}
             onItemClick={openMsgWindow}
-            // onAvatarClick={openProfile}
+        // onAvatarClick={openProfile}
         />
 
 

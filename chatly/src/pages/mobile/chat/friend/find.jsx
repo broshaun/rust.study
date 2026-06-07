@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useHttpClient, currentAppBar } from 'utils';
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FriendFindUI } from "./UI/FriendFindUI";
+import { useLocalStorage } from "@mantine/hooks";
 
 
 export const Find = () => {
@@ -18,6 +19,24 @@ export const Find = () => {
         setRightIcon(null)
         setRightPath(null)
     }, [])
+
+
+    const [userId] = useLocalStorage({ key: 'current_account' })
+    const queryClient = useQueryClient();
+    queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] })
+    useEffect(() => {
+        if (!userId) return;
+        const handleBeforeUnload = () => {
+            queryClient.invalidateQueries({
+                queryKey: ["my_friends", userId],
+            });
+        };
+        return () => {
+            // console.log('离开执行')
+            handleBeforeUnload()
+        };
+    }, [queryClient, userId]);
+
 
     // 查找好友
     const { data: findByUser, isPending: loading, mutateAsync: run } = useMutation(
@@ -80,6 +99,7 @@ export const Find = () => {
                 console.log("code, message, data", code, message, data)
                 return 'ok';
             },
+
         }
     );
 

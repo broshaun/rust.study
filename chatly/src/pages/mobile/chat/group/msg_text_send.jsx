@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"
-import { useWinSize, currentAppBar, currentGroup } from 'utils';
+import React, { useState, useEffect, useMemo } from "react"
+import { useWinSize, currentAppBar, currentChat, groupStore } from 'utils';
 import { liveQuery } from 'dexie';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./msg_tools";
@@ -14,38 +14,41 @@ export function Msg() {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-    const current = currentGroup((s) => s.current);
+
+    const group = currentChat(
+        (state) => state.current.get("group")
+    );
+
     useEffect(() => {
-        setTitle(current?.group_name)
+        setTitle(group?.name)
         setLeftPath('/mobile/chat/group/')
         setRightIcon(<IconDots />)
         setRightPath('/mobile/chat/group/gusr/')
-    }, [])
+    }, [group])
 
     const { winHeight } = useWinSize();
     const { db, mutation } = useOutletContext();
     const [msgs, setMsgs] = useState([]);
     useEffect(() => {
-        if (!db) return;
+        if (!db || !group) return;
         const sub = liveQuery(
-            () => db.table('gmsgs').where('group_id').equals(current?.id).toArray()
-            // () => db.table('message').where('uid').equals(current?.uid).reverse().toArray()
+            () => db.table('gmsgs').where('group_id').equals(group?.id).toArray()
         ).subscribe({
             next: rows => setMsgs(rows),
             error: console.error
         });
         return () => sub.unsubscribe();
-    }, [current?.id, db]);
+    }, [group, db]);
 
 
     const msgTextSend = async (sendText) => {
         if (sendText) {
-            await mutation.mutateAsync({ group_id: current?.id, msgType: 'text', msgText: sendText })
+            if (!group?.id) return;
+            await mutation.mutateAsync({ group_id: group?.id, msgType: 'text', msgText: sendText })
         }
     }
 
     return <div>
-    
         <ChatBox
             height={winHeight - 55}
             messages={msgs}

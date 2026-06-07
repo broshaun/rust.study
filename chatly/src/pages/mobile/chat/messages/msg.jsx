@@ -11,7 +11,9 @@ export function Msg() {
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-    const current = currentChat((s) => s.current);
+    const current = currentChat(
+        (state) => state.current.get("friend")
+    );
     useEffect(() => {
         setTitle(current?.displayName)
         setLeftPath('/mobile/chat/dialog/')

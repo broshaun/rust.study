@@ -1,5 +1,5 @@
 import { GroupEdit } from "./UI/GroupEdit";
-import { currentAppBar, useHttpClient, currentGroup, useDateTime, groupStore } from "utils";
+import { currentAppBar, useHttpClient, currentChat, useDateTime, groupStore } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -85,8 +85,6 @@ export const Manage = () => {
         },
     });
 
-
-
     const handleUpdateGroup = async (value) => {
         console.log('value', value)
         await updateGroup({
@@ -98,10 +96,12 @@ export const Manage = () => {
         });
     };
 
-    const group = currentGroup((state) => state.current)
-
+    const current = currentChat((state) => state.current);
+    const group = groupStore((state) =>{
+        const {id:groupId} = current.get("group")
+        return state.groups.get(groupId)
+    });
     // console.log('group',group)
-
     return <div>
 
         <GroupEdit

@@ -1,26 +1,37 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback ,useMemo} from "react";
 import { useNavigate } from 'react-router';
 import { liveQuery } from 'dexie';
-import { currentChat, currentAppBar, getUserDB } from 'utils';
+import { currentChat, currentAppBar, getUserDB, friendStore } from 'utils';
 import { useListState, useLocalStorage } from '@mantine/hooks';
 import { DialogList } from "./UI/DialogList";
+import { useQueryClient } from "@tanstack/react-query";
 
 
 export const Item = () => {
     const navigate = useNavigate()
     const [dialog, handlers] = useListState([]);
-    const [account] = useLocalStorage({ key: 'current_account' })
-    const db = getUserDB(account);
+    const [userId] = useLocalStorage({ key: 'current_account' })
+    const db = getUserDB(userId);
 
-    useEffect(() => {
-        if (!db) return;
-        const sub = liveQuery(
-            () => db.table('friends').where('dialog').equals(1).toArray()
-        ).subscribe({
-            next: rows => handlers.setState(rows),
-        })
-        return () => sub.unsubscribe()
-    }, [db])
+
+    const queryClient = useQueryClient();
+    const friendList = queryClient.getQueryData(["my_friends", userId]);
+
+
+    const dialogFriends = useMemo(
+        () => friendStore.getState().filter(f => f.dialog === 1),
+        [friendStore]
+    );
+
+    const finalFriends = useMemo(() => {
+        return dialogFriends
+            .map(friend => ({
+                ...friendList.find(item => item.id === friend.id),
+                ...friend,
+            }))
+            .filter(friend => friend.id);
+    }, [friendList, dialogFriends]);
+
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -32,27 +43,22 @@ export const Item = () => {
         setRightPath(null);
     }, [])
 
-    // 打开聊天
-    const setCurrent = currentChat((s) => s.setCurrent);
     const openMsgWindow = useCallback((select) => {
         if (!select?.id) return;
-
         const displayName = select.remark ?? select.nickname ?? select.email ?? select.id;
-
-        setCurrent({ 'uid': select?.uid, 'avatar_url': select?.avatar_url, 'displayName': displayName })
-
-        db.table('friends').update(select.id, { 'signal': 'old', 'dialog': 1 }).then(() => {
-            navigate('/mobile/chat/message')
-        })
+        currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
+        friendStore.getState().set(friend?.id, { signal: 'old', dialog: 1, })
+        navigate('/mobile/chat/message')
     }, [navigate, db])
 
     // 关闭聊天
     const handleClear = useCallback((item) => {
         if (item?.id) {
-            db.table('friends').get(item.id).then((row) => {
-                db.table('message').where('uid').equals(row?.uid).delete()
-                db.table('friends').update(item.id, { 'signal': 'old', 'dialog': 0 })
-            })
+
+            friendStore.getState().set(item?.id, { signal: 'old', dialog: 0 })
+            console.log('item',item)
+            // db.table('message').where('uid').equals(item?.uid).delete()
+
             navigate('/mobile/chat/dialog')
         }
     }, [db])
@@ -60,7 +66,7 @@ export const Item = () => {
 
     return (
         <DialogList
-            dialogs={dialog}
+            dialogs={finalFriends}
             onSelect={openMsgWindow}
             onClear={handleClear}
         />
