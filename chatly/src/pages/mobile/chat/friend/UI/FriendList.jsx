@@ -16,6 +16,10 @@ export const FriendList = memo(function FriendList({
     >
       <Box px={12}>
         {friends.map((friend) => (
+
+
+          // 在这个位置订阅Dexie对应id行数据
+
           <Friend
             key={friend.id}
             data={friend}
@@ -28,3 +32,18 @@ export const FriendList = memo(function FriendList({
     </ScrollArea>
   );
 });
+
+
+// useEffect(() => {
+//   if (!db || !friend.id) return;
+
+//   const sub = liveQuery(
+//     () => db.table("friends").get(friend.id)
+//   ).subscribe({
+//     next: row => {
+//       setLocal(row);
+//     },
+//   });
+
+//   return () => sub.unsubscribe();
+// }, [db, friend.id]);
