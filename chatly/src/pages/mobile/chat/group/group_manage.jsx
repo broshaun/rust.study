@@ -1,5 +1,5 @@
 import { GroupEdit } from "./UI/GroupEdit";
-import { currentAppBar, useHttpClient, currentGroup } from "utils";
+import { currentAppBar, useHttpClient, currentGroup, useDateTime, groupStore } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,6 +7,7 @@ import { useLocalStorage } from "@mantine/hooks";
 
 
 export const Manage = () => {
+    const dt = useDateTime();
     const queryClient = useQueryClient();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -45,6 +46,9 @@ export const Manage = () => {
             if (code !== 200) {
                 throw new Error(message || "修改群信息失败");
             }
+            groupStore.getState().set(id, {
+                timestamp: dt.getDateTimeStr()
+            })
             return data || true;
         },
         onSuccess: (data) => {

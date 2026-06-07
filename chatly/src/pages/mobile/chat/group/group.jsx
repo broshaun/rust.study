@@ -28,7 +28,7 @@ export const Group = () => {
                     sentByMe: true,
                     avatar_url: currentUser?.avatar_url,
                 });
-                groupStore.set(group_id, {
+                groupStore.getState().set(group_id, {
                     signal: "old",
                     timestamp: dt.getDateTimeStr()
                 })

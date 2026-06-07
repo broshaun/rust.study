@@ -9,9 +9,7 @@ function formatGroupTime(timestamp) {
   if (!timestamp) return "";
 
   const date = new Date(
-    typeof timestamp === "string"
-      ? timestamp.replace(/-/g, "/")
-      : timestamp
+    typeof timestamp === "string" ? timestamp.replace(/-/g, "/") : timestamp
   );
 
   if (Number.isNaN(date.getTime())) return "";
@@ -43,93 +41,92 @@ function formatGroupTime(timestamp) {
   )}月${String(date.getDate()).padStart(2, "0")}日`;
 }
 
-const GroupRow = memo(function GroupRow({ group, onSelect, onAvatarClick }) {
-  if (!group) return null;
+const GroupRow = memo(
+  function GroupRow({ group, version, onSelect, onAvatarClick }) {
+    if (!group) return null;
 
-  const hasNews = group.signal === "news";
-  const time = formatGroupTime(group.timestamp);
+    const hasNews = group.signal === "news";
+    const time = formatGroupTime(group.timestamp);
 
-  return (
-    <Box
-      w="100%"
-      px={8}
-      py={6}
-      style={{
-        borderRadius: 8,
-      }}
-    >
-      <Group wrap="nowrap" gap={10} align="stretch">
-        <Box
-          pos="relative"
-          mt={3}
-          style={{
-            cursor: onAvatarClick ? "pointer" : "default",
-            flexShrink: 0,
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAvatarClick?.(group);
-          }}
-        >
-          <SafeAvatar url={group.group_avatar} size={38} radius={8} cover />
-
-          {hasNews && (
-            <Box
-              pos="absolute"
-              top={-2}
-              right={-2}
-              w={10}
-              h={10}
-              bg="green"
-              style={{
-                borderRadius: "50%",
-                border: "2px solid var(--mantine-color-body)",
-                pointerEvents: "none",
-              }}
-            />
-          )}
-        </Box>
-
-        <Box
-          flex={1}
-          miw={0}
-          h={48}
-          pos="relative"
-          onClick={() => onSelect?.(group)}
-          style={{
-            cursor: "pointer",
-            borderBottom: "1px solid var(--mantine-color-gray-2)",
-          }}
-        >
-          <Text
-            size="sm"
-            fw={600}
-            truncate
-            pr={72}
-            pt={4}
-            lh={1.25}
+    return (
+      <Box
+        w="100%"
+        px={8}
+        py={6}
+        style={{
+          borderRadius: 8,
+        }}
+      >
+        <Group wrap="nowrap" gap={10} align="stretch">
+          <Box
+            pos="relative"
+            mt={3}
+            style={{
+              cursor: onAvatarClick ? "pointer" : "default",
+              flexShrink: 0,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAvatarClick?.(group);
+            }}
           >
-            {group.group_name || "未命名群聊"}
-          </Text>
+            <SafeAvatar url={group.group_avatar} size={38} radius={8} cover />
 
-          {time && (
-            <Text
-              pos="absolute"
-              top={5}
-              right={0}
-              size="9px"
-              c="dimmed"
-              opacity={0.55}
-              lh={1}
-            >
-              {time}
+            {hasNews && (
+              <Box
+                pos="absolute"
+                top={-2}
+                right={-2}
+                w={10}
+                h={10}
+                bg="green"
+                style={{
+                  borderRadius: "50%",
+                  border: "2px solid var(--mantine-color-body)",
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+          </Box>
+
+          <Box
+            flex={1}
+            miw={0}
+            h={48}
+            pos="relative"
+            onClick={() => onSelect?.(group)}
+            style={{
+              cursor: "pointer",
+              borderBottom: "1px solid var(--mantine-color-gray-2)",
+            }}
+          >
+            <Text size="sm" fw={600} truncate pr={72} pt={4} lh={1.25}>
+              {group.group_name || "未命名群聊"}
             </Text>
-          )}
-        </Box>
-      </Group>
-    </Box>
-  );
-});
+
+            {time && (
+              <Text
+                pos="absolute"
+                top={5}
+                right={0}
+                size="9px"
+                c="dimmed"
+                opacity={0.55}
+                lh={1}
+              >
+                {time}
+              </Text>
+            )}
+          </Box>
+        </Group>
+      </Box>
+    );
+  },
+  (prev, next) =>
+    prev.version === next.version &&
+    prev.onSelect === next.onSelect &&
+    prev.onAvatarClick === next.onAvatarClick
+);
 
 export const GroupList = memo(function GroupList({
   groups = [],
@@ -156,6 +153,7 @@ export const GroupList = memo(function GroupList({
         <GroupRow
           key={group.id}
           group={group}
+          version={group?.timestamp}
           onSelect={onSelect}
           onAvatarClick={onAvatarClick}
         />

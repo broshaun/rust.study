@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useToken, getUserDB, useHttpClient, useDateTime } from "utils"
+import { useToken, getUserDB, useHttpClient, useDateTime, groupStore } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -30,13 +30,22 @@ export function ChatGuard() {
           group_id: item.group_id,
         }))
       );
-      new Set(data.map(item => item.group_id)).forEach((group_id) => {
-        setGroup(group_id, {
+
+      const groupMsgCount = {};
+      data.forEach(item => {
+        const groupId = item.group_id;
+        groupMsgCount[groupId] = (groupMsgCount[groupId] || 0) + 1;
+      });
+      Object.entries(groupMsgCount).forEach(([group_id, count]) => {
+        const oldStore = groupStore.getState().get(group_id) || {};
+        const newUnread = (oldStore.unread || 0) + count;
+        groupStore.getState().set(group_id, {
+          ...oldStore,
+          unread: newUnread,
           signal: "news",
           timestamp: dt.getDateTimeStr(),
         });
       });
-
     }
   }
 
