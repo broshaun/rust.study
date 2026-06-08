@@ -1,11 +1,11 @@
-import { useHttpClient, currentAppBar, currentChat } from "utils";
+import { useHttpClient, currentAppBar, currentChat, getUserDB } from "utils";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconMailExclamation } from "@tabler/icons-react";
 import { GroupList } from "./UI/GroupList";
-
+import { liveQuery } from "dexie";
 
 
 const groups = [
@@ -18,7 +18,8 @@ const groups = [
 ];
 
 export const Item = () => {
-
+    const [userId] = useLocalStorage({ key: 'current_account' })
+    const db = getUserDB(userId);
     const [currentUser] = useLocalStorage({ key: 'current_user' });
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -31,7 +32,7 @@ export const Item = () => {
         setRightIcon(<IconMailExclamation />)
         setRightPath('/mobile/chat/group/ingmsg/')
     }, [])
-
+    
 
     const navigate = useNavigate();
     // 打开群聊
@@ -50,8 +51,8 @@ export const Item = () => {
         }
     }
 
-    const [userId] = useLocalStorage({ key: 'current_account' })
-    const db = getUserDB(userId);
+    
+
 
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const { data: groupList, isSuccess } = useQuery({

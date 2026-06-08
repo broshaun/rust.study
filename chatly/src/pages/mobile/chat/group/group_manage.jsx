@@ -1,13 +1,19 @@
 import { GroupEdit } from "./UI/GroupEdit";
-import { currentAppBar, useHttpClient, currentChat, useDateTime } from "utils";
-import { useEffect, useCallback } from "react";
+import { currentAppBar, useHttpClient, currentChat, useDateTime, getUserDB } from "utils";
+import { useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
+import { liveQuery } from "dexie";
 
 
 export const Manage = () => {
     const dt = useDateTime();
+    const navigate = useNavigate();
+    const [userId] = useLocalStorage({ key: 'current_account' })
+    const current = currentChat((state) => state.current);
+    const db = getUserDB(userId)
+
     const queryClient = useQueryClient();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -20,8 +26,7 @@ export const Manage = () => {
         setRightPath(null)
     }, [])
 
-    const navigate = useNavigate();
-    const [userId] = useLocalStorage({ key: 'current_account' })
+
     const { http } = useHttpClient('/rpc/chat/msg/group/');
     const { http: httpFiles } = useHttpClient('/files/avatar/');
     const uploadFile = useCallback(async (file) => {
@@ -32,7 +37,7 @@ export const Manage = () => {
         }
     }, [httpFiles]);
 
-    const db = getUserDB(userId)
+
     const { mutateAsync: updateGroup, isPending } = useMutation({
         mutationFn: async ({ id, ...payload }) => {
             if (!id) return;
@@ -86,7 +91,6 @@ export const Manage = () => {
     });
 
     const handleUpdateGroup = async (value) => {
-        console.log('value', value)
         await updateGroup({
             id: value.id,
             group_name: value.group_name,
@@ -96,16 +100,24 @@ export const Manage = () => {
         });
     };
 
-    const current = currentChat((state) => state.current);
-    const [group, setGroup] = useState([]);
-    useEffect(() => {
-        const { id: groupId } = current.get("group")
-        if (!groupId) return;
-        const sub = liveQuery(() => db.table('groups').get(groupId).toArray())
-            .subscribe(rows => setGroup(rows));
-        return () => sub.unsubscribe();
-    }, [db, current]);
-    // console.log('group',group)
+
+    const get_group = async () => {
+        const group = current.get("group");
+        if (!group) return;
+        const results = await http.getById(group?.id);
+        const { code, message, data } = results;
+        if (code !== 200) {
+            return {}
+        }
+        return data
+    }
+    const { data: group } = useQuery({
+        queryKey: ["thisgroup", userId],
+        queryFn: get_group,
+        staleTime: 5000,
+        enabled: !!userId,
+    })
+
 
     return <div>
         <GroupEdit
