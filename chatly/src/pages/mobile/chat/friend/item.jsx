@@ -1,11 +1,11 @@
-import React, { useEffect, useCallback, useMemo, useState } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useNavigate } from 'react-router';
 import { currentAppBar, useHttpClient, currentChat, getUserDB } from "utils";
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 import { IconCirclePlus } from "@tabler/icons-react";
 import { FriendList } from "./UI/FriendList";
-import { liveQuery } from "dexie";
+
 
 
 export const Item = () => {
@@ -55,7 +55,6 @@ export const Item = () => {
         });
         await navigate('/mobile/chat/friend/detail/');
     }, [navigate, db]);
-
 
     return (
         <FriendList
