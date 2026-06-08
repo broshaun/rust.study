@@ -23,9 +23,9 @@ export const Item = () => {
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
-
+    const { http } = useHttpClient('/rpc/chat/friend/')
     const getfriend = async () => {
-        const results = await http.requestBodyJson("GET", {});
+        const results = await http.requestBodyJson("GET", { ask_state: "agree" });
         if (!results) throw new Error("获取失败");
         const { code, data, message } = results;
         console.log('results', results)
@@ -36,47 +36,31 @@ export const Item = () => {
         return data?.detail || [];
     }
 
-    const { data: friendList, isSuccess } = useQuery({
-        queryKey: ["my_friens", userId],
+    const { data: friendList, isPending } = useQuery({
+        queryKey: ["my_friends", userId],
         queryFn: getfriend,
-        staleTime: 0,
+        staleTime: 1000 * 3600 * 1,
         gcTime: 1000 * 3600 * 12,
         enabled: !!userId,
         refetchOnWindowFocus: false,
     })
-
-
     const db = getUserDB(userId)
-    const [friendMap, setFriendMap] = useState(() => new Map());
-    useEffect(() => {
-        if (!db) return;
-        const sub = liveQuery(() => db.table("friends").where("ask_state").equals("agree").toArray())
-            .subscribe(rows => setFriendMap(new Map(rows.map(item => [item.id, item]))));
-        return () => sub.unsubscribe();
-    }, [db]);
-
-    const finalFriends = useMemo(() => {
-        if (!isSuccess) return;
-        return friendList.map(friend => ({ ...friend, ...friendMap.get(friend.id) }));
-    }, [friendList, friendMap, isSuccess]);
     const openMsgWindow = useCallback(async (select) => {
-        const displayName = select.remark ?? select.nickname ?? select.email ?? select.id;
+        const displayName = select.remark ?? select.nickname ?? select.email;
         currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
-        const old = await db.table("dialog").get(select.id);
+        const old = await db.table("dialog").get(select.uid);
         await db.table("dialog").put({
             ...old,
-            ...select
+            id: select?.uid,
         });
-
         await navigate('/mobile/chat/friend/detail/');
     }, [navigate, db]);
-
-    const { http } = useHttpClient('/rpc/chat/friend/')
 
 
     return (
         <FriendList
-            friends={finalFriends}
+            friends={friendList}
+            isPending={isPending}
             onItemClick={openMsgWindow}
         // onAvatarClick={openProfile}
         />

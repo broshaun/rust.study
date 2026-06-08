@@ -47,13 +47,13 @@ function formatDialogTime(timestamp) {
 }
 
 export const Dialog = memo(
-  ({
+  function Dialog({
     data,
     onSelect,
     onClear,
     onAvatarClick,
     height = 52,
-  }) => {
+  }) {
     const { apiBase } = useApiBase();
 
     if (!data) return null;
@@ -86,12 +86,7 @@ export const Dialog = memo(
           boxSizing: "border-box",
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            flexShrink: 0,
-          }}
-        >
+        <div style={{ position: "relative", flexShrink: 0 }}>
           <SafeAvatar
             url={avatarUrl}
             size={34}
@@ -119,12 +114,7 @@ export const Dialog = memo(
           )}
         </div>
 
-        <div
-          style={{
-            flex: 1,
-            minWidth: 0,
-          }}
-        >
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
               fontSize: 14,
@@ -150,19 +140,8 @@ export const Dialog = memo(
           </div>
         </div>
 
-        <div
-          style={{
-            width: 42,
-            flexShrink: 0,
-            textAlign: "right",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              opacity: 0.45,
-            }}
-          >
+        <div style={{ width: 42, flexShrink: 0, textAlign: "right" }}>
+          <div style={{ fontSize: 10, opacity: 0.45 }}>
             {formatDialogTime(data.timestamp)}
           </div>
 
@@ -183,5 +162,9 @@ export const Dialog = memo(
         </div>
       </div>
     );
-  }
+  },
+  (prev, next) => 
+    prev.version === next.version &&
+    prev.onSelect === next.onSelect &&
+    prev.onAvatarClick === next.onAvatarClick
 );

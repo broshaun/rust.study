@@ -20,6 +20,7 @@ export const DialogList = memo(function DialogList({
           <Dialog
             key={dialog.id}
             data={dialog}
+            version={dialog?.timestamp}
             onSelect={onSelect}
             onClear={onClear}
             onAvatarClick={onAvatarClick}

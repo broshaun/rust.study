@@ -133,13 +133,14 @@ export const GroupList = memo(function GroupList({ groups = [], onSelect, onAvat
     );
   }
 
+  console.log('groups',groups)
   return (
     <Box>
       {groups.map((group) => (
         <GroupRow
           key={group.id}
           group={group}
-          version={group.version} // 父组件控制渲染
+          version={group.timestamp} // 父组件控制渲染
           onSelect={onSelect}
           onAvatarClick={onAvatarClick}
         />

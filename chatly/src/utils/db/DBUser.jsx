@@ -19,7 +19,7 @@ export const getUserDB = (userId) => {
   db.version(13).stores({
     message: '++id, uid, timestamp',
     friends: 'id, uid, timestamp, ask_state',
-    dialog: 'id, uid, timestamp, signal',
+    dialog: 'id, timestamp, signal',
     groups: 'id, timestamp',
     gmsgs: '++id, group_id, timestamp',
   });

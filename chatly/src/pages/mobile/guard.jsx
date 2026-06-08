@@ -7,20 +7,20 @@ import { useLocalStorage } from '@mantine/hooks';
 
 export function ChatGuard() {
   const dt = useDateTime();
-
   const navigate = useNavigate();
   const [userId] = useLocalStorage({ key: 'current_account' })
   const db = getUserDB(userId);
   const { remainSeconds } = useToken()
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
-
-
   const fetchGroupMsgs = async () => {
-    const results = await httpGMsg.requestBodyJson('group_receive')
-    const { code, data } = results;
-    if (code === 200 && Array.isArray(data) && data.length > 0) {
-      await db.table('gmsgs').bulkPut(
-        data.map((item) => ({
+    const { code, data } = await httpGMsg.requestBodyJson("group_receive");
+    // console.log('data',data);
+    if (code !== 200 || !data?.length) return;
+    const now = dt.getDateTimeStr();
+    await Promise.all(
+      data.map(async (item) => {
+        await db.table('gmsgs').put({
+          id: item.id,
           avatar_url: item.avatar_url,
           nickname: item.nickname,
           type: item.msg_type,
@@ -28,29 +28,45 @@ export function ChatGuard() {
           timestamp: item.timestamp,
           sentByMe: false,
           group_id: item.group_id,
-        }))
-      );
-    }
-  }
+        });
+
+        const group = await db.table('groups').get(item.group_id);
+        await db.table('groups').put({
+          ...group,
+          id: item.group_id,
+          timestamp: now,
+          signal: "news",
+          unread: (group?.unread ?? 0) + 1,
+        });
+      })
+    );
+  };
 
   const { http: httpMsg } = useHttpClient('/rpc/chat/msg/single/');
   const fetchMsgs = async () => {
-    const results = await httpMsg.requestBodyJson('POST')
-    const { code, data } = results;
-    if (code === 200 && Array.isArray(data) && data.length > 0) {
-      await db.table('message').bulkPut(
-        data.map((item) => ({
-          avatar_url: item.avatar_url,
-          nickname: item.nickname,
-          uid: item.uid,
-          type: item.msg_type,
-          content: item.msg_text,
-          timestamp: item.timestamp,
-          sentByMe: false,
-        }))
-      );
+    const { code, data } = await httpMsg.requestBodyJson('POST')
+    if (code !== 200 || !data?.length) return;
+    const now = dt.getDateTimeStr();
+    await Promise.all(data.map(async (item) => {
+      await db.table('message').put({
+        avatar_url: item.avatar_url,
+        nickname: item.nickname,
+        uid: item.uid,
+        type: item.msg_type,
+        content: item.msg_text,
+        timestamp: item.timestamp,
+        sentByMe: false,
+      });
 
-    }
+      const dialog = await db.table('dialog').get(item.uid);
+      await db.table('dialog').put({
+        ...dialog,
+        id: item.uid,
+        timestamp: now,
+        signal: "news",
+        unread: (dialog?.unread ?? 0) + 1,
+      });
+    }));
   }
 
   // 每2秒获取一次

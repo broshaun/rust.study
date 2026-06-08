@@ -6,7 +6,7 @@ import { ImgUp } from './UI/ImageUpload';
 
 
 export function ImagSend() {
-    const { db, mutation } = useOutletContext();
+    const { mutation } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
 
     useEffect(() => {
@@ -60,7 +60,6 @@ export function ImagSend() {
     };
 
     useEffect(() => {
-
         if (isUploadingStart && !mutation.isPending) {
             navigate('/mobile/chat/group/msgs/');
         }

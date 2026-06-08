@@ -40,6 +40,7 @@ export const Main = () => {
                         sentByMe: true,
                         avatar_url: currentUser?.avatar_url,
                     });
+                    
                 }
                 return 'ok';
             },

@@ -1,10 +1,10 @@
-import React, { useEffect, useCallback,useState } from "react";
+import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { useNavigate } from 'react-router';
 import { liveQuery } from 'dexie';
 import { currentChat, currentAppBar, getUserDB } from 'utils';
 import { useLocalStorage } from '@mantine/hooks';
 import { DialogList } from "./UI/DialogList";
-
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Item = () => {
     const navigate = useNavigate()
@@ -33,6 +33,8 @@ export const Item = () => {
 
     // 关闭聊天
     const handleClear = useCallback((item) => {
+        console.log('item', item)
+
         if (item?.id) {
             console.log('item', item)
             db.table("dialog").where("id").equals(item?.id).delete()
@@ -42,16 +44,39 @@ export const Item = () => {
     }, [db])
 
 
-    const [dialogList, setDialogList] = useState([]);
+    const [friendMap, setFriendMap] = useState(() => new Map());
+    const queryClient = useQueryClient();
+    const friendList = queryClient.getQueryData(["my_friends", userId]);
+
+    useEffect(() => {
+        if (!friendList) return;
+        setFriendMap(new Map(friendList.map(item => [item.uid, item])));
+    }, [friendList]);
+
+
+    // console.log('friendMap',friendMap)
+
+    const [dialogList, setDialogList] = useState([])
     useEffect(() => {
         if (!db) return;
         const sub = liveQuery(() => db.table("dialog").toArray())
-            .subscribe(rows => setDialogList(rows));
+            .subscribe(rows => {
+                setDialogList(rows.map(item => {
+                    // console.log('item',item)
+                    const friend = friendMap.get(item.id);
+                    return {
+                        ...item,
+                        "avatar_url": friend?.avatar_url,
+                        "email": friend?.email,
+                        "nickname": friend?.nickname,
+                        "remark": friend?.remark,
+                    }
+                }))
+            });
         return () => sub.unsubscribe();
-    }, [db]);
+    }, [db, friendMap]);
 
-
-    console.log('dialogList',dialogList)
+    // console.log('dialogList', dialogList)
 
     return (
         <DialogList
