@@ -10,8 +10,8 @@ export { useToken } from './store/useToken';
 export { currentChat } from "./global/currentChat";
 export { currentAppBar, GlobalAppBar } from './global/currentAppBar';
 export { currentModal, GlobalModal } from './global/currentModal'
-export { groupStore } from "./global/groupStore"
-export { friendStore } from "./global/friendStore"
+
+
 
 export { useDateTime } from './dateTimeUtils';
 export { getUserDB, closeUserDB, deleteUserDB } from './db/DBUser';

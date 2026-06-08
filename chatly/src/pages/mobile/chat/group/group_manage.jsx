@@ -1,5 +1,5 @@
 import { GroupEdit } from "./UI/GroupEdit";
-import { currentAppBar, useHttpClient, currentChat, useDateTime, groupStore } from "utils";
+import { currentAppBar, useHttpClient, currentChat, useDateTime } from "utils";
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,7 +32,7 @@ export const Manage = () => {
         }
     }, [httpFiles]);
 
-
+    const db = getUserDB(userId)
     const { mutateAsync: updateGroup, isPending } = useMutation({
         mutationFn: async ({ id, ...payload }) => {
             if (!id) return;
@@ -46,9 +46,9 @@ export const Manage = () => {
             if (code !== 200) {
                 throw new Error(message || "修改群信息失败");
             }
-            groupStore.getState().set(id, {
-                timestamp: dt.getDateTimeStr()
-            })
+            await db.table('groups').update(id, {
+                timestamp: dt.getDateTimeStr(),
+            });
             return data || true;
         },
         onSuccess: (data) => {
@@ -97,13 +97,17 @@ export const Manage = () => {
     };
 
     const current = currentChat((state) => state.current);
-    const group = groupStore((state) =>{
-        const {id:groupId} = current.get("group")
-        return state.groups.get(groupId)
-    });
+    const [group, setGroup] = useState([]);
+    useEffect(() => {
+        const { id: groupId } = current.get("group")
+        if (!groupId) return;
+        const sub = liveQuery(() => db.table('groups').get(groupId).toArray())
+            .subscribe(rows => setGroup(rows));
+        return () => sub.unsubscribe();
+    }, [db, current]);
     // console.log('group',group)
-    return <div>
 
+    return <div>
         <GroupEdit
             group={group}
             loading={isPending}

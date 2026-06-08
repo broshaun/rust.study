@@ -1,4 +1,4 @@
-import { useHttpClient, currentAppBar, currentChat, groupStore } from "utils";
+import { useHttpClient, currentAppBar, currentChat } from "utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
@@ -37,7 +37,7 @@ export const Item = () => {
     // 打开群聊
     const openGroup = (value) => {
         currentChat.getState().set('group', { id: value?.id, name: value?.group_name })
-        groupStore.getState().set(value?.id, { signal: "old", unread: 0 });
+        db.table("groups").update(value?.id, { signal: 'old', unread: 0 })
         navigate('/mobile/chat/group/msgs')
     }
 
@@ -51,6 +51,8 @@ export const Item = () => {
     }
 
     const [userId] = useLocalStorage({ key: 'current_account' })
+    const db = getUserDB(userId);
+
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const { data: groupList, isSuccess } = useQuery({
         queryKey: ["my_group_list", userId],
@@ -68,14 +70,22 @@ export const Item = () => {
         enabled: !!userId,
         refetchOnWindowFocus: false,
     });
-    const groupsMap = groupStore((state) => state.groups);
+
+
+
+    const [groupMap, setGroupMap] = useState(() => new Map());
+    useEffect(() => {
+        if (!db) return;
+        const sub = liveQuery(() => db.table("groups").toArray())
+            .subscribe(rows => setGroupMap(new Map(rows.map(item => [item.id, item]))));
+        return () => sub.unsubscribe();
+    }, [db]);
+
     const finalGroups = useMemo(() => {
         if (!isSuccess) return;
-        return groupList.map(g => ({
-            ...g,
-            ...groupsMap.get(g.id)
-        }));
-    }, [groupList, groupsMap, isSuccess]);
+        return groupList.map(friend => ({ ...friend, ...groupMap.get(friend.id) }));
+    }, [groupList, groupMap, isSuccess]);
+
 
     // console.log('groupList', groupList)
     // console.log('finalGroups', finalGroups)

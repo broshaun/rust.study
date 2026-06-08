@@ -2,6 +2,10 @@ import Dexie from 'dexie';
 
 const dbCache = new Map();
 
+
+/**
+ * const db = getUserDB(userId)
+ */
 export const getUserDB = (userId) => {
 
   if (!userId) {
@@ -14,7 +18,8 @@ export const getUserDB = (userId) => {
   const db = new Dexie(`chatDB_${userId}`);
   db.version(13).stores({
     message: '++id, uid, timestamp',
-    friends: 'id, uid, timestamp, dialog, signal, ask_state',
+    friends: 'id, uid, timestamp, ask_state',
+    dialog: 'id, uid, timestamp, signal',
     groups: 'id, timestamp',
     gmsgs: '++id, group_id, timestamp',
   });

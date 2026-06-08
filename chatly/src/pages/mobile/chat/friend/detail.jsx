@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router";
-import { useHttpClient, currentAppBar, currentChat, friendStore } from 'utils';
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router";
+import { useHttpClient, currentAppBar, currentChat } from 'utils';
 import { getUserDB } from "utils";
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
 import { FriendInfo } from "./UI/FriendInfoUI";
 
@@ -55,7 +55,8 @@ export function Detail() {
     mutationFn: async (id) => {
       if (!id) return;
       await http2.requestBodyJson('DELETE', { id });
-      await db.table('message').where('id').equals(id).delete();
+      await db.table('message').where('uid').equals(id).delete();
+      await db.table('dialog').where('id').equals(id).delete();
       return 'ok';
     },
     onSuccess: () => {
@@ -75,10 +76,8 @@ export function Detail() {
     },
   });
 
-  function openMsgWindow(friend) {
+  async function openMsgWindow(friend) {
     if (!friend?.id) return;
-    console.log('friend',friend)
-    friendStore.getState().set(friend?.id, { signal: 'old', dialog: 1 })
     navigate('/mobile/chat/message/');
   }
 

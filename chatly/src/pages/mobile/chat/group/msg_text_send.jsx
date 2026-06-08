@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react"
-import { useWinSize, currentAppBar, currentChat, groupStore } from 'utils';
+import { useWinSize, currentAppBar, currentChat } from 'utils';
 import { liveQuery } from 'dexie';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./msg_tools";

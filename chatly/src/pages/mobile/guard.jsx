@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useToken, getUserDB, useHttpClient, useDateTime, groupStore } from "utils"
+import { useToken, getUserDB, useHttpClient, useDateTime } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 
@@ -30,22 +30,6 @@ export function ChatGuard() {
           group_id: item.group_id,
         }))
       );
-
-      const groupMsgCount = {};
-      data.forEach(item => {
-        const groupId = item.group_id;
-        groupMsgCount[groupId] = (groupMsgCount[groupId] || 0) + 1;
-      });
-      Object.entries(groupMsgCount).forEach(([group_id, count]) => {
-        const oldStore = groupStore.getState().get(group_id) || {};
-        const newUnread = (oldStore.unread || 0) + count;
-        groupStore.getState().set(group_id, {
-          ...oldStore,
-          unread: newUnread,
-          signal: "news",
-          timestamp: dt.getDateTimeStr(),
-        });
-      });
     }
   }
 
@@ -54,7 +38,6 @@ export function ChatGuard() {
     const results = await httpMsg.requestBodyJson('POST')
     const { code, data } = results;
     if (code === 200 && Array.isArray(data) && data.length > 0) {
-
       await db.table('message').bulkPut(
         data.map((item) => ({
           avatar_url: item.avatar_url,
@@ -67,18 +50,6 @@ export function ChatGuard() {
         }))
       );
 
-      await Promise.all(
-        data.map((item) =>
-          db.table('friends')
-            .where('uid')
-            .equals(item.uid)
-            .modify((user) => {
-              user.signal = 'news';
-              user.dialog = 1;
-              user.timestamp = item.timestamp;
-            })
-        )
-      );
     }
   }
 
