@@ -20,22 +20,14 @@ export const Find = () => {
         setRightPath(null)
     }, [])
 
-
     const [userId] = useLocalStorage({ key: 'current_account' })
     const queryClient = useQueryClient();
-    queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] })
     useEffect(() => {
         if (!userId) return;
-        const handleBeforeUnload = () => {
-            queryClient.invalidateQueries({
-                queryKey: ["my_friends", userId],
-            });
-        };
         return () => {
-            // console.log('离开执行')
-            handleBeforeUnload()
+            queryClient.invalidateQueries({queryKey: ["my_friends", userId]}).catch(console.error);
         };
-    }, [queryClient, userId]);
+    }, [userId]);
 
 
     // 查找好友
@@ -43,7 +35,7 @@ export const Find = () => {
         {
             mutationFn: async ({ email }) => {
                 if (!email) return;
-                const results = await http.requestBodyJson('POST', { 'email': email });
+                const results = await http.requestBodyJson('find', { 'email': email });
                 if (!results) return;
                 const { code, message, data } = results;
                 if (code === 200) return data;
@@ -71,7 +63,7 @@ export const Find = () => {
     // 好友请求
     const { data: askFriends = [], isPending: loading2 } = useQuery(
         {
-            queryKey: ['ask-friends'],
+            queryKey: ['friends-await'],
             queryFn: async () => {
                 try {
                     const { code, data } = await http.requestBodyJson('GET', {

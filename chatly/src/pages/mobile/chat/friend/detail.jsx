@@ -2,16 +2,21 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useHttpClient, currentAppBar, currentChat } from 'utils';
 import { getUserDB } from "utils";
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
 import { FriendInfo } from "./UI/FriendInfoUI";
 
 
 export function Detail() {
+  const { http: http2 } = useHttpClient('/rpc/chat/friend/');
+  const navigate = useNavigate();
+  const [userId] = useLocalStorage({ key: 'current_account' })
+  const db = getUserDB(userId);
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
   const setRightPath = currentAppBar((state) => state.setRightPath);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setLeftPath('/mobile/chat/friend/')
@@ -20,12 +25,12 @@ export function Detail() {
     setRightPath(null)
   }, [])
 
-  const navigate = useNavigate();
-  const [userId] = useLocalStorage({ key: 'current_account' })
-  const db = getUserDB(userId);
+  useEffect(() => {
+    return () => {
+      queryClient.invalidateQueries(["my_friends", userId]).catch(console.error)
+    }
+  }, [userId])
 
-
-  const { http: http2 } = useHttpClient('/rpc/chat/friend/');
 
 
   const current_friend = currentChat(
@@ -67,7 +72,7 @@ export function Detail() {
   const { mutateAsync: updRemark } = useMutation({
     mutationFn: async ({ id, remark }) => {
       if (!id) return;
-      await http2.requestBodyJson('PATCH', { id, remark });
+      await http2.requestBodyJson('set_friend', { id, remark });
       return 'ok';
     },
     onSuccess: () => {

@@ -31,7 +31,7 @@ export function CreateGroup() {
             }
             return data || true;
         },
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
                 navigate('/mobile/chat/group/');
             })
