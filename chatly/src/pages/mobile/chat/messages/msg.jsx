@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react"
-import { useWinSize, currentChat, currentAppBar, getUserDB } from 'utils';
-import { liveQuery } from 'dexie';
+import React, { useEffect } from "react"
+import { useWinSize, currentChat, currentAppBar, getUserDB, useDateTime } from 'utils';
 import { useOutletContext } from 'react-router';
 import { ChatBox } from "./UI/ChatBox"
 import { Tools } from "./tools";
 import { useLocalStorage } from "@mantine/hooks";
+import { useLiveQuery } from "dexie-react-hooks";
+
 
 export function Msg() {
-
+    const dt = useDateTime();
     const [userId] = useLocalStorage({ key: 'current_account' })
     const db = getUserDB(userId)
     const current = currentChat((state) => state.current.get("friend"));
-    console.log('current', current)
 
     const { fnSendMsg } = useOutletContext();
     const { winHeight } = useWinSize();
@@ -25,30 +25,22 @@ export function Msg() {
         setRightPath(null)
     }, [])
 
-
     useEffect(() => {
         if (!db) return;
         return () => {
             if (!current?.id) return;
-            db.table("dialog").update(current?.uid, {
+            db.table("friends_dialog").update(current?.uid, {
                 signal: "old",
                 unread: 0,
+                timestamp: dt.getDateTimeStr(),
             }).catch(console.error);
         };
     }, [db, current]);
 
 
-    const [msgs, setMsgs] = useState([]);
-    useEffect(() => {
-        if (!db) return;
-        const sub = liveQuery(
-            () => db.table('message').where('uid').equals(current?.uid).toArray()
-        ).subscribe({
-            next: rows => setMsgs(rows),
-            error: console.error
-        });
-        return () => sub.unsubscribe();
-    }, [current?.uid, db]);
+    const msgs = useLiveQuery(async () => {
+        return await db.table('message').where('uid').equals(current?.uid).toArray()
+    }, [db], [])
 
     const msgTextSend = async (sendText) => {
         if (sendText) {

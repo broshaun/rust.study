@@ -32,7 +32,6 @@ export function Detail() {
     (state) => state.current.get("friend")
   );
   const friendId = current_friend?.id
-
   const { data: friend, refetch } = useQuery({
     queryKey: ["get_friend", userId, friendId],
     queryFn: async () => {
@@ -56,7 +55,7 @@ export function Detail() {
       if (!id) return;
       await http2.requestBodyJson('DELETE', { id });
       await db.table('message').where('uid').equals(id).delete();
-      await db.table('dialog').where('id').equals(id).delete();
+      await db.table('friends_dialog').where('id').equals(id).delete();
       return 'ok';
     },
     onSuccess: () => {

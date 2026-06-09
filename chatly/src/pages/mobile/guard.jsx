@@ -11,12 +11,13 @@ export function ChatGuard() {
   const [userId] = useLocalStorage({ key: 'current_account' })
   const db = getUserDB(userId);
   const { remainSeconds } = useToken()
+
+
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
   const fetchGroupMsgs = async () => {
     const { code, data } = await httpGMsg.requestBodyJson("group_receive");
     // console.log('data',data);
     if (code !== 200 || !data?.length) return;
-    const now = dt.getDateTimeStr();
     await Promise.all(
       data.map(async (item) => {
         await db.table('gmsgs').put({
@@ -30,13 +31,12 @@ export function ChatGuard() {
           group_id: item.group_id,
         });
 
-        const group = await db.table('groups').get(item.group_id);
-        await db.table('groups').put({
-          ...group,
+        // const dialog = await db.table('groups_dialog').get(item.id);
+        await db.table('groups_dialog').put({
           id: item.group_id,
-          timestamp: now,
+          timestamp: dt.getDateTimeStr(),
           signal: "news",
-          unread: (group?.unread ?? 0) + 1,
+          // unread: (dialog?.unread ?? 0) + 1,
         });
       })
     );
@@ -46,7 +46,7 @@ export function ChatGuard() {
   const fetchMsgs = async () => {
     const { code, data } = await httpMsg.requestBodyJson('POST')
     if (code !== 200 || !data?.length) return;
-    const now = dt.getDateTimeStr();
+
     await Promise.all(data.map(async (item) => {
       await db.table('message').put({
         avatar_url: item.avatar_url,
@@ -58,13 +58,12 @@ export function ChatGuard() {
         sentByMe: false,
       });
 
-      const dialog = await db.table('dialog').get(item.uid);
-      await db.table('dialog').put({
-        ...dialog,
+      // const dialog = await db.table('friends_dialog').get(item.uid);
+      await db.table('friends_dialog').put({
         id: item.uid,
-        timestamp: now,
+        timestamp: dt.getDateTimeStr(),
         signal: "news",
-        unread: (dialog?.unread ?? 0) + 1,
+        // unread: (dialog?.unread ?? 0) + 1,
       });
     }));
   }

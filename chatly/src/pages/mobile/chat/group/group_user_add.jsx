@@ -43,13 +43,12 @@ export const AddMember = () => {
           message: message,
           onConfirm: () => close(),
           onCancel: null
-        });
+        })
       }
-      return data || true;
+      return data;
     },
     onSuccess: (data) => {
       console.log("邀请成功:", data);
-
     },
     onError: (error) => {
       console.error("邀请失败:", error);

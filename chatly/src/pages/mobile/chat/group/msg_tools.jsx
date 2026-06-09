@@ -48,11 +48,11 @@ export function Tools() {
                             display: 'flex', 
                             flexDirection: 'column', 
                             alignItems: 'center', 
-                            gap: '6px' // 文本与图标的间距
+                            gap: '6px'
                         }}
                     >
                         <ActionIcon
-                            component="div" // 避免 button 嵌套规范警告
+                            component="div" 
                             variant="light"
                             color={color}
                             size="xl"

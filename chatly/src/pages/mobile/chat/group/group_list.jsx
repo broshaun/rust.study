@@ -1,6 +1,6 @@
-import { useHttpClient, currentAppBar, currentChat, getUserDB } from "utils";
+import { useHttpClient, currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect} from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconMailExclamation } from "@tabler/icons-react";
@@ -9,6 +9,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 
 
 export const Item = () => {
+    const dt = useDateTime();
     const [userId] = useLocalStorage({ key: 'current_account' })
     const db = getUserDB(userId);
 
@@ -30,7 +31,7 @@ export const Item = () => {
     // 打开群聊
     const openGroup = (value) => {
         currentChat.getState().set('group', { id: value?.id, name: value?.group_name })
-        db.table("groups").update(value?.id, { signal: 'old', unread: 0 })
+        db.table("groups_dialog").put({ id: value?.id, signal: 'old', timestamp: dt.getDateTimeStr() }).catch(console.error);
         navigate('/mobile/chat/group/msgs')
     }
 
@@ -67,10 +68,15 @@ export const Item = () => {
         db.table("groups").bulkPut(groupList).catch(console.error);
     }, [groupList, isSuccess, db]);
 
-    const finalGroups = useLiveQuery(() => {
+    const finalGroups = useLiveQuery(async () => {
         if (!db) return;
-        return db.table("groups").where("is_delete").equals(0).toArray();
-    }, [db],[]);
+        const groups = await db.table("groups").where("is_delete").equals(0).toArray();
+        const dialog = await db.table("groups_dialog").toArray()
+        const groupMap = new Map(dialog.map(item => [item.id, item]))
+        return groups.map(group => ({ ...group, ...groupMap.get(group.id) }))
+    }, [db], []);
+
+    console.log('finalGroups', finalGroups)
 
     return (
         <GroupList

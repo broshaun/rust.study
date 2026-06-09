@@ -43,23 +43,14 @@ export function InviteGroup() {
     const [userId] = useLocalStorage({ key: 'current_account' })
     const updateGroupAskState = useMutation({
         mutationFn: async ({ id, ask_state }) => {
-            const results = await http.requestBodyJson(
-                "group_ask_state",
-                { id, ask_state }
-            );
-
-            if (results?.code !== 200) {
-                throw new Error(results?.message);
-            }
-
-            return results.data;
+            const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
+            if (results?.code !== 200) return [];
+            return results?.data;
         },
-        onSuccess: (data) => {
-            // console.log("操作成功:", data);
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] })
         }
     });
-
 
     return <div>
         <GroupInviteMessageList data={data} loading={loading}

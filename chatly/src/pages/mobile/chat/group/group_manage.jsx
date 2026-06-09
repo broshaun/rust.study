@@ -48,16 +48,11 @@ export const Manage = () => {
             });
             const results = await http.requestBodyJson('update_group', { id, ...payload })
             const { code, message, data } = results;
-            if (code !== 200) {
-                throw new Error(message || "修改群信息失败");
-            }
-            await db.table('groups').update(id, {
-                timestamp: dt.getDateTimeStr(),
-            });
-            return data || true;
+            if (code !== 200)return;
+            await db.table('groups').update(id, {timestamp: dt.getDateTimeStr()});
+            return data;
         },
-        onSuccess: (data) => {
-            // console.log("修改成功:", data);
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
                 navigate('/mobile/chat/group/');
             })
@@ -74,10 +69,8 @@ export const Manage = () => {
             const payload = { id };
             const results = await http.requestBodyJson('delete_group', payload)
             const { code, message, data } = results;
-            if (code !== 200) {
-                throw new Error(message || "删除群失败");
-            }
-            return data || true;
+            if (code !== 200) return;
+            return data;
         },
         onSuccess: (data) => {
             console.log(data);

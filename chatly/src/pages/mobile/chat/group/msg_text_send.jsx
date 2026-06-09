@@ -27,10 +27,7 @@ export function Msg() {
         if (!db) return;
         return () => {
             if (!group?.id) return;
-            db.table("groups").update(group?.id, {
-                signal: "old",
-                unread: 0,
-            }).catch(console.error);
+            db.table("groups_dialog").put({ id: group?.id, signal: "old", unread: 0, }).catch(console.error);
         };
     }, [db, group]);
 
