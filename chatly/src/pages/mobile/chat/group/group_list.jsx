@@ -1,25 +1,17 @@
 import { useHttpClient, currentAppBar, currentChat, getUserDB } from "utils";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect} from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconMailExclamation } from "@tabler/icons-react";
 import { GroupList } from "./UI/GroupList";
-import { liveQuery } from "dexie";
+import { useLiveQuery } from "dexie-react-hooks";
 
-
-const groups = [
-    {
-        id: "6a0eda8ddd4f1b65730c7953",
-        group_name: "修改群名称",
-        group_avatar: "群头像.jpg",
-        group_notice: "群公告",
-    },
-];
 
 export const Item = () => {
     const [userId] = useLocalStorage({ key: 'current_account' })
     const db = getUserDB(userId);
+
     const [currentUser] = useLocalStorage({ key: 'current_user' });
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -32,7 +24,7 @@ export const Item = () => {
         setRightIcon(<IconMailExclamation />)
         setRightPath('/mobile/chat/group/ingmsg/')
     }, [])
-    
+
 
     const navigate = useNavigate();
     // 打开群聊
@@ -50,9 +42,6 @@ export const Item = () => {
             navigate('/mobile/chat/group/update')
         }
     }
-
-    
-
 
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const { data: groupList, isSuccess } = useQuery({
@@ -72,24 +61,16 @@ export const Item = () => {
         refetchOnWindowFocus: false,
     });
 
-
-
-    const [groupMap, setGroupMap] = useState(() => new Map());
     useEffect(() => {
         if (!db) return;
-        const sub = liveQuery(() => db.table("groups").toArray())
-            .subscribe(rows => setGroupMap(new Map(rows.map(item => [item.id, item]))));
-        return () => sub.unsubscribe();
-    }, [db]);
-
-    const finalGroups = useMemo(() => {
         if (!isSuccess) return;
-        return groupList.map(friend => ({ ...friend, ...groupMap.get(friend.id) }));
-    }, [groupList, groupMap, isSuccess]);
+        db.table("groups").bulkPut(groupList).catch(console.error);
+    }, [groupList, isSuccess, db]);
 
-
-    // console.log('groupList', groupList)
-    // console.log('finalGroups', finalGroups)
+    const finalGroups = useLiveQuery(() => {
+        if (!db) return;
+        return db.table("groups").where("is_delete").equals(0).toArray();
+    }, [db],[]);
 
     return (
         <GroupList
