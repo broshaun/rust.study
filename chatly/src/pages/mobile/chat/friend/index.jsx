@@ -2,6 +2,7 @@ import { Outlet, Navigate } from "react-router";
 import { Item } from "./item";
 import { Detail } from "./detail";
 import { Find } from "./find";
+import { FriendRequests } from "./await";
 
 
 export const Friend = () => {
@@ -25,6 +26,10 @@ export const RsFriend = [
                 path: "find",
                 element: <Find />
             },
+            {
+                path: "await",
+                element: <FriendRequests />
+            }
         ]
     }
 ];

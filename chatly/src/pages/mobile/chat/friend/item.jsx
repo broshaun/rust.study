@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { currentAppBar, useHttpClient, currentChat, getUserDB, useDateTime } from "utils";
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
-import { IconCirclePlus } from "@tabler/icons-react";
+import { IconCirclePlus,IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./UI/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 
@@ -18,8 +18,8 @@ export const Item = () => {
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');
-        setRightIcon(<IconCirclePlus />)
-        setRightPath('/mobile/chat/friend/find/')
+        setRightIcon(<IconUserPlus />)
+        setRightPath('/mobile/chat/friend/await/')
     }, [])
 
 
@@ -63,7 +63,10 @@ export const Item = () => {
 
     const finalFriends = useLiveQuery(async () => {
         if (!db) return;
-        const friends = await db.table("friends").where("is_delete").equals(0).toArray();
+        const friends = await db.table("friends")
+            .where("ask_state").equals("agree")
+            .filter(friend => !friend.ask_state?.includes("delete"))
+            .toArray();
         return friends
     }, [db], []);
 

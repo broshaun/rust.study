@@ -41,6 +41,16 @@ export const Main = () => {
                         avatar_url: currentUser?.avatar_url,
                     });
                     
+                }else if(results?.code === 335){
+                    db.table('message').put({
+                        uid: uid,
+                        nickname: '我自己',
+                        type: msgType,
+                        content: results?.message,
+                        timestamp: getDateTimeStr(),
+                        sentByMe: true,
+                        avatar_url: currentUser?.avatar_url,
+                    });
                 }
                 return 'ok';
             },

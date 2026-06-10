@@ -42,6 +42,8 @@ export function Msg() {
         return await db.table('message').where('uid').equals(current?.uid).toArray()
     }, [db], [])
 
+
+
     const msgTextSend = async (sendText) => {
         if (sendText) {
             await fnSendMsg({ uid: current?.uid, msgType: 'text', msgText: sendText })

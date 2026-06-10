@@ -18,7 +18,7 @@ export const getUserDB = (userId) => {
   const db = new Dexie(`chatDB_${userId}`);
   db.version(16).stores({
     message: '++id, uid, timestamp',
-    friends: 'id, uid, updated_at, ask_state, is_delete',
+    friends: 'id, uid, updated_at, *ask_state, is_delete',
     friends_dialog: 'id, timestamp, signal',
     groups: 'id, updated_at, is_delete',
     groups_dialog: 'id, timestamp, signal',
