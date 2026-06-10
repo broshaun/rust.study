@@ -60,17 +60,15 @@ export const Find = () => {
         setKeywordEmail(value);
     };
 
-    // 好友请求
+    // 好友请求列表
     const { data: askFriends = [], isPending: loading2 } = useQuery(
         {
             queryKey: ['friends-await'],
             queryFn: async () => {
                 try {
-                    const { code, data } = await http.requestBodyJson('GET', {
-                        ask_state: 'await',
-                    });
+                    const { code, data } = await http.requestBodyJson('get_await_friends', {});
                     if (code === 200) {
-                        return data?.detail || [];
+                        return data || [];
                     }
                     return [];
                 } catch (error) {
@@ -95,6 +93,9 @@ export const Find = () => {
         }
     );
 
+
+    console.log('findByUser',findByUser) 
+
     return (
         <FriendFindUI
             keyword={keywordEmail}
@@ -105,15 +106,17 @@ export const Find = () => {
             onKeywordChange={handleEmailChange}
             onSearch={(email) => run({ email })}
             onAddFriend={(userId) =>
+        
                 addFriend({
                     user_id: userId,
                 })
             }
             onAccept={(user) =>
-                isPass({
-                    id: user.id,
-                    ask_state: "agree",
-                })
+                console.log('user',user)
+                // isPass({
+                //     id: user.id,
+                //     ask_state: "agree",
+                // })
             }
             onRefuse={(user) =>
                 isPass({

@@ -27,7 +27,7 @@ export const Item = () => {
     const [userId] = useLocalStorage({ key: 'current_account' })
     const { http } = useHttpClient('/rpc/chat/friend/')
     const get_friend = async () => {
-        const results = await http.requestBodyJson("GET", { ask_state: "agree" });
+        const results = await http.requestBodyJson("my_friends", {});
         if (!results) throw new Error("获取失败");
         const { code, data, message } = results;
         console.log('results', results)
@@ -35,7 +35,7 @@ export const Item = () => {
             console.log(message)
             return []
         };
-        return data?.detail || [];
+        return data || [];
     }
 
     const { data: friendList, isSuccess, isPending } = useQuery({
