@@ -1,8 +1,7 @@
 import React, { memo, useMemo } from "react";
 import * as TablerIcons from "@tabler/icons-react";
 
-
-export const IconLabel = memo(({
+export const IconLabel = memo(function IconLabel({
   name,
   icon: IconComponent,
   size = 24,
@@ -14,12 +13,12 @@ export const IconLabel = memo(({
   defaultGray = "light-dark(#495057, #ced4da)",
   active = false,
   onClick,
+  onClearBadge,
   dot = false,
   badgeContent = null,
   style,
   ...others
-}) => {
-
+}) {
   const SelectedIcon = useMemo(() => {
     return IconComponent || TablerIcons[name] || TablerIcons.IconHelp;
   }, [IconComponent, name]);
@@ -27,17 +26,26 @@ export const IconLabel = memo(({
   const isBottom = labelPos === "bottom";
   const hasBadge = dot || (badgeContent !== null && badgeContent !== 0);
 
-  // 键盘无障碍事件处理
+  const handleClick = (e) => {
+    onClick?.(e);
+
+    if (hasBadge) {
+      onClearBadge?.(e);
+    }
+  };
+
   const handleKeyDown = (e) => {
-    if (onClick && ["Enter", " "].includes(e.key)) {
+    if (!onClick) return;
+
+    if (["Enter", " "].includes(e.key)) {
       e.preventDefault();
-      onClick(e);
+      handleClick(e);
     }
   };
 
   return (
     <div
-      onClick={onClick}
+      onClick={onClick ? handleClick : undefined}
       onKeyDown={handleKeyDown}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -50,14 +58,13 @@ export const IconLabel = memo(({
         gap: isBottom ? 5 : 8,
         cursor: onClick ? "pointer" : "default",
         userSelect: "none",
-        // 精简：将颜色和字重直接交由 CSS 变量控制，避免频繁计算内联样式样式串
-        color: active ? activeColor : (color || defaultGray),
+        color: active ? activeColor : color || defaultGray,
         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        WebkitTapHighlightColor: "transparent",
         ...style,
       }}
     >
       <div style={{ position: "relative", display: "flex", flexShrink: 0 }}>
-        {/* 精简：color="currentColor" 让图标直接继承父级最外层 div 的 color */}
         <SelectedIcon size={size} color="currentColor" stroke={stroke} />
 
         {hasBadge && (
@@ -90,12 +97,14 @@ export const IconLabel = memo(({
       </div>
 
       {label && (
-        <span style={{ 
-          fontSize: 12, 
-          fontWeight: active ? 600 : 500, 
-          lineHeight: 1,
-          letterSpacing: "0.02em"
-        }}>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: active ? 600 : 500,
+            lineHeight: 1,
+            letterSpacing: "0.02em",
+          }}
+        >
           {label}
         </span>
       )}

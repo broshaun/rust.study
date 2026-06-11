@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
-import { useWinSize, useDateTime, currentAppBar,GlobalAppBar, getUserDB } from 'utils';
+import { useWinSize, useDateTime, currentAppBar, GlobalAppBar, getUserDB } from 'utils';
 
 import { IconLabel } from 'components';
 import { liveQuery } from 'dexie';
 import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconFlask, IconUserCircle } from "@tabler/icons-react";
+import { useLiveQuery } from "dexie-react-hooks";
 
 
 
@@ -15,33 +16,44 @@ export function ChatShell() {
   const navigate = useNavigate();
   const isShowBack = currentAppBar((state) => state.leftPath !== null);
 
-  const [dot, setDot] = useState(false)
   const [account] = useLocalStorage({ key: 'current_account' })
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
   const db = getUserDB(account);
 
-  const items = useMemo(() => {
-    return [
-      { key: 'news', icon: <IconLabel icon={IconMessage} label='消息' labelPos='bottom' onClick={() => { navigate('/mobile/chat/dialog/'); setDot(false); }} dot={dot} /> },
-      { key: 'friend', icon: <IconLabel icon={IconUser} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
-      { key: 'group', icon: <IconLabel icon={IconUsers} label='群聊' onClick={() => { navigate('/mobile/chat/group/') }} /> },
-      { key: 'self', icon: <IconLabel icon={IconUserCircle} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
-      { key: 'test', icon: <IconLabel icon={IconFlask} label='测试' onClick={() => { navigate('/mobile/chat/test/test3/'); }} /> },
-    ]
-  }, [isMobile, navigate, getTimestampMs, dot]);
-
-  useEffect(() => {
+  const [msgDot, setMsgDot] = useState(false);
+  const messageChanged = useLiveQuery(async () => {
     if (!db) return;
-    const sub = liveQuery(
-      () => db.table('message').count()
-    ).subscribe({
-      next: (count) => setDot(count > 0)
-    })
-    return () => sub.unsubscribe()
-  }, [db])
+    return db.table("message").limit(1).toArray();
+  }, [db]);
+  useEffect(() => {
+    if (messageChanged) {
+      setMsgDot(true);
+    }
+  }, [messageChanged]);
 
-  const visibleItems = items; // 如果有 display: false 的需求，在此过滤
+
+  const [gmsgDot, setGmsgDot] = useState(false);
+  const gmsgChanged = useLiveQuery(async () => {
+    if (!db) return;
+    return db.table("groups_dialog").limit(1).toArray();
+  }, [db]);
+  useEffect(() => {
+    if (gmsgChanged) {
+      setGmsgDot(true);
+    }
+  }, [gmsgChanged]);
+
+  const visibleItems = useMemo(() => {
+    return [
+      { key: 'news', icon: <IconLabel icon={IconMessage} label='消息' onClearBadge={() => setMsgDot(false)} onClick={() => { navigate('/mobile/chat/dialog/') }} dot={msgDot} /> },
+      { key: 'friend', icon: <IconLabel icon={IconUser} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
+      { key: 'group', icon: <IconLabel icon={IconUsers} label='群聊' dot={gmsgDot} onClearBadge={() => setGmsgDot(false)} onClick={() => { navigate('/mobile/chat/group/') }} /> },
+      { key: 'self', icon: <IconLabel icon={IconUserCircle} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
+      // { key: 'test', icon: <IconLabel icon={IconFlask} label='测试' onClick={() => { navigate('/mobile/chat/test/test3/'); }} /> },
+    ]
+  }, [isMobile, navigate, getTimestampMs, msgDot,gmsgDot]);
+
 
   return (
     <AppShell
@@ -54,7 +66,7 @@ export function ChatShell() {
         <GlobalAppBar />
       </AppShell.Header>
       <AppShell.Main>
-    
+
         <Outlet />
 
       </AppShell.Main>

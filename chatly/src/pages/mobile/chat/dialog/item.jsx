@@ -41,9 +41,9 @@ export const Item = () => {
     const finalDialog = useLiveQuery(async () => {
         if (!db) return;
         const dialog = await db.table("friends_dialog").toArray();
-        const friends = await db.table("friends").toArray();
-        const friendpMap = new Map(friends.map(item => [item.uid, item]))
-        return dialog.map(d => ({ ...d, ...friendpMap.get(d.id) }))
+        const friends = await db.table("friends").where("ask_state").equals("agree").toArray();
+        const friendMap = new Map(friends.map(item => [item.uid, item]))
+        return dialog.filter(d => friendMap.has(d.id)).map(d => ({ ...d, ...friendMap.get(d.id) }))
     }, [db], []);
 
     return (

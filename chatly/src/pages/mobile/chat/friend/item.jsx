@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router';
 import { currentAppBar, useHttpClient, currentChat, getUserDB, useDateTime } from "utils";
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
-import { IconCirclePlus,IconUserPlus } from "@tabler/icons-react";
+import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./UI/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 
 
 
+
 export const Item = () => {
     const dt = useDateTime();
+
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -18,8 +20,8 @@ export const Item = () => {
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');
-        setRightIcon(<IconUserPlus />)
-        setRightPath('/mobile/chat/friend/await/')
+        setRightIcon(<IconUserPlus/>)
+        setRightPath('/mobile/chat/friend/find/')
     }, [])
 
 
@@ -46,6 +48,7 @@ export const Item = () => {
         enabled: !!userId,
         refetchOnWindowFocus: false,
     })
+
     const db = getUserDB(userId)
 
     const openMsgWindow = useCallback(async (select) => {
@@ -63,10 +66,8 @@ export const Item = () => {
 
     const finalFriends = useLiveQuery(async () => {
         if (!db) return;
-        const friends = await db.table("friends")
-            .where("ask_state").equals("agree")
-            .filter(friend => !friend.ask_state?.includes("delete"))
-            .toArray();
+        const friends = await db.table("friends").where("ask_state").equals("agree").toArray();
+
         return friends
     }, [db], []);
 

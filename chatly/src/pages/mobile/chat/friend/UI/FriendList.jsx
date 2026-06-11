@@ -8,9 +8,6 @@ export const FriendList = memo(function FriendList({
   onAvatarClick,
 }) {
 
-
-  console.log('friends',friends)
-
   return (
     <ScrollArea
       w="100%"

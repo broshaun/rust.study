@@ -9,7 +9,8 @@ export { useToken } from './store/useToken';
 
 export { currentChat } from "./global/currentChat";
 export { currentAppBar, GlobalAppBar } from './global/currentAppBar';
-export { currentModal, GlobalModal } from './global/currentModal'
+export { currentModal, GlobalModal } from './global/currentModal';
+export { currentAwait } from './global/currentAwait';
 
 
 

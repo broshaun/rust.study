@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useHttpClient, currentAppBar } from "utils";
 import { useMutation } from "@tanstack/react-query";
 import { FriendSearch } from "./UI/FriendSearch";
+import { IconUserExclamation } from "@tabler/icons-react";
 
 
 export const Find = () => {
@@ -16,8 +17,8 @@ export const Find = () => {
     useEffect(() => {
         setLeftPath("/mobile/chat/friend/");
         setTitle("好友查找");
-        setRightIcon(null);
-        setRightPath(null);
+        setRightIcon(<IconUserExclamation />);
+        setRightPath('/mobile/chat/friend/await/');
     }, []);
 
     const {
@@ -27,13 +28,8 @@ export const Find = () => {
     } = useMutation({
         mutationFn: async ({ email }) => {
             if (!email?.trim()) return null;
-
-            const result = await http.requestBodyJson("find", {
-                email,
-            });
-
+            const result = await http.requestBodyJson("find", { email });
             if (!result) return null;
-
             return result.data ?? null;
         },
     });
@@ -41,13 +37,7 @@ export const Find = () => {
     const { mutateAsync: addFriend } = useMutation({
         mutationFn: async ({ user_id }) => {
             if (!user_id) return null;
-
-            const result = await http.requestBodyJson("PUT", {
-                user_id,
-            });
-
-            console.log("add friend", result);
-
+            const result = await http.requestBodyJson("PUT", { user_id });
             return result;
         },
     });

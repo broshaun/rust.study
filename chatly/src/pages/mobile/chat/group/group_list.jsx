@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
-import { IconMailExclamation } from "@tabler/icons-react";
+import { IconUserShare } from "@tabler/icons-react";
 import { GroupList } from "./UI/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 
@@ -22,7 +22,7 @@ export const Item = () => {
     useEffect(() => {
         setTitle('群聊')
         setLeftPath(null)
-        setRightIcon(<IconMailExclamation />)
+        setRightIcon(<IconUserShare />)
         setRightPath('/mobile/chat/group/ingmsg/')
     }, [])
 
@@ -70,13 +70,13 @@ export const Item = () => {
 
     const finalGroups = useLiveQuery(async () => {
         if (!db) return;
-        const groups = await db.table("groups").where("is_delete").equals(0).toArray();
+        const groups = await db.table("groups").toArray();
         const dialog = await db.table("groups_dialog").toArray()
         const groupMap = new Map(dialog.map(item => [item.id, item]))
         return groups.map(group => ({ ...group, ...groupMap.get(group.id) }))
     }, [db], []);
 
-    console.log('finalGroups', finalGroups)
+    console.log('finalGroups',finalGroups)
 
     return (
         <GroupList

@@ -3,6 +3,7 @@ import { useNavigate, Outlet } from 'react-router';
 import { useToken, getUserDB, useHttpClient, useDateTime } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
+import { currentAwait } from "utils";
 
 
 export function ChatGuard() {
@@ -13,10 +14,28 @@ export function ChatGuard() {
   const { remainSeconds } = useToken()
 
 
+  const { http: httpAwait } = useHttpClient("/rpc/chat/friend/");
+  const { data: friendsAwait = [], isFetching } = useQuery({
+    queryKey: ["friends-await", userId],
+    queryFn: async () => {
+      const res = await httpAwait.requestBodyJson("get_await_friends", {}).catch(console.error);
+      return res?.code === 200 ? res.data ?? [] : [];
+    },
+    staleTime: 3000,
+    gcTime: 1000 * 60 * 5,
+    refetchInterval: 3000,
+    enabled: Boolean(userId),
+    refetchIntervalInBackground: true,
+  });
+
+  useEffect(() => {
+    currentAwait.getState().set("friend", friendsAwait.length);
+  }, [friendsAwait.length]);
+
+
   const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
   const fetchGroupMsgs = async () => {
     const { code, data } = await httpGMsg.requestBodyJson("group_receive");
-    // console.log('data',data);
     if (code !== 200 || !data?.length) return;
     await Promise.all(
       data.map(async (item) => {
@@ -29,14 +48,13 @@ export function ChatGuard() {
           timestamp: item.timestamp,
           sentByMe: false,
           group_id: item.group_id,
+
         });
 
-        // const dialog = await db.table('groups_dialog').get(item.id);
         await db.table('groups_dialog').put({
           id: item.group_id,
           timestamp: dt.getDateTimeStr(),
           signal: "news",
-          // unread: (dialog?.unread ?? 0) + 1,
         });
       })
     );
@@ -57,13 +75,10 @@ export function ChatGuard() {
         timestamp: item.timestamp,
         sentByMe: false,
       });
-
-      // const dialog = await db.table('friends_dialog').get(item.uid);
       await db.table('friends_dialog').put({
         id: item.uid,
         timestamp: dt.getDateTimeStr(),
         signal: "news",
-        // unread: (dialog?.unread ?? 0) + 1,
       });
     }));
   }

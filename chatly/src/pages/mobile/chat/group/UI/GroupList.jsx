@@ -5,13 +5,13 @@ import { SafeAvatar } from "components";
 
 const DAY_MS = 86400000;
 
-/** 格式化群更新时间 */
 function formatGroupTime(timestamp) {
   if (!timestamp) return "";
 
   const date = new Date(
     typeof timestamp === "string" ? timestamp.replace(/-/g, "/") : timestamp
   );
+
   if (Number.isNaN(date.getTime())) return "";
 
   const now = new Date();
@@ -38,9 +38,25 @@ function formatGroupTime(timestamp) {
   )}月${String(date.getDate()).padStart(2, "0")}日`;
 }
 
-/** 单行群聊组件 */
+function DefaultGroupAvatar() {
+  return (
+    <Center
+      w={38}
+      h={38}
+      style={{
+        borderRadius: 8,
+        background: "#f1f3f5",
+        color: "#868e96",
+        flexShrink: 0,
+      }}
+    >
+      <IconUsers size={18} stroke={1.8} />
+    </Center>
+  );
+}
+
 const GroupRow = memo(
-  function GroupRow({ group, onSelect, onAvatarClick }) {
+  function GroupRow({ group, version, onSelect, onAvatarClick }) {
     if (!group) return null;
 
     const { group_name, group_avatar, signal, timestamp } = group;
@@ -50,17 +66,24 @@ const GroupRow = memo(
     return (
       <Box w="100%" px={8} py={6} style={{ borderRadius: 8 }}>
         <Group wrap="nowrap" gap={10} align="stretch">
-          {/* 头像 */}
           <Box
             pos="relative"
             mt={3}
-            style={{ cursor: onAvatarClick ? "pointer" : "default", flexShrink: 0 }}
+            style={{
+              cursor: onAvatarClick ? "pointer" : "default",
+              flexShrink: 0,
+            }}
             onClick={(e) => {
               e.stopPropagation();
               onAvatarClick?.(group);
             }}
           >
-            <SafeAvatar url={group_avatar} size={38} radius={8} cover />
+            {group_avatar ? (
+              <SafeAvatar url={group_avatar} size={38} radius={8} cover />
+            ) : (
+              <DefaultGroupAvatar />
+            )}
+
             {hasNews && (
               <Box
                 pos="absolute"
@@ -78,7 +101,6 @@ const GroupRow = memo(
             )}
           </Box>
 
-          {/* 群名和时间 */}
           <Box
             flex={1}
             miw={0}
@@ -93,6 +115,7 @@ const GroupRow = memo(
             <Text size="sm" fw={600} truncate pr={72} pt={4} lh={1.25}>
               {group_name || "未命名群聊"}
             </Text>
+
             {time && (
               <Text
                 pos="absolute"
@@ -111,15 +134,17 @@ const GroupRow = memo(
       </Box>
     );
   },
-  /** 只在 version 或事件函数变化时渲染 */
   (prev, next) =>
     prev.version === next.version &&
     prev.onSelect === next.onSelect &&
     prev.onAvatarClick === next.onAvatarClick
 );
 
-/** 群列表组件 */
-export const GroupList = memo(function GroupList({ groups = [], onSelect, onAvatarClick }) {
+export const GroupList = memo(function GroupList({
+  groups = [],
+  onSelect,
+  onAvatarClick,
+}) {
   if (!groups.length) {
     return (
       <Center py="xl">
@@ -133,14 +158,13 @@ export const GroupList = memo(function GroupList({ groups = [], onSelect, onAvat
     );
   }
 
-  console.log('groups',groups)
   return (
     <Box>
       {groups.map((group) => (
         <GroupRow
           key={group.id}
           group={group}
-          version={group.timestamp} // 父组件控制渲染
+          version={group.timestamp}
           onSelect={onSelect}
           onAvatarClick={onAvatarClick}
         />

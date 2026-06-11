@@ -26,10 +26,11 @@ export function Detail() {
   }, [])
 
   useEffect(() => {
+    if (!userId) return;
     return () => {
       queryClient.invalidateQueries(["my_friends", userId]).catch(console.error)
     }
-  }, [userId])
+  }, [queryClient,userId])
 
 
 
@@ -55,16 +56,19 @@ export function Detail() {
     refetchOnWindowFocus: false,
   })
 
-  const { mutateAsync: delFid } = useMutation({
+  const { mutateAsync: deleteFriend } = useMutation({
     mutationFn: async (id) => {
       if (!id) return;
+      // console.log('shang除的用户', id)
       await http2.requestBodyJson('DELETE', { id });
       await db.table('message').where('uid').equals(id).delete();
+      await db.table('friends').where('id').equals(id).delete();
       await db.table('friends_dialog').where('id').equals(id).delete();
       return 'ok';
     },
     onSuccess: () => {
       refetch()
+      navigate("/mobile/chat/friend/");
     },
   });
 
@@ -88,18 +92,9 @@ export function Detail() {
   return (
     <FriendInfo
       friend={friend}
-      onRemarkChange={(remark) => {
-        updRemark({
-          id: friend.id,
-          remark,
-        });
-      }}
+      onRemarkChange={(remark) => { updRemark({ id: friend.id, remark }) }}
       onChat={openMsgWindow}
-      onDelete={(friend) => {
-        delFid(friend.id).then(() => {
-          navigate("/mobile/chat/friend/");
-        });
-      }}
+      onDelete={(friend) => { deleteFriend(friend.id) }}
     />
   );
 }

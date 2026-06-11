@@ -1,7 +1,7 @@
 import { GroupInviteMessageList } from "./UI/InviteGroupCard";
 import { currentAppBar, useHttpClient } from "utils";
 import { useEffect, useState } from "react";
-import { IconCirclePlus } from "@tabler/icons-react";
+import { IconUsersPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
 
@@ -34,7 +34,7 @@ export function InviteGroup() {
     useEffect(() => {
         setTitle('群邀请')
         setLeftPath('/mobile/chat/group/')
-        setRightIcon(<IconCirclePlus />)
+        setRightIcon(<IconUsersPlus />)
         setRightPath('/mobile/chat/group/addg/')
     }, [])
 

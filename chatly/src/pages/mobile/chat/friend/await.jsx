@@ -1,12 +1,14 @@
 import React, { useEffect } from "react";
 import { useHttpClient, currentAppBar } from "utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { FriendRequestList } from "./UI/FriendRequestList";
-import { IconUserSearch } from "@tabler/icons-react";
+import { useLocalStorage } from "@mantine/hooks";
+import { useQueryClient, useIsFetching, useMutation } from '@tanstack/react-query'
+
 
 export const FriendRequests = () => {
   const { http } = useHttpClient("/rpc/chat/friend/");
-
+  const [userId] = useLocalStorage({ key: 'current_account' })
+  const queryClient = useQueryClient()
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -15,79 +17,30 @@ export const FriendRequests = () => {
   useEffect(() => {
     setLeftPath("/mobile/chat/friend/");
     setTitle("好友请求");
-    setRightIcon(<IconUserSearch/>);
-    setRightPath('/mobile/chat/friend/find/');
+    setRightIcon(null);
+    setRightPath(null);
   }, []);
 
-  const {
-    data: friendRequests = [],
-    isPending: isLoadingRequests,
-    refetch,
-  } = useQuery({
-    queryKey: ["friends-await"],
-    queryFn: async () => {
-      try {
-        const { code, data } =
-          await http.requestBodyJson(
-            "get_await_friends",
-            {}
-          );
+  const friendRequests = queryClient.getQueryData(["friends-await", userId]);
+  const isRefetching = useIsFetching({ queryKey:["friends-await", userId] }) > 0;
 
-        return code === 200
-          ? data || []
-          : [];
-      } catch (error) {
-        console.error(error);
-        return [];
-      }
+  const { mutateAsync: updateFriendRequest } = useMutation({
+    mutationFn: async ({ id, ask_state }) => {
+      if (!id || !ask_state) return;
+      const result = await http.requestBodyJson("PATCH", { id, ask_state, });
+      return result;
     },
   });
 
-  const { mutateAsync: updateFriendRequest } =
-    useMutation({
-      mutationFn: async ({
-        id,
-        ask_state,
-      }) => {
-        if (!id || !ask_state) return;
-
-        const result =
-          await http.requestBodyJson(
-            "PATCH",
-            {
-              id,
-              ask_state,
-            }
-          );
-
-        return result;
-      },
-
-      onSuccess: () => {
-        refetch();
-      },
-    });
-
   return (
     <FriendRequestList
-      isLoadingRequests={
-        isLoadingRequests
-      }
-      friendRequests={
-        friendRequests
-      }
-      onAcceptFriend={(user) =>
-        updateFriendRequest({
-          id: user.id,
-          ask_state: "agree",
-        })
-      }
-      onRejectFriend={(user) =>
-        updateFriendRequest({
-          id: user.id,
-          ask_state: "refuse",
-        })
-      }
+      isRefetching={isRefetching}
+      onRefetch={async () => {
+        await queryClient.refetchQueries({ queryKey: ["friends-await", userId] })
+      }}
+      friendRequests={friendRequests}
+      onAcceptFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "agree" })}
+      onRejectFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "refuse" })}
     />
   );
 };
