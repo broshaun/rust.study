@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (Stable Fixed)
+name: Tauri2 Android Build
 
 on:
   workflow_dispatch:
@@ -16,12 +16,14 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
+
     env:
-      NODE_VERSION: "20"
+      NODE_VERSION: "22"
       JAVA_VERSION: "17"
       NDK_VER: "26.1.10909125"
       BUILD_TOOLS_VER: "34.0.0"
       WORKING_DIR: "chatly"
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
@@ -41,21 +43,18 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Purge old NDK and install Android packages
+      - name: Install Android packages
         shell: bash
         run: |
           set -euxo pipefail
 
-          echo "Purging old NDKs..."
           rm -rf "$ANDROID_SDK_ROOT/ndk" || true
           rm -rf "$ANDROID_SDK_ROOT/ndk-bundle" || true
 
-          echo "Accepting Android SDK licenses..."
           set +o pipefail
           yes | sdkmanager --licenses > /dev/null
           set -o pipefail
 
-          echo "Installing required Android packages..."
           sdkmanager \
             "platform-tools" \
             "platforms;android-34" \
@@ -63,12 +62,11 @@ jobs:
             "ndk;${{ env.NDK_VER }}"
 
           NDK_PATH="$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VER }}"
+
           echo "NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
           echo "$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
 
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "Using NDK at $NDK_PATH"
           test -d "$NDK_PATH"
 
       - name: Setup Node
@@ -76,7 +74,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Enable Corepack and activate pnpm
+      - name: Enable Corepack and pnpm
         shell: bash
         run: |
           set -euxo pipefail
@@ -97,9 +95,6 @@ jobs:
           pnpm config set registry https://registry.npmmirror.com
           pnpm install --frozen-lockfile
 
-          # 如果 package.json 里本来已经有 @tauri-apps/cli，可删除下面这行
-          pnpm add -D @tauri-apps/cli@^2
-
       - name: Verify project files
         shell: bash
         working-directory: ${{ env.WORKING_DIR }}
@@ -108,12 +103,25 @@ jobs:
 
           test -f package.json
           test -d src-tauri
+          test -f src-tauri/Cargo.toml
+          test -f src-tauri/Cargo.lock
 
           echo "==== package.json scripts ===="
           node -e "const p=require('./package.json'); console.log(p.scripts || {})"
 
-          echo "==== tauri config exists ===="
+          echo "==== src-tauri files ===="
           ls -la src-tauri | sed -n '1,120p'
+
+      - name: Verify Rust dependency versions
+        shell: bash
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          set -euxo pipefail
+
+          cargo tree -i ed25519-dalek --manifest-path src-tauri/Cargo.toml || true
+          cargo tree -i ed25519 --manifest-path src-tauri/Cargo.toml || true
+          cargo tree -i pkcs8 --manifest-path src-tauri/Cargo.toml || true
+          cargo tree -i openssl-sys --manifest-path src-tauri/Cargo.toml || true
 
       - name: Clean and initialize Android project
         shell: bash
@@ -124,12 +132,7 @@ jobs:
         run: |
           set -euxo pipefail
 
-          if [ -d "src-tauri/gen/android" ]; then
-            echo "Detected existing Android project, cleaning it to prevent path bleeding..."
-            rm -rf src-tauri/gen/android
-          fi
-
-          echo "Initializing fresh Android project..."
+          rm -rf src-tauri/gen/android || true
           pnpm tauri android init --ci
 
       - name: Build Android APK
@@ -150,8 +153,9 @@ jobs:
           set -euxo pipefail
 
           APK_SRC=$(find "${{ env.WORKING_DIR }}/src-tauri/gen/android" -type f -name "*.apk" | grep "release" | head -n 1)
+
           if [ -z "$APK_SRC" ]; then
-            echo "❌ APK NOT FOUND"
+            echo "APK NOT FOUND"
             find "${{ env.WORKING_DIR }}/src-tauri/gen/android" -type f | sed -n '1,200p'
             exit 1
           fi
@@ -166,6 +170,7 @@ jobs:
           set -euxo pipefail
 
           mkdir -p dist
+
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.jks
 
           BT="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VER }}"
