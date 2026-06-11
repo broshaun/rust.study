@@ -1,5 +1,5 @@
 import { createHashRouter, RouterProvider, Navigate } from "react-router";
-import { RsMobile } from "pages/mobile2";
+import { RsMobile } from "pages/mobile";
 import { useWinSize, useToken } from 'utils';
 
 
