@@ -1,5 +1,5 @@
 import { useNavigate, useOutletContext } from 'react-router';
-import { P2PCallCaller } from "./UI/P2PCallCaller";
+import { P2PCallCaller } from "./ui/P2PCallCaller";
 import { currentAppBar, currentChat } from 'utils';
 import { useEffect } from "react"
 

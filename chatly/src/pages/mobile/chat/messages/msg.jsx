@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { useWinSize, currentChat, currentAppBar, getUserDB, useDateTime } from 'utils';
 import { useOutletContext } from 'react-router';
-import { ChatBox } from "./UI/ChatBox"
+import { ChatBox } from "./ui/ChatBox"
 import { Tools } from "./tools";
 import { useLocalStorage } from "@mantine/hooks";
 import { useLiveQuery } from "dexie-react-hooks";

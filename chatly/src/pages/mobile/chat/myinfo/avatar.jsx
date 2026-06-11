@@ -4,7 +4,7 @@ import { useLocalStorage } from '@mantine/hooks';
 import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
-import { ImageUpload } from "./UI/ImageUpload";
+import { ImageUpload } from "./ui/ImageUpload";
 /**
  * Avatar2 - 用户头像设置与大图预览页面
  */

@@ -3,7 +3,7 @@ import { Main } from "./main"
 import { Caller } from "./caller";
 import { Receiver } from "./receiver";
 import { Msg } from "./msg";
-import { P2PPcmVoiceTest } from "./UI/P2PPcmVoiceTest"
+import { P2PPcmVoiceTest } from "./ui/P2PPcmVoiceTest"
 import { ImagSend } from "./imgSend";
 import { Smile } from "./smile";
 

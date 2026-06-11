@@ -2,7 +2,7 @@ import { Suspense, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { useHttpClient, currentAppBar } from 'utils';
 import { useMutation } from '@tanstack/react-query';
-import { PushdeerEditPage } from "./UI/PushdeerEditPahe";
+import { PushdeerEditPage } from "./ui/PushdeerEditPahe";
 
 
 export const PushDeer = () => {
