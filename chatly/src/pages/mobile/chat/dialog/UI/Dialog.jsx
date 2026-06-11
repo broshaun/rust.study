@@ -166,5 +166,6 @@ export const Dialog = memo(
   (prev, next) => 
     prev.version === next.version &&
     prev.onSelect === next.onSelect &&
+    prev.onClear === next.onClear &&
     prev.onAvatarClick === next.onAvatarClick
 );

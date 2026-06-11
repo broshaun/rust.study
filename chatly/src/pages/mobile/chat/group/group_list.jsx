@@ -76,7 +76,7 @@ export const Item = () => {
         return groups.map(group => ({ ...group, ...groupMap.get(group.id) }))
     }, [db], []);
 
-    console.log('finalGroups',finalGroups)
+    // console.log('finalGroups',finalGroups)
 
     return (
         <GroupList

@@ -30,13 +30,13 @@ export const Item = () => {
     }, [navigate, db])
 
     // 关闭聊天
-    const handleClear = useCallback((item) => {
+    const handleClear = (item) => {
         if (item?.id) {
-            db.table("friends_dialog").where("id").equals(item?.id).delete().catch(console.error);
+            db.table("friends_dialog").where("id").equals(item?.uid).delete().catch(console.error);
             db.table('message').where('uid').equals(item?.uid).delete().catch(console.error);
             navigate('/mobile/chat/dialog')
         }
-    }, [db])
+    }
 
     const finalDialog = useLiveQuery(async () => {
         if (!db) return;
