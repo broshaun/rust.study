@@ -1,4 +1,4 @@
-import { GroupEdit } from "./UI/GroupEdit";
+import { GroupEdit } from "./ui/GroupEdit";
 import { currentAppBar, useHttpClient, currentChat, useDateTime, getUserDB } from "utils";
 import { useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router";

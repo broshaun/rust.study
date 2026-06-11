@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconUserShare } from "@tabler/icons-react";
-import { GroupList } from "./UI/GroupList";
+import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 
 

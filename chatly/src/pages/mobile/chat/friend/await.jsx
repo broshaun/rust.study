@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useHttpClient, currentAppBar } from "utils";
-import { FriendRequestList } from "./UI/FriendRequestList";
+import { FriendRequestList } from "./ui/FriendRequestList";
 import { useLocalStorage } from "@mantine/hooks";
 import { useQueryClient, useIsFetching, useMutation } from '@tanstack/react-query'
 

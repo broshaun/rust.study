@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import { useNavigate } from 'react-router';
 import { currentChat, currentAppBar, getUserDB, useDateTime } from 'utils';
 import { useLocalStorage } from '@mantine/hooks';
-import { DialogList } from "./UI/DialogList";
+import { DialogList } from "./ui/DialogList";
 import { useLiveQuery } from "dexie-react-hooks";
 
 

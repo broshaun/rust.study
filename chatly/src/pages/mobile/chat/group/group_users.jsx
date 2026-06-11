@@ -1,4 +1,4 @@
-import { GroupMemberList } from "./UI/GroupMemberList"
+import { GroupMemberList } from "./ui/GroupMemberList"
 import { useNavigate } from "react-router";
 import { currentAppBar, useHttpClient, currentChat } from "utils"
 import { useEffect } from "react";

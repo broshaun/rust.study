@@ -1,7 +1,7 @@
 import React from "react";
 import { useMutation } from '@tanstack/react-query';
 import { useHttpClient, currentModal } from 'utils';
-import { RegisterUI } from "./UI/RegisterUI";
+import { RegisterUI } from "./ui/RegisterUI";
 
 export function Register() {
     const { http } = useHttpClient('/rpc/chat/register/');

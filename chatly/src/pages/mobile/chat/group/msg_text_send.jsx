@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { useWinSize, currentAppBar, currentChat, getUserDB } from 'utils';
 import { liveQuery } from 'dexie';
-import { ChatBox } from "./UI/ChatBox"
+import { ChatBox } from "./ui/ChatBox"
 import { Tools } from "./msg_tools";
 import { useOutletContext } from "react-router";
 import { IconDots } from "@tabler/icons-react";

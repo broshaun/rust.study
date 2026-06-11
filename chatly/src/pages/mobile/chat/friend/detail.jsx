@@ -4,7 +4,7 @@ import { useHttpClient, currentAppBar, currentChat } from 'utils';
 import { getUserDB } from "utils";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
-import { FriendInfo } from "./UI/FriendDetailUI";
+import { FriendInfo } from "./ui/FriendDetailUI";
 
 
 export function Detail() {

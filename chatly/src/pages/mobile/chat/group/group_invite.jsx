@@ -1,4 +1,4 @@
-import { GroupInviteMessageList } from "./UI/InviteGroupCard";
+import { GroupInviteMessageList } from "./ui/InviteGroupCard";
 import { currentAppBar, useHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";

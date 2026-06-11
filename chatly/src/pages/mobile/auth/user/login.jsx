@@ -4,7 +4,7 @@ import { useToken } from "utils";
 import { useHttpClient, currentModal, useDateTime } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from "@mantine/hooks";
-import { LoginUI } from "./UI/LoginUI";
+import { LoginUI } from "./ui/LoginUI";
 
 
 export function Login() {

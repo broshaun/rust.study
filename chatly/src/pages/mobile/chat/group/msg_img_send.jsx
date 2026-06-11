@@ -2,7 +2,7 @@ import { useNavigate, useOutletContext } from 'react-router';
 import { useState, useEffect } from "react";
 import { useMutation } from '@tanstack/react-query';
 import { currentChat, useHttpClient, currentAppBar } from 'utils';
-import { ImgUp } from './UI/ImageUpload';
+import { ImgUp } from './ui/ImageUpload';
 
 
 export function ImagSend() {

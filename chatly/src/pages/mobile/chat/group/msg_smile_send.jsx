@@ -1,4 +1,4 @@
-import { EmojiList } from "./UI/EmojiList";
+import { EmojiList } from "./ui/EmojiList";
 import { currentAppBar, currentChat} from 'utils';
 import { useNavigate, useOutletContext } from 'react-router';
 import { useState, useEffect } from "react";

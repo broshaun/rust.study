@@ -1,4 +1,4 @@
-import { CreateGroupView } from "./UI/CreateGroupView"
+import { CreateGroupView } from "./ui/CreateGroupView"
 import { currentAppBar, useHttpClient } from "utils";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";

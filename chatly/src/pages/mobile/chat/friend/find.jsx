@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useHttpClient, currentAppBar } from "utils";
 import { useMutation } from "@tanstack/react-query";
-import { FriendSearch } from "./UI/FriendSearch";
+import { FriendSearch } from "./ui/FriendSearch";
 import { IconUserExclamation } from "@tabler/icons-react";
 
 

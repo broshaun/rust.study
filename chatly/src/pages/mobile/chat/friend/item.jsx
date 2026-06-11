@@ -4,7 +4,7 @@ import { currentAppBar, useHttpClient, currentChat, getUserDB, useDateTime } fro
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 import { IconUserPlus } from "@tabler/icons-react";
-import { FriendList } from "./UI/FriendList";
+import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 
 

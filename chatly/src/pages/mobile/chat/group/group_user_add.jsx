@@ -3,7 +3,7 @@ import { useLocalStorage, useListState } from "@mantine/hooks";
 import { getUserDB, currentChat, useHttpClient, currentAppBar, currentModal } from "utils";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { GroupMemberSelector } from "./UI/GroupMemberSelector";
+import { GroupMemberSelector } from "./ui/GroupMemberSelector";
 
 export const AddMember = () => {
 
