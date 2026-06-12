@@ -4,7 +4,7 @@ import { Avatar2 } from "./avatar";
 import { Logout } from "./logout";
 import { PushDeer } from "./pushdeer";
 import { ClearLogs } from "./clear";
-import { nickname } from "./nickname";
+import { Nickname } from "./nickname";
 import { GlobalModal } from "utils";
 
 
@@ -29,7 +29,7 @@ export const RsMyInfo = [
             },
             {
                 path: "name",
-                element: <nickname />,
+                element: <Nickname />,
             },
             {
                 path: "pushdeer",

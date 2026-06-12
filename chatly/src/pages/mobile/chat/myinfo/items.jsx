@@ -31,7 +31,7 @@ export const Items = () => {
         {
             queryKey: ['api-info'],
             queryFn: async () => {
-                const res = await apiLogin.requestBodyJson('GET');
+                const res = await apiLogin.requestBodyJson('loginfo',{});
                 if (!res || res.code !== 200) {
                     throw new Error(res?.message || '获取失败');
                 }
@@ -41,7 +41,7 @@ export const Items = () => {
         });
 
 
-    console.log('apiInfo',apiInfo)
+    // console.log('apiInfo',apiInfo)
 
     return (
 

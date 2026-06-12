@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
 
 
-export const nickname = () => {
+export const Nickname = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -18,12 +18,13 @@ export const nickname = () => {
     }, [])
 
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
-    const { mutateAsync: nameEdit, isPending: loading } = useMutation({
+    const { mutateAsync: nameEdit } = useMutation({
         mutationFn: async (nickname) => {
             if (!nickname) {
                 throw new Error('请输入昵称');
             }
             const res = await apiLogin.post('PATCH', { nickname });
+            console.log('res',res)
             if (!res) {
                 throw new Error('请求失败');
             }
