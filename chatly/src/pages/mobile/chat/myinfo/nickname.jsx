@@ -23,7 +23,7 @@ export const Nickname = () => {
             if (!nickname) {
                 throw new Error('请输入昵称');
             }
-            const res = await apiLogin.post('PATCH', { nickname });
+            const res = await apiLogin.post('update', { nickname });
             console.log('res',res)
             if (!res) {
                 throw new Error('请求失败');

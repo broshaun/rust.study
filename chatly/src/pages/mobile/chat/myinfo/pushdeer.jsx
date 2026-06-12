@@ -22,7 +22,7 @@ export const PushDeer = () => {
             if (!push_key) {
                 throw new Error('请输入推送码');
             }
-            const results = await apiLogin.post('PATCH', { push_key });
+            const results = await apiLogin.post('update', { push_key });
             if (!results) {
                 throw new Error('请求失败');
             }
