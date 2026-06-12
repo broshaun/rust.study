@@ -58,7 +58,7 @@ For iOS development, run:
 ### 安装前端包
 ```sh
   pnpm remove xxx
-  pnpm add @tauri-apps/api
+  pnpm add @tauri-apps/api 
   pnpm add react-router
   pnpm add dexie dexie-react-hooks
   pnpm add zustand
@@ -70,7 +70,6 @@ For iOS development, run:
 ### 安装Tauri插件
 ```sh
   pnpm tauri add http
-  pnpm tauri add fs
 ```
 
 

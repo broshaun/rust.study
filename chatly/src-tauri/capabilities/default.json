@@ -9,18 +9,7 @@
     "core:default",
     "core:webview:allow-set-webview-zoom", 
     "core:event:default",
-    "fs:default",
-    "fs:allow-appdata-read-recursive",
-    "fs:allow-appdata-write-recursive",
-    "fs:allow-appdata-meta-recursive",
-    {
-      "identifier": "fs:scope",
-      "allow": [
-        {
-          "path": "**"
-        }
-      ]
-    },
+
     {
       "identifier": "http:default",
       "allow": [

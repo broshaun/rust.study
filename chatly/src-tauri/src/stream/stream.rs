@@ -107,7 +107,7 @@ pub struct P2PChannel {
     // 内存 -> 网络 (Flume -> Iroh)
     outgoing_tx: mpsc::Sender<Vec<u8>>,
     outgoing_rx: Arc<Mutex<mpsc::Receiver<Vec<u8>>>>,
-    
+
     // 网络 -> 内存 (Iroh -> Flume)
     incoming_tx: mpsc::Sender<Vec<u8>>,
     incoming_rx: Arc<Mutex<mpsc::Receiver<Vec<u8>>>>,
@@ -340,7 +340,7 @@ impl P2PNode {
     // /**
     //  * 节点信息
     //  */
-    pub async fn get_state(&self) -> P2PState {
-        self.state_rx.borrow().clone()
-    }
+    // pub async fn get_state(&self) -> P2PState {
+    //     self.state_rx.borrow().clone()
+    // }
 }

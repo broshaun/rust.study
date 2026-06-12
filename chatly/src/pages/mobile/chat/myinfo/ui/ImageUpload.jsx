@@ -16,11 +16,12 @@ export const ImageUpload = memo(({
   const [error, setError] = useState(false);
   const resetRef = useRef(null);
 
-  // 清理内存
+  // 组件销毁或预览图切换时释放内存，防止内存泄漏
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   }, [previewUrl]);
 
+  // 重置状态
   const clear = useCallback(() => {
     resetRef.current?.();
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -29,26 +30,31 @@ export const ImageUpload = memo(({
     setError(false);
   }, [previewUrl]);
 
+  // 文件选择变更处理器
   const handleFileChange = (f) => {
     if (!f) return;
     setError(false);
 
-    // 校验逻辑
+    // 1. 格式校验
     if (!acceptTypes.includes(f.type)) {
       onError?.({ type: 'format', message: '格式不支持' });
       setError(true);
       return;
     }
+    
+    // 2. 大小校验
     if (f.size > maxSize * 1024 * 1024) {
       onError?.({ type: 'size', message: `不能超过${maxSize}MB` });
       setError(true);
       return;
     }
 
+    // 3. 校验通过，生成预览
     setFile(f);
     setPreviewUrl(URL.createObjectURL(f));
   };
 
+  // 确认上传
   const handleConfirm = async () => {
     if (!file) return;
     try {
@@ -71,14 +77,15 @@ export const ImageUpload = memo(({
               <Button
                 {...props}
                 variant="filled"
-                color={error ? "red.1" : "gray.0"}
+                // 优化：使用 Mantine 标准的语义化属性，动态切换错误样式
+                bg={error ? "red.0" : "gray.0"}
                 c={error ? "red.7" : "gray.7"}
+                bd={`1px solid ${error ? 'var(--mantine-color-red-3)' : 'var(--mantine-color-gray-3)'}`}
                 fw={500}
                 fz={12}
                 h={size}
                 px={12}
                 leftSection={<IconUpload size={14} />}
-                style={{ border: '1px solid var(--mantine-color-gray-3)' }}
               >
                 {btnText}
               </Button>
@@ -86,21 +93,19 @@ export const ImageUpload = memo(({
           </FileButton>
         ) : (
           <Group gap={20} wrap="nowrap">
-            {/* 预览图 */}
+            {/* 预览图容器 */}
             <Box
               h={size}
               w={previewWidth}
-              style={{
-                border: '1px solid var(--mantine-color-gray-3)',
-                borderRadius: '4px',
-                overflow: 'hidden',
-                backgroundColor: 'var(--mantine-color-gray-0)'
-              }}
+              bg="gray.0"
+              bdr="4px" // Mantine 简写：border-radius
+              bd="1px solid gray.3" // Mantine 简写：border
+              style={{ overflow: 'hidden' }}
             >
               <Image src={previewUrl} h="100%" w="100%" fit="cover" alt="Preview" />
             </Box>
 
-            {/* 操作组 */}
+            {/* 操作按钮组 */}
             <Group gap={8} wrap="nowrap">
               <Tooltip label="确定" fz={10}>
                 <ActionIcon
@@ -128,10 +133,12 @@ export const ImageUpload = memo(({
       </Group>
 
       {error && (
-        <Text c="red" fz={11} mt={2} style={{ whiteSpace: 'nowrap' }}>
+        <Text c="red.7" fz={11} mt={4} style={{ whiteSpace: 'nowrap' }}>
           图片格式/大小错误
         </Text>
       )}
     </Box>
   );
 });
+
+ImageUpload.displayName = 'ImageUpload';

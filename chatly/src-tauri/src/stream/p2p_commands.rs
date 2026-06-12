@@ -241,7 +241,6 @@ pub async fn p2p_send(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Resul
  */
 // #[tauri::command]
 // pub async fn p2p_info(state: tauri::State<'_, AppState>) -> Result<String, String> {
-
 //     let task_guard = state.task.read().await;
 //     let Some(ts) = task_guard.as_ref() else {
 //         return Err("未启动任务".to_string());
