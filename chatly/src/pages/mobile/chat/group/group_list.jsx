@@ -6,14 +6,15 @@ import { useLocalStorage } from '@mantine/hooks';
 import { IconUserShare } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useLoginUserInfo } from "http/login";
 
 
 export const Item = () => {
     const dt = useDateTime();
     const [userId] = useLocalStorage({ key: 'current_account' })
     const db = getUserDB(userId);
+    const {data:usrInfo } = useLoginUserInfo()
 
-    const [currentUser] = useLocalStorage({ key: 'current_user' });
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -38,7 +39,7 @@ export const Item = () => {
     // 点击群头像
     const openGroupInfo = (value) => {
         const list = value?.administrator || [];
-        if (list.includes(currentUser?.id)) {
+        if (list.includes(usrInfo?.id)) {
             currentChat.getState().set('group', { id: value?.id })
             navigate('/mobile/chat/group/update')
         }

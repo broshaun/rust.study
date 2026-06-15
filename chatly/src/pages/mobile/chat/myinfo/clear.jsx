@@ -15,7 +15,6 @@ export const ClearLogs = () => {
             deleteUserDB(account).then(console.log('记录清空'))
         }
         navigate('/mobile/chat/self/')
-
     }
     const { open } = currentModal();
     useEffect(() => {

@@ -2,7 +2,7 @@ import { Outlet } from 'react-router';
 import { useHttpClient, useDateTime, getUserDB } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
-
+import { useLoginUserInfo } from 'http/login';
 
 
 
@@ -10,7 +10,7 @@ export const Main = () => {
     /** 账号对应信息
      * 个人数据库
      */
-    const [currentUser] = useLocalStorage({ key: 'current_user' })
+    const {data:currentUser} = useLoginUserInfo()
     const [account] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(account);
     const { getDateTimeStr } = useDateTime();

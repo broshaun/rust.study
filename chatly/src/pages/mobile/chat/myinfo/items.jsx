@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router';
-import { useHttpClient, currentAppBar } from 'utils';
-import { useQuery } from '@tanstack/react-query';
+import { currentAppBar } from 'utils';
 import { Stack, Divider, NavLink } from '@mantine/core';
 import {
     IconUserCircle,
@@ -12,6 +11,7 @@ import {
     IconChevronRight
 } from '@tabler/icons-react';
 import React, { useEffect } from "react";
+import { useLoginUserInfo } from 'http/login';
 
 
 export const Items = () => {
@@ -26,32 +26,16 @@ export const Items = () => {
         setRightPath(null);
     }, [])
 
-    const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
-    const { data: apiInfo = {}, isPending: loading, error, refetch } = useQuery(
-        {
-            queryKey: ['api-info'],
-            queryFn: async () => {
-                const res = await apiLogin.requestBodyJson('info',{});
-                if (!res || res.code !== 200) {
-                    throw new Error(res?.message || '获取失败');
-                }
-                return res.data;
-            },
-            staleTime: 10,
-        });
-
-
-    // console.log('apiInfo',apiInfo)
+    const { data: apiInfo = {} } = useLoginUserInfo()
 
     return (
-
         <Stack gap={0}>
             <NavLink
                 py={15} px={25}
                 label="头像"
                 leftSection={<IconUserCircle size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => navigate("/mobile/chat/self/image/", { state: apiInfo })}
+                onClick={() => navigate("/mobile/chat/self/image/")}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
@@ -63,14 +47,14 @@ export const Items = () => {
                 label={`昵称：${apiInfo?.nickname}`}
                 leftSection={<IconId size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => { navigate("/mobile/chat/self/name/", { state: apiInfo }); refetch(); }}
+                onClick={() => { navigate("/mobile/chat/self/name/")}}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="设置手机提醒"
                 leftSection={<IconDeviceMobileMessage size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => { navigate("/mobile/chat/self/pushdeer/", { state: apiInfo }); refetch(); }}
+                onClick={() => { navigate("/mobile/chat/self/pushdeer/")}}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}

@@ -2,10 +2,11 @@ import { Outlet } from 'react-router';
 import { useHttpClient, useDateTime, getUserDB, GlobalModal } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
+import { useLoginUserInfo } from 'http/login';
 
 
 export const Group = () => {
-    const [currentUser] = useLocalStorage({ key: 'current_user' })
+    const {data:currentUser} = useLoginUserInfo()
     const [userId] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(userId);
     const dt = useDateTime();
@@ -38,10 +39,7 @@ export const Group = () => {
             console.log(data);
         },
     });
-    // mutation.mutateAsync({})
-    // mutation.isPending
-    // mutation.isSuccess
-    // mutation.isError
+
 
     return <div>
         <GlobalModal />

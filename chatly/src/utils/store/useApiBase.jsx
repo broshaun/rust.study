@@ -16,14 +16,14 @@ const safeJoin = (...parts) => {
 };
 
 export function useApiBase(path = "") {
-  const [apiBase, setApiBase] = useLocalStorage({ key: "apiBase", defaultValue: "http://192.168.2.1:5015" });
+  const [apiBase, setApiBase] = useLocalStorage({ key: "apiBase", defaultValue: "http://185.245.41.154:5015" });
   const base = apiBase || "";
   const joinPath = (subPath = "") => safeJoin(base, path, subPath);
   return { apiBase: base, setApiBase, joinPath };
 }
 
 export function useImgApiBase(path = "") {
-  const [imgBase, setImgBase] = useLocalStorage({ key: "imgBase", defaultValue: "http://192.168.2.2:9000" });
+  const [imgBase, setImgBase] = useLocalStorage({ key: "imgBase", defaultValue: "http://185.245.41.154:9000" });
   const base = imgBase || "";
   const joinPath = (subPath = "") => safeJoin(base, path, subPath);
   return { imgBase: base, setImgBase, joinPath };

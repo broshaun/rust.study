@@ -1,30 +1,25 @@
 import { useCallback, Suspense, useEffect } from "react";
 import { useHttpClient, } from 'utils';
-import { useLocalStorage } from '@mantine/hooks';
 import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
+import { useLoginUserInfo } from "http/login";
+
 /**
- * Avatar2 - 用户头像设置与大图预览页面
+ * 上传并更新头像
  */
 export const Avatar2 = () => {
-    const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
+    const {data:currentUser, refetch} = useLoginUserInfo();
     const { http: httpFiles } = useHttpClient('/files/avatar/');
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
-    /**
-     * 上传并更新头像
-     */
-    const uploadFile = useCallback((file) => {
+
+    const uploadFile = useCallback(async(file) => {
         if (!file) return;
-        httpFiles.uploadFiles(file).then((results) => {
-            if (!results?.data) return;
-            apiLogin.post('PATCH', { avatar_url: results.data });
-            setCurrentUser(p => ({
-                ...p,
-                avatar_url: results.data
-            }));
-        });
+        const results =  await httpFiles.uploadFiles(file);
+        if (!results?.data) return;
+        await apiLogin.post('update', { avatar_url: results.data });
+        refetch()
     }, [httpFiles, apiLogin]);
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -33,8 +28,6 @@ export const Avatar2 = () => {
         setLeftPath('/mobile/chat/self/')
         setTitle('上传头像');
     }, [])
-
-    console.log('currentUser+++', currentUser)
 
 
     return (

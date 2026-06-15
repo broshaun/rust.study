@@ -1,15 +1,14 @@
 import { Suspense, useEffect } from "react";
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useHttpClient, currentAppBar } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
+import { useLoginUserInfo } from "http/login";
 
 
 export const Nickname = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-
-
+    const {data:User, refetch} = useLoginUserInfo()
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
@@ -35,13 +34,13 @@ export const Nickname = () => {
             return 'ok';
         },
         onSuccess: () => {
+            refetch()
             navigate('/mobile/chat/self/')
         }
     });
 
-
     return <Suspense fallback={<div>加载中...</div>}>
-        <NicknameEditPage value={location.state?.nickname} onClick={(text) => { nameEdit(text) }} />
+        <NicknameEditPage value={User?.nickname} onClick={(text) => { nameEdit(text) }} />
     </Suspense>
 
 

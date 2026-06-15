@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { useHttpClient, useToken, currentModal, GlobalModal } from 'utils';
+import { useHttpClient, useToken, currentModal } from 'utils';
 import { useEffect } from "react";
 
 
