@@ -18,8 +18,8 @@ keytool -genkeypair \
 
 
 
-- git tag android-v1.1.4
-- git push origin android-v1.1.4
+- git tag android-v1.1.5
+- git push origin android-v1.1.5
 
 
 
