@@ -1,7 +1,8 @@
 import { Outlet } from "react-router";
+import { GlobalModal } from "utils";
 import { Login } from "./login";
 import { Register } from "./register";
-import { GlobalModal } from "utils";
+import { Proxy } from "./proxy";
 
 
 export const User = () => {
@@ -22,6 +23,10 @@ export const RsUser = [
       {
         path: "register",
         element: <Register />,
+      },
+      {
+        path: "proxy",
+        element: <Proxy />,
       },
     ]
   }

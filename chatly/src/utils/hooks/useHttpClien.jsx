@@ -37,7 +37,7 @@ export function useHttpClient(baseUrl = "") {
         try {
           const err = await res.json();
           message = err?.message || err?.msg || message;
-        } catch {}
+        } catch { }
         throw new Error(message);
       }
       return res.json();
@@ -62,6 +62,10 @@ export function useHttpClient(baseUrl = "") {
     [endpoint, request]
   );
 
+  const get = useCallback(() => {
+    return request(endpoint, { method: "GET" })
+  }, [endpoint, request]);
+
   const uploadFiles = useCallback(
     (file, method = "POST", fieldName = "file") => {
       const formData = new FormData();
@@ -77,9 +81,10 @@ export function useHttpClient(baseUrl = "") {
       requestBodyJson,
       post: requestBodyJson,
       getById,
+      get,
       uploadFiles,
     }),
-    [request, requestBodyJson, getById, uploadFiles]
+    [request, requestBodyJson, getById, get, uploadFiles]
   );
 
   return { http, endpoint };

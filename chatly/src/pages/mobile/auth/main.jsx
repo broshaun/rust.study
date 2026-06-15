@@ -10,7 +10,7 @@ export function AuthShell() {
   const drawerMenu = [
     { key: 'login', display: true, icon: { name: 'IconUserCircle', label: '登陆' }, onTap: () => { navigate('/mobile/auth/user/') } },
     { key: 'register', display: true, icon: { name: 'IconUserPlus', label: '注册' }, onTap: () => { navigate('/mobile/auth/user/register/') } },
-    // { key: 'settings', display: true, icon: { name: 'IconSettings', label: '设置' }, onTap: () => { navigate('/mobile/auth/user/items/') } },
+    { key: 'settings', display: true, icon: { name: 'IconSettings', label: '设置' }, onTap: () => { navigate('/mobile/auth/user/proxy/') } },
   ];
 
   const [opened, { open, close }] = useDisclosure(false);
