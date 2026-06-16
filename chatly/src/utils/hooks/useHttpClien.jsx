@@ -17,25 +17,12 @@ export function useHttpClient(baseUrl = "") {
   const { token } = useToken();
 
   const endpoint = useMemo(() => (apiBase || "") + baseUrl, [apiBase, baseUrl]);
-  
+
   const request = useCallback(
     async (url, options = {}) => {
       const { method = "POST", headers = {}, body } = options;
       const isFormData = body instanceof FormData;
-
-      //  核心修复：规范化 URL 格式
-      // 防止因为末尾斜杠、双斜杠、query 参数导致 Tauri 的生产环境 Scope 匹配失败
-      let normalizedUrl = url;
-      try {
-        // 如果传入的是相对路径，基于当前 origin 转换；如果是绝对路径，直接规范化
-        const parsedUrl = new URL(url, window.location.origin);
-        normalizedUrl = parsedUrl.href;
-      } catch (e) {
-        console.error("URL 规范化失败:", e);
-      }
-
-      // 传递给 Tauri 的是绝对规范化后的 URL
-      const res = await fetch(normalizedUrl, {
+      const res = await fetch(url, {
         method,
         headers: {
           ...(token ? { Authorization: token } : {}),
