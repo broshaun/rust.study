@@ -1,5 +1,4 @@
-import { useApiBase, useImgApiBase, useHttpClient, currentModal, useDateTime } from "utils";
-import { useLocalStorage } from "@mantine/hooks";
+import { useApiBase, useImgApiBase, useHttpClient, currentModal } from "utils";
 import { useMutation } from '@tanstack/react-query';
 import { ProxySetting } from "./ui/ProxySetting";
 
@@ -47,8 +46,8 @@ export const Proxy = () => {
         <ProxySetting
             apiBase={apiBase}
             imgBase={imgBase}
-            onPingApi={async (url) => {
-                ping()
+            onPingApi={(url) => {
+                ping().catch(console.error)
             }}
             onSave={(newApi, newImg) => {
                 setApiBase(newApi);

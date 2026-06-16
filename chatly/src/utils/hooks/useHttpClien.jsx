@@ -2,6 +2,9 @@ import { useMemo, useCallback } from "react";
 import { fetch } from "@tauri-apps/plugin-http";
 import { useApiBase, useToken } from "utils";
 
+/**
+ * JSON 序列化转换器
+ */
 function replacer(key, value) {
   if (value instanceof Map) return Object.fromEntries(value);
   if (value instanceof Date) return value.toISOString();
@@ -9,58 +12,47 @@ function replacer(key, value) {
   return value;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export function useHttpClient(baseUrl = "") {
   const { apiBase } = useApiBase();
   const { token } = useToken();
 
-  const endpoint = useMemo(
-    () => (apiBase || "") + baseUrl,
-    [apiBase, baseUrl]
-  );
-
+  const endpoint = useMemo(() => (apiBase || "") + baseUrl, [apiBase, baseUrl]);
+  
   const request = useCallback(
     async (url, options = {}) => {
-      const {
-        method = "POST",
-        headers = {},
-        body,
-        signal,
-      } = options;
-
+      const { method = "POST", headers = {}, body } = options;
       const isFormData = body instanceof FormData;
 
-      const res = await fetch(url, {
+      //  核心修复：规范化 URL 格式
+      // 防止因为末尾斜杠、双斜杠、query 参数导致 Tauri 的生产环境 Scope 匹配失败
+      let normalizedUrl = url;
+      try {
+        // 如果传入的是相对路径，基于当前 origin 转换；如果是绝对路径，直接规范化
+        const parsedUrl = new URL(url, window.location.origin);
+        normalizedUrl = parsedUrl.href;
+      } catch (e) {
+        console.error("URL 规范化失败:", e);
+      }
+
+      // 传递给 Tauri 的是绝对规范化后的 URL
+      const res = await fetch(normalizedUrl, {
         method,
-        signal,
         headers: {
           ...(token ? { Authorization: token } : {}),
-          ...(!isFormData && body !== undefined
-            ? { "Content-Type": "application/json" }
-            : {}),
+          ...(!isFormData && body !== undefined ? { "Content-Type": "application/json" } : {}),
           ...headers,
         },
-        body: isFormData
-          ? body
-          : body === undefined
-            ? undefined
-            : JSON.stringify(body, replacer),
+        body: isFormData ? body : (body === undefined ? undefined : JSON.stringify(body, replacer)),
       });
 
       if (!res.ok) {
         let message = `HTTP ${res.status}`;
-
         try {
           const err = await res.json();
           message = err?.message || err?.msg || message;
         } catch { }
-
         throw new Error(message);
       }
-
       return res.json();
     },
     [token]
@@ -83,82 +75,15 @@ export function useHttpClient(baseUrl = "") {
     [endpoint, request]
   );
 
-  const get = useCallback(
-    () => request(endpoint, { method: "GET" }),
-    [endpoint, request]
-  );
+  const get = useCallback(() => {
+    return request(endpoint, { method: "GET" })
+  }, [endpoint, request]);
 
   const uploadFiles = useCallback(
     (file, method = "POST", fieldName = "file") => {
       const formData = new FormData();
       formData.append(fieldName, file);
-
-      return request(endpoint, {
-        method,
-        body: formData,
-      });
-    },
-    [endpoint, request]
-  );
-
-  const longPoll = useCallback(
-    ({
-      url = endpoint,
-      methodName,
-      payload = {},
-      onMessage,
-      onError,
-      retryDelay = 2000,
-      requestTimeout = 30000,
-    }) => {
-      let stopped = false;
-      let controller = null;
-
-      const run = async () => {
-        while (!stopped) {
-          controller = new AbortController();
-
-          const timeoutId = setTimeout(() => {
-            controller?.abort();
-          }, requestTimeout);
-
-          try {
-            const data = await request(url, {
-              method: "POST",
-              signal: controller.signal,
-              headers: methodName
-                ? { "X-HTTP-Method": methodName }
-                : {},
-              body: payload,
-            });
-
-            if (!stopped) {
-              await onMessage?.(data);
-            }
-          } catch (error) {
-            const aborted =
-              controller?.signal?.aborted ||
-              error?.name === "AbortError";
-
-            if (stopped) break;
-
-            if (!aborted) {
-              onError?.(error);
-              await sleep(retryDelay);
-            }
-          } finally {
-            clearTimeout(timeoutId);
-            controller = null;
-          }
-        }
-      };
-
-      void run();
-
-      return () => {
-        stopped = true;
-        controller?.abort();
-      };
+      return request(endpoint, { method, body: formData });
     },
     [endpoint, request]
   );
@@ -171,16 +96,8 @@ export function useHttpClient(baseUrl = "") {
       getById,
       get,
       uploadFiles,
-      longPoll,
     }),
-    [
-      request,
-      requestBodyJson,
-      getById,
-      get,
-      uploadFiles,
-      longPoll,
-    ]
+    [request, requestBodyJson, getById, get, uploadFiles]
   );
 
   return { http, endpoint };
