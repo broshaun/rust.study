@@ -6,7 +6,7 @@ import { useEffect } from "react"
 
 export function Caller() {
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
-  const current_friend = currentChat(
+  const current = currentChat(
     (state) => state.current.get("friend")
   );
   useEffect(() => {
@@ -16,7 +16,7 @@ export function Caller() {
   const { fnSendMsg, db } = useOutletContext();
   const msgPhoneSend = async (ticket) => {
     if (ticket) {
-      await fnSendMsg({ uid: current_friend?.uid, msgType: 'phone', msgText: ticket })
+      await fnSendMsg({ uid: current?.uid, msgType: 'phone', msgText: ticket })
     }
   }
 
