@@ -1,163 +1,249 @@
-import { useState, useRef, useCallback, memo, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
-  Box,
-  TextInput,
-  ScrollArea,
-  Paper,
-  Group,
   ActionIcon,
-  Collapse,
-  Divider,
+  Box,
+  Group,
+  Paper,
+  ScrollArea,
+  Text,
+  TextInput,
+  Transition,
+  UnstyledButton,
 } from "@mantine/core";
-import { IconSend, IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconSend } from "@tabler/icons-react";
+
 import { MsgItem } from "./MsgItem";
-
-const ChatBoxTools = memo(({ children }) => (
-  <Group gap="sm" pt="xs">
-    {children}
-  </Group>
-));
-
-ChatBoxTools.displayName = "ChatBoxTools";
 
 export function ChatBox({
   messages = [],
   onSend,
-  onOpenTools,
   height = 600,
-  children,
+  tools = [],
 }) {
+  const navigate = useNavigate();
+
   const [input, setInput] = useState("");
-  const [showTools, setShowTools] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const [toolsHeight, setToolsHeight] = useState(0);
+
   const viewportRef = useRef(null);
+  const toolsRef = useRef(null);
+
+  const hasTools = tools.length > 0;
 
   const virtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => viewportRef.current,
     estimateSize: () => 70,
     overscan: 6,
-    getItemKey: useCallback(
-      (index) => messages[index]?.id ?? index,
-      [messages]
-    ),
+    getItemKey: (index) => messages[index]?.id ?? index,
   });
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length) {
       virtualizer.scrollToIndex(messages.length - 1);
     }
-  }, [messages.length, virtualizer]);
+  }, [messages.length]);
 
-  const handleSend = useCallback(() => {
+  useEffect(() => {
+    if (!opened || !toolsRef.current) return;
+
+    const updateHeight = () => {
+      setToolsHeight(toolsRef.current?.offsetHeight || 0);
+    };
+
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(toolsRef.current);
+
+    return () => observer.disconnect();
+  }, [opened, tools.length]);
+
+  const send = useCallback(() => {
     const value = input.trim();
+
     if (!value) return;
 
     onSend?.(value);
+
     setInput("");
   }, [input, onSend]);
 
   const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-        e.preventDefault();
-        handleSend();
+    (event) => {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.nativeEvent.isComposing
+      ) {
+        event.preventDefault();
+        send();
       }
     },
-    [handleSend]
+    [send]
   );
-
-  const toggleTools = useCallback(() => {
-    if (children) {
-      setShowTools((v) => !v);
-    }
-
-    onOpenTools?.();
-  }, [children, onOpenTools]);
 
   return (
     <Paper
-      shadow="md"
-      w="100%"
+      shadow="sm"
       h={height}
-      display="flex"
-      style={{ flexDirection: "column" }}
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
     >
-      <ScrollArea flex={1} p="md" viewportRef={viewportRef}>
-        <Box h={virtualizer.getTotalSize()} w="100%" pos="relative">
-          {virtualizer.getVirtualItems().map((row) => {
-            const msg = messages[row.index];
-
-            return (
+      <Box
+        style={{
+          flex: 1,
+          minHeight: 0,
+          paddingBottom: opened ? toolsHeight : 0,
+          transition: "padding-bottom 180ms ease",
+        }}
+        onClick={() => {
+          if (opened) setOpened(false);
+        }}
+      >
+        <ScrollArea h="100%" p="md" viewportRef={viewportRef}>
+          <Box h={virtualizer.getTotalSize()} pos="relative">
+            {virtualizer.getVirtualItems().map((row) => (
               <Box
                 key={row.key}
                 ref={virtualizer.measureElement}
                 data-index={row.index}
                 pos="absolute"
-                top={0}
                 left={0}
+                top={0}
                 w="100%"
                 style={{
                   transform: `translateY(${row.start}px)`,
                   paddingBottom: 8,
                 }}
               >
-                <MsgItem msg={msg} />
+                <MsgItem msg={messages[row.index]} />
               </Box>
-            );
-          })}
-        </Box>
-      </ScrollArea>
+            ))}
+          </Box>
+        </ScrollArea>
+      </Box>
 
-      <Box
-        p="md"
-        style={{
-          borderTop: "1px solid var(--mantine-color-gray-3)",
-        }}
+      {!opened ? (
+        <Box
+          p="md"
+          style={{
+            borderTop: "1px solid var(--mantine-color-gray-3)",
+            background: "var(--mantine-color-body)",
+          }}
+        >
+          <Group gap="xs">
+            <ActionIcon
+              variant="light"
+              size="lg"
+              radius="md"
+              disabled={!hasTools}
+              onClick={() => setOpened(true)}
+            >
+              <IconPlus size={18} />
+            </ActionIcon>
+
+            <TextInput
+              flex={1}
+              value={input}
+              placeholder="输入消息..."
+              onChange={(e) => setInput(e.currentTarget.value)}
+              onKeyDown={handleKeyDown}
+            />
+
+            <ActionIcon
+              variant="filled"
+              size="lg"
+              radius="md"
+              disabled={!input.trim()}
+              onClick={send}
+            >
+              <IconSend size={18} />
+            </ActionIcon>
+          </Group>
+        </Box>
+      ) : null}
+
+      <Transition
+        mounted={opened && hasTools}
+        transition="slide-up"
+        duration={180}
       >
-        <Group gap="xs">
-          <ActionIcon
-            variant="light"
-            size="lg"
-            radius="md"
-            onClick={toggleTools}
-            disabled={!children && !onOpenTools}
+        {(styles) => (
+          <Box
+            ref={toolsRef}
             style={{
-              transform: showTools ? "rotate(45deg)" : "none",
-              transition: "transform 0.2s ease",
+              ...styles,
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "var(--mantine-color-body)",
+              borderTop: "1px solid var(--mantine-color-gray-3)",
+              padding: "10px 16px 20px",
+              zIndex: 10,
             }}
           >
-            <IconPlus size={18} />
-          </ActionIcon>
+            <Group justify="center" mb="lg">
+              <Box
+                onClick={() => setOpened(false)}
+                style={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 999,
+                  background: "var(--mantine-color-gray-4)",
+                  cursor: "pointer",
+                }}
+              />
+            </Group>
 
-          <TextInput
-            flex={1}
-            placeholder="输入消息..."
-            value={input}
-            onChange={(e) => setInput(e.currentTarget.value)}
-            onKeyDown={handleKeyDown}
-          />
+            <Group
+              justify="space-around"
+              align="flex-start"
+              wrap="wrap"
+              gap={4}
+            >
+              {tools.map(({ id, icon: Icon, label, path, color }) => (
+                <UnstyledButton
+                  key={id}
+                  onClick={() => {
+                    setOpened(false);
+                    navigate(path);
+                  }}
+                  style={{
+                    minWidth: 72,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <ActionIcon
+                    component="div"
+                    variant="light"
+                    color={color}
+                    size="xl"
+                    radius="md"
+                  >
+                    <Icon size={24} stroke={1.5} />
+                  </ActionIcon>
 
-          <ActionIcon
-            variant="filled"
-            size="lg"
-            radius="md"
-            onClick={handleSend}
-            disabled={!input.trim()}
-          >
-            <IconSend size={18} />
-          </ActionIcon>
-        </Group>
-
-        {children && (
-          <Collapse in={showTools}>
-            <Divider my="md" />
-            {children}
-          </Collapse>
+                  <Text size="xs" fw={500} c="dimmed">
+                    {label}
+                  </Text>
+                </UnstyledButton>
+              ))}
+            </Group>
+          </Box>
         )}
-      </Box>
+      </Transition>
     </Paper>
   );
 }
-
-ChatBox.Tools = ChatBoxTools;

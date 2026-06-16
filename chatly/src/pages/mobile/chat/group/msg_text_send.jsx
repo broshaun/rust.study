@@ -2,11 +2,28 @@ import React, { useState, useEffect } from "react"
 import { useWinSize, currentAppBar, currentChat, getUserDB } from 'utils';
 import { liveQuery } from 'dexie';
 import { ChatBox } from "./ui/ChatBox"
-import { Tools } from "./msg_tools";
 import { useOutletContext } from "react-router";
 import { IconDots } from "@tabler/icons-react";
 import { useLocalStorage } from "@mantine/hooks";
+import { IconMoodSmile,IconPhotoUp } from "@tabler/icons-react";
 
+const TOOLS_CONFIG = [
+    { 
+        id: 'smile', 
+        icon: IconMoodSmile, 
+        label: '表情', 
+        path: '/mobile/chat/group/smile',
+        color: 'grape' 
+    },
+    { 
+        id: 'imgUp', 
+        icon: IconPhotoUp, 
+        label: '发送图片', 
+        path: '/mobile/chat/group/imgUp',
+        color: 'teal' 
+    },
+
+];
 
 export function Msg() {
     const group = currentChat((state) => state.current.get("group"));
@@ -63,15 +80,12 @@ export function Msg() {
 
     return <div>
         <ChatBox
+            tools={TOOLS_CONFIG}
             height={winHeight - 55}
             messages={msgs}
             onSend={(v) => { msgTextSend(v) }}
-            onOpenTools={() => { console.log("打开工具栏") }}
-        >
-            <ChatBox.Tools>
-                <Tools />
-            </ChatBox.Tools>
-        </ChatBox>
+        />
+  
 
     </div>
 

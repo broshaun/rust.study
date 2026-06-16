@@ -37,6 +37,9 @@ Template created! To get started run:
   pnpm add -D @tauri-apps/cli
   
   pnpm tauri init
+
+
+  
   pnpm tauri android init
   pnpm tauri ios init
 
