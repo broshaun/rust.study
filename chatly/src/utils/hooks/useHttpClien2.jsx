@@ -1,5 +1,4 @@
 import { useMemo, useCallback } from "react";
-import { fetch } from "@tauri-apps/plugin-http";
 import { useApiBase, useToken } from "utils";
 
 /**
@@ -12,6 +11,9 @@ function replacer(key, value) {
   return value;
 }
 
+/** useHttpClient
+ * 原生web fetch实现http访问
+ */
 export function useHttpClient(baseUrl = "") {
   const { apiBase } = useApiBase();
   const { token } = useToken();
