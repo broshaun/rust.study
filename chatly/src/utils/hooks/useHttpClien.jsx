@@ -1,10 +1,7 @@
 import { useMemo, useCallback } from "react";
-import { fetch } from "@tauri-apps/plugin-http";
+import { invoke } from "@tauri-apps/api/core";
 import { useApiBase, useToken } from "utils";
 
-/**
- * JSON 序列化转换器
- */
 function replacer(key, value) {
   if (value instanceof Map) return Object.fromEntries(value);
   if (value instanceof Date) return value.toISOString();
@@ -12,79 +9,110 @@ function replacer(key, value) {
   return value;
 }
 
+function parseResponse(res) {
+  if (res === undefined || res === null || res === "") {
+    return null;
+  }
+
+  try {
+    return JSON.parse(res);
+  } catch {
+    return res;
+  }
+}
+
+function toBody(body = {}) {
+  return JSON.parse(JSON.stringify(body, replacer));
+}
+
+async function fileToBytes(file) {
+  const buffer = await file.arrayBuffer();
+  return Array.from(new Uint8Array(buffer));
+}
+
 export function useHttpClient(baseUrl = "") {
   const { apiBase } = useApiBase();
   const { token } = useToken();
 
-  const endpoint = useMemo(() => (apiBase || "") + baseUrl, [apiBase, baseUrl]);
+  const endpoint = useMemo(
+    () => `${apiBase || ""}${baseUrl || ""}`,
+    [apiBase, baseUrl]
+  );
 
-  const request = useCallback(
-    async (url, options = {}) => {
-      const { method = "POST", headers = {}, body } = options;
-      const isFormData = body instanceof FormData;
-      const res = await fetch(url, {
-        method,
-        headers: {
-          ...(token ? { Authorization: token } : {}),
-          ...(!isFormData && body !== undefined ? { "Content-Type": "application/json" } : {}),
-          ...headers,
-        },
-        body: isFormData ? body : (body === undefined ? undefined : JSON.stringify(body, replacer)),
-      });
-
-      if (!res.ok) {
-        let message = `HTTP ${res.status}`;
-        try {
-          const err = await res.json();
-          message = err?.message || err?.msg || message;
-        } catch { }
-        throw new Error(message);
-      }
-      return res.json();
-    },
+  const authHeaders = useMemo(
+    () => (token ? { Authorization: token } : {}),
     [token]
   );
 
-  const requestBodyJson = useCallback(
-    (methodName, payload = {}) =>
-      request(endpoint, {
-        headers: { "X-HTTP-Method": methodName },
-        body: payload,
-      }),
-    [endpoint, request]
-  );
+  const get = useCallback(async () => {
+    const res = await invoke("http_get", {
+      options: {
+        url: endpoint,
+        headers: authHeaders,
+      },
+    });
+
+    return parseResponse(res);
+  }, [endpoint, authHeaders]);
 
   const getById = useCallback(
-    (id) =>
-      request(`${endpoint}?id=${encodeURIComponent(id)}`, {
-        method: "GET",
-      }),
-    [endpoint, request]
+    async (id) => {
+      const res = await invoke("http_get", {
+        options: {
+          url: `${endpoint}?id=${encodeURIComponent(id)}`,
+          headers: authHeaders,
+        },
+      });
+
+      return parseResponse(res);
+    },
+    [endpoint, authHeaders]
   );
 
-  const get = useCallback(() => {
-    return request(endpoint, { method: "GET" })
-  }, [endpoint, request]);
+  const requestBodyJson = useCallback(
+    async (methodName, payload = {}) => {
+      const res = await invoke("http_post", {
+        options: {
+          url: endpoint,
+          headers: {
+            ...authHeaders,
+            "X-HTTP-Method": methodName,
+          },
+          body: toBody(payload),
+        },
+      });
+
+      return parseResponse(res);
+    },
+    [endpoint, authHeaders]
+  );
 
   const uploadFiles = useCallback(
-    (file, method = "POST", fieldName = "file") => {
-      const formData = new FormData();
-      formData.append(fieldName, file);
-      return request(endpoint, { method, body: formData });
+    async (file) => {
+      if (!file) {
+        throw new Error("No file selected");
+      }
+
+      const res = await invoke("http_upload", {
+        url: endpoint,
+        fileBytes: await fileToBytes(file),
+        fileName: file.name || "file",
+      });
+
+      return parseResponse(res);
     },
-    [endpoint, request]
+    [endpoint]
   );
 
   const http = useMemo(
     () => ({
-      request,
+      get,
+      getById,
       requestBodyJson,
       post: requestBodyJson,
-      getById,
-      get,
       uploadFiles,
     }),
-    [request, requestBodyJson, getById, get, uploadFiles]
+    [get, getById, requestBodyJson, uploadFiles]
   );
 
   return { http, endpoint };

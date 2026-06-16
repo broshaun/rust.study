@@ -2,6 +2,10 @@ mod files;
 mod stream;
 use files::image_cache;
 use stream::p2p_commands;
+mod net;
+use net::http;
+
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -12,7 +16,6 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(p2p_commands::AppState::new())
-        .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             p2p_commands::p2p_start,
             p2p_commands::p2p_stop,
@@ -23,8 +26,13 @@ pub fn run() {
             p2p_commands::p2p_start_connect,
             p2p_commands::p2p_send,
             p2p_commands::send_to_this_window,
+
             image_cache::get_image_cached,
             image_cache::clear_image_cache,
+
+            http::http_get,
+            http::http_post,
+            http::http_upload
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
