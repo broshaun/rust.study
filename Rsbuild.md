@@ -64,15 +64,9 @@ For iOS development, run:
   pnpm add @tauri-apps/api 
   pnpm add react-router
   pnpm add dexie dexie-react-hooks
-  pnpm add zustand
   pnpm add @mantine/hooks @mantine/core @tabler/icons-react
-  pnpm add @tanstack/react-query
-  pnpm add @tanstack/react-virtual
-```
+  pnpm add zustand @tanstack/react-query @tanstack/react-virtual
 
-### 安装Tauri插件
-```sh
-  pnpm tauri add http
 ```
 
 
