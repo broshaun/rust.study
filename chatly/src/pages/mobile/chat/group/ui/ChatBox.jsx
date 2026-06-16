@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback, memo, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useNavigate } from "react-router";
 import {
   Box,
   TextInput,
@@ -7,28 +8,33 @@ import {
   Paper,
   Group,
   ActionIcon,
-  Collapse,
+  Transition,
   Divider,
+  Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { IconSend, IconPlus } from "@tabler/icons-react";
 import { MsgItem } from "./MsgItem";
-
-const ChatBoxTools = memo(({ children }) => (
-  <Group gap="sm" pt="xs">
-    {children}
-  </Group>
-));
+import { currentAppBar } from "utils";
 
 export function ChatBox({
   messages = [],
   onSend,
   onOpenTools,
   height = 600,
-  children,
+  tools = [],
 }) {
+  const navigate = useNavigate();
+  const setLeftPath = currentAppBar((state) => state.setLeftPath);
+
   const [input, setInput] = useState("");
   const [showTools, setShowTools] = useState(false);
   const viewportRef = useRef(null);
+  const hasTools = Array.isArray(tools) && tools.length > 0;
+
+  useEffect(() => {
+    setLeftPath("/mobile/chat/message/");
+  }, [setLeftPath]);
 
   const virtualizer = useVirtualizer({
     count: messages.length,
@@ -43,16 +49,12 @@ export function ChatBox({
 
   useEffect(() => {
     if (!messages.length) return;
-
-    virtualizer.scrollToIndex(messages.length - 1, {
-      align: "end",
-    });
+    virtualizer.scrollToIndex(messages.length - 1, { align: "end" });
   }, [messages.length, virtualizer]);
 
   const handleSend = useCallback(async () => {
     const value = input.trim();
     if (!value) return;
-
     await onSend?.(value);
     setInput("");
   }, [input, onSend]);
@@ -62,7 +64,6 @@ export function ChatBox({
       if (e.key !== "Enter") return;
       if (e.shiftKey) return;
       if (e.nativeEvent.isComposing) return;
-
       e.preventDefault();
       handleSend();
     },
@@ -70,12 +71,17 @@ export function ChatBox({
   );
 
   const toggleTools = useCallback(() => {
-    if (children) {
-      setShowTools((v) => !v);
-    }
-
+    if (hasTools) setShowTools((v) => !v);
     onOpenTools?.();
-  }, [children, onOpenTools]);
+  }, [hasTools, onOpenTools]);
+
+  const handleToolClick = useCallback(
+    (path) => {
+      navigate(path);
+      setShowTools(false);
+    },
+    [navigate]
+  );
 
   return (
     <Paper
@@ -89,7 +95,6 @@ export function ChatBox({
         <Box h={virtualizer.getTotalSize()} w="100%" pos="relative">
           {virtualizer.getVirtualItems().map((row) => {
             const msg = messages[row.index];
-
             return (
               <Box
                 key={row.key}
@@ -123,7 +128,7 @@ export function ChatBox({
             size="lg"
             radius="md"
             onClick={toggleTools}
-            disabled={!children && !onOpenTools}
+            disabled={!hasTools && !onOpenTools}
             style={{
               transform: showTools ? "rotate(45deg)" : "none",
               transition: "transform 0.2s ease",
@@ -151,15 +156,81 @@ export function ChatBox({
           </ActionIcon>
         </Group>
 
-        {children && (
-          <Collapse in={showTools}>
-            <Divider my="md" />
-            {children}
-          </Collapse>
-        )}
+        <Transition
+          mounted={showTools && hasTools}
+          transition="slide-up"
+          duration={200}
+          timingFunction="ease"
+        >
+          {(transitionStyles) => (
+            <div style={transitionStyles}>
+              <Divider my="md" />
+              {/* 外层相对定位，预留滚动条宽度，杜绝布局挤压抖动 */}
+              <Box
+                p="xs"
+                pos="relative"
+                pr="xs"
+                sx={{
+                  overflowX: "auto",
+                  overflowY: "hidden",
+                  // 滚动条悬浮在容器上层，不占用布局宽度
+                  "&::-webkit-scrollbar": {
+                    height: 4,
+                    position: "absolute",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "transparent",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "rgba(0,0,0,0.07)",
+                    borderRadius: 999,
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    background: "rgba(0,0,0,0.14)",
+                  },
+                  // Firefox 透明细滚动条
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "rgba(0,0,0,0.07) transparent",
+                }}
+              >
+                <Group
+                  justify="space-around"
+                  align="flex-start"
+                  wrap="nowrap"
+                  gap="sm"
+                  style={{ minWidth: "max-content" }}
+                >
+                  {tools.map(({ id, icon: Icon, label, path, color }) => (
+                    <UnstyledButton
+                      key={id}
+                      onClick={() => handleToolClick(path)}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <ActionIcon
+                        component="div"
+                        variant="light"
+                        color={color}
+                        size="xl"
+                        radius="md"
+                      >
+                        <Icon size={24} stroke={1.5} />
+                      </ActionIcon>
+                      <Text size="xs" fw={500} c="dimmed">
+                        {label}
+                      </Text>
+                    </UnstyledButton>
+                  ))}
+                </Group>
+              </Box>
+            </div>
+          )}
+        </Transition>
       </Box>
     </Paper>
   );
 }
-
-ChatBox.Tools = ChatBoxTools;
