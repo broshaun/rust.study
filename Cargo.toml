@@ -1,3 +1,0 @@
-[workspace]
-members = ["chatly/src-tauri", "mylib", "mytest", "study"]
-resolver = "2"
