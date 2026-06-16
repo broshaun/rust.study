@@ -96,7 +96,8 @@ export function Msg() {
     );
 
     const msgTextSend = async (sendText) => {
-        if (!sendText || !current?.uid) return;
+        if (!sendText)return;
+        if (!current?.uid) return;
         await fnSendMsg({
             uid: current.uid,
             msgType: "text",
@@ -104,11 +105,14 @@ export function Msg() {
         });
     };
 
+
+    console.log('msgs',msgs)
+
     return (
         <ChatBox
+            messages={msgs}
             tools={TOOLS_CONFIG}
             height={winHeight - 55}
-            messages={msgs}
             onSend={msgTextSend}
         />
     );
