@@ -1,5 +1,4 @@
-import { useHttpClient, currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
-import { useQuery } from "@tanstack/react-query";
+import { currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
@@ -7,7 +6,7 @@ import { IconUserShare } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { loginCache } from "http/loginCache";
-
+import { agroups } from "http/groups";
 
 export const Item = () => {
     const dt = useDateTime();
@@ -27,7 +26,6 @@ export const Item = () => {
         setRightPath('/mobile/chat/group/ingmsg/')
     }, [])
 
-
     const navigate = useNavigate();
     // 打开群聊
     const openGroup = (value) => {
@@ -45,23 +43,7 @@ export const Item = () => {
         }
     }
 
-    const { http } = useHttpClient('/rpc/chat/msg/group/')
-    const { data: groupList, isSuccess } = useQuery({
-        queryKey: ["my_group_list", userId],
-        queryFn: async () => {
-            const results = await http.requestBodyJson("my_group_list", {});
-            if (!results) throw new Error("获取失败");
-            const { code, data, message } = results;
-            if (code !== 200) {
-                return []
-            }
-            return data || [];
-        },
-        staleTime: 1000 * 3600 * 1,
-        gcTime: 1000 * 3600 * 12,
-        enabled: !!userId,
-        refetchOnWindowFocus: false,
-    });
+    const { data: groupList, isSuccess } = agroups.useCache(userId);
 
     useEffect(() => {
         if (!db) return;
@@ -76,8 +58,6 @@ export const Item = () => {
         const groupMap = new Map(dialog.map(item => [item.id, item]))
         return groups.map(group => ({ ...group, ...groupMap.get(group.id) }))
     }, [db], []);
-
-    // console.log('finalGroups',finalGroups)
 
     return (
         <GroupList

@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from 'react-router';
 import { token } from "utils";
-import { useHttpClient, currentModal, useDateTime } from 'utils';
-import { useMutation } from '@tanstack/react-query';
+import { createHttpClient, currentModal, useDateTime } from 'utils';
 import { useLocalStorage } from "@mantine/hooks";
 import { LoginUI } from "./ui/LoginUI";
 import { loginCache } from "http/loginCache";
@@ -13,32 +12,32 @@ export function Login() {
     const navigate = useNavigate();
     const [userId, setUserId] = useLocalStorage({ key: 'current_account', defaultValue: "" });
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
-    const { http } = useHttpClient('/rpc/chat/login/');
+    const { http } = createHttpClient('/rpc/chat/login/');
     const { open, close } = currentModal();
-    const { mutateAsync: login } = useMutation({
-        mutationFn: async ({ account, password }) => {
+
+    async function login({ account, password }) {
+        try {
             if (!account || !password) throw new Error("请输入账号密码 ...");
-            const results = await http.post("POST", { email: account, pass_word: password });
+            const results = await http.requestBodyJson("POST", { email: account, pass_word: password });
             if (!results) throw new Error("登录失败，请稍后重试");
             const { code, data, message } = results;
-            if (code !== 200) throw new Error(message || "登录失败");
-            return data
-        },
-        onSuccess: (data) => {
+            if (code !== 200) throw new Error(message);
             token.set({ "token": data?.login_token, "remainSeconds": data?.login_expired })
-            loginCache.fetch(userId)
+            await loginCache.fetch(userId)
             setCurrentUser({ ...data?.user, timestamp: dt.getDateTimeStr() });
             navigate("/mobile/chat/");
-        },
-        onError: (error) => {
+            return data
+        } catch (error) {
             open({
                 title: "登录提示",
-                message: error?.message || "登录失败，请稍后重试",
-                onConfirm: () => close(),
+                message: error?.message || String(error),
+                onConfirm: close,
                 onCancel: null
             });
-        },
-    });
+        }
+    }
+
+
 
     return (
         <React.Fragment>

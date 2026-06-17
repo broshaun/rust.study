@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useRemainSeconds, getUserDB, useHttpClient, useDateTime } from "utils"
-import { useQuery } from '@tanstack/react-query'
+import { useRemainSeconds, getUserDB, createHttpClient, useDateTime } from "utils"
 import { useLocalStorage } from '@mantine/hooks';
 import { currentAwait } from "utils";
+import { afriends } from "http/friendsAwait";
 
 
 export function ChatGuard() {
@@ -13,27 +13,14 @@ export function ChatGuard() {
   const db = getUserDB(userId);
   const remainSeconds = useRemainSeconds();
 
-
-  const { http: httpAwait } = useHttpClient("/rpc/chat/friend/");
-  const { data: friendsAwait = [], isFetching } = useQuery({
-    queryKey: ["friends-await", userId],
-    queryFn: async () => {
-      const res = await httpAwait.requestBodyJson("get_await_friends", {}).catch(console.error);
-      return res?.code === 200 ? res.data ?? [] : [];
-    },
-    staleTime: 3000,
-    gcTime: 1000 * 60 * 5,
-    refetchInterval: 3000,
-    enabled: Boolean(userId),
-    refetchIntervalInBackground: true,
-  });
-
-  useEffect(() => {
-    currentAwait.getState().set("friend", friendsAwait.length);
-  }, [friendsAwait.length]);
+  // afriends.fetch(userId).then((list) => {
+  //   if (list !== null) {
+  //     currentAwait.getState().set("friend", list.length);
+  //   }
+  // });
 
 
-  const { http: httpGMsg } = useHttpClient('/rpc/chat/msg/group/');
+  const { http: httpGMsg } = createHttpClient('/rpc/chat/msg/group/');
   const fetchGroupMsgs = async () => {
     const { code, data } = await httpGMsg.requestBodyJson("group_receive");
     if (code !== 200 || !data?.length) return;
@@ -60,7 +47,7 @@ export function ChatGuard() {
     );
   };
 
-  const { http: httpMsg } = useHttpClient('/rpc/chat/msg/single/');
+  const { http: httpMsg } = createHttpClient('/rpc/chat/msg/single/');
   const fetchMsgs = async () => {
     const { code, data } = await httpMsg.requestBodyJson('POST')
     if (code !== 200 || !data?.length) return;
@@ -83,18 +70,14 @@ export function ChatGuard() {
     }));
   }
 
-  // 每2秒获取一次
-  useQuery({
-    queryKey: ['poll-message'],
-    queryFn: async () => {
+  useEffect(() => {
+    if (!userId) return;
+    const timer = setInterval(async () => {
       await fetchMsgs();
       await fetchGroupMsgs();
-      return 'ok';
-    },
-    enabled: !!userId,
-    refetchInterval: 2000,
-    refetchIntervalInBackground: false,
-  })
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [userId]);
 
   useEffect(() => {
     if (remainSeconds > 0 && remainSeconds < 10) {

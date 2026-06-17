@@ -56,7 +56,7 @@ export function Msg() {
     }, [group])
 
     const { winHeight } = useWinSize();
-    const { mutation } = useOutletContext();
+    const { msgSend } = useOutletContext();
     const [msgs, setMsgs] = useState([]);
 
     useEffect(() => {
@@ -74,7 +74,7 @@ export function Msg() {
     const msgTextSend = async (sendText) => {
         if (sendText) {
             if (!group?.id) return;
-            await mutation.mutateAsync({ group_id: group?.id, msgType: 'text', msgText: sendText })
+            await msgSend({ group_id: group?.id, msgType: 'text', msgText: sendText })
         }
     }
 

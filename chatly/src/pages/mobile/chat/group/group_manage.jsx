@@ -1,10 +1,9 @@
 import { GroupEdit } from "./ui/GroupEdit";
-import { currentAppBar, useHttpClient, currentChat, useDateTime, getUserDB } from "utils";
+import { currentAppBar, createHttpClient, currentChat, useDateTime, getUserDB } from "utils";
 import { useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
-import { liveQuery } from "dexie";
+import { agroups } from "http/groups";
 
 
 export const Manage = () => {
@@ -14,7 +13,6 @@ export const Manage = () => {
     const current = currentChat((state) => state.current);
     const db = getUserDB(userId)
 
-    const queryClient = useQueryClient();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -27,8 +25,8 @@ export const Manage = () => {
     }, [])
 
 
-    const { http } = useHttpClient('/rpc/chat/msg/group/');
-    const { http: httpFiles } = useHttpClient('/files/avatar/');
+    const { http } = createHttpClient('/rpc/chat/msg/group/');
+    const { http: httpFiles } = createHttpClient('/files/avatar/');
     const uploadFile = useCallback(async (file) => {
         if (!file) return;
         const results = await httpFiles.uploadFiles(file);
@@ -38,50 +36,56 @@ export const Manage = () => {
     }, [httpFiles]);
 
 
-    const { mutateAsync: updateGroup, isPending } = useMutation({
-        mutationFn: async ({ id, ...payload }) => {
-            if (!id) return;
-            Object.keys(payload).forEach((key) => {
-                if (payload[key] === undefined) {
-                    delete payload[key];
-                }
-            });
-            const results = await http.requestBodyJson('update_group', { id, ...payload })
-            const { code, message, data } = results;
-            if (code !== 200)return;
-            await db.table('groups').update(id, {timestamp: dt.getDateTimeStr()});
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
-                navigate('/mobile/chat/group/');
-            })
-        },
-        onError: (error) => {
-            console.error("修改失败:", error);
-        },
-    });
+    const [group, setGroup] = useState({})
+    const get_group = async () => {
+        const group = current.get("group");
+        if (!group) return;
+        const results = await http.getById(group?.id);
+        const { code, message, data } = results;
+        if (code !== 200) {
+            return {}
+        }
+        setGroup(data)
+        return data
+    }
 
 
-    const { mutateAsync: deteteGroup } = useMutation({
-        mutationFn: async ({ id }) => {
-            if (!id) return;
-            const payload = { id };
-            const results = await http.requestBodyJson('delete_group', payload)
-            const { code, message, data } = results;
+    const [isPending, setIsPending] = useState(false);
+    const updateGroup = async ({ id, ...payload }) => {
+        if (!id) return;
+        Object.keys(payload).forEach((key) => {
+            if (payload[key] === undefined) delete payload[key];
+        });
+        setIsPending(true);
+        try {
+            const results = await http.requestBodyJson('update_group', { id, ...payload });
+            const { code, data } = results;
             if (code !== 200) return;
+            await db.table('groups').update(id, { timestamp: dt.getDateTimeStr() });
+            await agroups.refresh(userId)
+            navigate('/mobile/chat/group/');
+            await get_group()
             return data;
-        },
-        onSuccess: (data) => {
-            console.log(data);
-            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
-                navigate('/mobile/chat/group/');
-            })
-        },
-        onError: (error) => {
-            console.error(error);
-        },
-    });
+        } catch (error) {
+            console.error("修改失败:", error);
+        } finally {
+            setIsPending(false);
+        }
+    };
+
+    const deteteGroup = async ({ id }) => {
+        if (!id) return;
+        const payload = { id };
+        const results = await http.requestBodyJson('delete_group', payload)
+        const { code, message, data } = results;
+        if (code === 200) {
+            await agroups.refresh(userId)
+            navigate('/mobile/chat/group/');
+            await get_group()
+            return data
+        };
+        return null;
+    }
 
     const handleUpdateGroup = async (value) => {
         await updateGroup({
@@ -91,25 +95,8 @@ export const Manage = () => {
             group_notice: value.group_notice,
             admin_invite_only: value.admin_invite_only,
         });
+        await get_group()
     };
-
-
-    const get_group = async () => {
-        const group = current.get("group");
-        if (!group) return;
-        const results = await http.getById(group?.id);
-        const { code, message, data } = results;
-        if (code !== 200) {
-            return {}
-        }
-        return data
-    }
-    const { data: group } = useQuery({
-        queryKey: ["thisgroup", userId],
-        queryFn: get_group,
-        staleTime: 5000,
-        enabled: !!userId,
-    })
 
 
     return <div>

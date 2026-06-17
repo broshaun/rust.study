@@ -1,12 +1,11 @@
 import React, { useEffect, useCallback } from "react";
 import { useNavigate } from 'react-router';
-import { currentAppBar, useHttpClient, currentChat, getUserDB, useDateTime } from "utils";
-import { useQuery } from '@tanstack/react-query'
+import { currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
-
+import { afriends } from "http/friends";
 
 
 
@@ -20,35 +19,14 @@ export const Item = () => {
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');
-        setRightIcon(<IconUserPlus/>)
+        setRightIcon(<IconUserPlus />)
         setRightPath('/mobile/chat/friend/find/')
     }, [])
 
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const { http } = useHttpClient('/rpc/chat/friend/')
-    const get_friend = async () => {
-        const results = await http.requestBodyJson("my_friends", {});
-        if (!results) throw new Error("获取失败");
-        const { code, data, message } = results;
-        console.log('results', results)
-        if (code !== 200) {
-            console.log(message)
-            return []
-        };
-        return data || [];
-    }
-
-    const { data: friendList, isSuccess, isPending } = useQuery({
-        queryKey: ["my_friends", userId],
-        queryFn: get_friend,
-        staleTime: 1000 * 3600 * 1,
-        gcTime: 1000 * 3600 * 12,
-        enabled: !!userId,
-        refetchOnWindowFocus: false,
-    })
-
+    const { data: friendList, isSuccess, isPending } = afriends.useCache(userId)
     const db = getUserDB(userId)
 
     const openMsgWindow = useCallback(async (select) => {

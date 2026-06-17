@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 export function Smile() {
 
-    const { fnSendMsg, isPending } = useOutletContext();
+    const { fnSendMsg } = useOutletContext();
     const current = currentChat(
         (state) => state.current.get("friend")
     );

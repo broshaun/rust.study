@@ -1,10 +1,11 @@
 import { GroupMemberList } from "./ui/GroupMemberList"
 import { useNavigate } from "react-router";
-import { currentAppBar, useHttpClient, currentChat } from "utils"
+import { currentAppBar, createHttpClient, currentChat } from "utils"
 import { useEffect } from "react";
 import { useLocalStorage } from '@mantine/hooks';
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { loginCache } from "http/loginCache";
+import { agroup_user } from "http/group_user";
+
 
 export const GroupUsers = () => {
     const navigate = useNavigate();
@@ -19,53 +20,22 @@ export const GroupUsers = () => {
         setRightPath(null)
     }, [])
 
-    const { http } = useHttpClient('/rpc/chat/msg/group/')
+    const { http } = createHttpClient('/rpc/chat/msg/group/')
     const [userId] = useLocalStorage({ key: 'current_account' })
     const currentUser = loginCache.get(userId)
-    const { data: members = [] } = useQuery
-        (
-            {
-                queryKey: ["group_user_list", userId],
-                queryFn: async () => {
-                    const {id:groupId} = currentChat.getState().get('group')
-                    const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
-                    const { code, data, message } = results;
-                    if (code !== 200) throw new Error(message);
-                    return data || [];
-                },
-                staleTime: 1000 * 60 * 5, // 5分钟内认为缓存有效
-                gcTime: 1000 * 60 * 30, // 缓存保留30分钟
-                select: (data) =>
-                    data.map((item) => ({
-                        id: item.id,
-                        user_id: item.user_id,
-                        nickname: item.nickname,
-                        ask_state: item.ask_state,
-                        avatar_url: item.avatar_url,
-                    }))
-            }
-        );
+    const { data: members = [] } = agroup_user.useCache(userId)
 
-    const queryClient = useQueryClient();
-    const { mutateAsync: leaveGroup } = useMutation({
-        mutationFn: async ({ id }) => {
-            const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
-            const { code, message, data } = results;
-            if (code !== 200) {
-                throw new Error(message);
-            }
-            return data;
-        },
-        onSuccess: (data) => {
-            console.log(data);
-            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] }).then(() => {
-                navigate('/mobile/chat/group/');
-            })
-        },
-        onError: (error) => {
-            console.error(error);
-        },
-    });
+    const leaveGroup = async ({ id }) => {
+        const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
+        const { code, message, data } = results;
+        if (code !== 200) {
+            throw new Error(message);
+        }
+        await agroup_user.refresh(userId)
+        navigate('/mobile/chat/group/');
+        return data;
+    }
+
 
     return <div>
         <GroupMemberList
@@ -73,7 +43,7 @@ export const GroupUsers = () => {
             onAddMember={() => navigate('/mobile/chat/group/addgusr/')}
             onRemoveMember={() => navigate('/mobile/chat/group/delgusr/')}
             onExitGroup={() => {
-                const id = members.find(item => item.user_id === currentUser?.id)?.id;
+                const id = members.find(item => item.uid === currentUser?.id)?.id;
                 leaveGroup({ id })
             }}
         />

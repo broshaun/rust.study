@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useHttpClient, currentAppBar } from "utils";
-import { useMutation } from "@tanstack/react-query";
+import { createHttpClient, currentAppBar } from "utils";
 import { FriendSearch } from "./ui/FriendSearch";
 import { IconUserExclamation } from "@tabler/icons-react";
 
 
 export const Find = () => {
-    const { http } = useHttpClient("/rpc/chat/friend/");
+    const { http } = createHttpClient("/rpc/chat/friend/");
     const [keywordEmail, setKeywordEmail] = useState("");
 
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -21,26 +20,30 @@ export const Find = () => {
         setRightPath('/mobile/chat/friend/await/');
     }, []);
 
-    const {
-        data: findByUser,
-        isPending: loading,
-        mutateAsync: searchFriend,
-    } = useMutation({
-        mutationFn: async ({ email }) => {
-            if (!email?.trim()) return null;
-            const result = await http.requestBodyJson("find", { email });
-            if (!result) return null;
-            return result.data ?? null;
-        },
-    });
 
-    const { mutateAsync: addFriend } = useMutation({
-        mutationFn: async ({ user_id }) => {
-            if (!user_id) return null;
-            const result = await http.requestBodyJson("PUT", { user_id });
-            return result;
-        },
-    });
+    const [isSearching, setIsSearching] = useState(false);
+    const [findByUser, setFindByUser] = useState(null);
+    const searchFriend = async ({ email }) => {
+        if (!email?.trim()) return null;
+        try {
+            setIsSearching(true);
+            const result = await http.requestBodyJson("find", { email });
+            const data = result?.data ?? null;
+            setFindByUser(data);
+            return data;
+        } catch (err) {
+            setFindByUser(null);
+            console.error(err)
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const addFriend = async ({ user_id }) => {
+        if (!user_id) return null;
+        const result = await http.requestBodyJson("PUT", { user_id });
+        return result;
+    }
 
     const handleEmailChange = (value) => {
         setKeywordEmail(value);
@@ -61,7 +64,7 @@ export const Find = () => {
     return (
         <FriendSearch
             keyword={keywordEmail}
-            isSearching={loading}
+            isSearching={isSearching}
             foundUser={findByUser}
             onKeywordChange={handleEmailChange}
             onSearchUser={handleSearch}

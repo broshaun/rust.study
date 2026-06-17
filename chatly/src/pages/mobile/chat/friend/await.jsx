@@ -1,14 +1,12 @@
 import React, { useEffect } from "react";
-import { useHttpClient, currentAppBar } from "utils";
+import { createHttpClient, currentAppBar } from "utils";
 import { FriendRequestList } from "./ui/FriendRequestList";
 import { useLocalStorage } from "@mantine/hooks";
-import { useQueryClient, useIsFetching, useMutation } from '@tanstack/react-query'
-
+import { afriends } from "http/friendsAwait";
 
 export const FriendRequests = () => {
-  const { http } = useHttpClient("/rpc/chat/friend/");
+  const { http } = createHttpClient("/rpc/chat/friend/");
   const [userId] = useLocalStorage({ key: 'current_account' })
-  const queryClient = useQueryClient()
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -21,22 +19,20 @@ export const FriendRequests = () => {
     setRightPath(null);
   }, []);
 
-  const friendRequests = queryClient.getQueryData(["friends-await", userId]);
-  const isRefetching = useIsFetching({ queryKey:["friends-await", userId] }) > 0;
 
-  const { mutateAsync: updateFriendRequest } = useMutation({
-    mutationFn: async ({ id, ask_state }) => {
-      if (!id || !ask_state) return;
-      const result = await http.requestBodyJson("PATCH", { id, ask_state, });
-      return result;
-    },
-  });
+  const { data: friendRequests, isFetching } = afriends.useCache(userId)
+  async function updateFriendRequest({ id, ask_state }) {
+    if (!id || !ask_state) return;
+    const result = await http.requestBodyJson("PATCH", { id, ask_state, });
+    return result;
+
+  }
 
   return (
     <FriendRequestList
-      isRefetching={isRefetching}
+      isRefetching={isFetching}
       onRefetch={async () => {
-        await queryClient.refetchQueries({ queryKey: ["friends-await", userId] })
+        await afriends.refresh(userId)
       }}
       friendRequests={friendRequests}
       onAcceptFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "agree" })}

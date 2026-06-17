@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@mantine/hooks";
-import { currentChat, useHttpClient, currentAppBar } from "utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { currentChat, createHttpClient, currentAppBar } from "utils";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
+import { agroup_user } from "http/group_user";
+
+
 
 export const DelMember = () => {
   
@@ -18,35 +20,11 @@ export const DelMember = () => {
     setRightPath(null)
   }, [])
 
-  const { http } = useHttpClient('/rpc/chat/msg/group/');
+  const { http } = createHttpClient('/rpc/chat/msg/group/');
   const [account] = useLocalStorage({ key: "current_account" });
-  const {
-    data: gusrlist = [],
-    refetch,
-  } = useQuery({
-    queryKey: ["group_user_list", account],
-    queryFn: async () => {
-      const {id:groupId} = currentChat.getState().get("group")
-      const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
-      if (!results) throw new Error("获取失败");
-      const { code, data, message } = results;
-      if (code !== 200) throw new Error(message);
-      return data || [];
-    },
-    staleTime: 1000 * 60 * 5, // 5分钟内认为缓存有效
-    gcTime: 1000 * 60 * 30, // 缓存保留30分钟
-    select: (data) =>
-      data.map((item) => ({
-        id: item.id,
-        uid: item.user_id,
-        nickname: item.nickname,
-        ask_state: item.ask_state,
-        avatar_url: item.avatar_url,
-      }))
-  });
+  const {data: gusrlist = [],refetch} = agroup_user.useCache(account)
 
-  const { mutateAsync: delgusr } = useMutation({
-    mutationFn: async ({ ids }) => {
+  const delgusr= async ({ ids }) => {
       if (!ids) return;
       const results = await http.requestBodyJson('group_user_del_list', { ids })
       const { code, message, data } = results;
@@ -54,15 +32,7 @@ export const DelMember = () => {
         throw new Error(message || "添加群成员");
       }
       return data || true;
-    },
-    onSuccess: (data) => {
-      console.log("删除成功:", data);
-
-    },
-    onError: (error) => {
-      console.error("删除失败:", error);
-    },
-  });
+    }
 
   const navigate = useNavigate();
   const handleConfirm = useCallback(async (value) => {

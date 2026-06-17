@@ -27,7 +27,7 @@ export const Items = () => {
         setRightPath(null);
     }, [])
 
-    const apiInfo = loginCache.useCache(userId)
+    const { data: apiInfo } = loginCache.useCache(userId)
 
     return (
         <Stack gap={0}>
@@ -48,14 +48,14 @@ export const Items = () => {
                 label={`昵称：${apiInfo?.nickname}`}
                 leftSection={<IconId size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => { navigate("/mobile/chat/self/name/")}}
+                onClick={() => { navigate("/mobile/chat/self/name/") }}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="设置手机提醒"
                 leftSection={<IconDeviceMobileMessage size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
-                onClick={() => { navigate("/mobile/chat/self/pushdeer/")}}
+                onClick={() => { navigate("/mobile/chat/self/pushdeer/") }}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}

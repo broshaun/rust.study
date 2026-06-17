@@ -1,5 +1,5 @@
 import { useCallback, Suspense, useEffect } from "react";
-import { useHttpClient, } from 'utils';
+import { createHttpClient, } from 'utils';
 import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
@@ -13,8 +13,8 @@ import { useLocalStorage } from '@mantine/hooks';
 export const Avatar2 = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });
     const currentUser = loginCache.get(userId);
-    const { http: httpFiles } = useHttpClient('/files/avatar/');
-    const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
+    const { http: httpFiles } = createHttpClient('/files/avatar/');
+    const { http: apiLogin } = createHttpClient('/rpc/chat/login/');
 
     const uploadFile = useCallback(async(file) => {
         if (!file) return;

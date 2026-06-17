@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { useHttpClient, currentModal, token } from 'utils';
+import { createHttpClient, currentModal, token } from 'utils';
 import { useEffect } from "react";
 
 
@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 export const Logout = () => {
   const navigate = useNavigate();
-  const { http } = useHttpClient('/rpc/chat/login/')
+  const { http } = createHttpClient('/rpc/chat/login/')
 
   const logout = () => {
     http.post('DELETE').catch(console.error);

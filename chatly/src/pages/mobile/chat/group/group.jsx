@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router';
-import { useHttpClient, useDateTime, getUserDB, GlobalModal } from 'utils';
-import { useMutation } from '@tanstack/react-query';
+import { createHttpClient, useDateTime, getUserDB, GlobalModal } from 'utils';
 import { useLocalStorage } from '@mantine/hooks';
 import { loginCache } from 'http/loginCache';
 
@@ -11,9 +10,8 @@ export const Group = () => {
     const dt = useDateTime();
     const currentUser = loginCache.get(userId)
 
-    const { http } = useHttpClient('/rpc/chat/msg/group/');
-    const mutation = useMutation({
-        mutationFn: async ({ group_id, msgType, msgText }) => {
+    const { http } = createHttpClient('/rpc/chat/msg/group/');
+    const msgSend = async ({ group_id, msgType, msgText }) => {
             const results = await http.requestBodyJson('group_send', {
                 group_id: group_id,
                 msg_type: msgType,
@@ -31,19 +29,12 @@ export const Group = () => {
                 });
             };
             return results?.message
-        },
-        onError: (error) => {
-            console.error(error);
-        },
-        onSuccess: (data) => {
-            console.log(data);
-        },
-    });
+        }
 
 
     return <div>
         <GlobalModal />
-        <Outlet context={{ db, mutation }} />
+        <Outlet context={{ msgSend }} />
     </div>
 
 

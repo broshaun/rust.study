@@ -1,37 +1,34 @@
-import { apiBase, apiImgs, useHttpClient, currentModal } from "utils";
-import { useMutation } from '@tanstack/react-query';
+import { apiBase, apiImgs, createHttpClient, currentModal } from "utils";
 import { ProxySetting } from "./ui/ProxySetting";
 import { useState } from "react";
 
 export const Proxy = () => {
     const { open, close } = currentModal();
-    const { http } = useHttpClient('/rpc/chat/ping/');
-    const { mutateAsync: ping } = useMutation({
-        mutationFn: async () => {
+    const { http } = createHttpClient('/rpc/chat/ping/');
+
+    async function handlePing() {
+        try {
             const results = await http.requestBodyJson("get", {});
             const { code, data, message } = results;
             if (code !== 200) {
                 throw new Error(message);
             }
-            return data
-        },
-        onSuccess: (data) => {
             open({
                 title: "Ping测试",
                 message: data,
-                onConfirm: () => close(),
+                onConfirm: close,
                 onCancel: null
             });
-        },
-        onError: (error) => {
+        } catch (e) {
             open({
                 title: "Ping测试",
-                message: error,
-                onConfirm: () => close(),
+                message: e?.message || String(e),
+                onConfirm: close,
                 onCancel: null
             });
-        },
-    });
+        }
+    }
+
 
     const [api, setApi] = useState(() => apiBase.get())
     const [img, setImg] = useState(() => apiImgs.get())
@@ -47,7 +44,7 @@ export const Proxy = () => {
         <ProxySetting
             apiBase={api}
             imgBase={img}
-            onPingApi={() => { ping().catch(console.error) }}
+            onPingApi={handlePing}
             onSave={handleSave}
         />
     </div>

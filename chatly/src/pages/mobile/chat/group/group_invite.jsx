@@ -1,10 +1,9 @@
 import { GroupInviteMessageList } from "./ui/InviteGroupCard";
-import { currentAppBar, useHttpClient } from "utils";
+import { currentAppBar, createHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@mantine/hooks";
-
+import { agroups } from "http/groups";
 
 
 export function InviteGroup() {
@@ -13,7 +12,7 @@ export function InviteGroup() {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-    const { http } = useHttpClient('/rpc/chat/msg/group/');
+    const { http } = createHttpClient('/rpc/chat/msg/group/');
     const groupInviteMsg = async () => {
         const results = await http.requestBodyJson('group_admin_invite_msg', {})
         if (results?.code !== 200) {
@@ -38,19 +37,15 @@ export function InviteGroup() {
         setRightPath('/mobile/chat/group/addg/')
     }, [])
 
-
-    const queryClient = useQueryClient();
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const updateGroupAskState = useMutation({
-        mutationFn: async ({ id, ask_state }) => {
-            const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
-            if (results?.code !== 200) return [];
+    const updateGroupAskState = async ({ id, ask_state }) => {
+        const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
+        if (results?.code === 200) {
+            await agroups.refresh(userId)
             return results?.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["my_group_list", userId] })
         }
-    });
+        return []
+    }
 
     return <div>
         <GroupInviteMessageList data={data} loading={loading}

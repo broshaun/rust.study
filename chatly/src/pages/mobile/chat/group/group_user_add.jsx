@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage, useListState } from "@mantine/hooks";
-import { getUserDB, currentChat, useHttpClient, currentAppBar, currentModal } from "utils";
-import { useMutation } from "@tanstack/react-query";
+import { getUserDB, currentChat, createHttpClient, currentAppBar, currentModal } from "utils";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
 
@@ -18,7 +17,7 @@ export const AddMember = () => {
     setRightPath(null)
   }, [])
 
-  const { http } = useHttpClient('/rpc/chat/msg/group/');
+  const { http } = createHttpClient('/rpc/chat/msg/group/');
   const [account] = useLocalStorage({ key: "current_account" });
   const db = getUserDB(account);
 
@@ -32,28 +31,20 @@ export const AddMember = () => {
 
 
   const { open, close } = currentModal();
-  const { mutateAsync: addgusr } = useMutation({
-    mutationFn: async ({ group_id, uids }) => {
-      if (!group_id) return;
-      const results = await http.requestBodyJson('group_user_add_list', { group_id, uids })
-      const { code, message, data } = results;
-      if (code !== 200) {
-        open({
-          title: "邀请失败",
-          message: message,
-          onConfirm: () => close(),
-          onCancel: null
-        })
-      }
-      return data;
-    },
-    onSuccess: (data) => {
-      console.log("邀请成功:", data);
-    },
-    onError: (error) => {
-      console.error("邀请失败:", error);
-    },
-  });
+  const addgusr = async ({ group_id, uids }) => {
+    if (!group_id) return;
+    const results = await http.requestBodyJson('group_user_add_list', { group_id, uids })
+    const { code, message, data } = results;
+    if (code !== 200) {
+      open({
+        title: "邀请失败",
+        message: message,
+        onConfirm: () => close(),
+        onCancel: null
+      })
+    }
+    return data;
+  }
 
   const navigate = useNavigate();
   const handleConfirm = useCallback(async (value) => {
