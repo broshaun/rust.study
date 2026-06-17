@@ -62,9 +62,6 @@ For iOS development, run:
 ```sh
   pnpm remove xxx
   pnpm add @tauri-apps/api
-  pnpm add @tauri-apps/plugin-sql
-  pnpm tauri add store
-
   pnpm add react-router
   pnpm add dexie dexie-react-hooks
   pnpm add @mantine/hooks @mantine/core @tabler/icons-react
