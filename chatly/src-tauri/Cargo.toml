@@ -34,3 +34,4 @@ pkcs8 = { version = "=0.11.0-rc.11" }
 iroh = "0.97"
 iroh-tickets = "0.4.0"
 iroh-ping = "0.9.0"
+tauri-plugin-store = "2"
