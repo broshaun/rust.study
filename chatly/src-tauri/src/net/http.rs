@@ -55,10 +55,7 @@ async fn send(req: reqwest::RequestBuilder) -> Result<String, String> {
 
 #[tauri::command]
 pub async fn http_get(options: GetOptions) -> Result<String, String> {
-    let req = add_headers(
-        Client::new().get(options.url),
-        options.headers,
-    );
+    let req = add_headers(Client::new().get(options.url), options.headers);
 
     send(req).await
 }
@@ -90,9 +87,7 @@ pub async fn http_upload(
         multipart::Part::bytes(file_bytes).file_name(file_name),
     );
 
-    let req = Client::new()
-        .post(url)
-        .multipart(form);
+    let req = Client::new().post(url).multipart(form);
 
     send(req).await
 }

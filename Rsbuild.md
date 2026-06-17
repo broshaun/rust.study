@@ -61,7 +61,7 @@ For iOS development, run:
 ### 安装前端包
 ```sh
   pnpm remove xxx
-  pnpm add @tauri-apps/api 
+  pnpm add @tauri-apps/api
   pnpm add react-router
   pnpm add dexie dexie-react-hooks
   pnpm add @mantine/hooks @mantine/core @tabler/icons-react
@@ -73,3 +73,7 @@ For iOS development, run:
 
 
 手机端不需要悬浮提示
+
+
+
+pnpm create tauri-app

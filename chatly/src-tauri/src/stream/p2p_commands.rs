@@ -70,7 +70,6 @@ pub async fn p2p_state(
     state: tauri::State<'_, AppState>,
     on_data: Channel<String>,
 ) -> Result<String, String> {
-
     let ts = {
         let task_guard = state.task.read().await;
         let Some(ts) = task_guard.as_ref() else {

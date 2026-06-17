@@ -5,7 +5,7 @@ import { useHttpClient, currentModal, useDateTime } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from "@mantine/hooks";
 import { LoginUI } from "./ui/LoginUI";
-import { useLoginUserInfo } from "http/login";
+// import { useLoginUserInfo } from "http/login";
 
 
 export function Login() {
@@ -25,7 +25,7 @@ export function Login() {
             if (!results) throw new Error("登录失败，请稍后重试");
             const { code, data, message } = results;
             if (code !== 200) throw new Error(message || "登录失败");
-            useLoginUserInfo()
+            // useLoginUserInfo()
             return data
         },
         onSuccess: (data) => {

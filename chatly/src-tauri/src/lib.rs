@@ -5,8 +5,6 @@ use stream::p2p_commands;
 mod net;
 use net::http;
 
-
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Iroh官方加密使用
@@ -26,10 +24,8 @@ pub fn run() {
             p2p_commands::p2p_start_connect,
             p2p_commands::p2p_send,
             p2p_commands::send_to_this_window,
-
             image_cache::get_image_cached,
             image_cache::clear_image_cache,
-
             http::http_get,
             http::http_post,
             http::http_upload
