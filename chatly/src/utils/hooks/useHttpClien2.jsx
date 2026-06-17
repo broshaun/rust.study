@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { useApiBase, useToken } from "utils";
+import { apiBase as apiBase2,  token as token2 } from "utils";
 
 /**
  * JSON 序列化转换器
@@ -15,8 +15,8 @@ function replacer(key, value) {
  * 原生web fetch实现http访问
  */
 export function useHttpClient(baseUrl = "") {
-  const { apiBase } = useApiBase();
-  const { token } = useToken();
+  const apiBase = apiBase2.get();
+  const { token } = token2.get();
 
   const endpoint = useMemo(() => (apiBase || "") + baseUrl, [apiBase, baseUrl]);
 

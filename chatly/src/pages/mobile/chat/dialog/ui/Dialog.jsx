@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { useApiBase } from "utils";
+import { apiBase } from "utils";
 import { SafeAvatar } from "components";
 
 const WEEK_DAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -54,7 +54,6 @@ export const Dialog = memo(
     onAvatarClick,
     height = 52,
   }) {
-    const { apiBase } = useApiBase();
 
     if (!data) return null;
 
@@ -67,7 +66,7 @@ export const Dialog = memo(
       "未知联系人";
 
     const avatarUrl = data.avatar_url
-      ? `${String(apiBase).replace(/\/+$/, "")}/imgs/${String(
+      ? `${String(apiBase.get()).replace(/\/+$/, "")}/imgs/${String(
           data.avatar_url
         ).replace(/^\/+/, "")}`
       : "";

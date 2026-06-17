@@ -16,7 +16,7 @@ import {
   IconRotateClockwise,
   IconX,
 } from "@tabler/icons-react";
-import { useCachedImage, useImgApiBase } from "utils";
+import { useCachedImage, apiImgs } from "utils";
 
 const IMAGE_BASE_PATH = "images";
 
@@ -30,8 +30,7 @@ function SafeImageComponent({
   allowPreview = true,
   alt = "Image",
 }) {
-  const { joinPath } = useImgApiBase(IMAGE_BASE_PATH);
-
+  const joinPath = (PATH) => apiImgs.join(IMAGE_BASE_PATH,PATH);
   const finalUrl = url ? joinPath(url) : "";
   const finalPreviewUrl = previewUrl ? joinPath(previewUrl) : finalUrl;
 

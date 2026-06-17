@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Box, Skeleton, Image, Center } from "@mantine/core";
-import { useCachedImage, useImgApiBase } from "utils";
+import { useCachedImage, apiImgs } from "utils";
 
 const IMAGE_BASE_PATH = "avatar";
 
@@ -25,10 +25,9 @@ function SafeAvatarComponent({
   radius = "circle",
   cover = true,
   stretch = false,
-  version,
 }) {
-  const { joinPath } = useImgApiBase(IMAGE_BASE_PATH);
 
+  const joinPath = (PATH) => apiImgs.join(IMAGE_BASE_PATH,PATH)
   const finalUrl = url ? joinPath(url) : "";
   const { src, loading } = useCachedImage(finalUrl);
 

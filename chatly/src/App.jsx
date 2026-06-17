@@ -1,12 +1,10 @@
 import { createHashRouter, RouterProvider, Navigate } from "react-router";
 import { RsMobile } from "pages/mobile";
-import { useWinSize, useToken } from 'utils';
+import { useRemainSeconds } from 'utils';
 
-
-// const { isMobile } = useWinSize()
 
 const App = () => {
-  const { remainSeconds } = useToken();
+  const remainSeconds = useRemainSeconds()
   const router = createHashRouter([
     {
       index: true,
@@ -14,9 +12,7 @@ const App = () => {
       // element: <Navigate to="/mobile/auth" replace />,
     },
     ...RsMobile
-
   ]);
-
   return <RouterProvider router={router} />;
 };
 

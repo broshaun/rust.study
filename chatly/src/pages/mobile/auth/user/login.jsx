@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from 'react-router';
-import { useToken } from "utils";
+import { token } from "utils";
 import { useHttpClient, currentModal, useDateTime } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from "@mantine/hooks";
@@ -12,9 +12,10 @@ export function Login() {
     const navigate = useNavigate();
     const [account, setAccount] = useLocalStorage({ key: 'current_account', defaultValue: "" });
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
-
     const { http } = useHttpClient('/rpc/chat/login/');
-    const { setToken } = useToken();
+
+
+
     const dt = useDateTime();
 
     const { open, close } = currentModal();
@@ -29,7 +30,7 @@ export function Login() {
             return data
         },
         onSuccess: (data) => {
-            setToken(data?.login_token, data?.login_expired);
+            token.set({ "token": data?.login_token, "remainSeconds": data?.login_expired })
             setCurrentUser({ ...data?.user, timestamp: dt.getDateTimeStr() });
             navigate("/mobile/chat/");
         },

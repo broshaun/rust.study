@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useToken, getUserDB, useHttpClient, useDateTime } from "utils"
+import { useRemainSeconds, getUserDB, useHttpClient, useDateTime } from "utils"
 import { useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@mantine/hooks';
 import { currentAwait } from "utils";
@@ -11,7 +11,7 @@ export function ChatGuard() {
   const navigate = useNavigate();
   const [userId] = useLocalStorage({ key: 'current_account' })
   const db = getUserDB(userId);
-  const { remainSeconds } = useToken()
+  const remainSeconds = useRemainSeconds();
 
 
   const { http: httpAwait } = useHttpClient("/rpc/chat/friend/");

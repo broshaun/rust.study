@@ -1,4 +1,4 @@
-import { useApiBase, useImgApiBase, useHttpClient, currentModal } from "utils";
+import { apiBase, apiImgs, useHttpClient, currentModal } from "utils";
 import { useMutation } from '@tanstack/react-query';
 import { ProxySetting } from "./ui/ProxySetting";
 
@@ -32,28 +32,22 @@ export const Proxy = () => {
         },
     });
 
-
-
-
-    const {apiBase, setApiBase} = useApiBase() //http://185.245.41.154:5015
-    const {imgBase, setImgBase} = useImgApiBase() // http://185.245.41.154:9000
-
-
-    console.log('apiBase', apiBase)
-    console.log('imgBase', imgBase)
+    const [api, setApi] = useState(() => apiBase.get())
+    const [img, setImg] = useState(() => apiImgs.get())
+    const handleSave = (newApi, newImg) => {
+        apiBase.set(newApi);
+        apiImgs.set(newImg);
+        setApi(newApi);
+        setImg(newImg);
+        console.log('新配置：', newApi, newImg);
+    };
 
     return <div>
         <ProxySetting
-            apiBase={apiBase}
-            imgBase={imgBase}
-            onPingApi={(url) => {
-                ping().catch(console.error)
-            }}
-            onSave={(newApi, newImg) => {
-                setApiBase(newApi);
-                setImgBase(newImg);
-                console.log('新配置：', newApi, newImg);
-            }}
+            apiBase={api}
+            imgBase={img}
+            onPingApi={() => { ping().catch(console.error) }}
+            onSave={handleSave}
         />
     </div>
 }
