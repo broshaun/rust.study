@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryObserver } from '@tanstack/query-core';
-import { useHttpClient } from 'utils';
+import { createHttpClient } from 'utils';
 
 
 const queryClient = new QueryClient();
 const key = (userId) => ['login-info', userId];
-const { http } = useHttpClient('/rpc/chat/login/');
+const { http } = createHttpClient('/rpc/chat/login/');
+
+// import { useLocalStorage } from '@mantine/hooks';
+// const [userId] = useLocalStorage({ key: 'current_account' });
+
 
 async function loginFn() {
     const res = await http.requestBodyJson('info', {});

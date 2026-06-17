@@ -4,13 +4,15 @@ import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
-import { useLoginUserInfo } from "http/login";
+import { loginCache } from "http/loginCache";
+import { useLocalStorage } from '@mantine/hooks';
 
 /**
  * 上传并更新头像
  */
 export const Avatar2 = () => {
-    const {data:currentUser, refetch} = useLoginUserInfo();
+    const [userId] = useLocalStorage({ key: 'current_account' });
+    const currentUser = loginCache.get(userId);
     const { http: httpFiles } = useHttpClient('/files/avatar/');
     const { http: apiLogin } = useHttpClient('/rpc/chat/login/');
 
@@ -19,7 +21,7 @@ export const Avatar2 = () => {
         const results =  await httpFiles.uploadFiles(file);
         if (!results?.data) return;
         await apiLogin.post('update', { avatar_url: results.data });
-        refetch()
+        loginCache.refresh(userId)
     }, [httpFiles, apiLogin]);
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);

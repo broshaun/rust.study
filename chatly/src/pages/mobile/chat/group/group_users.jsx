@@ -4,7 +4,7 @@ import { currentAppBar, useHttpClient, currentChat } from "utils"
 import { useEffect } from "react";
 import { useLocalStorage } from '@mantine/hooks';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLoginUserInfo } from "http/login";
+import { loginCache } from "http/loginCache";
 
 export const GroupUsers = () => {
     const navigate = useNavigate();
@@ -21,7 +21,7 @@ export const GroupUsers = () => {
 
     const { http } = useHttpClient('/rpc/chat/msg/group/')
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const {data:currentUser} = useLoginUserInfo()
+    const currentUser = loginCache.get(userId)
     const { data: members = [] } = useQuery
         (
             {

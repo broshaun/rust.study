@@ -6,14 +6,14 @@ import { useLocalStorage } from '@mantine/hooks';
 import { IconUserShare } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useLoginUserInfo } from "http/login";
+import { loginCache } from "http/loginCache";
 
 
 export const Item = () => {
     const dt = useDateTime();
     const [userId] = useLocalStorage({ key: 'current_account' })
     const db = getUserDB(userId);
-    const {data:usrInfo } = useLoginUserInfo()
+    const usrInfo = loginCache.get(userId)
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);

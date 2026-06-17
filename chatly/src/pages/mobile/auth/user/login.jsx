@@ -5,19 +5,15 @@ import { useHttpClient, currentModal, useDateTime } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from "@mantine/hooks";
 import { LoginUI } from "./ui/LoginUI";
-// import { useLoginUserInfo } from "http/login";
+import { loginCache } from "http/loginCache";
 
 
 export function Login() {
+    const dt = useDateTime();
     const navigate = useNavigate();
-    const [account, setAccount] = useLocalStorage({ key: 'current_account', defaultValue: "" });
+    const [userId, setUserId] = useLocalStorage({ key: 'current_account', defaultValue: "" });
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
     const { http } = useHttpClient('/rpc/chat/login/');
-
-
-
-    const dt = useDateTime();
-
     const { open, close } = currentModal();
     const { mutateAsync: login } = useMutation({
         mutationFn: async ({ account, password }) => {
@@ -26,11 +22,11 @@ export function Login() {
             if (!results) throw new Error("登录失败，请稍后重试");
             const { code, data, message } = results;
             if (code !== 200) throw new Error(message || "登录失败");
-            // useLoginUserInfo()
             return data
         },
         onSuccess: (data) => {
             token.set({ "token": data?.login_token, "remainSeconds": data?.login_expired })
+            loginCache.fetch(userId)
             setCurrentUser({ ...data?.user, timestamp: dt.getDateTimeStr() });
             navigate("/mobile/chat/");
         },
@@ -49,8 +45,8 @@ export function Login() {
             <LoginUI
                 avatarUrl={currentUser?.avatar_url}
                 avatarVersion={currentUser?.timestamp}
-                defaultAccount={account}
-                onAccountChange={setAccount}
+                defaultAccount={userId}
+                onAccountChange={setUserId}
                 onSubmit={login}
             />
         </React.Fragment>

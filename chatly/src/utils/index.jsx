@@ -1,4 +1,5 @@
 export { useHttpClient } from './hooks/useHttpClien';
+export { createHttpClient } from './hooks/httpClient';
 export { usePcmCapture } from './hooks/usePcmCapture';
 export { usePcmPlayback } from './hooks/usePcmPlayback';
 export { useWinSize } from './hooks/useWinSize';

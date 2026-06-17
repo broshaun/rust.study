@@ -2,14 +2,14 @@ import { Outlet } from 'react-router';
 import { useHttpClient, useDateTime, getUserDB, GlobalModal } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalStorage } from '@mantine/hooks';
-import { useLoginUserInfo } from 'http/login';
+import { loginCache } from 'http/loginCache';
 
 
 export const Group = () => {
-    const {data:currentUser} = useLoginUserInfo()
     const [userId] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(userId);
     const dt = useDateTime();
+    const currentUser = loginCache.get(userId)
 
     const { http } = useHttpClient('/rpc/chat/msg/group/');
     const mutation = useMutation({

@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router';
 import { useHttpClient, currentAppBar } from 'utils';
 import { useMutation } from '@tanstack/react-query';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
-import { useLoginUserInfo } from "http/login";
-
+import { loginCache } from "http/loginCache";
+import { useLocalStorage } from '@mantine/hooks';
 
 export const Nickname = () => {
+    const [userId] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
-    const {data:User, refetch} = useLoginUserInfo()
+    const User = loginCache.useCache(userId)
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
@@ -34,7 +35,7 @@ export const Nickname = () => {
             return 'ok';
         },
         onSuccess: () => {
-            refetch()
+            loginCache.refresh(userId)
             navigate('/mobile/chat/self/')
         }
     });

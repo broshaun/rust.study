@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { apiBase as apiBase2, token as token2 } from "utils";
 
 function replacer(key, value) {
   if (value instanceof Map) return Object.fromEntries(value);
@@ -26,11 +27,14 @@ async function fileToBytes(file) {
   return Array.from(new Uint8Array(buffer));
 }
 
-export function createHttpClient({ apiBase = "", token = "", baseUrl = "" } = {}) {
-  const endpoint = `${apiBase}${baseUrl}`;
-  const authHeaders = token ? { Authorization: token } : {};
+function createHttpClient(baseUrl = "") {
+  const apiBase = apiBase2.get();
+  const tokenValue = token2.get()?.token;
 
-  async function get() {
+  const endpoint = `${apiBase || ""}${baseUrl || ""}`;
+  const authHeaders = tokenValue ? { Authorization: tokenValue } : {};
+
+  const get = async () => {
     const res = await invoke("http_get", {
       options: {
         url: endpoint,
@@ -39,9 +43,9 @@ export function createHttpClient({ apiBase = "", token = "", baseUrl = "" } = {}
     });
 
     return parseResponse(res);
-  }
+  };
 
-  async function getById(id) {
+  const getById = async (id) => {
     const res = await invoke("http_get", {
       options: {
         url: `${endpoint}?id=${encodeURIComponent(id)}`,
@@ -50,9 +54,9 @@ export function createHttpClient({ apiBase = "", token = "", baseUrl = "" } = {}
     });
 
     return parseResponse(res);
-  }
+  };
 
-  async function requestBodyJson(methodName, payload = {}) {
+  const requestBodyJson = async (methodName, payload = {}) => {
     const res = await invoke("http_post", {
       options: {
         url: endpoint,
@@ -65,9 +69,9 @@ export function createHttpClient({ apiBase = "", token = "", baseUrl = "" } = {}
     });
 
     return parseResponse(res);
-  }
+  };
 
-  async function uploadFiles(file) {
+  const uploadFiles = async (file) => {
     if (!file) throw new Error("No file selected");
 
     const res = await invoke("http_upload", {
@@ -77,14 +81,18 @@ export function createHttpClient({ apiBase = "", token = "", baseUrl = "" } = {}
     });
 
     return parseResponse(res);
-  }
+  };
 
   return {
     endpoint,
-    get,
-    getById,
-    requestBodyJson,
-    post: requestBodyJson,
-    uploadFiles,
+    http: {
+      get,
+      getById,
+      requestBodyJson,
+      post: requestBodyJson,
+      uploadFiles,
+    },
   };
 }
+
+export { createHttpClient };

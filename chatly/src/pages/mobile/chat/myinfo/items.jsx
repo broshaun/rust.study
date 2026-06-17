@@ -11,12 +11,13 @@ import {
     IconChevronRight
 } from '@tabler/icons-react';
 import React, { useEffect } from "react";
-import { useLoginUserInfo } from 'http/login';
+import { loginCache } from 'http/loginCache';
+import { useLocalStorage } from '@mantine/hooks';
 
 
 export const Items = () => {
+    const [userId] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
-
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     const setRightPath = currentAppBar((state) => state.setRightPath);
@@ -26,7 +27,7 @@ export const Items = () => {
         setRightPath(null);
     }, [])
 
-    const { data: apiInfo = {} } = useLoginUserInfo()
+    const apiInfo = loginCache.useCache(userId)
 
     return (
         <Stack gap={0}>
