@@ -1,6 +1,7 @@
 import { apiBase, apiImgs, useHttpClient, currentModal } from "utils";
 import { useMutation } from '@tanstack/react-query';
 import { ProxySetting } from "./ui/ProxySetting";
+import { useState } from "react";
 
 export const Proxy = () => {
     const { open, close } = currentModal();
