@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { useNavigate } from 'react-router';
 import { tokenStore } from "utils";
 import { createHttpClient, currentModal, useDateTime } from 'utils';
@@ -12,7 +11,7 @@ export function Login() {
     const navigate = useNavigate();
     const [userId, setUserId] = useLocalStorage({ key: 'current_account', defaultValue: "" });
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
-    const { http,endpoint } = createHttpClient('/rpc/chat/login/');
+    const { http } = createHttpClient('/rpc/chat/login/');
     
 
     const { open, close } = currentModal();
@@ -40,7 +39,6 @@ export function Login() {
             });
         }
     }
-
 
 
     return (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Stack,
@@ -17,7 +17,7 @@ const TextField = ({
   hintText,
   value,
   onChanged,
-  maxWidth = 250, // 提取为默认值
+  maxWidth = 250,
   obscureText = false,
   disabled = false,
   error,
@@ -79,13 +79,17 @@ export function LoginUI({
   const [account, setAccount] = useState(defaultAccount);
   const [password, setPassword] = useState("");
 
+  // 关键：监听 defaultAccount 变化，同步到本地state
+  useEffect(() => {
+    setAccount(defaultAccount);
+  }, [defaultAccount]);
+
   const handleAccountChange = (val) => {
     setAccount(val);
     onAccountChange?.(val);
   };
 
   return (
-    // 使用 align="center" 一次性解决所有子元素的居中问题
     <Stack align="center" gap="md">
       <SafeAvatar
         url={avatarUrl}

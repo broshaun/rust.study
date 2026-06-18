@@ -17,9 +17,6 @@ keytool -genkeypair \
 ```
 
 
-
+- git tag -d android-v1.1.9
 - git tag android-v1.1.9
 - git push origin android-v1.1.9
-
-
-
