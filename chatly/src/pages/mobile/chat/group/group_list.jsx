@@ -7,7 +7,7 @@ import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { loginCache } from "cache/loginCache";
 import { agroups } from "cache/groups";
-import { useQueryCache } from "cache/useQueryCache";
+import { useQueryCache } from "cache";
 
 
 

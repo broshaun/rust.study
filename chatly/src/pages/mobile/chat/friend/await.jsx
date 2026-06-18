@@ -3,7 +3,7 @@ import { createHttpClient, currentAppBar } from "utils";
 import { FriendRequestList } from "./ui/FriendRequestList";
 import { useLocalStorage } from "@mantine/hooks";
 import { afriends } from "cache/friendsAwait";
-import { useQueryCache } from "cache/useQueryCache";
+import { useQueryCache } from "cache";
 
 export const FriendRequests = () => {
   const { http } = createHttpClient("/rpc/chat/friend/");

@@ -13,7 +13,7 @@ import {
 import React, { useEffect } from "react";
 import { loginCache } from 'cache/loginCache';
 import { useLocalStorage } from '@mantine/hooks';
-import { useQueryCache } from 'cache/useQueryCache';
+import { useQueryCache } from 'cache';
 
 export const Items = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });

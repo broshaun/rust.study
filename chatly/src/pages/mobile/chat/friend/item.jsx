@@ -6,7 +6,7 @@ import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { afriends } from "cache/friends";
-import { useQueryCache } from "cache/useQueryCache";
+import { useQueryCache } from "cache";
 
 
 
