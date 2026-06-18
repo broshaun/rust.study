@@ -12,7 +12,5 @@ export { currentAppBar, GlobalAppBar } from './global/currentAppBar';
 export { currentModal, GlobalModal } from './global/currentModal';
 export { currentAwait } from './global/currentAwait';
 
-
-
 export { useDateTime } from './dateTimeUtils';
 export { getUserDB, closeUserDB, deleteUserDB } from './db/DBUser';
