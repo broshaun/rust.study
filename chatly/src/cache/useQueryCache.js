@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { emptyState, queryClient } from './createQueryCache';
+import { emptyState, queryClient } from './helper/createQueryCache';
 
 export function useQueryCache(cache, ...args) {
     const [state, setState] = useState(emptyState);

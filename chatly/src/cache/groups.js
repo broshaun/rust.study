@@ -1,5 +1,5 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './createQueryCache';
+import { createQueryCache } from './helper/createQueryCache';
 
 
 const { http } = createHttpClient('/rpc/chat/msg/group/');
