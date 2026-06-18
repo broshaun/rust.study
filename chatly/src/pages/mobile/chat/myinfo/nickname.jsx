@@ -2,9 +2,9 @@ import { Suspense, useEffect } from "react";
 import { useNavigate } from 'react-router';
 import { createHttpClient, currentAppBar } from 'utils';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
-import { loginCache } from "http/loginCache";
+import { loginCache } from "cache/loginCache";
 import { useLocalStorage } from '@mantine/hooks';
-import { useQueryCache } from "http/useQueryCache";
+import { useQueryCache } from "cache/useQueryCache";
 
 
 export const Nickname = () => {

@@ -3,7 +3,7 @@ import { currentAppBar, createHttpClient } from "utils";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from "@mantine/hooks";
-import { agroups } from "http/groups";
+import { agroups } from "cache/groups";
 
 
 export function CreateGroup() {

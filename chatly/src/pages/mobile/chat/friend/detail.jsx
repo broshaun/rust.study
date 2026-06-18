@@ -4,7 +4,7 @@ import { createHttpClient, currentAppBar, currentChat } from 'utils';
 import { getUserDB } from "utils";
 import { useLocalStorage } from '@mantine/hooks';
 import { FriendInfo } from "./ui/FriendDetailUI";
-import { afriends } from "http/friends";
+import { afriends } from "cache/friends";
 
 
 export function Detail() {

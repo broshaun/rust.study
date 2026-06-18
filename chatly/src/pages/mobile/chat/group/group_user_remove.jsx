@@ -3,8 +3,8 @@ import { useLocalStorage } from "@mantine/hooks";
 import { currentChat, createHttpClient, currentAppBar } from "utils";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
-import { agroup_user } from "http/group_user";
-import { useQueryCache } from "http/useQueryCache";
+import { agroup_user } from "cache/group_user";
+import { useQueryCache } from "cache/useQueryCache";
 
 
 export const DelMember = () => {

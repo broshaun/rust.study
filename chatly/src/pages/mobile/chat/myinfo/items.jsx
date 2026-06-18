@@ -11,9 +11,9 @@ import {
     IconChevronRight
 } from '@tabler/icons-react';
 import React, { useEffect } from "react";
-import { loginCache } from 'http/loginCache';
+import { loginCache } from 'cache/loginCache';
 import { useLocalStorage } from '@mantine/hooks';
-import { useQueryCache } from 'http/useQueryCache';
+import { useQueryCache } from 'cache/useQueryCache';
 
 export const Items = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });

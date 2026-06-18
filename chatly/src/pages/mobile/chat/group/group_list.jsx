@@ -5,9 +5,9 @@ import { useLocalStorage } from '@mantine/hooks';
 import { IconUserShare } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
-import { loginCache } from "http/loginCache";
-import { agroups } from "http/groups";
-import { useQueryCache } from "http/useQueryCache";
+import { loginCache } from "cache/loginCache";
+import { agroups } from "cache/groups";
+import { useQueryCache } from "cache/useQueryCache";
 
 
 

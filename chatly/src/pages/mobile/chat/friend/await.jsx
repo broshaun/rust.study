@@ -2,8 +2,8 @@ import React, { useEffect } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendRequestList } from "./ui/FriendRequestList";
 import { useLocalStorage } from "@mantine/hooks";
-import { afriends } from "http/friendsAwait";
-import { useQueryCache } from "http/useQueryCache";
+import { afriends } from "cache/friendsAwait";
+import { useQueryCache } from "cache/useQueryCache";
 
 export const FriendRequests = () => {
   const { http } = createHttpClient("/rpc/chat/friend/");

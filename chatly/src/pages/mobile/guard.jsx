@@ -3,7 +3,7 @@ import { useNavigate, Outlet } from 'react-router';
 import { useRemainSeconds, getUserDB, createHttpClient, useDateTime } from "utils"
 import { useLocalStorage } from '@mantine/hooks';
 import { currentAwait } from "utils";
-import { afriends } from "http/friendsAwait";
+import { afriends } from "cache/friendsAwait";
 
 
 export function ChatGuard() {

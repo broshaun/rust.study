@@ -4,7 +4,7 @@ import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
-import { loginCache } from "http/loginCache";
+import { loginCache } from "cache/loginCache";
 import { useLocalStorage } from '@mantine/hooks';
 
 /**

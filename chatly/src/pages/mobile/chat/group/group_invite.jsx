@@ -3,7 +3,7 @@ import { currentAppBar, createHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";
 import { useLocalStorage } from "@mantine/hooks";
-import { agroups } from "http/groups";
+import { agroups } from "cache/groups";
 
 
 export function InviteGroup() {
