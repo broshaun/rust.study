@@ -1,4 +1,4 @@
-name: Tauri2 Android Build (Stable Fixed)
+name: Tauri2 Android Build Split APK
 
 on:
   workflow_dispatch:
@@ -16,6 +16,24 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: aarch64
+            rust_target: aarch64-linux-android
+            name: arm64-v8a
+          - abi: armv7
+            rust_target: armv7-linux-androideabi
+            name: armeabi-v7a
+          - abi: i686
+            rust_target: i686-linux-android
+            name: x86
+          - abi: x86_64
+            rust_target: x86_64-linux-android
+            name: x86_64
+
     env:
       NODE_VERSION: "20"
       JAVA_VERSION: "17"
@@ -36,7 +54,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+          targets: ${{ matrix.rust_target }}
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -46,16 +64,13 @@ jobs:
         run: |
           set -euxo pipefail
 
-          echo "Purging old NDKs..."
           rm -rf "$ANDROID_SDK_ROOT/ndk" || true
           rm -rf "$ANDROID_SDK_ROOT/ndk-bundle" || true
 
-          echo "Accepting Android SDK licenses..."
           set +o pipefail
           yes | sdkmanager --licenses > /dev/null
           set -o pipefail
 
-          echo "Installing required Android packages..."
           sdkmanager \
             "platform-tools" \
             "platforms;android-34" \
@@ -67,10 +82,6 @@ jobs:
           echo "ANDROID_NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
           echo "$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
 
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "Using NDK at $NDK_PATH"
-          test -d "$NDK_PATH"
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -80,68 +91,33 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-
           corepack enable
           corepack prepare pnpm@9.12.3 --activate
-
-          node -v
-          npm -v
-          pnpm -v
 
       - name: Install frontend dependencies
         shell: bash
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           set -euxo pipefail
-
           pnpm config set registry https://registry.npmmirror.com
           pnpm install --frozen-lockfile
-
-          # 如果 package.json 里本来已经有 @tauri-apps/cli，可删除下面这行
           pnpm add -D @tauri-apps/cli@^2
-
-      - name: Verify project files
-        shell: bash
-        working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          set -euxo pipefail
-
-          test -f package.json
-          test -d src-tauri
-
-          echo "==== package.json scripts ===="
-          node -e "const p=require('./package.json'); console.log(p.scripts || {})"
-
-          echo "==== tauri config exists ===="
-          ls -la src-tauri | sed -n '1,120p'
 
       - name: Clean and initialize Android project
         shell: bash
         working-directory: ${{ env.WORKING_DIR }}
-        env:
-          NDK_HOME: ${{ env.NDK_HOME }}
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
           set -euxo pipefail
 
-          if [ -d "src-tauri/gen/android" ]; then
-            echo "Detected existing Android project, cleaning it to prevent path bleeding..."
-            rm -rf src-tauri/gen/android
-          fi
-
-          echo "Initializing fresh Android project..."
+          rm -rf src-tauri/gen/android || true
           pnpm tauri android init --ci
 
-      - name: Build Android APK
+      - name: Build Android APK - ${{ matrix.name }}
         shell: bash
         working-directory: ${{ env.WORKING_DIR }}
-        env:
-          NDK_HOME: ${{ env.NDK_HOME }}
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
           set -euxo pipefail
-
-          pnpm tauri android build --apk
+          pnpm tauri android build --apk --target ${{ matrix.abi }}
 
       - name: Find release APK
         id: apk
@@ -150,16 +126,16 @@ jobs:
           set -euxo pipefail
 
           APK_SRC=$(find "${{ env.WORKING_DIR }}/src-tauri/gen/android" -type f -name "*.apk" | grep "release" | head -n 1)
+
           if [ -z "$APK_SRC" ]; then
-            echo "❌ APK NOT FOUND"
+            echo "APK NOT FOUND"
             find "${{ env.WORKING_DIR }}/src-tauri/gen/android" -type f | sed -n '1,200p'
             exit 1
           fi
 
           echo "apk_path=$APK_SRC" >> "$GITHUB_OUTPUT"
-          echo "Found APK: $APK_SRC"
 
-      - name: Sign APK
+      - name: Sign APK - ${{ matrix.name }}
         id: sign
         shell: bash
         run: |
@@ -170,7 +146,7 @@ jobs:
 
           BT="$ANDROID_SDK_ROOT/build-tools/${{ env.BUILD_TOOLS_VER }}"
           UNSIGNED_APK="${{ steps.apk.outputs.apk_path }}"
-          SIGNED_APK="dist/chatly-${{ github.ref_name }}.apk"
+          SIGNED_APK="dist/chatly-${{ github.ref_name }}-${{ matrix.name }}.apk"
 
           "$BT/zipalign" -f -p 4 "$UNSIGNED_APK" /tmp/aligned.apk
 
@@ -189,7 +165,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chatly-android-apk
+          name: chatly-android-${{ matrix.name }}
           path: ${{ steps.sign.outputs.signed_apk }}
 
       - name: Create GitHub Release
