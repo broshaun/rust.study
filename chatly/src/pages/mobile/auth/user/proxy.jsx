@@ -1,12 +1,14 @@
 import { apiBase, apiImgs, createHttpClient, currentModal } from "utils";
 import { ProxySetting } from "./ui/ProxySetting";
 import { useState } from "react";
-
+import { http as http2 } from "utils";
 
 
 export const Proxy = () => {
     const { open, close } = currentModal();
     const { http } = createHttpClient('/rpc/chat/ping/');
+    const [api, setApi] = useState(() => apiBase.get())
+    const [img, setImg] = useState(() => apiImgs.get())
 
     async function handlePing() {
         try {
@@ -31,14 +33,44 @@ export const Proxy = () => {
         }
     }
 
-
-    async function handlePingImgs(params) {
-        //  /minio/health/live
-        
+    async function handlePingImgs(url) {
+        console.log('url', url)
+        if (!url || typeof url !== 'string') {
+            open({
+                title: 'Ping测试',
+                message: '服务地址不能为空，请检查配置',
+                onConfirm: close,
+            });
+            return;
+        }
+        try {
+            const results = await http2.get(`${url}/minio/health/live`)
+            if (results?.code === 200) {
+                open({
+                    title: 'Ping测试',
+                    message: '测试成功',
+                    onConfirm: close,
+                });
+                return;
+            } else if (results?.code === 404) {
+                open({
+                    title: 'Ping测试',
+                    message: '连接超时！',
+                    onConfirm: close,
+                });
+                return;
+            }
+        } catch (e) {
+            open({
+                title: "Ping测试",
+                message: e?.message || String(e),
+                onConfirm: close,
+                onCancel: null
+            });
+        }
     }
 
-    const [api, setApi] = useState(() => apiBase.get())
-    const [img, setImg] = useState(() => apiImgs.get())
+
     const handleSave = (newApi, newImg) => {
         apiBase.set(newApi);
         apiImgs.set(newImg);
@@ -52,7 +84,7 @@ export const Proxy = () => {
             apiBase={api}
             imgBase={img}
             onPingApi={handlePing}
-            onPingImg={(va)=>{console.log(va)}}
+            onPingImg={handlePingImgs}
             onSave={handleSave}
         />
     </div>
