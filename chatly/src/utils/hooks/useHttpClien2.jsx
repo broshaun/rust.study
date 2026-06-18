@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { apiBase as apiBase2,  token as token2 } from "utils";
+import { apiBase as apiBase2,  tokenStore as token2 } from "utils";
 
 /**
  * JSON 序列化转换器

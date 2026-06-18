@@ -37,12 +37,14 @@ export function Detail() {
   const friendId = current_friend?.id
 
   const [friend, setFriend] = useState()
+
   async function get_friend(friendId) {
     if (!friendId) return;
     try {
       const results = await http2.getById(friendId);
       if (!results) throw new Error("获取失败");
       const { code, data, message } = results;
+      console.log('results',results)
       if (code === 200) {
         setFriend(data)
       }
@@ -73,6 +75,7 @@ export function Detail() {
     if (!id) return;
     await http2.requestBodyJson('set_friend', { id, remark });
     await afriends.refresh(userId)
+    await get_friend(friendId)
   }
 
   async function openMsgWindow(friend) {

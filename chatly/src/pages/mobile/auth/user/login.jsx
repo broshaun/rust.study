@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from 'react-router';
-import { token } from "utils";
+import { tokenStore } from "utils";
 import { createHttpClient, currentModal, useDateTime } from 'utils';
 import { useLocalStorage } from "@mantine/hooks";
 import { LoginUI } from "./ui/LoginUI";
@@ -26,7 +26,7 @@ export function Login() {
             const { code, data, message } = results;
 
             if (code !== 200) throw new Error(message);
-            token.set({ "token": data?.login_token, "remainSeconds": data?.login_expired })
+            tokenStore.set({ "token": data?.login_token, "login_expired": data?.login_expired })
             await loginCache.fetch(userId)
             setCurrentUser({ ...data?.user, timestamp: dt.getDateTimeStr() });
             navigate("/mobile/chat/");

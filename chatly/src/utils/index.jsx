@@ -5,7 +5,7 @@ export { useWinSize } from './hooks/useWinSize';
 export { useCachedImage, clearAllImageCache } from './hooks/useCachedImage';
 
 export { apiBase, apiImgs } from './store/apiBase'
-export { token, useRemainSeconds } from './store/token'
+export { tokenStore, useRemainSeconds } from './store/token'
 
 export { currentChat } from "./global/currentChat";
 export { currentAppBar, GlobalAppBar } from './global/currentAppBar';

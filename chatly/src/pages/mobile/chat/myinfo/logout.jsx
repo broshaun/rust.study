@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { createHttpClient, currentModal, token } from 'utils';
+import { createHttpClient, currentModal, tokenStore } from 'utils';
 import { useEffect } from "react";
 
 
@@ -12,7 +12,7 @@ export const Logout = () => {
 
   const logout = () => {
     http.post('DELETE').catch(console.error);
-    token.remove()
+    tokenStore.remove()
     navigate('/mobile/auth/user', { replace: true });
   }
 

@@ -29,8 +29,6 @@ export const Items = () => {
 
     const { data: apiInfo } = useQueryCache(loginCache,userId)
 
-    console.log('apiInfo',apiInfo)
-
     return (
         <Stack gap={0}>
             <NavLink

@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { apiBase as apiBase2, token as token2 } from "utils";
+import { apiBase as apiBase2, tokenStore } from "utils";
 
 function replacer(key, value) {
   if (value instanceof Map) return Object.fromEntries(value);
@@ -32,8 +32,7 @@ async function fileToBytes(file) {
 
 export function useHttpClient(baseUrl = "") {
   const apiBase = apiBase2.get();
-  const { token } = token2.get();
-
+  const { token } = tokenStore.get();
 
   const endpoint = useMemo(
     () => `${apiBase || ""}${baseUrl || ""}`,
@@ -82,7 +81,6 @@ export function useHttpClient(baseUrl = "") {
           body: toBody(payload),
         },
       });
-
       return parseResponse(res);
     },
     [endpoint, authHeaders]

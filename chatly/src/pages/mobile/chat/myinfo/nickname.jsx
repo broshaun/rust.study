@@ -19,12 +19,13 @@ export const Nickname = () => {
     }, [])
 
     const { http: apiLogin } = createHttpClient('/rpc/chat/login/');
+    
     const nameEdit = async (nickname) => {
         if (!nickname) {
             throw new Error('请输入昵称');
         }
         const res = await apiLogin.post('update', { nickname });
-        console.log('res', res)
+
         if (!res) {
             throw new Error('请求失败');
         }

@@ -37,26 +37,36 @@ export const Manage = () => {
 
 
     const [group, setGroup] = useState({})
+    const [isPending, setIsPending] = useState(false);
     const get_group = async () => {
         const group = current.get("group");
         if (!group) return;
-        const results = await http.getById(group?.id);
-        const { code, message, data } = results;
-        if (code !== 200) {
+        setIsPending(true);
+        try {
+            const results = await http.getById(group?.id);
+            const { code, message, data } = results;
+            if (code !== 200) {
+                return {}
+            }
+            setGroup(data)
+            return data
+        } catch {
             return {}
+        } finally {
+            setIsPending(false);
         }
-        setGroup(data)
-        return data
     }
+    useEffect(()=>{
+        get_group().catch(console.error)
+    },[])
 
 
-    const [isPending, setIsPending] = useState(false);
+
     const updateGroup = async ({ id, ...payload }) => {
         if (!id) return;
         Object.keys(payload).forEach((key) => {
             if (payload[key] === undefined) delete payload[key];
         });
-        setIsPending(true);
         try {
             const results = await http.requestBodyJson('update_group', { id, ...payload });
             const { code, data } = results;
@@ -68,8 +78,6 @@ export const Manage = () => {
             return data;
         } catch (error) {
             console.error("修改失败:", error);
-        } finally {
-            setIsPending(false);
         }
     };
 
@@ -86,6 +94,8 @@ export const Manage = () => {
         };
         return null;
     }
+
+    console.log('group++',group)
 
     const handleUpdateGroup = async (value) => {
         await updateGroup({
