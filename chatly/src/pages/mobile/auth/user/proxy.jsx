@@ -2,6 +2,8 @@ import { apiBase, apiImgs, createHttpClient, currentModal } from "utils";
 import { ProxySetting } from "./ui/ProxySetting";
 import { useState } from "react";
 
+
+
 export const Proxy = () => {
     const { open, close } = currentModal();
     const { http } = createHttpClient('/rpc/chat/ping/');
@@ -30,6 +32,11 @@ export const Proxy = () => {
     }
 
 
+    async function handlePingImgs(params) {
+        //  /minio/health/live
+        
+    }
+
     const [api, setApi] = useState(() => apiBase.get())
     const [img, setImg] = useState(() => apiImgs.get())
     const handleSave = (newApi, newImg) => {
@@ -45,6 +52,7 @@ export const Proxy = () => {
             apiBase={api}
             imgBase={img}
             onPingApi={handlePing}
+            onPingImg={(va)=>{console.log(va)}}
             onSave={handleSave}
         />
     </div>
