@@ -1,8 +1,9 @@
 import { createHttpClient, currentChat } from 'utils';
 import { createQueryCache } from './createQueryCache';
 
-const { http } = createHttpClient('/rpc/chat/msg/group/');
+
 const queryFn = async () => {
+    const { http } = createHttpClient('/rpc/chat/msg/group/');
     const { id: groupId } = currentChat.getState().get("group")
     const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
     if (!results) throw new Error("获取失败");

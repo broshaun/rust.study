@@ -3,6 +3,7 @@ import { createHttpClient, currentAppBar } from "utils";
 import { FriendRequestList } from "./ui/FriendRequestList";
 import { useLocalStorage } from "@mantine/hooks";
 import { afriends } from "http/friendsAwait";
+import { useQueryCache } from "http/useQueryCache";
 
 export const FriendRequests = () => {
   const { http } = createHttpClient("/rpc/chat/friend/");
@@ -20,7 +21,10 @@ export const FriendRequests = () => {
   }, []);
 
 
-  const { data: friendRequests, isFetching } = afriends.useCache(userId)
+
+
+
+  const { data: friendRequests, isFetching } = useQueryCache(afriends,userId)
   async function updateFriendRequest({ id, ask_state }) {
     if (!id || !ask_state) return;
     const result = await http.requestBodyJson("PATCH", { id, ask_state, });

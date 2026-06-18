@@ -7,6 +7,9 @@ import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { loginCache } from "http/loginCache";
 import { agroups } from "http/groups";
+import { useQueryCache } from "http/useQueryCache";
+
+
 
 export const Item = () => {
     const dt = useDateTime();
@@ -43,7 +46,7 @@ export const Item = () => {
         }
     }
 
-    const { data: groupList, isSuccess } = agroups.useCache(userId);
+    const { data: groupList, isSuccess } = useQueryCache(agroups,userId);
 
     useEffect(() => {
         if (!db) return;

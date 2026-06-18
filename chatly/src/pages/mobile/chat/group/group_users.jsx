@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useLocalStorage } from '@mantine/hooks';
 import { loginCache } from "http/loginCache";
 import { agroup_user } from "http/group_user";
-
+import { useQueryCache } from "http/useQueryCache";
 
 export const GroupUsers = () => {
     const navigate = useNavigate();
@@ -23,7 +23,7 @@ export const GroupUsers = () => {
     const { http } = createHttpClient('/rpc/chat/msg/group/')
     const [userId] = useLocalStorage({ key: 'current_account' })
     const currentUser = loginCache.get(userId)
-    const { data: members = [] } = agroup_user.useCache(userId)
+    const { data: members = [] } = useQueryCache(agroup_user,userId)
 
     const leaveGroup = async ({ id }) => {
         const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })

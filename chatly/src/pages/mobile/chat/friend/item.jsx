@@ -6,6 +6,7 @@ import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { afriends } from "http/friends";
+import { useQueryCache } from "http/useQueryCache";
 
 
 
@@ -26,7 +27,7 @@ export const Item = () => {
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
-    const { data: friendList, isSuccess, isPending } = afriends.useCache(userId)
+    const { data: friendList, isSuccess, isPending } = useQueryCache(afriends,userId)
     const db = getUserDB(userId)
 
     const openMsgWindow = useCallback(async (select) => {

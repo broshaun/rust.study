@@ -12,15 +12,19 @@ export function Login() {
     const navigate = useNavigate();
     const [userId, setUserId] = useLocalStorage({ key: 'current_account', defaultValue: "" });
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
-    const { http } = createHttpClient('/rpc/chat/login/');
+    const { http,endpoint } = createHttpClient('/rpc/chat/login/');
+    
+
     const { open, close } = currentModal();
 
     async function login({ account, password }) {
         try {
             if (!account || !password) throw new Error("请输入账号密码 ...");
             const results = await http.requestBodyJson("POST", { email: account, pass_word: password });
+
             if (!results) throw new Error("登录失败，请稍后重试");
             const { code, data, message } = results;
+
             if (code !== 200) throw new Error(message);
             token.set({ "token": data?.login_token, "remainSeconds": data?.login_expired })
             await loginCache.fetch(userId)

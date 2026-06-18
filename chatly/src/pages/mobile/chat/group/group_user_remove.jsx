@@ -4,7 +4,7 @@ import { currentChat, createHttpClient, currentAppBar } from "utils";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
 import { agroup_user } from "http/group_user";
-
+import { useQueryCache } from "http/useQueryCache";
 
 
 export const DelMember = () => {
@@ -22,7 +22,7 @@ export const DelMember = () => {
 
   const { http } = createHttpClient('/rpc/chat/msg/group/');
   const [account] = useLocalStorage({ key: "current_account" });
-  const {data: gusrlist = [],refetch} = agroup_user.useCache(account)
+  const {data: gusrlist = [],refetch} = useQueryCache(agroup_user,account)
 
   const delgusr= async ({ ids }) => {
       if (!ids) return;

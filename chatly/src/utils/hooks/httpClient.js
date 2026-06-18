@@ -31,6 +31,8 @@ function createHttpClient(baseUrl = "") {
   const apiBase = apiBase2.get();
   const tokenValue = token2.get()?.token;
 
+  console.log('token2',token2.get())
+
   const endpoint = `${apiBase || ""}${baseUrl || ""}`;
   const authHeaders = tokenValue ? { Authorization: tokenValue } : {};
 

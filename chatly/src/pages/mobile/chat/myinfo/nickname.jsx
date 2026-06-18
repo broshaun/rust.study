@@ -4,11 +4,13 @@ import { createHttpClient, currentAppBar } from 'utils';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
 import { loginCache } from "http/loginCache";
 import { useLocalStorage } from '@mantine/hooks';
+import { useQueryCache } from "http/useQueryCache";
+
 
 export const Nickname = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
-    const { data: User } = loginCache.useCache(userId)
+    const { data: User } = useQueryCache(loginCache,userId)
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {

@@ -13,7 +13,7 @@ import {
 import React, { useEffect } from "react";
 import { loginCache } from 'http/loginCache';
 import { useLocalStorage } from '@mantine/hooks';
-
+import { useQueryCache } from 'http/useQueryCache';
 
 export const Items = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });
@@ -27,7 +27,9 @@ export const Items = () => {
         setRightPath(null);
     }, [])
 
-    const { data: apiInfo } = loginCache.useCache(userId)
+    const { data: apiInfo } = useQueryCache(loginCache,userId)
+
+    console.log('apiInfo',apiInfo)
 
     return (
         <Stack gap={0}>
