@@ -1,19 +1,19 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
-  Box,
-  TextInput,
-  ScrollArea,
-  Paper,
-  Group,
   ActionIcon,
-  Transition,
-  Divider,
+  Box,
+  Group,
+  Paper,
+  ScrollArea,
   Text,
+  TextInput,
+  Transition,
   UnstyledButton,
 } from "@mantine/core";
-import { IconSend, IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconSend } from "@tabler/icons-react";
+
 import { MsgItem } from "./MsgItem";
 import { currentAppBar } from "utils";
 
@@ -28,8 +28,12 @@ export function ChatBox({
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
 
   const [input, setInput] = useState("");
-  const [showTools, setShowTools] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const [toolsHeight, setToolsHeight] = useState(0);
+
   const viewportRef = useRef(null);
+  const toolsRef = useRef(null);
+
   const hasTools = Array.isArray(tools) && tools.length > 0;
 
   useEffect(() => {
@@ -41,10 +45,7 @@ export function ChatBox({
     getScrollElement: () => viewportRef.current,
     estimateSize: () => 76,
     overscan: 6,
-    getItemKey: useCallback(
-      (index) => messages[index]?.id ?? index,
-      [messages]
-    ),
+    getItemKey: (index) => messages[index]?.id ?? index,
   });
 
   useEffect(() => {
@@ -52,33 +53,59 @@ export function ChatBox({
     virtualizer.scrollToIndex(messages.length - 1, { align: "end" });
   }, [messages.length, virtualizer]);
 
-  const handleSend = useCallback(async () => {
+  useEffect(() => {
+    if (!opened || !toolsRef.current) return;
+
+    const updateHeight = () => {
+      setToolsHeight(toolsRef.current?.offsetHeight || 0);
+    };
+
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(toolsRef.current);
+
+    return () => observer.disconnect();
+  }, [opened, tools.length]);
+
+  const measureItem = useCallback(
+    (node) => {
+      if (node) virtualizer.measureElement(node);
+    },
+    [virtualizer]
+  );
+
+  const send = useCallback(async () => {
     const value = input.trim();
     if (!value) return;
+
     await onSend?.(value);
     setInput("");
   }, [input, onSend]);
 
   const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key !== "Enter") return;
-      if (e.shiftKey) return;
-      if (e.nativeEvent.isComposing) return;
-      e.preventDefault();
-      handleSend();
+    (event) => {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.nativeEvent.isComposing
+      ) {
+        event.preventDefault();
+        send();
+      }
     },
-    [handleSend]
+    [send]
   );
 
-  const toggleTools = useCallback(() => {
-    if (hasTools) setShowTools((v) => !v);
+  const openTools = useCallback(() => {
     onOpenTools?.();
+    if (hasTools) setOpened(true);
   }, [hasTools, onOpenTools]);
 
   const handleToolClick = useCallback(
     (path) => {
+      setOpened(false);
       navigate(path);
-      setShowTools(false);
     },
     [navigate]
   );
@@ -88,17 +115,30 @@ export function ChatBox({
       shadow="md"
       w="100%"
       h={height}
-      display="flex"
-      style={{ flexDirection: "column" }}
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
     >
-      <ScrollArea flex={1} p="md" viewportRef={viewportRef}>
-        <Box h={virtualizer.getTotalSize()} w="100%" pos="relative">
-          {virtualizer.getVirtualItems().map((row) => {
-            const msg = messages[row.index];
-            return (
+      <Box
+        style={{
+          flex: 1,
+          minHeight: 0,
+          paddingBottom: opened ? toolsHeight : 0,
+          transition: "padding-bottom 180ms ease",
+        }}
+        onClick={() => {
+          if (opened) setOpened(false);
+        }}
+      >
+        <ScrollArea h="100%" p="md" viewportRef={viewportRef}>
+          <Box h={virtualizer.getTotalSize()} w="100%" pos="relative">
+            {virtualizer.getVirtualItems().map((row) => (
               <Box
                 key={row.key}
-                ref={virtualizer.measureElement}
+                ref={measureItem}
                 data-index={row.index}
                 pos="absolute"
                 top={0}
@@ -109,128 +149,119 @@ export function ChatBox({
                   paddingBottom: 8,
                 }}
               >
-                <MsgItem msg={msg} />
+                <MsgItem msg={messages[row.index]} />
               </Box>
-            );
-          })}
-        </Box>
-      </ScrollArea>
+            ))}
+          </Box>
+        </ScrollArea>
+      </Box>
 
-      <Box
-        p="md"
-        style={{
-          borderTop: "1px solid var(--mantine-color-gray-3)",
-        }}
+      {!opened && (
+        <Box
+          p="md"
+          style={{
+            borderTop: "1px solid var(--mantine-color-gray-3)",
+            background: "var(--mantine-color-body)",
+          }}
+        >
+          <Group gap="xs">
+            <ActionIcon
+              variant="light"
+              size="lg"
+              radius="md"
+              onClick={openTools}
+              disabled={!hasTools && !onOpenTools}
+            >
+              <IconPlus size={18} />
+            </ActionIcon>
+
+            <TextInput
+              flex={1}
+              placeholder="输入消息..."
+              value={input}
+              onChange={(e) => setInput(e.currentTarget.value)}
+              onKeyDown={handleKeyDown}
+            />
+
+            <ActionIcon
+              variant="filled"
+              size="lg"
+              radius="md"
+              onClick={send}
+              disabled={!input.trim()}
+            >
+              <IconSend size={18} />
+            </ActionIcon>
+          </Group>
+        </Box>
+      )}
+
+      <Transition
+        mounted={opened && hasTools}
+        transition="slide-up"
+        duration={180}
+        timingFunction="ease"
       >
-        <Group gap="xs">
-          <ActionIcon
-            variant="light"
-            size="lg"
-            radius="md"
-            onClick={toggleTools}
-            disabled={!hasTools && !onOpenTools}
+        {(styles) => (
+          <Box
+            ref={toolsRef}
             style={{
-              transform: showTools ? "rotate(45deg)" : "none",
-              transition: "transform 0.2s ease",
+              ...styles,
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 10,
+              background: "var(--mantine-color-body)",
+              borderTop: "1px solid var(--mantine-color-gray-3)",
+              padding: "10px 16px 20px",
             }}
           >
-            <IconPlus size={18} />
-          </ActionIcon>
-
-          <TextInput
-            flex={1}
-            placeholder="输入消息..."
-            value={input}
-            onChange={(e) => setInput(e.currentTarget.value)}
-            onKeyDown={handleKeyDown}
-          />
-
-          <ActionIcon
-            variant="filled"
-            size="lg"
-            radius="md"
-            onClick={handleSend}
-            disabled={!input.trim()}
-          >
-            <IconSend size={18} />
-          </ActionIcon>
-        </Group>
-
-        <Transition
-          mounted={showTools && hasTools}
-          transition="slide-up"
-          duration={200}
-          timingFunction="ease"
-        >
-          {(transitionStyles) => (
-            <div style={transitionStyles}>
-              <Divider my="md" />
-              {/* 外层相对定位，预留滚动条宽度，杜绝布局挤压抖动 */}
+            <Group justify="center" mb="lg">
               <Box
-                p="xs"
-                pos="relative"
-                pr="xs"
-                sx={{
-                  overflowX: "auto",
-                  overflowY: "hidden",
-                  // 滚动条悬浮在容器上层，不占用布局宽度
-                  "&::-webkit-scrollbar": {
-                    height: 4,
-                    position: "absolute",
-                  },
-                  "&::-webkit-scrollbar-track": {
-                    background: "transparent",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    background: "rgba(0,0,0,0.07)",
-                    borderRadius: 999,
-                  },
-                  "&::-webkit-scrollbar-thumb:hover": {
-                    background: "rgba(0,0,0,0.14)",
-                  },
-                  // Firefox 透明细滚动条
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "rgba(0,0,0,0.07) transparent",
+                onClick={() => setOpened(false)}
+                style={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 999,
+                  background: "var(--mantine-color-gray-4)",
+                  cursor: "pointer",
                 }}
-              >
-                <Group
-                  justify="space-around"
-                  align="flex-start"
-                  wrap="nowrap"
-                  gap="sm"
-                  style={{ minWidth: "max-content" }}
+              />
+            </Group>
+
+            <Group justify="space-around" align="flex-start" wrap="wrap" gap={4}>
+              {tools.map(({ id, icon: Icon, label, path, color }) => (
+                <UnstyledButton
+                  key={id}
+                  onClick={() => handleToolClick(path)}
+                  style={{
+                    minWidth: 72,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
                 >
-                  {tools.map(({ id, icon: Icon, label, path, color }) => (
-                    <UnstyledButton
-                      key={id}
-                      onClick={() => handleToolClick(path)}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <ActionIcon
-                        component="div"
-                        variant="light"
-                        color={color}
-                        size="xl"
-                        radius="md"
-                      >
-                        <Icon size={24} stroke={1.5} />
-                      </ActionIcon>
-                      <Text size="xs" fw={500} c="dimmed">
-                        {label}
-                      </Text>
-                    </UnstyledButton>
-                  ))}
-                </Group>
-              </Box>
-            </div>
-          )}
-        </Transition>
-      </Box>
+                  <ActionIcon
+                    component="div"
+                    variant="light"
+                    color={color}
+                    size="xl"
+                    radius="md"
+                  >
+                    <Icon size={24} stroke={1.5} />
+                  </ActionIcon>
+
+                  <Text size="xs" fw={500} c="dimmed">
+                    {label}
+                  </Text>
+                </UnstyledButton>
+              ))}
+            </Group>
+          </Box>
+        )}
+      </Transition>
     </Paper>
   );
 }

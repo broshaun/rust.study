@@ -5,22 +5,22 @@ import { ChatBox } from "./ui/ChatBox"
 import { useOutletContext } from "react-router";
 import { IconDots } from "@tabler/icons-react";
 import { useLocalStorage } from "@mantine/hooks";
-import { IconMoodSmile,IconPhotoUp } from "@tabler/icons-react";
+import { IconMoodSmile, IconPhotoUp } from "@tabler/icons-react";
 
 const TOOLS_CONFIG = [
-    { 
-        id: 'smile', 
-        icon: IconMoodSmile, 
-        label: '表情', 
+    {
+        id: 'smile',
+        icon: IconMoodSmile,
+        label: '表情',
         path: '/mobile/chat/group/smile',
-        color: 'grape' 
+        color: 'grape'
     },
-    { 
-        id: 'imgUp', 
-        icon: IconPhotoUp, 
-        label: '发送图片', 
+    {
+        id: 'imgUp',
+        icon: IconPhotoUp,
+        label: '发送图片',
         path: '/mobile/chat/group/imgUp',
-        color: 'teal' 
+        color: 'teal'
     },
 
 ];
@@ -29,9 +29,6 @@ export function Msg() {
     const group = currentChat((state) => state.current.get("group"));
     const [userId] = useLocalStorage({ key: 'current_account' })
     const db = getUserDB(userId)
-
-
-
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -70,7 +67,6 @@ export function Msg() {
         return () => sub.unsubscribe();
     }, [group, db]);
 
-
     const msgTextSend = async (sendText) => {
         if (sendText) {
             if (!group?.id) return;
@@ -85,8 +81,6 @@ export function Msg() {
             messages={msgs}
             onSend={(v) => { msgTextSend(v) }}
         />
-  
-
     </div>
 
 

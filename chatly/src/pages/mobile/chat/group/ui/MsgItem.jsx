@@ -135,6 +135,8 @@ const formatChatTime = (timestamp) => {
 export const MsgItem = memo(({ msg, ref }) => {
   if (!msg) return null;
 
+  // console.log("msg",msg)
+
   const {
     timestamp,
     type = "text",
