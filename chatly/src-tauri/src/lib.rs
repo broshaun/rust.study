@@ -5,10 +5,15 @@ use p2p::p2p_commands;
 mod net;
 mod mq;
 mod tasks;
+mod actor;
 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+
+    // let system = actix::System::new();
+    // system.run();
+
     // Iroh官方加密使用
     rustls::crypto::ring::default_provider()
         .install_default()
@@ -17,7 +22,6 @@ pub fn run() {
     tauri::Builder::default()
         .manage(p2p_commands::AppState::new())
         .manage(tasks::TaskManager::new())
-        .manage(mq::MqttState::new())
         .invoke_handler(tauri::generate_handler![
             p2p_commands::p2p_start,
             p2p_commands::p2p_stop,
@@ -36,13 +40,14 @@ pub fn run() {
             net::http::http_post,
             net::http::http_upload,
 
-            mq::mqtt_subscribe,
 
             tasks::commands::spawn_demo_task,
             tasks::commands::list_tasks,
             tasks::commands::cancel_task,
             tasks::commands::cancel_all_tasks,
             tasks::commands::shutdown,
+
+            actor::test::test,
             
         ])
         .run(tauri::generate_context!())

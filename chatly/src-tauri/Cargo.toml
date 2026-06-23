@@ -34,7 +34,7 @@ iroh-ping = "0.9.0"
 tauri = { version = "2.11.2", features = ["protocol-asset"] }
 rumqttc = "0.25"
 dashmap = "6"
-actix = "0.13.5"
+xtra = { version = "0.6", features = ["tokio", "macros"] }
 
 [profile.release]
 panic = "abort"
