@@ -50,7 +50,7 @@ export function ChatShell() {
       { key: 'friend', icon: <IconLabel icon={IconUser} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
       { key: 'group', icon: <IconLabel icon={IconUsers} label='群聊' dot={gmsgDot} onClearBadge={() => setGmsgDot(false)} onClick={() => { navigate('/mobile/chat/group/') }} /> },
       { key: 'self', icon: <IconLabel icon={IconUserCircle} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
-      // { key: 'test', icon: <IconLabel icon={IconFlask} label='测试' onClick={() => { navigate('/mobile/chat/test/test3/'); }} /> },
+      { key: 'test', icon: <IconLabel icon={IconFlask} label='测试' onClick={() => { navigate('/mobile/chat/test/test4/'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, msgDot,gmsgDot]);
 

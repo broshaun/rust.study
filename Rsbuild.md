@@ -70,7 +70,36 @@ For iOS development, run:
 ```
 
 
+```js
+import { createSignal, createEffect } from "solid-js";
 
+function Page(props) {
+  const [snapshot, setSnapshot] = createSignal(props.data);
+  createEffect(() => {
+    // 👉 只依赖 version
+    props.version;
+    // 👉 version 变化时才更新快照
+    setSnapshot(props.data);
+  });
+  return <App data={snapshot()} />;
+}
+```
+3
+
+
+Tauri 三端
+按你说的选型 UI:Tailwind + kobalte
+
+
+SolidJS (version gate)
+        ↓
+Snapshot Store
+        ↓
+Kobalte UI (headless primitives)
+        ↓
+Tailwind (layout & responsive)
+        ↓
+Tauri (multi-device runtime)
 
 手机端不需要悬浮提示
 

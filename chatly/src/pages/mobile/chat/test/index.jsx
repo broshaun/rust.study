@@ -2,6 +2,7 @@ import { Outlet } from "react-router";
 import { P2PTest } from "./test01";
 import { PcmTestPage } from "./test02";
 import { AvTest } from "./test03";
+import { Test4 } from "./test04";
 
 export const Test = () => {
     return <Outlet />
@@ -20,6 +21,9 @@ export const RsTest = [
             },
             {
                 path: "test3", element: <AvTest />,
+            },
+            {
+                path: "test4", element: <Test4 />,
             }
         ]
 

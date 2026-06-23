@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import { useNavigate, Outlet } from 'react-router';
 import { useRemainSeconds, getUserDB, createHttpClient, useDateTime } from "utils"
 import { useLocalStorage } from '@mantine/hooks';
-import { currentAwait } from "utils";
+import { currentAwait, tokenStore } from "utils";
 import { afriends } from "cache/friendsAwait";
-
+import { invoke, Channel } from "@tauri-apps/api/core";
 
 export function ChatGuard() {
   const dt = useDateTime();
@@ -18,6 +18,33 @@ export function ChatGuard() {
   //     currentAwait.getState().set("friend", list.length);
   //   }
   // });
+  const tokenValue = tokenStore.get()?.token;
+
+  // console.log('tokenValue', tokenValue)
+
+  // invoke('spawn_demo_task', { name: 'task01', interval_secs: 100 }).catch(console.error)
+
+  // invoke('list_tasks').catch(console.error)
+
+
+  // useEffect(() => {
+  //   const channel = new Channel();
+  //   channel.onmessage = (msg) => {
+  //     console.log("MQTT消息:", msg);
+  //   };
+  //   invoke("mqtt_subscribe", {
+  //     clientId: "tauri-user-001",
+  //     host: "192.168.2.1",
+  //     port: 1883,
+  //     username: "jwt",
+  //     password: tokenValue,
+  //     topic: "chat/single/001",
+  //     onMessage: channel,
+  //   }).catch((err) => { console.error("MQTT订阅失败:", err); });
+  //   return ()=>{
+
+  //   }
+  // }, [tokenValue])
 
 
   const { http: httpGMsg } = createHttpClient('/rpc/chat/msg/group/');
