@@ -27,8 +27,13 @@ export const Item = () => {
 
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
+
+    console.log('userId',userId)
+
     const { data: friendList, isSuccess, isPending } = useQueryCache(afriends,userId)
     const db = getUserDB(userId)
+
+
 
     const openMsgWindow = useCallback(async (select) => {
         const displayName = select.remark ?? select.nickname ?? select.email;
@@ -38,6 +43,7 @@ export const Item = () => {
     }, [navigate, db]);
 
     useEffect(() => {
+        // console.log('friendList',friendList)
         if (!db) return;
         if (!isSuccess) return;
         db.table("friends").bulkPut(friendList).catch(console.error);
@@ -49,6 +55,8 @@ export const Item = () => {
 
         return friends
     }, [db], []);
+
+    // console.log('finalFriends',finalFriends)
 
     return (
         <FriendList

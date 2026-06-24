@@ -6,22 +6,23 @@ import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
 import { loginCache } from "cache/loginCache";
 import { useLocalStorage } from '@mantine/hooks';
+import { useQueryCache } from "cache";
 
 /**
  * 上传并更新头像
  */
 export const Avatar2 = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });
-    const currentUser = loginCache.get(userId);
+    const { data: currentUser } = useQueryCache(loginCache, userId)
     const { http: httpFiles } = createHttpClient('/files/avatar/');
     const { http: apiLogin } = createHttpClient('/rpc/chat/login/');
 
-    const uploadFile = useCallback(async(file) => {
+    const uploadFile = useCallback(async (file) => {
         if (!file) return;
-        const results =  await httpFiles.uploadFiles(file);
+        const results = await httpFiles.uploadFiles(file);
         if (!results?.data) return;
         await apiLogin.post('update', { avatar_url: results.data });
-        loginCache.refresh(userId)
+        await loginCache.refresh(userId)
     }, [httpFiles, apiLogin]);
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -30,7 +31,6 @@ export const Avatar2 = () => {
         setLeftPath('/mobile/chat/self/')
         setTitle('上传头像');
     }, [])
-
 
     return (
         <Suspense fallback={<div>加载中...</div>}>
@@ -52,7 +52,7 @@ export const Avatar2 = () => {
                     url={currentUser?.avatar_url}
                     size={320}
                     radius={12}
-                    version={currentUser?.timestamp}
+                    version={currentUser?.updated_at}
                 />
             </Center>
             <Group p={20} justify="center">

@@ -1,5 +1,5 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { tokenStore } from "utils";
 
 
@@ -7,6 +7,10 @@ export const Test4 = () => {
 
     const tokenValue = tokenStore.get()?.token;
 
+    const [topics, setTopics] = useState([
+        "chat/single/+",
+        "chat/group/+"
+    ])
 
     useEffect(() => {
         if (!tokenValue) return;
@@ -20,7 +24,7 @@ export const Test4 = () => {
             port: 1883,
             username: "jwt",
             password: tokenValue,
-            topic: "chat/single/001",
+            topics: topics,
             onMessage: channel,
         }).catch((err) => { console.error("MQTT订阅失败:", err); });
 
@@ -29,7 +33,7 @@ export const Test4 = () => {
                 console.error("MQTT停止失败:", err);
             });
         };
-    }, [tokenValue])
+    }, [tokenValue, topics])
 
 
 

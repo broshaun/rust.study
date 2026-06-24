@@ -25,6 +25,7 @@ export const FriendRequests = () => {
 
 
   const { data: friendRequests, isFetching } = useQueryCache(afriends,userId)
+  
   async function updateFriendRequest({ id, ask_state }) {
     if (!id || !ask_state) return;
     const result = await http.requestBodyJson("PATCH", { id, ask_state, });

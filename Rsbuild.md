@@ -66,6 +66,7 @@ For iOS development, run:
   pnpm add dexie dexie-react-hooks
   pnpm add @mantine/hooks @mantine/core @tabler/icons-react
   pnpm add zustand @tanstack/query-core @tanstack/react-virtual
+  pnpm add bson
 
 ```
 

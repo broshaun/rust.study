@@ -51,6 +51,24 @@ const clear = (storage, queryKey) => {
     } catch {}
 };
 
+/**
+ const currentUser = loginCache.get(userId)
+const [members, setMembers] = useState([])
+useEffect(() => {
+    if (!userId) return;
+    let isMounted = true;
+    agroup_user.fetch(userId).catch(() => { });
+    const unsubscribe = agroup_user.subscribe(userId, (next) => {
+        if (!isMounted) return;
+        const newData = Array.isArray(next?.data) ? next.data : [];
+        setMembers(newData);
+    });
+    return () => {
+        isMounted = false;
+        unsubscribe?.();
+    }
+}, [userId]);
+ */
 export function createQueryCache({
     key,
     queryFn,
@@ -80,7 +98,7 @@ export function createQueryCache({
         const queryKey = key(...args);
         if (isInvalidKey(queryKey)) return null;
         const data = queryClient.getQueryData(queryKey);
-        if (data != null) return data;
+        if (data !== undefined) return data;
         const local = read(store, queryKey);
         if (local == null) return null;
         queryClient.setQueryData(queryKey, local);

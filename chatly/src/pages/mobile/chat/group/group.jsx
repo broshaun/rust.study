@@ -9,15 +9,21 @@ export const Group = () => {
     const db = getUserDB(userId);
     const dt = useDateTime();
     const currentUser = loginCache.get(userId)
-    const { http } = createHttpClient('/rpc/chat/msg/group/');
+    const { http } = createHttpClient('/rpc/chat/msg/group2/');
     const msgSend = async ({ group_id, msgType, msgText }) => {
-        const results = await http.requestBodyJson('group_send', {
+        const results = await http.requestBodyJson('send', {
             group_id: group_id,
             msg_type: msgType,
             msg_text: msgText
         });
+
+        // console.log('group_id, msgType, msgText ',group_id, msgType, msgText )
+        // console.log('results',results)
         if (results?.code === 200) {
-            db.table('gmsgs').put({
+            
+
+            await db.table('gmsgs').put({
+                id: results?.data,
                 group_id: group_id,
                 nickname: '我自己',
                 type: msgType,

@@ -1,7 +1,7 @@
 import { GroupMemberList } from "./ui/GroupMemberList"
 import { useNavigate } from "react-router";
 import { currentAppBar, createHttpClient, currentChat } from "utils"
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocalStorage } from '@mantine/hooks';
 import { loginCache } from "cache/loginCache";
 import { agroup_user } from "cache/group_user";
@@ -22,8 +22,26 @@ export const GroupUsers = () => {
 
     const { http } = createHttpClient('/rpc/chat/msg/group/')
     const [userId] = useLocalStorage({ key: 'current_account' })
+
+
     const currentUser = loginCache.get(userId)
-    const { data: members = [] } = useQueryCache(agroup_user,userId)
+    const [members, setMembers] = useState([])
+    useEffect(() => {
+        if (!userId) return;
+        let isMounted = true;
+        agroup_user.fetch(userId).catch(() => { });
+        const unsubscribe = agroup_user.subscribe(userId, (next) => {
+            if (!isMounted) return;
+            const newData = Array.isArray(next?.data) ? next.data : [];
+            setMembers(newData);
+        });
+        return () => {
+            isMounted = false;
+            unsubscribe?.();
+        }
+    }, [userId]);
+
+
 
     const leaveGroup = async ({ id }) => {
         const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
@@ -36,6 +54,8 @@ export const GroupUsers = () => {
         return data;
     }
 
+
+    // console.log('members', members)
 
     return <div>
         <GroupMemberList
@@ -50,3 +70,4 @@ export const GroupUsers = () => {
     </div>
 
 }
+

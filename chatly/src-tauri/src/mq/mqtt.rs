@@ -5,6 +5,12 @@ use tauri::ipc::Channel;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use xtra::prelude::*;
 
+/// MQTT message sent to frontend
+#[derive(Clone, Serialize)]
+pub struct MqttMessage {
+    pub topic: String,
+    pub payload: String,
+}
 
 #[derive(xtra::Actor)]
 struct MqttActor {
@@ -17,6 +23,7 @@ static MQTT_ACTOR: OnceLock<Address<MqttActor>> = OnceLock::new();
 impl MqttActor {
     fn start() -> Address<Self> {
         let (addr, mailbox) = Mailbox::bounded(32);
+
         xtra::spawn_tokio(
             Self {
                 tracker: TaskTracker::new(),
@@ -24,6 +31,7 @@ impl MqttActor {
             },
             (addr.clone(), mailbox),
         );
+
         addr
     }
 
@@ -31,8 +39,10 @@ impl MqttActor {
         if let Some(token) = self.token.take() {
             token.cancel();
         }
+
         self.tracker.close();
         self.tracker.wait().await;
+
         self.tracker = TaskTracker::new();
     }
 
@@ -43,41 +53,54 @@ impl MqttActor {
     }
 }
 
-
-#[derive(Clone, Serialize)]
-pub struct MqttMessage {
-    pub topic: String,
-    pub payload: String,
-}
+/// Subscribe command (UPDATED: Vec<String>)
 struct SubscribeCmd {
     client_id: String,
     host: String,
     port: u16,
     username: String,
     password: String,
-    topic: String,
+    topics: Vec<String>,
     on_message: Channel<MqttMessage>,
 }
 
 impl Handler<SubscribeCmd> for MqttActor {
     type Return = Result<(), String>;
+
     async fn handle(&mut self, cmd: SubscribeCmd, _ctx: &mut Context<Self>) -> Self::Return {
+        // stop previous connection
         self.stop().await;
+
+        // MQTT options
         let mut options = MqttOptions::new(cmd.client_id, cmd.host, cmd.port);
+
         if !cmd.username.is_empty() {
             options.set_credentials(cmd.username, cmd.password);
         }
+
         options.set_keep_alive(Duration::from_secs(30));
+
+        // create client + eventloop
         let (client, mut eventloop) = AsyncClient::new(options, 10);
-        client
-            .subscribe(cmd.topic, QoS::AtLeastOnce)
-            .await
-            .map_err(|e| e.to_string())?;
+
+        // subscribe all topics
+        for topic in &cmd.topics {
+            client
+                .subscribe(topic, QoS::AtLeastOnce)
+                .await
+                .map_err(|e| e.to_string())?;
+        }
+
         let token = self.new_token();
+        let on_message = cmd.on_message;
+
         self.tracker.spawn(async move {
             loop {
                 tokio::select! {
-                    _ = token.cancelled() => break,
+                    _ = token.cancelled() => {
+                        break;
+                    }
+
                     event = eventloop.poll() => {
                         match event {
                             Ok(Event::Incoming(Incoming::Publish(p))) => {
@@ -85,11 +108,14 @@ impl Handler<SubscribeCmd> for MqttActor {
                                     topic: p.topic,
                                     payload: String::from_utf8_lossy(&p.payload).to_string(),
                                 };
-                                if cmd.on_message.send(message).is_err() {
+
+                                if on_message.send(message).is_err() {
                                     break;
                                 }
                             }
+
                             Ok(_) => {}
+
                             Err(e) => {
                                 eprintln!("MQTT eventloop stopped: {e}");
                                 break;
@@ -105,8 +131,10 @@ impl Handler<SubscribeCmd> for MqttActor {
 }
 
 struct StopCmd;
+
 impl Handler<StopCmd> for MqttActor {
     type Return = Result<(), String>;
+
     async fn handle(&mut self, _cmd: StopCmd, _ctx: &mut Context<Self>) -> Self::Return {
         self.stop().await;
         Ok(())
@@ -120,7 +148,7 @@ pub async fn subscribe(
     port: u16,
     username: String,
     password: String,
-    topic: String,
+    topics: Vec<String>,
     on_message: Channel<MqttMessage>,
 ) -> Result<(), String> {
     MQTT_ACTOR
@@ -131,7 +159,7 @@ pub async fn subscribe(
             port,
             username,
             password,
-            topic,
+            topics,
             on_message,
         })
         .await
