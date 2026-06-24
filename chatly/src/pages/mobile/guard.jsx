@@ -22,9 +22,7 @@ export function ChatGuard() {
 
   // console.log('tokenValue', tokenValue)
 
-  // invoke('spawn_demo_task', { name: 'task01', interval_secs: 100 }).catch(console.error)
 
-  // invoke('list_tasks').catch(console.error)
 
 
   // useEffect(() => {
