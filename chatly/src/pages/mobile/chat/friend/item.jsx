@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback,useState } from "react";
 import { useNavigate } from 'react-router';
 import { currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
 import { useLocalStorage } from '@mantine/hooks';
@@ -6,7 +6,6 @@ import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { afriends } from "cache/friends";
-import { useQueryCache } from "cache";
 
 
 
@@ -28,9 +27,31 @@ export const Item = () => {
     const navigate = useNavigate();
     const [userId] = useLocalStorage({ key: 'current_account' })
 
-    console.log('userId',userId)
 
-    const { data: friendList, isSuccess, isPending } = useQueryCache(afriends,userId)
+
+    const [isPending, setIsPending] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [friendList, setFriendList] = useState([])
+    useEffect(() => {
+        if (!userId) {
+            setIsPending(false);
+            setIsSuccess(false);
+            return;
+        };
+        let isMounted = true;
+        afriends.fetch(userId).catch(() => { });
+        const unsubscribe = afriends.subscribe(userId, (next) => {
+            if (!isMounted) return;
+            setIsPending(!!next?.isPending);
+            setIsSuccess(!!next?.isSuccess);
+            const newData = Array.isArray(next?.data) ? next.data : [];
+            setFriendList(newData);
+        });
+        return () => {
+            isMounted = false;
+            unsubscribe?.();
+        }
+    }, [userId]);
     const db = getUserDB(userId)
 
 

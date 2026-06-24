@@ -1,4 +1,4 @@
-import { useCallback, Suspense, useEffect } from "react";
+import { useCallback, Suspense, useEffect, useState } from "react";
 import { createHttpClient, } from 'utils';
 import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
@@ -6,14 +6,30 @@ import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
 import { loginCache } from "cache/loginCache";
 import { useLocalStorage } from '@mantine/hooks';
-import { useQueryCache } from "cache";
 
 /**
  * 上传并更新头像
  */
 export const Avatar2 = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });
-    const { data: currentUser } = useQueryCache(loginCache, userId)
+
+    const [currentUser, setUser] = useState({})
+    useEffect(() => {
+        if (!userId) return;
+        let isMounted = true;
+        loginCache.fetch(userId).catch(() => { });
+        const unsubscribe = loginCache.subscribe(userId, (next) => {
+            if (!isMounted) return;
+            const isObject = next?.data && typeof next.data === 'object';
+            const newData = isObject ? next.data : {};
+            setUser(newData);
+        });
+        return () => {
+            isMounted = false;
+            unsubscribe?.();
+        }
+    }, [userId]);
+
     const { http: httpFiles } = createHttpClient('/files/avatar/');
     const { http: apiLogin } = createHttpClient('/rpc/chat/login/');
 

@@ -4,11 +4,10 @@ import { currentChat, createHttpClient, currentAppBar } from "utils";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
 import { agroup_user } from "cache/group_user";
-import { useQueryCache } from "cache";
 
 
 export const DelMember = () => {
-  
+
   // const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -21,25 +20,42 @@ export const DelMember = () => {
   }, [])
 
   const { http } = createHttpClient('/rpc/chat/msg/group/');
-  const [account] = useLocalStorage({ key: "current_account" });
-  const {data: gusrlist = [],refetch} = useQueryCache(agroup_user,account)
+  const [userId] = useLocalStorage({ key: "current_account" });
 
-  const delgusr= async ({ ids }) => {
-      if (!ids) return;
-      const results = await http.requestBodyJson('group_user_del_list', { ids })
-      const { code, message, data } = results;
-      if (code !== 200) {
-        throw new Error(message || "添加群成员");
-      }
-      return data || true;
+
+  const [gusrlist, setGusrlist] = useState([])
+  useEffect(() => {
+    if (!userId) return;
+    let isMounted = true;
+    agroup_user.fetch(userId).catch(() => { });
+    const unsubscribe = agroup_user.subscribe(userId, (next) => {
+      if (!isMounted) return;
+      const newData = Array.isArray(next?.data) ? next.data : [];
+      setGusrlist(newData);
+    });
+    return () => {
+      isMounted = false;
+      unsubscribe?.();
     }
+  }, [userId]);
+
+
+  const delgusr = async ({ ids }) => {
+    if (!ids) return;
+    const results = await http.requestBodyJson('group_user_del_list', { ids })
+    const { code, message, data } = results;
+    if (code !== 200) {
+      throw new Error(message || "添加群成员");
+    }
+    return data || true;
+  }
 
   const navigate = useNavigate();
   const handleConfirm = useCallback(async (value) => {
     const list = value?.users || []
     const ids = list.map(item => item.id);
     await delgusr({ ids: ids })
-    await refetch()
+    await agroup_user.refresh()
     await navigate('/mobile/chat/group/gusr/')
 
   }, [navigate]);

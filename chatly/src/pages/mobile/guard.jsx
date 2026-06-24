@@ -40,6 +40,7 @@ export function ChatGuard() {
       const ids = [payload];
 
       if (topic.startsWith("chat/single/")) {
+
         const { code, data } = await httpMsg.requestBodyJson('get_message', ids)
         if (code !== 200) return;
         const messages = data.map(item => ({
@@ -54,21 +55,21 @@ export function ChatGuard() {
         await db.table('message').bulkPut(messages);
 
       } else if (topic.startsWith("chat/group/")) {
+
         const { code, data } = await httpGMsg.requestBodyJson('get_message', ids)
-        // console.log('code', code)
-        // console.log('data', data)
         if (code !== 200) return;
-          const messages = data.map(item => ({
-            id: item.id,
-            avatar_url: item.avatar_url,
-            group_id: item.group_id,
-            nickname: item.nickname,
-            type: item.msg_type,
-            content: item.msg_text,
-            timestamp: item.created_at,
-            sentByMe: false,
+        const messages = data.map(item => ({
+          id: item.id,
+          avatar_url: item.avatar_url,
+          group_id: item.group_id,
+          nickname: item.nickname,
+          type: item.msg_type,
+          content: item.msg_text,
+          timestamp: item.created_at,
+          sentByMe: false,
         }));
         await db.table('gmsgs').bulkPut(messages);
+        
       }
     };
 

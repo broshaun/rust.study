@@ -10,10 +10,10 @@ import {
     IconLogout,
     IconChevronRight
 } from '@tabler/icons-react';
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import { loginCache } from 'cache/loginCache';
 import { useLocalStorage } from '@mantine/hooks';
-import { useQueryCache } from 'cache';
+
 
 export const Items = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });
@@ -27,7 +27,22 @@ export const Items = () => {
         setRightPath(null);
     }, [])
 
-    const { data: apiInfo } = useQueryCache(loginCache,userId)
+    const [apiInfo, setApiInfo] = useState({})
+    useEffect(() => {
+        if (!userId) return;
+        let isMounted = true;
+        loginCache.fetch(userId).catch(() => { });
+        const unsubscribe = loginCache.subscribe(userId, (next) => {
+            console.log('next',next)
+            if (!isMounted) return;
+            setApiInfo(next?.data);
+        });
+        return () => {
+            isMounted = false;
+            unsubscribe?.();
+        }
+    }, [userId]);
+
 
     return (
         <Stack gap={0}>

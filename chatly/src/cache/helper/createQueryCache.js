@@ -52,7 +52,7 @@ const clear = (storage, queryKey) => {
 };
 
 /**
- const currentUser = loginCache.get(userId)
+const currentUser = loginCache.get(userId)
 const [members, setMembers] = useState([])
 useEffect(() => {
     if (!userId) return;
@@ -60,7 +60,9 @@ useEffect(() => {
     agroup_user.fetch(userId).catch(() => { });
     const unsubscribe = agroup_user.subscribe(userId, (next) => {
         if (!isMounted) return;
-        const newData = Array.isArray(next?.data) ? next.data : [];
+        // const newData = Array.isArray(next?.data) ? next.data : [];
+        const isObject = next?.data && typeof next.data === 'object';
+        const newData = isObject ? next.data : {};
         setMembers(newData);
     });
     return () => {
@@ -68,6 +70,34 @@ useEffect(() => {
         unsubscribe?.();
     }
 }, [userId]);
+
+
+const [isPending, setIsPending] = useState(false);
+const [isSuccess, setIsSuccess] = useState(false);
+const [friendList, setFriendList] = useState([])
+useEffect(() => {
+    if (!userId) {
+        setIsPending(false);
+        setIsSuccess(false);
+        return;
+    };
+    let isMounted = true;
+    afriends.fetch(userId).catch(() => { });
+    const unsubscribe = afriends.subscribe(userId, (next) => {
+        if (!isMounted) return;
+        setIsPending(!!next?.isPending);
+        setIsSuccess(!!next?.isSuccess);
+        const newData = Array.isArray(next?.data) ? next.data : [];
+        setFriendList(newData);
+    });
+    return () => {
+        isMounted = false;
+        unsubscribe?.();
+    }
+}, [userId]);
+const db = getUserDB(userId)
+
+
  */
 export function createQueryCache({
     key,

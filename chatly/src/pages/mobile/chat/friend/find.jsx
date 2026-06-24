@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendSearch } from "./ui/FriendSearch";
 import { IconUserExclamation } from "@tabler/icons-react";
+import { afriends } from "cache/friends";
 
 
 export const Find = () => {
@@ -55,10 +56,11 @@ export const Find = () => {
         });
     };
 
-    const handleAddFriend = (userId) => {
+    const handleAddFriend = async (userId) => {
         addFriend({
             user_id: userId,
         });
+        await afriends.refresh()
     };
 
     return (

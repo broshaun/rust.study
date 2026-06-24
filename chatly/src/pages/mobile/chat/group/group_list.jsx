@@ -1,5 +1,5 @@
 import { currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
-import { useEffect } from "react";
+import { useEffect,useState } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconUserShare } from "@tabler/icons-react";
@@ -7,7 +7,6 @@ import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { loginCache } from "cache/loginCache";
 import { agroups } from "cache/groups";
-import { useQueryCache } from "cache";
 
 
 
@@ -46,7 +45,26 @@ export const Item = () => {
         }
     }
 
-    const { data: groupList, isSuccess } = useQueryCache(agroups,userId);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [groupList, setGroupList] = useState([])
+    useEffect(() => {
+        if (!userId) {
+            setIsSuccess(false);
+            return;
+        };
+        let isMounted = true;
+        agroups.fetch(userId).catch(() => { });
+        const unsubscribe = agroups.subscribe(userId, (next) => {
+            if (!isMounted) return;
+            setIsSuccess(!!next?.isSuccess);
+            const newData = Array.isArray(next?.data) ? next.data : [];
+            setGroupList(newData);
+        });
+        return () => {
+            isMounted = false;
+            unsubscribe?.();
+        }
+    }, [userId]);
 
     useEffect(() => {
         if (!db) return;

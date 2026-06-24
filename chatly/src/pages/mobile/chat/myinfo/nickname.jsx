@@ -1,16 +1,32 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect,useState } from "react";
 import { useNavigate } from 'react-router';
 import { createHttpClient, currentAppBar } from 'utils';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
 import { loginCache } from "cache/loginCache";
 import { useLocalStorage } from '@mantine/hooks';
-import { useQueryCache } from "cache";
 
 
 export const Nickname = () => {
     const [userId] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
-    const { data: User } = useQueryCache(loginCache,userId)
+
+    const [User, setUser] = useState([])
+    useEffect(() => {
+        if (!userId) return;
+        let isMounted = true;
+        loginCache.fetch(userId).catch(() => { });
+        const unsubscribe = loginCache.subscribe(userId, (next) => {
+            if (!isMounted) return;
+            const isObject = next?.data && typeof next.data === 'object';
+            const newData = isObject ? next.data : {};
+            setUser(newData);
+        });
+        return () => {
+            isMounted = false;
+            unsubscribe?.();
+        }
+    }, [userId]);
+
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {
@@ -19,7 +35,7 @@ export const Nickname = () => {
     }, [])
 
     const { http: apiLogin } = createHttpClient('/rpc/chat/login/');
-    
+
     const nameEdit = async (nickname) => {
         if (!nickname) {
             throw new Error('请输入昵称');
