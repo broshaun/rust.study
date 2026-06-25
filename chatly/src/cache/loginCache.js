@@ -16,5 +16,4 @@ export const loginCache = createQueryCache({
     cacheKey: 'login-info',
     queryFn: loginFn,
     staleTime: 12 * 60 * 60 * 1000,
-    storage: true,
 });

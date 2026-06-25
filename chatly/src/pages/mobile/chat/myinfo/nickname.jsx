@@ -12,10 +12,9 @@ export const Nickname = () => {
 
     const [User, setUser] = useState([])
     useEffect(() => {
-        if (!userId) return;
         let isMounted = true;
-        loginCache.fetch(userId).catch(() => { });
-        const unsubscribe = loginCache.subscribe(userId, (next) => {
+        loginCache.fetch().catch(() => { });
+        const unsubscribe = loginCache.subscribe((next) => {
             if (!isMounted) return;
             const isObject = next?.data && typeof next.data === 'object';
             const newData = isObject ? next.data : {};
@@ -25,7 +24,7 @@ export const Nickname = () => {
             isMounted = false;
             unsubscribe?.();
         }
-    }, [userId]);
+    }, []);
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);

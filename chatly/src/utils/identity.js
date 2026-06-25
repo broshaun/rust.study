@@ -78,24 +78,4 @@ export const Device = {
     },
 };
 
-/* =========================
-   CLIENT (derived only)
-========================= */
-const sha256 = async (str) => {
-    const buf = await crypto.subtle.digest(
-        "SHA-256",
-        new TextEncoder().encode(str)
-    );
 
-    return [...new Uint8Array(buf)]
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-};
-
-export const Client = {
-    async get() {
-        const userId = userId.get();
-        const raw = `${Device.get()}:${userId}`;
-        return sha256(raw);
-    },
-};

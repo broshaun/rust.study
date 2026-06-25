@@ -32,80 +32,80 @@ const toState = (r) =>
         : emptyState;
 
 /* =========================
-   storage
-========================= */
-const getStorage = (storage) => {
-    if (!storage) return null;
-    if (storage === true)
-        return typeof localStorage === 'undefined' ? null : localStorage;
-    return storage;
-};
-
-const storageKey = (sessionId, cacheKey) =>
-    `query-cache:${sessionId}:${cacheKey}`;
-
-const read = (storage, sessionId, cacheKey) => {
-    try {
-        const raw = storage?.getItem(storageKey(sessionId, cacheKey));
-        return raw ? JSON.parse(raw) : null;
-    } catch {
-        return null;
-    }
-};
-
-const write = (storage, sessionId, cacheKey, data) => {
-    try {
-        storage?.setItem(
-            storageKey(sessionId, cacheKey),
-            JSON.stringify(data)
-        );
-    } catch {}
-};
-
-const clear = (storage, sessionId, cacheKey) => {
-    try {
-        storage?.removeItem(storageKey(sessionId, cacheKey));
-    } catch {}
-};
-
-/* =========================
    CORE FACTORY
 ========================= */
 export function createQueryCache({
-    sessionId,
+    sessionId,        // ✔ 允许传 value（Session.get()）
     cacheKey,
     queryFn,
     staleTime = 0,
     retry = 1,
     retryDelay = 1000,
-    storage = false,
 }) {
-    const store = getStorage(storage);
+
+
+    /* =========================
+       strict validation (static only)
+    ========================= */
+    if (!cacheKey) {
+        throw new Error('[createQueryCache] cacheKey is required');
+    }
+
+    if (typeof queryFn !== 'function') {
+        throw new Error('[createQueryCache] queryFn must be a function');
+    }
+
     if (!sessionId) {
         throw new Error('[createQueryCache] sessionId is required');
     }
+
+    /* =========================
+       lazy session resolver (关键修复点)
+    ========================= */
+    const resolveSessionId = () => {
+        // ✔ 支持 function 或 value
+        if (typeof sessionId === 'function') {
+            return sessionId();
+        }
+        return sessionId;
+    };
+
     /* =========================
        query key
     ========================= */
-    const getQueryKey = () => [cacheKey, sessionId];
+    const getQueryKey = () => {
+        const sid = resolveSessionId();
+
+        if (!sid) {
+            throw new Error('[createQueryCache] sessionId is not ready');
+        }
+
+        const key = [cacheKey, sid];
+
+        if (isInvalidKey(key)) {
+            throw new Error('[createQueryCache] invalid queryKey');
+        }
+
+        return key;
+    };
+
     /* =========================
        options builder
     ========================= */
     const optionsOf = () => {
-        const key = getQueryKey();
-        if (isInvalidKey(key)) return null;
+        const queryKey = getQueryKey();
+
         return {
-            queryKey: key,
+            queryKey,
             staleTime,
             retry,
             retryDelay,
             queryFn: async () => {
-                const data = await queryFn();
-                write(store, sessionId, cacheKey, data);
-                return data;
+                return await queryFn();
             },
         };
     };
+
     /* =========================
        get
     ========================= */
@@ -115,19 +115,16 @@ export function createQueryCache({
         const data = queryClient.getQueryData(key);
         if (data !== undefined) return data;
 
-        const local = read(store, sessionId, cacheKey);
-        if (local == null) return null;
-
-        queryClient.setQueryData(key, local);
-        return local;
+        return null;
     };
 
     /* =========================
-       fetch
+       fetch (strict)
     ========================= */
     const fetch = async () => {
         const options = optionsOf();
-        return options ? queryClient.fetchQuery(options) : null;
+
+        return queryClient.fetchQuery(options);
     };
 
     /* =========================
@@ -135,9 +132,11 @@ export function createQueryCache({
     ========================= */
     const refresh = async () => {
         const options = optionsOf();
-        return options
-            ? queryClient.fetchQuery({ ...options, staleTime: 0 })
-            : null;
+
+        return queryClient.fetchQuery({
+            ...options,
+            staleTime: 0,
+        });
     };
 
     /* =========================
@@ -147,7 +146,6 @@ export function createQueryCache({
         const key = getQueryKey();
 
         queryClient.setQueryData(key, data);
-        write(store, sessionId, cacheKey, data);
 
         return data;
     };
@@ -158,24 +156,28 @@ export function createQueryCache({
     const remove = () => {
         const key = getQueryKey();
 
-        queryClient.removeQueries({ queryKey: key, exact: true });
-        clear(store, sessionId, cacheKey);
+        queryClient.removeQueries({
+            queryKey: key,
+            exact: true,
+        });
 
-        return null;
+        return true;
     };
 
     /* =========================
        subscribe
     ========================= */
     const subscribe = (callback) => {
-        const options = optionsOf();
-
-        if (!options) {
-            callback(emptyState);
-            return () => {};
+        if (typeof callback !== 'function') {
+            throw new Error('[subscribe] callback must be a function');
         }
 
-        get();
+        const options = optionsOf();
+
+        // ✔ 自动 hydrate（保证初始化）
+        queryClient.fetchQuery(options).catch((e) => {
+            console.error('[queryCache fetch error]', e);
+        });
 
         const observer = new QueryObserver(queryClient, {
             ...options,

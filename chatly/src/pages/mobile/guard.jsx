@@ -27,13 +27,12 @@ export function ChatGuard() {
   const currentUser = loginCache.get()
 
 
-  useEffect(() => {
-    loginCache.refresh().catch(() => { })
-  }, [userId])
+  // useEffect(() => {
+  //   loginCache.refresh().catch(() => { })
+  // }, [userId])
 
   const [mygroup, setMyGroup] = useState(null)
   useEffect(() => {
-    if (!userId) return;
     let isMounted = true;
     my_groups.fetch().catch(() => { });
     const unsubscribe = my_groups.subscribe((next) => {
@@ -44,8 +43,10 @@ export function ChatGuard() {
       isMounted = false;
       unsubscribe?.();
     }
-  }, [userId]);
+  }, []);
 
+
+  console.log('mygroup',mygroup)
 
   const topics = useMemo(() => {
     if (!currentUser?.id || !Array.isArray(mygroup)) return [];
@@ -59,6 +60,7 @@ export function ChatGuard() {
   console.log('currentUser', currentUser)
   console.log('getDeviceId',Device.get())
   console.log('getUserId', User.get())
+  console.log('getClientId',  `${User.get()}:${Device.get()}`)
 
 
   const tokenValue = tokenStore.get()?.token;
@@ -126,7 +128,7 @@ export function ChatGuard() {
 
 
     invoke("subscribe", {
-      clientId: "77254254",
+      clientId: 'user123',
       host: "192.168.2.1",
       port: 1883,
       username: "jwt",
