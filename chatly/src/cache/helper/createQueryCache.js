@@ -2,6 +2,9 @@ import { QueryClient, QueryObserver } from '@tanstack/query-core';
 
 export const queryClient = new QueryClient();
 
+/* =========================
+   empty state
+========================= */
 export const emptyState = {
     data: null,
     error: null,
@@ -11,96 +14,66 @@ export const emptyState = {
     isError: false,
 };
 
-const isInvalidKey = (queryKey) => queryKey.some((v) => v == null);
+/* =========================
+   utils
+========================= */
+const isInvalidKey = (key) => key.some((v) => v == null);
 
-const toState = (r) => r ? {
-    data: r.data ?? null,
-    error: r.error ?? null,
-    isPending: r.status === 'pending',
-    isFetching: r.fetchStatus === 'fetching',
-    isSuccess: r.status === 'success',
-    isError: r.status === 'error',
-} : emptyState;
+const toState = (r) =>
+    r
+        ? {
+              data: r.data ?? null,
+              error: r.error ?? null,
+              isPending: r.status === 'pending',
+              isFetching: r.fetchStatus === 'fetching',
+              isSuccess: r.status === 'success',
+              isError: r.status === 'error',
+          }
+        : emptyState;
 
+/* =========================
+   storage
+========================= */
 const getStorage = (storage) => {
     if (!storage) return null;
-    if (storage === true) return typeof localStorage === 'undefined' ? null : localStorage;
+    if (storage === true)
+        return typeof localStorage === 'undefined' ? null : localStorage;
     return storage;
 };
 
-const storageKey = (queryKey) => `query-cache:${JSON.stringify(queryKey)}`;
+const storageKey = (sessionId, cacheKey) =>
+    `query-cache:${sessionId}:${cacheKey}`;
 
-const read = (storage, queryKey) => {
+const read = (storage, sessionId, cacheKey) => {
     try {
-        const raw = storage?.getItem(storageKey(queryKey));
+        const raw = storage?.getItem(storageKey(sessionId, cacheKey));
         return raw ? JSON.parse(raw) : null;
     } catch {
         return null;
     }
 };
 
-const write = (storage, queryKey, data) => {
+const write = (storage, sessionId, cacheKey, data) => {
     try {
-        storage?.setItem(storageKey(queryKey), JSON.stringify(data));
+        storage?.setItem(
+            storageKey(sessionId, cacheKey),
+            JSON.stringify(data)
+        );
     } catch {}
 };
 
-const clear = (storage, queryKey) => {
+const clear = (storage, sessionId, cacheKey) => {
     try {
-        storage?.removeItem(storageKey(queryKey));
+        storage?.removeItem(storageKey(sessionId, cacheKey));
     } catch {}
 };
 
-/**
-const currentUser = loginCache.get(userId)
-const [members, setMembers] = useState([])
-useEffect(() => {
-    if (!userId) return;
-    let isMounted = true;
-    agroup_user.fetch(userId).catch(() => { });
-    const unsubscribe = agroup_user.subscribe(userId, (next) => {
-        if (!isMounted) return;
-        // const newData = Array.isArray(next?.data) ? next.data : [];
-        const isObject = next?.data && typeof next.data === 'object';
-        const newData = isObject ? next.data : {};
-        setMembers(newData);
-    });
-    return () => {
-        isMounted = false;
-        unsubscribe?.();
-    }
-}, [userId]);
-
-
-const [isPending, setIsPending] = useState(false);
-const [isSuccess, setIsSuccess] = useState(false);
-const [friendList, setFriendList] = useState([])
-useEffect(() => {
-    if (!userId) {
-        setIsPending(false);
-        setIsSuccess(false);
-        return;
-    };
-    let isMounted = true;
-    afriends.fetch(userId).catch(() => { });
-    const unsubscribe = afriends.subscribe(userId, (next) => {
-        if (!isMounted) return;
-        setIsPending(!!next?.isPending);
-        setIsSuccess(!!next?.isSuccess);
-        const newData = Array.isArray(next?.data) ? next.data : [];
-        setFriendList(newData);
-    });
-    return () => {
-        isMounted = false;
-        unsubscribe?.();
-    }
-}, [userId]);
-const db = getUserDB(userId)
-
-
- */
+/* =========================
+   CORE FACTORY
+========================= */
 export function createQueryCache({
-    key,
+    sessionId,
+    cacheKey,
     queryFn,
     staleTime = 0,
     retry = 1,
@@ -108,85 +81,122 @@ export function createQueryCache({
     storage = false,
 }) {
     const store = getStorage(storage);
-    const optionsOf = (...args) => {
-        const queryKey = key(...args);
-        if (isInvalidKey(queryKey)) return null;
+    if (!sessionId) {
+        throw new Error('[createQueryCache] sessionId is required');
+    }
+    /* =========================
+       query key
+    ========================= */
+    const getQueryKey = () => [cacheKey, sessionId];
+    /* =========================
+       options builder
+    ========================= */
+    const optionsOf = () => {
+        const key = getQueryKey();
+        if (isInvalidKey(key)) return null;
         return {
-            queryKey,
+            queryKey: key,
             staleTime,
             retry,
             retryDelay,
             queryFn: async () => {
-                const data = await queryFn(...args);
-                write(store, queryKey, data);
+                const data = await queryFn();
+                write(store, sessionId, cacheKey, data);
                 return data;
             },
         };
     };
+    /* =========================
+       get
+    ========================= */
+    const get = () => {
+        const key = getQueryKey();
 
-    const get = (...args) => {
-        const queryKey = key(...args);
-        if (isInvalidKey(queryKey)) return null;
-        const data = queryClient.getQueryData(queryKey);
+        const data = queryClient.getQueryData(key);
         if (data !== undefined) return data;
-        const local = read(store, queryKey);
+
+        const local = read(store, sessionId, cacheKey);
         if (local == null) return null;
-        queryClient.setQueryData(queryKey, local);
+
+        queryClient.setQueryData(key, local);
         return local;
     };
 
-    const fetch = async (...args) => {
-        const options = optionsOf(...args);
+    /* =========================
+       fetch
+    ========================= */
+    const fetch = async () => {
+        const options = optionsOf();
         return options ? queryClient.fetchQuery(options) : null;
     };
 
-    const refresh = async (...args) => {
-        const options = optionsOf(...args);
-        return options ? queryClient.fetchQuery({ ...options, staleTime: 0 }) : null;
+    /* =========================
+       refresh
+    ========================= */
+    const refresh = async () => {
+        const options = optionsOf();
+        return options
+            ? queryClient.fetchQuery({ ...options, staleTime: 0 })
+            : null;
     };
 
-    const set = (...args) => {
-        const data = args.pop();
-        const queryKey = key(...args);
-        if (isInvalidKey(queryKey)) return null;
-        queryClient.setQueryData(queryKey, data);
-        write(store, queryKey, data);
+    /* =========================
+       set
+    ========================= */
+    const set = (data) => {
+        const key = getQueryKey();
+
+        queryClient.setQueryData(key, data);
+        write(store, sessionId, cacheKey, data);
+
         return data;
     };
 
-    const remove = (...args) => {
-        const queryKey = key(...args);
-        if (isInvalidKey(queryKey)) return null;
-        queryClient.removeQueries({ queryKey, exact: true });
-        clear(store, queryKey);
+    /* =========================
+       remove
+    ========================= */
+    const remove = () => {
+        const key = getQueryKey();
+
+        queryClient.removeQueries({ queryKey: key, exact: true });
+        clear(store, sessionId, cacheKey);
+
         return null;
     };
 
-    const subscribe = (...args) => {
-        const callback = args.pop();
-        if (typeof callback !== 'function') {
-            throw new TypeError('subscribe callback must be a function');
-        }
-        const options = optionsOf(...args);
+    /* =========================
+       subscribe
+    ========================= */
+    const subscribe = (callback) => {
+        const options = optionsOf();
+
         if (!options) {
             callback(emptyState);
             return () => {};
         }
-        get(...args);
+
+        get();
+
         const observer = new QueryObserver(queryClient, {
             ...options,
             enabled: false,
         });
+
         callback(toState(observer.getCurrentResult()));
-        return observer.subscribe((result) => callback(toState(result)));
+
+        return observer.subscribe((result) =>
+            callback(toState(result))
+        );
     };
 
+    /* =========================
+       public API
+    ========================= */
     return {
-        key,
-        fetch,
         get,
-        set,
+        fetch,
         refresh,
+        set,
         remove,
         subscribe,
     };

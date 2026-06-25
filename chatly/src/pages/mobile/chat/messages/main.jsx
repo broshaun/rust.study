@@ -12,7 +12,7 @@ export const Main = () => {
 
     const [userId] = useLocalStorage({ key: 'current_account' });
     const db = getUserDB(userId);
-    const currentUser = loginCache.get(userId);
+    const currentUser = loginCache.get();
     const { getDateTimeStr } = useDateTime();
 
     /**
@@ -27,9 +27,11 @@ export const Main = () => {
                 msg_text: msgText
             });
             if (!results) return;
+            console.log('发送结果results',results)
+            // [Log] 发送结果results – {code: 200, message: "", data: "6a3bea96d237a5e0da31d073"} (index.d1a019fcd9b05e9e.hot-update.js, line 44)
             if (results?.code === 200) {
                 db.table('message').put({
-                    id:results?.data,
+                    id: new ObjectId().toString(),
                     uid: uid,
                     nickname: '我自己',
                     type: msgType,

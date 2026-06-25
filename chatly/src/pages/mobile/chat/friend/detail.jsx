@@ -28,7 +28,7 @@ export function Detail() {
   useEffect(() => {
     if (!userId) return;
     return () => {
-      afriends.refresh(userId).catch(console.error)
+      afriends.refresh().catch(console.error)
     }
   }, [userId])
 
@@ -74,7 +74,7 @@ export function Detail() {
   async function updRemark({ id, remark }) {
     if (!id) return;
     await http2.requestBodyJson('set_friend', { id, remark });
-    await afriends.refresh(userId)
+    await afriends.refresh()
     await get_friend(friendId)
   }
 

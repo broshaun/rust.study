@@ -6,7 +6,7 @@ import { IconUserShare } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { loginCache } from "cache/loginCache";
-import { agroups } from "cache/groups";
+import { my_groups } from "cache/my_groups";
 
 
 
@@ -14,7 +14,7 @@ export const Item = () => {
     const dt = useDateTime();
     const [userId] = useLocalStorage({ key: 'current_account' })
     const db = getUserDB(userId);
-    const usrInfo = loginCache.get(userId)
+    const usrInfo = loginCache.get()
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -53,8 +53,8 @@ export const Item = () => {
             return;
         };
         let isMounted = true;
-        agroups.fetch(userId).catch(() => { });
-        const unsubscribe = agroups.subscribe(userId, (next) => {
+        my_groups.fetch().catch(() => { });
+        const unsubscribe = my_groups.subscribe((next) => {
             if (!isMounted) return;
             setIsSuccess(!!next?.isSuccess);
             const newData = Array.isArray(next?.data) ? next.data : [];

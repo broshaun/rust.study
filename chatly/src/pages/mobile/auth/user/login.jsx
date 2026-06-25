@@ -5,12 +5,13 @@ import { createHttpClient, currentModal, useDateTime } from 'utils';
 import { useLocalStorage } from "@mantine/hooks";
 import { LoginUI } from "./ui/LoginUI";
 import { loginCache } from "cache/loginCache";
+import { User } from "utils/identity";
 
 
 export function Login() {
     const dt = useDateTime();
     const navigate = useNavigate();
-    const [userId, setUserId] = useLocalStorage({ key: 'current_account', defaultValue: "" });
+    const [account, setAccount] = useLocalStorage({ key: 'current_account', defaultValue: "" });
     const [currentUser, setCurrentUser] = useLocalStorage({ key: 'current_user' });
     const { http } = createHttpClient('/rpc/chat/login/');
     
@@ -26,10 +27,18 @@ export function Login() {
             const { code, data, message } = results;
 
             if (code !== 200) throw new Error(message);
+            User.set(account)
+
             tokenStore.set({ "token": data?.login_token, "login_expired": data?.login_expired })
-            await loginCache.fetch(userId)
+            await loginCache.fetch()
+            
             setCurrentUser({ ...data?.user, timestamp: dt.getDateTimeStr() });
+
+            
+
             navigate("/mobile/chat/");
+
+
             return data
         } catch (error) {
             open({
@@ -47,8 +56,8 @@ export function Login() {
             <LoginUI
                 avatarUrl={currentUser?.avatar_url}
                 avatarVersion={currentUser?.timestamp}
-                defaultAccount={userId}
-                onAccountChange={setUserId}
+                defaultAccount={account}
+                onAccountChange={setAccount}
                 onSubmit={login}
             />
         </React.Fragment>

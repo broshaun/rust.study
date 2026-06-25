@@ -1,5 +1,7 @@
 import { createHttpClient } from 'utils';
 import { createQueryCache } from './helper/createQueryCache';
+import { Session } from 'utils/identity';
+
 
 const { http } = createHttpClient('/rpc/chat/friend/');
 const get_friends = async () => {
@@ -14,7 +16,8 @@ const get_friends = async () => {
 }
 
 export const afriends = createQueryCache({
-    key: (userId) => ['my_friends', userId],
+    sessionId: Session.get(),
+    cacheKey: 'my_friends',
     queryFn: get_friends,
     staleTime: 12 * 60 * 60 * 1000,
 });

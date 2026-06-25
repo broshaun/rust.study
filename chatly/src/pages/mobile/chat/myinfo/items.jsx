@@ -29,10 +29,9 @@ export const Items = () => {
 
     const [apiInfo, setApiInfo] = useState({})
     useEffect(() => {
-        if (!userId) return;
         let isMounted = true;
-        loginCache.fetch(userId).catch(() => { });
-        const unsubscribe = loginCache.subscribe(userId, (next) => {
+        loginCache.fetch().catch(() => { });
+        const unsubscribe = loginCache.subscribe((next) => {
             console.log('next',next)
             if (!isMounted) return;
             setApiInfo(next?.data);
@@ -41,7 +40,7 @@ export const Items = () => {
             isMounted = false;
             unsubscribe?.();
         }
-    }, [userId]);
+    }, []);
 
 
     return (

@@ -33,14 +33,9 @@ export const Item = () => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [friendList, setFriendList] = useState([])
     useEffect(() => {
-        if (!userId) {
-            setIsPending(false);
-            setIsSuccess(false);
-            return;
-        };
         let isMounted = true;
-        afriends.fetch(userId).catch(() => { });
-        const unsubscribe = afriends.subscribe(userId, (next) => {
+        afriends.fetch().catch(() => { });
+        const unsubscribe = afriends.subscribe((next) => {
             if (!isMounted) return;
             setIsPending(!!next?.isPending);
             setIsSuccess(!!next?.isSuccess);
@@ -51,9 +46,10 @@ export const Item = () => {
             isMounted = false;
             unsubscribe?.();
         }
-    }, [userId]);
+    }, []);
     const db = getUserDB(userId)
 
+    console.log('friendList',friendList)
 
 
     const openMsgWindow = useCallback(async (select) => {

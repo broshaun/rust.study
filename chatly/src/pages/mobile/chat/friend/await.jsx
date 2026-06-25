@@ -22,10 +22,9 @@ export const FriendRequests = () => {
     const [friendRequests, setFriendRequests] = useState([])
     const [isFetching, setIsFetching] = useState(false);
     useEffect(() => {
-        if (!userId) return;
         let isMounted = true;
-        afriends.fetch(userId).catch(() => { });
-        const unsubscribe = afriends.subscribe(userId, (next) => {
+        afriends.fetch().catch(() => { });
+        const unsubscribe = afriends.subscribe((next) => {
             if (!isMounted) return;
             setIsFetching(!!next?.isFetching);
             const listData = Array.isArray(next?.data) ? next.data : [];
@@ -35,7 +34,7 @@ export const FriendRequests = () => {
             isMounted = false;
             unsubscribe?.();
         }
-    }, [userId]);
+    }, []);
 
 
   async function updateFriendRequest({ id, ask_state }) {
@@ -49,7 +48,7 @@ export const FriendRequests = () => {
     <FriendRequestList
       isRefetching={isFetching}
       onRefetch={async () => {
-        await afriends.refresh(userId)
+        await afriends.refresh()
       }}
       friendRequests={friendRequests}
       onAcceptFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "agree" })}

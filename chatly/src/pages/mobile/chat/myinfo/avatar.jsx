@@ -18,7 +18,7 @@ export const Avatar2 = () => {
         if (!userId) return;
         let isMounted = true;
         loginCache.fetch(userId).catch(() => { });
-        const unsubscribe = loginCache.subscribe(userId, (next) => {
+        const unsubscribe = loginCache.subscribe((next) => {
             if (!isMounted) return;
             const isObject = next?.data && typeof next.data === 'object';
             const newData = isObject ? next.data : {};
@@ -38,7 +38,7 @@ export const Avatar2 = () => {
         const results = await httpFiles.uploadFiles(file);
         if (!results?.data) return;
         await apiLogin.post('update', { avatar_url: results.data });
-        await loginCache.refresh(userId)
+        await loginCache.refresh()
     }, [httpFiles, apiLogin]);
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);

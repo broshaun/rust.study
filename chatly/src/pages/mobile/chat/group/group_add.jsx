@@ -3,7 +3,7 @@ import { currentAppBar, createHttpClient } from "utils";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from "@mantine/hooks";
-import { agroups } from "cache/groups";
+import { my_groups } from "cache/my_groups";
 
 
 export function CreateGroup() {
@@ -25,7 +25,7 @@ export function CreateGroup() {
         const results = await http.requestBodyJson('create_group', { group_name })
         const { code, message, data } = results;
         if (code === 200) {
-            await agroups.refresh(userId);
+            await my_groups.refresh();
             navigate('/mobile/chat/group/');
         }
         return data || true;

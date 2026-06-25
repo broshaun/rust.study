@@ -3,7 +3,7 @@ import { currentAppBar, createHttpClient, currentChat, useDateTime, getUserDB } 
 import { useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from "@mantine/hooks";
-import { agroups } from "cache/groups";
+import { my_groups } from "cache/my_groups";
 
 
 export const Manage = () => {
@@ -72,7 +72,7 @@ export const Manage = () => {
             const { code, data } = results;
             if (code !== 200) return;
             await db.table('groups').update(id, { timestamp: dt.getDateTimeStr() });
-            await agroups.refresh(userId)
+            await my_groups.refresh()
             navigate('/mobile/chat/group/');
             await get_group()
             return data;
@@ -87,7 +87,7 @@ export const Manage = () => {
         const results = await http.requestBodyJson('delete_group', payload)
         const { code, message, data } = results;
         if (code === 200) {
-            await agroups.refresh(userId)
+            await my_groups.refresh()
             navigate('/mobile/chat/group/');
             await get_group()
             return data

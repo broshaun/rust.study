@@ -1,6 +1,6 @@
 import { createHttpClient } from 'utils';
 import { createQueryCache } from './helper/createQueryCache';
-
+import { Session } from 'utils/identity';
 
 const { http } = createHttpClient('/rpc/chat/msg/group/');
 const queryFn = async () => {
@@ -13,8 +13,9 @@ const queryFn = async () => {
     return data || [];
 }
 
-export const agroups = createQueryCache({
-    key: (userId) => ['my_group_list', userId],
+export const my_groups = createQueryCache({
+    sessionId: Session.get(),
+    key: 'my_group_list',
     queryFn: queryFn,
     staleTime: 12 * 60 * 60 * 1000,
 });

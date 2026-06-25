@@ -23,13 +23,12 @@ export const GroupUsers = () => {
     const [userId] = useLocalStorage({ key: 'current_account' })
 
 
-    const currentUser = loginCache.get(userId)
+    const currentUser = loginCache.get()
     const [members, setMembers] = useState([])
     useEffect(() => {
-        if (!userId) return;
         let isMounted = true;
-        agroup_user.fetch(userId).catch(() => { });
-        const unsubscribe = agroup_user.subscribe(userId, (next) => {
+        agroup_user.fetch().catch(() => { });
+        const unsubscribe = agroup_user.subscribe((next) => {
             if (!isMounted) return;
             const newData = Array.isArray(next?.data) ? next.data : [];
             setMembers(newData);
@@ -38,7 +37,7 @@ export const GroupUsers = () => {
             isMounted = false;
             unsubscribe?.();
         }
-    }, [userId]);
+    }, []);
 
 
 
@@ -48,7 +47,7 @@ export const GroupUsers = () => {
         if (code !== 200) {
             throw new Error(message);
         }
-        await agroup_user.refresh(userId)
+        await agroup_user.refresh()
         navigate('/mobile/chat/group/');
         return data;
     }

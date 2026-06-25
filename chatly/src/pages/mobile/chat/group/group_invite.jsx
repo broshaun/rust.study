@@ -3,7 +3,7 @@ import { currentAppBar, createHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";
 import { useLocalStorage } from "@mantine/hooks";
-import { agroups } from "cache/groups";
+import { my_groups } from "cache/my_groups";
 
 
 export function InviteGroup() {
@@ -41,7 +41,7 @@ export function InviteGroup() {
     const updateGroupAskState = async ({ id, ask_state }) => {
         const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
         if (results?.code === 200) {
-            await agroups.refresh(userId)
+            await my_groups.refresh()
             return results?.data;
         }
         return []

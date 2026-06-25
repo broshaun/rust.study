@@ -25,10 +25,9 @@ export const DelMember = () => {
 
   const [gusrlist, setGusrlist] = useState([])
   useEffect(() => {
-    if (!userId) return;
     let isMounted = true;
-    agroup_user.fetch(userId).catch(() => { });
-    const unsubscribe = agroup_user.subscribe(userId, (next) => {
+    agroup_user.fetch().catch(() => { });
+    const unsubscribe = agroup_user.subscribe((next) => {
       if (!isMounted) return;
       const newData = Array.isArray(next?.data) ? next.data : [];
       setGusrlist(newData);
@@ -37,7 +36,7 @@ export const DelMember = () => {
       isMounted = false;
       unsubscribe?.();
     }
-  }, [userId]);
+  }, []);
 
 
   const delgusr = async ({ ids }) => {

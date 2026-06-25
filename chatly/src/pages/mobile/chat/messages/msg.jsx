@@ -106,7 +106,7 @@ export function Msg() {
     };
 
 
-    console.log('msgs',msgs)
+    // console.log('msgs',msgs)
 
     return (
         <ChatBox
