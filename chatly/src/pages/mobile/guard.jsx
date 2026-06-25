@@ -22,7 +22,7 @@ export function ChatGuard() {
     loginCache.fetch().catch(() => { });
     const unsubscribe1 = loginCache.subscribe((next) => {
       if (!isMounted) return;
-      console.log('next++',next)
+      console.log('next++', next)
       setUser(next?.data);
     });
 
@@ -39,6 +39,7 @@ export function ChatGuard() {
     }
   }, []);
 
+
   const topics = useMemo(() => {
     if (!currentUser?.id || !Array.isArray(mygroup)) return [];
     return [...mygroup.map(item => `chat/group/${item?.id}`), `chat/single/${currentUser.id}`];
@@ -47,10 +48,7 @@ export function ChatGuard() {
   // console.log('mygroup',mygroup)
   // console.log('topics', topics)
   // console.log('currentUser', currentUser)
-  // console.log('getDeviceId',Device.get())
   // console.log('getUserId', User.get())
-  // console.log('getClientId',  `${User.get()}:${Device.get()}`)
-  // console.log('topics++',topics)
 
   const tokenValue = tokenStore.get()?.token;
 
@@ -59,8 +57,8 @@ export function ChatGuard() {
 
   useEffect(() => {
     if (!db) return;
-    if (!userId) return;
     if (!tokenValue) return;
+
     const channel = new Channel();
     channel.onmessage = async (msg) => {
       console.log("MQTT消息:", msg);
@@ -109,8 +107,11 @@ export function ChatGuard() {
       }
     };
 
+    let uid = userId.get();
+    let did = deviceId.get();
+
     invoke("subscribe", {
-      clientId: `${userId.get()}:${deviceId.get()}`,
+      clientId: `${uid}:${did}`,
       host: "192.168.2.1",
       port: 1883,
       username: "jwt",

@@ -3,7 +3,7 @@ import { ObjectId } from "bson";
 
 export const userId = {
     get() {
-        const uid = localStorage.getItem('userId');
+        let uid = localStorage.getItem('userId');
         if (!uid) throw new Error("[identity] userId missing");
         return uid;
     },
@@ -14,7 +14,7 @@ export const userId = {
 
 export const Tenant = {
     get() {
-        const id = localStorage.getItem('tenant');
+        let id = localStorage.getItem('tenant');
         if (!id) throw new Error("[identity] tenantId missing");
         return id;
     },
@@ -25,20 +25,23 @@ export const Tenant = {
 
 export const sessionId = {
     get() {
-        const sid = sessionStorage.getItem('sessionId')
+        let sid = sessionStorage.getItem('sessionId')
         if (!sid) {
-            sessionStorage.setItem('sessionId', new ObjectId().toString())
+            sid = new ObjectId().toString();
+            sessionStorage.setItem('sessionId', sid)
         }
         return sid;
     },
     new() {
-        sessionStorage.setItem('sessionId', new ObjectId().toString())
+        let sid = new ObjectId().toString();
+        sessionStorage.setItem('sessionId', sid);
+        return sid;
     },
 };
 
 export const deviceId = {
     get() {
-        const did = sessionStorage.getItem('deviceId')
+        let did = sessionStorage.getItem('deviceId')
         if (!did) {
             did = (crypto.randomUUID?.() || Math.random().toString(36).slice(2)) + Date.now();
             sessionStorage.setItem('deviceId', did)
