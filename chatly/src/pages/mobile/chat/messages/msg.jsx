@@ -10,8 +10,7 @@ import {
     useDateTime,
 } from "utils";
 import { ChatBox } from "./ui/ChatBox";
-
-
+import { userId } from "utils/identity";
 import {
     IconMoodSmile,
     IconPhotoUp,
@@ -46,12 +45,7 @@ const TOOLS_CONFIG = [
 
 export function Msg() {
     const dt = useDateTime();
-
-    const [userId] = useLocalStorage({
-        key: "current_account",
-    });
-
-    const db = getUserDB(userId);
+    const db = getUserDB(userId.get());
     const current = currentChat((state) => state.current.get("friend"));
 
     const { fnSendMsg } = useOutletContext();

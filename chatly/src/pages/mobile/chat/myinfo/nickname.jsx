@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router';
 import { createHttpClient, currentAppBar } from 'utils';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
 import { loginCache } from "cache/loginCache";
-import { useLocalStorage } from '@mantine/hooks';
 
 
 export const Nickname = () => {
-    const [userId] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
 
     const [User, setUser] = useState([])
@@ -40,7 +38,6 @@ export const Nickname = () => {
             throw new Error('请输入昵称');
         }
         const res = await apiLogin.post('update', { nickname });
-
         if (!res) {
             throw new Error('请求失败');
         }
@@ -48,8 +45,8 @@ export const Nickname = () => {
         if (code !== 200) {
             throw new Error(message || '更新失败');
         }
-        loginCache.refresh(userId)
-        navigate('/mobile/chat/self/')
+        await loginCache.refresh()
+        await navigate('/mobile/chat/self/')
     }
     return <Suspense fallback={<div>加载中...</div>}>
         <NicknameEditPage value={User?.nickname} onClick={(text) => { nameEdit(text) }} />

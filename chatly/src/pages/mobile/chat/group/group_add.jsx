@@ -2,7 +2,6 @@ import { CreateGroupView } from "./ui/CreateGroupView"
 import { currentAppBar, createHttpClient } from "utils";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useLocalStorage } from "@mantine/hooks";
 import { my_groups } from "cache/my_groups";
 
 
@@ -19,7 +18,6 @@ export function CreateGroup() {
     }, [])
 
     const navigate = useNavigate();
-    const [userId] = useLocalStorage({ key: 'current_account' })
     const { http } = createHttpClient('/rpc/chat/msg/group/')
     const createGroup = async ({ group_name }) => {
         const results = await http.requestBodyJson('create_group', { group_name })

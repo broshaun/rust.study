@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocalStorage, useListState } from "@mantine/hooks";
+import { useListState } from "@mantine/hooks";
 import { getUserDB, currentChat, createHttpClient, currentAppBar, currentModal } from "utils";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
+import { userId } from "utils/identity";
+
 
 export const AddMember = () => {
-
   // const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -18,8 +19,7 @@ export const AddMember = () => {
   }, [])
 
   const { http } = createHttpClient('/rpc/chat/msg/group/');
-  const [account] = useLocalStorage({ key: "current_account" });
-  const db = getUserDB(account);
+  const db = getUserDB(userId.get());
 
   const [friends, handlers] = useListState([]);
   useEffect(() => {
@@ -54,7 +54,7 @@ export const AddMember = () => {
     const uids = users.map((item) => item.uid).filter(Boolean);
     if (!uids.length) return;
     await addgusr({ group_id: groupId, uids: uids })
-    navigate('/mobile/chat/group/gusr/')
+    await navigate('/mobile/chat/group/gusr/')
   }, [navigate, addgusr]);
 
   return (

@@ -1,13 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate } from "react-router";
 import { useWinSize, useDateTime, currentAppBar, GlobalAppBar, getUserDB } from 'utils';
-
 import { IconLabel } from 'components';
-import { liveQuery } from 'dexie';
-import { useLocalStorage } from "@mantine/hooks";
 import { AppShell, Group, Center } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconFlask, IconUserCircle } from "@tabler/icons-react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { userId } from "utils/identity";
 
 
 
@@ -16,10 +14,10 @@ export function ChatShell() {
   const navigate = useNavigate();
   const isShowBack = currentAppBar((state) => state.leftPath !== null);
 
-  const [account] = useLocalStorage({ key: 'current_account' })
+
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
-  const db = getUserDB(account);
+  const db = getUserDB(userId.get());
 
   const [msgDot, setMsgDot] = useState(false);
   const messageChanged = useLiveQuery(async () => {

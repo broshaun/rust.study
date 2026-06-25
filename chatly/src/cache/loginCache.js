@@ -1,6 +1,6 @@
 import { createHttpClient } from 'utils';
 import { createQueryCache } from './helper/createQueryCache';
-import { Session } from 'utils/identity';
+import { sessionId } from 'utils/identity';
 
 const { http } = createHttpClient('/rpc/chat/login/');
 async function loginFn() {
@@ -12,7 +12,7 @@ async function loginFn() {
 
 
 export const loginCache = createQueryCache({
-    sessionId: Session.get(),
+    sessionId: ()=>sessionId.get(),
     cacheKey: 'login-info',
     queryFn: loginFn,
     staleTime: 12 * 60 * 60 * 1000,

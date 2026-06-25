@@ -1,5 +1,5 @@
 import { currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from '@mantine/hooks';
 import { IconUserShare } from "@tabler/icons-react";
@@ -7,13 +7,12 @@ import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { loginCache } from "cache/loginCache";
 import { my_groups } from "cache/my_groups";
-
+import { userId } from "utils/identity";
 
 
 export const Item = () => {
     const dt = useDateTime();
-    const [userId] = useLocalStorage({ key: 'current_account' })
-    const db = getUserDB(userId);
+    const db = getUserDB(userId.get());
     const usrInfo = loginCache.get()
 
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -38,7 +37,15 @@ export const Item = () => {
 
     // 点击群头像
     const openGroupInfo = (value) => {
+
+
+
         const list = value?.administrator || [];
+
+
+        console.log('usrInfo?.id', usrInfo?.id)
+        console.log('list', list)
+
         if (list.includes(usrInfo?.id)) {
             currentChat.getState().set('group', { id: value?.id })
             navigate('/mobile/chat/group/update')
@@ -79,6 +86,9 @@ export const Item = () => {
         const groupMap = new Map(dialog.map(item => [item.id, item]))
         return groups.map(group => ({ ...group, ...groupMap.get(group.id) }))
     }, [db], []);
+
+
+    console.log('finalGroups',finalGroups)
 
     return (
         <GroupList

@@ -3,18 +3,17 @@ import { useNavigate } from 'react-router';
 import { deleteUserDB, currentModal } from 'utils';
 import { clearAllImageCache } from "utils";
 import { useLocalStorage } from "@mantine/hooks";
-
+import { userId } from "utils/identity";
 
 
 export const ClearLogs = () => {
-    const [account] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
     const clear = async (click) => {
         await clearAllImageCache();
         if (click) {
-            deleteUserDB(account).then(console.log('记录清空'))
+            deleteUserDB(userId.get()).then(console.log('记录清空'))
         }
-        navigate('/mobile/chat/self/')
+        await navigate('/mobile/chat/self/')
     }
     const { open } = currentModal();
     useEffect(() => {

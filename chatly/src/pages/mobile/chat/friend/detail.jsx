@@ -2,16 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { createHttpClient, currentAppBar, currentChat } from 'utils';
 import { getUserDB } from "utils";
-import { useLocalStorage } from '@mantine/hooks';
 import { FriendInfo } from "./ui/FriendDetailUI";
 import { afriends } from "cache/friends";
+import { userId } from "utils/identity";
 
 
 export function Detail() {
   const { http: http2 } = createHttpClient('/rpc/chat/friend/');
   const navigate = useNavigate();
-  const [userId] = useLocalStorage({ key: 'current_account' })
-  const db = getUserDB(userId);
+  const db = getUserDB(userId.get());
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);

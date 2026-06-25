@@ -2,16 +2,15 @@ import { GroupEdit } from "./ui/GroupEdit";
 import { currentAppBar, createHttpClient, currentChat, useDateTime, getUserDB } from "utils";
 import { useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router";
-import { useLocalStorage } from "@mantine/hooks";
 import { my_groups } from "cache/my_groups";
+import { userId } from "utils/identity";
 
 
 export const Manage = () => {
     const dt = useDateTime();
     const navigate = useNavigate();
-    const [userId] = useLocalStorage({ key: 'current_account' })
     const current = currentChat((state) => state.current);
-    const db = getUserDB(userId)
+    const db = getUserDB(userId.get())
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -56,9 +55,9 @@ export const Manage = () => {
             setIsPending(false);
         }
     }
-    useEffect(()=>{
+    useEffect(() => {
         get_group().catch(console.error)
-    },[])
+    }, [])
 
 
 
@@ -73,9 +72,8 @@ export const Manage = () => {
             if (code !== 200) return;
             await db.table('groups').update(id, { timestamp: dt.getDateTimeStr() });
             await my_groups.refresh()
-            navigate('/mobile/chat/group/');
+            await navigate('/mobile/chat/group/');
             await get_group()
-            return data;
         } catch (error) {
             console.error("修改失败:", error);
         }
@@ -85,17 +83,16 @@ export const Manage = () => {
         if (!id) return;
         const payload = { id };
         const results = await http.requestBodyJson('delete_group', payload)
-        const { code, message, data } = results;
+        const { code } = results;
+        console.log('results++', results)
         if (code === 200) {
+            db.table('groups').delete(id);
             await my_groups.refresh()
-            navigate('/mobile/chat/group/');
-            await get_group()
-            return data
+            await navigate('/mobile/chat/group/');
         };
-        return null;
     }
 
-    console.log('group++',group)
+
 
     const handleUpdateGroup = async (value) => {
         await updateGroup({

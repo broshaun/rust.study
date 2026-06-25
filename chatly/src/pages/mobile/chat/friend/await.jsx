@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendRequestList } from "./ui/FriendRequestList";
-import { useLocalStorage } from "@mantine/hooks";
 import { afriends } from "cache/friendsAwait";
 
 export const FriendRequests = () => {
   const { http } = createHttpClient("/rpc/chat/friend/");
-  const [userId] = useLocalStorage({ key: 'current_account' })
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);

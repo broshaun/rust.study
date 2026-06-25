@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import { useNavigate } from 'react-router';
 import { createHttpClient, currentModal, tokenStore } from 'utils';
 import { useEffect } from "react";
-
+import { queryClient } from "cache";
 
 
 
@@ -11,8 +11,9 @@ export const Logout = () => {
   const { http } = createHttpClient('/rpc/chat/login/')
 
   const logout = () => {
-    http.post('DELETE').catch(console.error);
+    queryClient.clear()
     tokenStore.remove()
+    http.post('DELETE').catch(console.error);
     navigate('/mobile/auth/user', { replace: true });
   }
 

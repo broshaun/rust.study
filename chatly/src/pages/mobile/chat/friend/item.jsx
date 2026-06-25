@@ -1,17 +1,15 @@
 import React, { useEffect, useCallback,useState } from "react";
 import { useNavigate } from 'react-router';
 import { currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
-import { useLocalStorage } from '@mantine/hooks';
 import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { afriends } from "cache/friends";
-
+import { userId } from "utils/identity";
 
 
 export const Item = () => {
     const dt = useDateTime();
-
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -23,12 +21,7 @@ export const Item = () => {
         setRightPath('/mobile/chat/friend/find/')
     }, [])
 
-
     const navigate = useNavigate();
-    const [userId] = useLocalStorage({ key: 'current_account' })
-
-
-
     const [isPending, setIsPending] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [friendList, setFriendList] = useState([])
@@ -47,11 +40,8 @@ export const Item = () => {
             unsubscribe?.();
         }
     }, []);
-    const db = getUserDB(userId)
 
-    console.log('friendList',friendList)
-
-
+    const db = getUserDB(userId.get())
     const openMsgWindow = useCallback(async (select) => {
         const displayName = select.remark ?? select.nickname ?? select.email;
         currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
@@ -60,7 +50,6 @@ export const Item = () => {
     }, [navigate, db]);
 
     useEffect(() => {
-        // console.log('friendList',friendList)
         if (!db) return;
         if (!isSuccess) return;
         db.table("friends").bulkPut(friendList).catch(console.error);

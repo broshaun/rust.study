@@ -2,7 +2,6 @@ import { GroupInviteMessageList } from "./ui/InviteGroupCard";
 import { currentAppBar, createHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";
-import { useLocalStorage } from "@mantine/hooks";
 import { my_groups } from "cache/my_groups";
 
 
@@ -37,7 +36,6 @@ export function InviteGroup() {
         setRightPath('/mobile/chat/group/addg/')
     }, [])
 
-    const [userId] = useLocalStorage({ key: 'current_account' })
     const updateGroupAskState = async ({ id, ask_state }) => {
         const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
         if (results?.code === 200) {

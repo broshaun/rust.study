@@ -1,16 +1,14 @@
 import React, { useEffect, useCallback } from "react";
 import { useNavigate } from 'react-router';
 import { currentChat, currentAppBar, getUserDB, useDateTime } from 'utils';
-import { useLocalStorage } from '@mantine/hooks';
 import { DialogList } from "./ui/DialogList";
 import { useLiveQuery } from "dexie-react-hooks";
-
+import { userId } from "utils/identity";
 
 export const Item = () => {
     const dt = useDateTime();
     const navigate = useNavigate()
-    const [userId] = useLocalStorage({ key: 'current_account' })
-    const db = getUserDB(userId);
+    const db = getUserDB(userId.get());
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     const setRightPath = currentAppBar((state) => state.setRightPath);

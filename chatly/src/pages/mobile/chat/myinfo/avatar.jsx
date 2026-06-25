@@ -5,19 +5,16 @@ import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
 import { loginCache } from "cache/loginCache";
-import { useLocalStorage } from '@mantine/hooks';
+
 
 /**
  * 上传并更新头像
  */
 export const Avatar2 = () => {
-    const [userId] = useLocalStorage({ key: 'current_account' });
-
     const [currentUser, setUser] = useState({})
     useEffect(() => {
-        if (!userId) return;
         let isMounted = true;
-        loginCache.fetch(userId).catch(() => { });
+        loginCache.fetch().catch(() => { });
         const unsubscribe = loginCache.subscribe((next) => {
             if (!isMounted) return;
             const isObject = next?.data && typeof next.data === 'object';
@@ -28,7 +25,7 @@ export const Avatar2 = () => {
             isMounted = false;
             unsubscribe?.();
         }
-    }, [userId]);
+    }, []);
 
     const { http: httpFiles } = createHttpClient('/files/avatar/');
     const { http: apiLogin } = createHttpClient('/rpc/chat/login/');

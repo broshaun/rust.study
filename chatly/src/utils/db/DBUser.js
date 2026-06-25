@@ -1,7 +1,10 @@
 import Dexie from 'dexie';
+import {userId} from 'utils/identity'
 
 const dbCache = new Map();
 
+
+// const userId = User.get()
 
 /**
  * const db = getUserDB(userId)

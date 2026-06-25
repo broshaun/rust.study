@@ -6,6 +6,8 @@ import { useOutletContext } from "react-router";
 import { IconDots } from "@tabler/icons-react";
 import { useLocalStorage } from "@mantine/hooks";
 import { IconMoodSmile, IconPhotoUp } from "@tabler/icons-react";
+import { userId } from "utils/identity";
+
 
 const TOOLS_CONFIG = [
     {
@@ -27,8 +29,7 @@ const TOOLS_CONFIG = [
 
 export function Msg() {
     const group = currentChat((state) => state.current.get("group"));
-    const [userId] = useLocalStorage({ key: 'current_account' })
-    const db = getUserDB(userId)
+    const db = getUserDB(userId.get())
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);

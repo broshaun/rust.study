@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocalStorage } from "@mantine/hooks";
-import { currentChat, createHttpClient, currentAppBar } from "utils";
+import { createHttpClient, currentAppBar } from "utils";
 import { useNavigate } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
 import { agroup_user } from "cache/group_user";
 
 
 export const DelMember = () => {
-
   // const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -20,9 +18,6 @@ export const DelMember = () => {
   }, [])
 
   const { http } = createHttpClient('/rpc/chat/msg/group/');
-  const [userId] = useLocalStorage({ key: "current_account" });
-
-
   const [gusrlist, setGusrlist] = useState([])
   useEffect(() => {
     let isMounted = true;

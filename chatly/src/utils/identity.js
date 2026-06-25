@@ -1,81 +1,48 @@
 import { ObjectId } from "bson";
 
-/* =========================
-   Keys
-========================= */
-const KEY = {
-    user: "app_user_id",
-    tenant: "app_tenant_id",
-};
 
-/* =========================
-   storage
-========================= */
-const ls = {
-    get: (k) => localStorage.getItem(k),
-    set: (k, v) => localStorage.setItem(k, v),
-    del: (k) => localStorage.removeItem(k),
-};
-
-/* =========================
-   USER (persistent)
-========================= */
-export const User = {
+export const userId = {
     get() {
-        const id = ls.get(KEY.user);
-        if (!id) throw new Error("[identity] userId missing");
-        return id;
+        const uid = localStorage.getItem('userId');
+        if (!uid) throw new Error("[identity] userId missing");
+        return uid;
     },
-
     set(id) {
-        if (id) ls.set(KEY.user, id);
+        if (id) localStorage.setItem('userId', id);
     },
 };
 
-/* =========================
-   TENANT (persistent)
-========================= */
 export const Tenant = {
     get() {
-        const id = ls.get(KEY.tenant);
+        const id = localStorage.getItem('tenant');
         if (!id) throw new Error("[identity] tenantId missing");
         return id;
     },
-
     set(id) {
-        if (id) ls.set(KEY.tenant, id);
+        if (id) localStorage.setItem('tenant', id);
     },
 };
 
-/* =========================
-   SESSION (runtime only)
-========================= */
-let sessionId;
-
-export const Session = {
+export const sessionId = {
     get() {
-        if (!sessionId) {
-            sessionId = new ObjectId().toString();
+        const sid = sessionStorage.getItem('sessionId')
+        if (!sid) {
+            sessionStorage.setItem('sessionId', new ObjectId().toString())
         }
-        return sessionId;
+        return sid;
+    },
+    new() {
+        sessionStorage.setItem('sessionId', new ObjectId().toString())
     },
 };
 
-/* =========================
-   DEVICE (runtime only)
-========================= */
-let deviceId;
-
-export const Device = {
+export const deviceId = {
     get() {
-        if (!deviceId) {
-            deviceId =
-                (crypto.randomUUID?.() ||
-                    Math.random().toString(36).slice(2)) +
-                Date.now();
+        const did = sessionStorage.getItem('deviceId')
+        if (!did) {
+            did = (crypto.randomUUID?.() || Math.random().toString(36).slice(2)) + Date.now();
+            sessionStorage.setItem('deviceId', did)
         }
-        return deviceId;
+        return did;
     },
 };
-
-

@@ -1,8 +1,7 @@
 import { GroupMemberList } from "./ui/GroupMemberList"
 import { useNavigate } from "react-router";
-import { currentAppBar, createHttpClient, currentChat } from "utils"
+import { currentAppBar, createHttpClient } from "utils"
 import { useEffect, useState } from "react";
-import { useLocalStorage } from '@mantine/hooks';
 import { loginCache } from "cache/loginCache";
 import { agroup_user } from "cache/group_user";
 
@@ -20,9 +19,6 @@ export const GroupUsers = () => {
     }, [])
 
     const { http } = createHttpClient('/rpc/chat/msg/group/')
-    const [userId] = useLocalStorage({ key: 'current_account' })
-
-
     const currentUser = loginCache.get()
     const [members, setMembers] = useState([])
     useEffect(() => {

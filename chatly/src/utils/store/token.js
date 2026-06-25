@@ -25,7 +25,6 @@ function createJsonStorage(key, defaultValue) {
 }
 
 export const tokenStore = createJsonStorage("token", {});
-
 const calc = () => {
   const data = tokenStore.get();
   const expireStr = data?.login_expired;
@@ -39,7 +38,6 @@ const calc = () => {
 import { useState, useEffect } from 'react';
 export function useRemainSeconds() {
   const [seconds, setSeconds] = useState(()=>calc());
-
   useEffect(() => {
     const timer = setInterval(() => {
       const rest = calc();
@@ -51,6 +49,5 @@ export function useRemainSeconds() {
     }, 1000);
     return () => clearInterval(timer);
   }, [tokenStore, calc]);
-
   return seconds;
 }

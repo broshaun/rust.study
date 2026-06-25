@@ -12,11 +12,9 @@ import {
 } from '@tabler/icons-react';
 import React, { useEffect,useState } from "react";
 import { loginCache } from 'cache/loginCache';
-import { useLocalStorage } from '@mantine/hooks';
 
 
 export const Items = () => {
-    const [userId] = useLocalStorage({ key: 'current_account' });
     const navigate = useNavigate();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);

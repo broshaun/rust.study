@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router';
 import { createHttpClient, useDateTime, getUserDB } from 'utils';
-import { useLocalStorage } from '@mantine/hooks';
 import { loginCache } from 'cache/loginCache';
 import { ObjectId } from "bson";
+import { userId } from 'utils/identity';
 
 
 export const Main = () => {
@@ -10,8 +10,7 @@ export const Main = () => {
      * 个人数据库
      */
 
-    const [userId] = useLocalStorage({ key: 'current_account' });
-    const db = getUserDB(userId);
+    const db = getUserDB(userId.get());
     const currentUser = loginCache.get();
     const { getDateTimeStr } = useDateTime();
 
