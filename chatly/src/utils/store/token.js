@@ -13,7 +13,7 @@ function createJsonStorage(key, defaultValue) {
   };
 
   const set = (value) => {
-    console.log('执行赋值', value)
+    // console.log('执行赋值', value)
     if (value == null) {
       localStorage.removeItem(key);
     } else {

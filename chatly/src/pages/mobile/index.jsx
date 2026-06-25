@@ -9,6 +9,7 @@ import { RsTest } from "./chat/test";
 import { AuthShell } from "./auth/main";
 import { RsUser } from "./auth/user";
 import { RsGroup } from "./chat/group";
+import { BootstrapGate } from "./BootstrapGate";
 
 
 export const RsMobile = [
@@ -30,7 +31,7 @@ export const RsMobile = [
             },
             {
                 path: "chat",
-                element: <ChatGuard />,
+                element: <BootstrapGate><ChatGuard /></BootstrapGate>,
                 children: [
                     {
                         index: true,

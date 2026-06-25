@@ -30,7 +30,6 @@ export const Items = () => {
         let isMounted = true;
         loginCache.fetch().catch(() => { });
         const unsubscribe = loginCache.subscribe((next) => {
-            console.log('next',next)
             if (!isMounted) return;
             setApiInfo(next?.data);
         });

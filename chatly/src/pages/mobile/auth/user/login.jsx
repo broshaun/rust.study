@@ -21,9 +21,6 @@ export function Login() {
         setLogin(user)
     }, [account])
 
-    console.log('login+++', login)
-
-
     const { http } = createHttpClient('/rpc/chat/login/');
     const { open, close } = currentModal();
     async function onLogin({ account, password }) {

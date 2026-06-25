@@ -22,7 +22,6 @@ export function ChatGuard() {
     loginCache.fetch().catch(() => { });
     const unsubscribe1 = loginCache.subscribe((next) => {
       if (!isMounted) return;
-      console.log('next++', next)
       setUser(next?.data);
     });
 
@@ -49,6 +48,8 @@ export function ChatGuard() {
   // console.log('topics', topics)
   // console.log('currentUser', currentUser)
   // console.log('getUserId', User.get())
+  // console.log('userId',userId.get())
+  // console.log('deviceId',deviceId.get())
 
   const tokenValue = tokenStore.get()?.token;
 
