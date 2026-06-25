@@ -8,12 +8,9 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { userId } from "utils/identity";
 
 
-
-
 export function ChatShell() {
   const navigate = useNavigate();
   const isShowBack = currentAppBar((state) => state.leftPath !== null);
-
 
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
@@ -29,7 +26,6 @@ export function ChatShell() {
       setMsgDot(true);
     }
   }, [messageChanged]);
-
 
   const [gmsgDot, setGmsgDot] = useState(false);
   const gmsgChanged = useLiveQuery(async () => {
@@ -48,7 +44,7 @@ export function ChatShell() {
       { key: 'friend', icon: <IconLabel icon={IconUser} label='好友' onClick={() => { navigate('/mobile/chat/friend/') }} /> },
       { key: 'group', icon: <IconLabel icon={IconUsers} label='群聊' dot={gmsgDot} onClearBadge={() => setGmsgDot(false)} onClick={() => { navigate('/mobile/chat/group/') }} /> },
       { key: 'self', icon: <IconLabel icon={IconUserCircle} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
-      { key: 'test', icon: <IconLabel icon={IconFlask} label='测试' onClick={() => { navigate('/mobile/chat/test/test4/'); }} /> },
+      // { key: 'test', icon: <IconLabel icon={IconFlask} label='测试' onClick={() => { navigate('/mobile/chat/test/test4/'); }} /> },
     ]
   }, [isMobile, navigate, getTimestampMs, msgDot,gmsgDot]);
 

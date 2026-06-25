@@ -15,11 +15,8 @@ const get_friends = async () => {
     return data || [];
 }
 
-
-
-
 export const afriends = createQueryCache({
-    sessionId: ()=>sessionId.get(),
+    sessionId: () => sessionId.get(),
     cacheKey: 'my_friends',
     queryFn: get_friends,
     staleTime: 12 * 60 * 60 * 1000,

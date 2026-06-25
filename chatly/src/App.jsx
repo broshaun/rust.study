@@ -8,8 +8,8 @@ const App = () => {
   const router = createHashRouter([
     {
       index: true,
-      // element: remainSeconds > 0 ? <Navigate to="/mobile/chat" replace /> : <Navigate to="/mobile/auth" replace />,
-      element: <Navigate to="/mobile/auth" replace />,
+      element: remainSeconds > 0 ? <Navigate to="/mobile/chat" replace /> : <Navigate to="/mobile/auth" replace />,
+      // element: <Navigate to="/mobile/auth" replace />,
     },
     ...RsMobile
   ]);

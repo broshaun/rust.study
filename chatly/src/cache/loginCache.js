@@ -10,7 +10,6 @@ async function loginFn() {
     return res.data ?? {};
 }
 
-
 export const loginCache = createQueryCache({
     sessionId: ()=>sessionId.get(),
     cacheKey: 'login-info',

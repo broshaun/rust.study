@@ -4,16 +4,11 @@ use files::image_cache;
 use p2p::p2p_commands;
 mod net;
 mod mq;
-mod tasks;
 mod actor;
 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-
-    // let system = actix::System::new();
-    // system.run();
-
     // Iroh官方加密使用
     rustls::crypto::ring::default_provider()
         .install_default()
@@ -22,7 +17,6 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(p2p_commands::AppState::new())
-        // .manage(tasks::TaskManager::new())
         .invoke_handler(tauri::generate_handler![
             p2p_commands::p2p_start,
             p2p_commands::p2p_stop,

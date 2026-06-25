@@ -5,13 +5,10 @@ import { sessionId } from 'utils/identity';
 const { http } = createHttpClient('/rpc/chat/msg/group/');
 const queryFn = async () => {
     const { id: groupId } = currentChat.getState().get("group")
-    console.log('groupId',groupId)
     const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
-    console.log('group_user_list results++', results)
     if (!results) throw new Error("获取失败");
     const { code, data, message } = results;
     if (code !== 200) throw new Error(message);
-
     return data.map((item) => ({
         id: item.id,
         user_id: item.user_id,
@@ -22,7 +19,7 @@ const queryFn = async () => {
 }
 
 export const agroup_user = createQueryCache({
-    sessionId: ()=>sessionId.get(),
+    sessionId: () => sessionId.get(),
     cacheKey: 'group_user_list',
     queryFn: queryFn,
     staleTime: 12 * 60 * 60 * 1000,
