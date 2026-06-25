@@ -14,7 +14,6 @@ pub fn run() {
         .install_default()
         .expect("failed to install rustls crypto provider");
 
-
     tauri::Builder::default()
         .manage(p2p_commands::AppState::new())
         .invoke_handler(tauri::generate_handler![
