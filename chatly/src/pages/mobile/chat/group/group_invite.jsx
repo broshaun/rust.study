@@ -11,7 +11,7 @@ export function InviteGroup() {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-    const { http } = createHttpClient('/rpc/chat/msg/group/');
+    const { http } = createHttpClient('/rpc/chat/group/');
     const groupInviteMsg = async () => {
         const results = await http.requestBodyJson('group_admin_invite_msg', {})
         if (results?.code !== 200) {

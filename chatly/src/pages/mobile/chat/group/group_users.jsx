@@ -18,7 +18,7 @@ export const GroupUsers = () => {
         setRightPath(null)
     }, [])
 
-    const { http } = createHttpClient('/rpc/chat/msg/group/')
+    const { http } = createHttpClient('/rpc/chat/group/')
     const currentUser = loginCache.get()
     const [members, setMembers] = useState([])
     useEffect(() => {

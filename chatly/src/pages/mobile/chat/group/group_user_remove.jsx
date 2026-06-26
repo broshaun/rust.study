@@ -17,7 +17,7 @@ export const DelMember = () => {
     setRightPath(null)
   }, [])
 
-  const { http } = createHttpClient('/rpc/chat/msg/group/');
+  const { http } = createHttpClient('/rpc/chat/group/');
   const [gusrlist, setGusrlist] = useState([])
   useEffect(() => {
     let isMounted = true;

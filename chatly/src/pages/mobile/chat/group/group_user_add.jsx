@@ -18,7 +18,7 @@ export const AddMember = () => {
     setRightPath(null)
   }, [])
 
-  const { http } = createHttpClient('/rpc/chat/msg/group/');
+  const { http } = createHttpClient('/rpc/chat/group/');
   const db = getUserDB(userId.get());
 
   const [friends, handlers] = useListState([]);

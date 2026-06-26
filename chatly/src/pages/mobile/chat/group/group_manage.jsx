@@ -24,7 +24,7 @@ export const Manage = () => {
     }, [])
 
 
-    const { http } = createHttpClient('/rpc/chat/msg/group/');
+    const { http } = createHttpClient('/rpc/chat/group/');
     const { http: httpFiles } = createHttpClient('/files/avatar/');
     const uploadFile = useCallback(async (file) => {
         if (!file) return;

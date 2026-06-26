@@ -2,7 +2,7 @@ import { createHttpClient } from 'utils';
 import { createQueryCache } from './helper/createQueryCache';
 import { sessionId } from 'utils/identity';
 
-const { http } = createHttpClient('/rpc/chat/msg/group/');
+const { http } = createHttpClient('/rpc/chat/group/');
 const queryFn = async () => {
     const results = await http.requestBodyJson("my_group_list", {});
     if (!results) throw new Error("获取失败");

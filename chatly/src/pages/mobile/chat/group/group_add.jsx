@@ -18,7 +18,7 @@ export function CreateGroup() {
     }, [])
 
     const navigate = useNavigate();
-    const { http } = createHttpClient('/rpc/chat/msg/group/')
+    const { http } = createHttpClient('/rpc/chat/group/')
     const createGroup = async ({ group_name }) => {
         const results = await http.requestBodyJson('create_group', { group_name })
         const { code, message, data } = results;

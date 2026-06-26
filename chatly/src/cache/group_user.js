@@ -2,7 +2,7 @@ import { createHttpClient, currentChat } from 'utils';
 import { createQueryCache } from './helper/createQueryCache';
 import { sessionId } from 'utils/identity';
 
-const { http } = createHttpClient('/rpc/chat/msg/group/');
+const { http } = createHttpClient('/rpc/chat/group/');
 const queryFn = async () => {
     const { id: groupId } = currentChat.getState().get("group")
     const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });

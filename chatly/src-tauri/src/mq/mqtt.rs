@@ -6,11 +6,7 @@ use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use xtra::prelude::*;
 
 
-#[derive(Clone, Serialize)]
-pub struct MqttMessage {
-    pub topic: String,
-    pub payload: String,
-}
+
 
 #[derive(xtra::Actor)]
 struct MqttActor {
@@ -47,6 +43,11 @@ impl MqttActor {
     }
 }
 
+#[derive(Clone, Serialize)]
+pub struct MqttMessage {
+    pub topic: String,
+    pub payload: String,
+}
 struct SubscribeCmd {
     client_id: String,
     host: String,
@@ -101,7 +102,6 @@ impl Handler<SubscribeCmd> for MqttActor {
                 }
             }
         });
-
         Ok(())
     }
 }
