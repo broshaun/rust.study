@@ -38,4 +38,4 @@ function createStringStorage(key, defaultValue) {
 // 字符串类型存储
 export const apiBase = createStringStorage("apiBase", "http://185.245.41.154:5015");
 export const apiImgs = createStringStorage("apiImgs", "http://185.245.41.154:9000");
-
+export const apiMqtt = createStringStorage("apiMqtt", "http://185.245.41.154");

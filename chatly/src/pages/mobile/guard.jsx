@@ -5,8 +5,7 @@ import { invoke, Channel } from "@tauri-apps/api/core";
 import { loginCache, } from "cache/loginCache";
 import { my_groups } from "cache/my_groups";
 import { userId, deviceId } from "utils/identity"
-import { ObjectId } from "bson";
-
+import { apiMqtt } from "utils/store/apiBase";
 
 
 export function ChatGuard() {
@@ -165,9 +164,11 @@ export function ChatGuard() {
     };
     let uid = userId.get();
     let did = deviceId.get();
+    let host = apiMqtt.get();
+
     invoke("subscribe", {
       clientId: `${uid}:${did}`,
-      host: "192.168.2.1",
+      host: "185.245.41.154",
       port: 1883,
       username: "jwt",
       password: tokenValue,
