@@ -88,7 +88,7 @@ export const Item = () => {
     }, [db], []);
 
 
-    console.log('finalGroups',finalGroups)
+    // console.log('finalGroups',finalGroups)
 
     return (
         <GroupList
