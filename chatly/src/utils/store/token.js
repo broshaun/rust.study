@@ -24,6 +24,9 @@ function createJsonStorage(key, defaultValue) {
   return { get, set, remove };
 }
 
+
+
+// 获取token
 export const tokenStore = createJsonStorage("token", {});
 const calc = () => {
   const data = tokenStore.get();
@@ -34,7 +37,7 @@ const calc = () => {
   const diff = Math.floor((expireTime - now) / 1000);
   return Math.max(0, diff);
 };
-
+// 获取剩余时间
 import { useState, useEffect } from 'react';
 export function useRemainSeconds() {
   const [seconds, setSeconds] = useState(()=>calc());

@@ -1,75 +1,75 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, Outlet } from 'react-router';
-import { useRemainSeconds, getUserDB, createHttpClient, useDateTime, tokenStore } from "utils"
+import { getUserDB, createHttpClient, useDateTime, tokenStore, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { loginCache, } from "cache/loginCache";
 import { my_groups } from "cache/my_groups";
 import { userId, deviceId } from "utils/identity"
 import { apiMqtt } from "utils/store/apiBase";
+import { useReady } from "utils";
 
 
 export function ChatGuard() {
+
+  const { ready, data: readyData } = useReady(() => {
+    const uid = userId.get();
+    const did = deviceId.get();
+    const host = apiMqtt.get();
+    const token = tokenStore.get()?.token;
+    if (uid && did && host && token) {
+      return { uid, did, host, token };
+    }
+    return null;
+  }, []);
+
   const dt = useDateTime();
   const navigate = useNavigate();
-  const db = getUserDB(userId.get());
+  const db = useMemo(() => {
+    return getUserDB(userId.get())
+  }, [ready])
+
+
+
+
   const remainSeconds = useRemainSeconds();
 
+  // ++++ 订阅列表 ++++
   const [mygroup, setMyGroup] = useState(null)
   const [currentUser, setUser] = useState(null)
   useEffect(() => {
     let isMounted = true;
-
     loginCache.fetch().catch(() => { });
     const unsubscribe1 = loginCache.subscribe((next) => {
       if (!isMounted) return;
       setUser(next?.data);
     });
-
     my_groups.fetch().catch(() => { });
     const unsubscribe = my_groups.subscribe((next) => {
       if (!isMounted) return;
       setMyGroup(next?.data);
     });
-
     return () => {
       isMounted = false;
       unsubscribe?.();
       unsubscribe1?.();
     }
   }, []);
-
-
   const topics = useMemo(() => {
     if (!currentUser?.id || !Array.isArray(mygroup)) return [];
     return [...mygroup.map(item => `chat/group/${item?.id}`), `chat/single/${currentUser.id}`];
   }, [currentUser?.id, mygroup])
 
-  // console.log('mygroup',mygroup)
-  // console.log('topics', topics)
-  // console.log('currentUser', currentUser)
-  // console.log('getUserId', User.get())
-  // console.log('userId',userId.get())
-  // console.log('deviceId',deviceId.get())
-
-  const tokenValue = tokenStore.get()?.token;
 
   const { http: httpGMsg } = createHttpClient('/rpc/chat/msg/group2/');
   const { http: httpMsg } = createHttpClient('/rpc/chat/msg/single2/');
 
-
+  // 离线消息
   const get_after_message = () => {
-    console.log('get_after_message++')
     const after_friend_message = async () => {
       const maxItem = await db.table('message').orderBy('id').last()
-      console.log('maxItem++', maxItem)
       let last_id = maxItem?.id
-      if (!last_id) {
-        last_id = '000000000000000000000000'
-      }
-      const { code, message, data } = await httpMsg.requestBodyJson('get_after_messges', { last_id })
-      // console.log('code++',code)
-      // console.log('message++',message)
-      // console.log('data++',data)
+      if (!last_id) last_id = '000000000000000000000000';
+      const { code, data } = await httpMsg.requestBodyJson('get_after_messges', { last_id })
       if (code === 200) {
         const messages = data.map(item => ({
           id: item.id,
@@ -87,9 +87,7 @@ export function ChatGuard() {
     const after_group_message = async () => {
       const maxItem = await db.table('message').orderBy('id').last()
       let last_id = maxItem?.id
-      if (!last_id) {
-        last_id = '000000000000000000000000'
-      }
+      if (!last_id) last_id = '000000000000000000000000';
       const { code, data } = await httpGMsg.requestBodyJson('get_after_messges', { last_id })
       if (code === 200) {
         const messages = data.map(item => ({
@@ -111,11 +109,17 @@ export function ChatGuard() {
 
   }
 
+
+
+
+
   useEffect(() => {
     if (!db) return;
-    if (!tokenValue) return;
+    if (!ready) return;
 
-    get_after_message()
+    console.log('readyData+++++ ', readyData)
+
+    get_after_message() // 离线消息加载
 
     const channel = new Channel();
     channel.onmessage = async (msg) => {
@@ -162,16 +166,15 @@ export function ChatGuard() {
         });
       }
     };
-    let uid = userId.get();
-    let did = deviceId.get();
-    let host = apiMqtt.get();
+
+    const { uid, did, host, token } = readyData;
 
     invoke("subscribe", {
       clientId: `${uid}:${did}`,
-      host: "185.245.41.154",
+      host: host,
       port: 1883,
       username: "jwt",
-      password: tokenValue,
+      password: token,
       topics: topics,
       onMessage: channel,
     }).catch((err) => { console.error("MQTT订阅失败:", err); });
@@ -181,7 +184,7 @@ export function ChatGuard() {
         console.error("MQTT停止失败:", err);
       });
     };
-  }, [tokenValue, topics, db])
+  }, [topics, db, ready])
 
   useEffect(() => {
     if (!remainSeconds) return;

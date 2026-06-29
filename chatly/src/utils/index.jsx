@@ -3,6 +3,7 @@ export { usePcmCapture } from './hooks/usePcmCapture';
 export { usePcmPlayback } from './hooks/usePcmPlayback';
 export { useWinSize } from './hooks/useWinSize';
 export { useCachedImage, clearAllImageCache } from './hooks/useCachedImage';
+export { useReady } from './hooks/useReady';
 
 export { apiBase, apiImgs } from './store/apiBase'
 export { tokenStore, useRemainSeconds } from './store/token'
