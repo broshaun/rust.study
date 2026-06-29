@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "chatly",
-  "version": "0.1.0",
+  "version": "1.1.10",
   "identifier": "com.tauri.dev2",
   "build": {
     "frontendDist": "../dist",
