@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"
-import { useWinSize, currentAppBar, currentChat, getUserDB } from 'utils';
+import React, { useState, useEffect, useMemo } from "react"
+import { useWinSize, currentAppBar, currentChat, getUserDB, useReady } from 'utils';
 import { liveQuery } from 'dexie';
 import { ChatBox } from "./ui/ChatBox"
 import { useOutletContext } from "react-router";
@@ -29,7 +29,18 @@ const TOOLS_CONFIG = [
 
 export function Msg() {
     const group = currentChat((state) => state.current.get("group"));
-    const db = getUserDB(userId.get())
+    const { ready, data: readyData } = useReady(() => {
+        const uid = userId.get();
+        if (uid) {
+            return { uid };
+        }
+        return null;
+    }, []);
+
+    const db = useMemo(() => {
+        if (!ready) return;
+        return getUserDB(readyData?.uid);
+    }, [ready])
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -37,8 +48,6 @@ export function Msg() {
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
     useEffect(() => {
-        console.log('db', db)
-        console.log('group', group)
         if (!db) return;
         return () => {
             if (!group?.id) return;

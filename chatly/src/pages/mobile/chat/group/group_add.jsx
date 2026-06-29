@@ -21,10 +21,10 @@ export function CreateGroup() {
     const { http } = createHttpClient('/rpc/chat/group/')
     const createGroup = async ({ group_name }) => {
         const results = await http.requestBodyJson('create_group', { group_name })
-        const { code, message, data } = results;
+        const { code, data } = results;
         if (code === 200) {
             await my_groups.refresh();
-            navigate('/mobile/chat/group/');
+            await navigate('/mobile/chat/group/');
         }
         return data || true;
     }

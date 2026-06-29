@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { createHttpClient, currentAppBar, currentChat } from 'utils';
+import { createHttpClient, currentAppBar, currentChat, useReady } from 'utils';
 import { getUserDB } from "utils";
 import { FriendInfo } from "./ui/FriendDetailUI";
 import { afriends } from "cache/friends";
@@ -10,7 +10,18 @@ import { userId } from "utils/identity";
 export function Detail() {
   const { http: http2 } = createHttpClient('/rpc/chat/friend/');
   const navigate = useNavigate();
-  const db = getUserDB(userId.get());
+  const { ready, data: readyData } = useReady(() => {
+    const uid = userId.get();
+    if (uid) {
+      return { uid };
+    }
+    return null;
+  }, []);
+
+  const db = useMemo(() => {
+    if (!ready) return;
+    return getUserDB(readyData?.uid);
+  }, [ready])
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -25,16 +36,14 @@ export function Detail() {
   }, [])
 
   useEffect(() => {
-    if (!userId) return;
     return () => {
       afriends.refresh().catch(console.error)
     }
-  }, [userId])
+  }, [])
 
 
   const current_friend = currentChat((state) => state.current.get("friend"));
   const friendId = current_friend?.id
-
   const [friend, setFriend] = useState()
 
   async function get_friend(friendId) {
@@ -42,8 +51,7 @@ export function Detail() {
     try {
       const results = await http2.getById(friendId);
       if (!results) throw new Error("获取失败");
-      const { code, data, message } = results;
-      console.log('results',results)
+      const { code, data } = results;
       if (code === 200) {
         setFriend(data)
       }
@@ -62,7 +70,7 @@ export function Detail() {
       await db.table('message').where('uid').equals(id).delete();
       await db.table('friends').where('id').equals(id).delete();
       await db.table('friends_dialog').where('id').equals(id).delete();
-      navigate("/mobile/chat/friend/");
+      await navigate("/mobile/chat/friend/");
       await get_friend()
     } catch (error) {
       console.error(error)
@@ -79,7 +87,7 @@ export function Detail() {
 
   async function openMsgWindow(friend) {
     if (!friend?.id) return;
-    navigate('/mobile/chat/message/');
+    await navigate('/mobile/chat/message/');
   }
 
   return (

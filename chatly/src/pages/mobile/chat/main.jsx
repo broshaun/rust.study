@@ -19,8 +19,9 @@ export function ChatShell() {
   const [msgDot, setMsgDot] = useState(false);
   const messageChanged = useLiveQuery(async () => {
     if (!db) return;
-    return db.table("message").limit(1).toArray();
+    return  db.table("message").limit(1).toArray();
   }, [db]);
+
   useEffect(() => {
     if (messageChanged) {
       setMsgDot(true);

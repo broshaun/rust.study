@@ -1,20 +1,31 @@
 import React, { Suspense } from "react";
 import { useNavigate } from 'react-router';
-import { createHttpClient, currentModal, tokenStore } from 'utils';
+import { createHttpClient, currentModal, tokenStore, closeUserDB, useReady } from 'utils';
 import { useEffect } from "react";
 import { queryClient } from "cache";
+import { userId } from "utils/identity";
 
 
 
 export const Logout = () => {
   const navigate = useNavigate();
   const { http } = createHttpClient('/rpc/chat/login/')
+  const { ready, data: readyData } = useReady(() => {
+    const uid = userId.get();
+    if (uid) {
+      return { uid };
+    }
+    return null;
+  }, []);
 
-  const logout = () => {
+
+  const logout = async () => {
+    if (!ready) return;
     queryClient.clear()
     tokenStore.remove()
-    http.post('DELETE').catch(console.error);
-    navigate('/mobile/auth/user', { replace: true });
+    closeUserDB(readyData?.uid)
+    await http.post('DELETE');
+    await navigate('/mobile/auth/user', { replace: true });
   }
 
   const { open } = currentModal();

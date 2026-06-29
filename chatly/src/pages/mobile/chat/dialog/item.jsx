@@ -1,6 +1,6 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from 'react-router';
-import { currentChat, currentAppBar, getUserDB, useDateTime } from 'utils';
+import { currentChat, currentAppBar, getUserDB, useDateTime, useReady } from 'utils';
 import { DialogList } from "./ui/DialogList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { userId } from "utils/identity";
@@ -8,7 +8,19 @@ import { userId } from "utils/identity";
 export const Item = () => {
     const dt = useDateTime();
     const navigate = useNavigate()
-    const db = getUserDB(userId.get());
+    const { ready, data: readyData } = useReady(() => {
+        const uid = userId.get();
+        if (uid) {
+            return { uid };
+        }
+        return null;
+    }, []);
+
+    const db = useMemo(() => {
+        if (!ready) return;
+        return getUserDB(readyData?.uid);
+    }, [ready])
+
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     const setRightPath = currentAppBar((state) => state.setRightPath);
@@ -28,11 +40,11 @@ export const Item = () => {
     }, [navigate, db])
 
     // 关闭聊天
-    const handleClear = (item) => {
+    const handleClear = async (item) => {
         if (item?.id) {
-            db.table("friends_dialog").where("id").equals(item?.uid).delete().catch(console.error);
-            db.table('message').where('uid').equals(item?.uid).delete().catch(console.error);
-            navigate('/mobile/chat/dialog')
+            await db.table("friends_dialog").where("id").equals(item?.uid).delete();
+            await db.table('message').where('uid').equals(item?.uid).delete();
+            await navigate('/mobile/chat/dialog')
         }
     }
 

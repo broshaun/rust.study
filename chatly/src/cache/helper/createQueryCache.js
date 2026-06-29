@@ -71,8 +71,9 @@ export function createQueryCache({
     };
 
     const refresh = async () => {
-        const options = optionsOf();
-        return queryClient.fetchQuery({ ...options, staleTime: 0 });
+        const key = getQueryKey();
+        await queryClient.invalidateQueries({ queryKey: key });
+        return queryClient.fetchQuery(optionsOf());
     };
 
     const set = (data) => {

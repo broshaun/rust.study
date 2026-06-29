@@ -1,8 +1,9 @@
 import { Outlet } from 'react-router';
-import { createHttpClient, useDateTime, getUserDB } from 'utils';
+import { createHttpClient, useDateTime, getUserDB, useReady } from 'utils';
 import { loginCache } from 'cache/loginCache';
 import { ObjectId } from "bson";
 import { userId } from 'utils/identity';
+import { useMemo } from 'react';
 
 
 export const Main = () => {
@@ -10,8 +11,23 @@ export const Main = () => {
      * 个人数据库
      */
 
-    const db = getUserDB(userId.get());
-    const currentUser = loginCache.get();
+
+    const { ready, data: readyData } = useReady(() => {
+        const uid = userId.get();
+        const usr = loginCache.get();
+        if (uid && usr) {
+            return { uid, usr };
+        }
+        return null;
+    }, []);
+
+
+    const db = useMemo(() => {
+        if (!ready) return;
+        return getUserDB(readyData?.uid);
+    }, [ready])
+
+
     const { getDateTimeStr } = useDateTime();
 
     /**
@@ -19,6 +35,9 @@ export const Main = () => {
      */
     const { http } = createHttpClient('/rpc/chat/msg/single2/');
     const fnSendMsg = async ({ uid, msgType, msgText }) => {
+        if (!ready)return;
+        const currentUser = readyData?.usr
+
         try {
             const results = await http.requestBodyJson('send', {
                 user_id: uid,
@@ -26,10 +45,8 @@ export const Main = () => {
                 msg_text: msgText
             });
             if (!results) return;
-            console.log('发送结果results',results)
-            // [Log] 发送结果results – {code: 200, message: "", data: "6a3bea96d237a5e0da31d073"} (index.d1a019fcd9b05e9e.hot-update.js, line 44)
             if (results?.code === 200) {
-                db.table('message').put({
+                await db.table('message').put({
                     id: new ObjectId().toString(),
                     uid: uid,
                     nickname: '我自己',
@@ -41,7 +58,7 @@ export const Main = () => {
                 });
 
             } else if (results?.code === 335) {
-                db.table('message').put({
+                await db.table('message').put({
                     id: new ObjectId().toString(),
                     uid: uid,
                     nickname: '我自己',

@@ -28,28 +28,23 @@ export function ImagSend() {
         return;
     }
 
-    const [isUploadingStart, setIsUploadingStart] = useState(false);
     const navigate = useNavigate();
     const upImg = async (files) => {
         if (!files || files.length === 0) return;
         const { id: groupId } = currentChat.getState().get('group')
 
-        setIsUploadingStart(true);
         try {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
                 await msgSend({ group_id: groupId, msgType: 'image', msgText: imgFileName });
             }
+            await navigate('/mobile/chat/group/msgs/');
         } catch (error) {
             console.error(error);
         }
     };
 
-    useEffect(() => {
-        if (isUploadingStart) {
-            navigate('/mobile/chat/group/msgs/');
-        }
-    }, []);
+
 
     return <div style={{ padding: '20px' }}>
         <ImgUp height={48} onClick={upImg} />

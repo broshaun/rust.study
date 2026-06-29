@@ -84,9 +84,9 @@ export const Manage = () => {
         const payload = { id };
         const results = await http.requestBodyJson('delete_group', payload)
         const { code } = results;
-        console.log('results++', results)
+        console.log('results+++',results)
         if (code === 200) {
-            db.table('groups').delete(id);
+            await db.table('groups').delete(id);
             await my_groups.refresh()
             await navigate('/mobile/chat/group/');
         };

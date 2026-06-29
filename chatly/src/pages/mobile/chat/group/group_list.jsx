@@ -29,10 +29,10 @@ export const Item = () => {
 
     const navigate = useNavigate();
     // 打开群聊
-    const openGroup = (value) => {
+    const openGroup = async (value) => {
         currentChat.getState().set('group', { id: value?.id, name: value?.group_name })
         db.table("groups_dialog").put({ id: value?.id, signal: 'old', timestamp: dt.getDateTimeStr() }).catch(console.error);
-        navigate('/mobile/chat/group/msgs')
+        await navigate('/mobile/chat/group/msgs')
     }
 
     // 点击群头像

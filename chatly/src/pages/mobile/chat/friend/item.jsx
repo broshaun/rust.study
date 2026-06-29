@@ -1,6 +1,6 @@
-import React, { useEffect, useCallback,useState } from "react";
+import React, { useEffect, useCallback, useState ,useMemo} from "react";
 import { useNavigate } from 'react-router';
-import { currentAppBar, currentChat, getUserDB, useDateTime } from "utils";
+import { currentAppBar, currentChat, getUserDB, useDateTime, useReady } from "utils";
 import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -41,7 +41,20 @@ export const Item = () => {
         }
     }, []);
 
-    const db = getUserDB(userId.get())
+    const { ready, data: readyData } = useReady(() => {
+        const uid = userId.get();
+        if (uid) {
+            return { uid };
+        }
+        return null;
+    }, []);
+
+    const db = useMemo(() => {
+        if (!ready) return;
+        return getUserDB(readyData?.uid);
+    }, [ready])
+
+
     const openMsgWindow = useCallback(async (select) => {
         const displayName = select.remark ?? select.nickname ?? select.email;
         currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
