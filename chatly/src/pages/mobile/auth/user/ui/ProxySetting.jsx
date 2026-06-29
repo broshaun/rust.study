@@ -13,8 +13,8 @@ import {
 export function ProxySetting({
   apiBase,
   imgBase,
+  mqttBase,
   onPingApi,
-  onPingImg,
   onSave,
 }) {
   const safeParseUrl = (urlStr) => {
@@ -28,139 +28,148 @@ export function ProxySetting({
   const apiUrl = safeParseUrl(apiBase);
   const imgUrl = safeParseUrl(imgBase);
 
-  // 状态管理
+  // ===== API =====
   const [apiIp, setApiIp] = useState(apiUrl.hostname);
   const [apiPort, setApiPort] = useState(apiUrl.port || '5015');
+
+  // ===== IMG =====
   const [imgIp, setImgIp] = useState(imgUrl.hostname);
   const [imgPort, setImgPort] = useState(imgUrl.port || '9000');
+
+  // ===== MQTT（纯字符串）=====
+  const [mqtt, setMqtt] = useState(mqttBase || '127.0.0.1:1883');
+
   const [confirmModal, setConfirmModal] = useState(false);
 
-  // 同步外部变化
+  // ===== sync API =====
   useEffect(() => {
     const url = safeParseUrl(apiBase);
     setApiIp(url.hostname);
     setApiPort(url.port || '5015');
   }, [apiBase]);
 
+  // ===== sync IMG =====
   useEffect(() => {
     const url = safeParseUrl(imgBase);
     setImgIp(url.hostname);
     setImgPort(url.port || '9000');
   }, [imgBase]);
 
+  // ===== sync MQTT =====
+  useEffect(() => {
+    setMqtt(mqttBase || '127.0.0.1:1883');
+  }, [mqttBase]);
+
+  // ===== builders =====
   const getApiFullUrl = () => `http://${apiIp}:${apiPort}`;
   const getImgFullUrl = () => `http://${imgIp}:${imgPort}`;
+  const getMqtt = () => mqtt;
 
   const handleSave = () => {
     setConfirmModal(false);
-    if (typeof onSave === 'function') {
-      onSave(getApiFullUrl(), getImgFullUrl());
-    }
+    onSave?.(
+      getApiFullUrl(),
+      getImgFullUrl(),
+      getMqtt()
+    );
   };
 
   return (
-    <Paper withBorder p="xs" m="xs" radius="sm" shadow="none">
+    <Paper withBorder p="xs" m="xs" radius="sm">
       <Stack gap="xs">
-        
-        {/* --- API Server 区块 --- */}
+
+        {/* ===== API SERVER（保留 ping）===== */}
         <Box>
-          <Text fw={600} size="xs" c="dimmed" mb={2}>API SERVER</Text>
-          {/* wrap="nowrap" 强行不换行，gap={4} 缩短组件间距 */}
-          <Group gap={4} wrap="nowrap" align="center">
+          <Text fw={600} size="xs" c="dimmed">API SERVER</Text>
+
+          <Group gap={4} wrap="nowrap">
             <TextInput
-              placeholder="IP 地址 (如 185.245.41.154)"
               value={apiIp}
               onChange={(e) => setApiIp(e.currentTarget.value)}
-              size="sm"
-              style={{ flex: 1 }} // 自动撑满剩余空间
-            />
-            <TextInput
-              placeholder="端口"
-              value={apiPort}
-              onChange={(e) => setApiPort(e.currentTarget.value.replace(/\D/g, ''))} // 纯手动纯数字
-              type="tel"
-              size="sm"
-              style={{ width: '65px' }} // 固定端口宽度，更紧凑
-            />
-            <Button 
-              variant="light" 
-              size="sm" 
-              onClick={() => onPingApi?.(getApiFullUrl())}
-              style={{ padding: '0 10px', minWidth: '50px' }}
-            >
-              测试
-            </Button>
-          </Group>
-        </Box>
-
-        {/* --- Image Server 区块 --- */}
-        <Box>
-          <Text fw={600} size="xs" c="dimmed" mb={2}>IMAGE SERVER</Text>
-          <Group gap={4} wrap="nowrap" align="center">
-            <TextInput
-              placeholder="IP 地址"
-              value={imgIp}
-              onChange={(e) => setImgIp(e.currentTarget.value)}
-              size="sm"
               style={{ flex: 1 }}
             />
+
             <TextInput
-              placeholder="端口"
-              value={imgPort}
-              onChange={(e) => setImgPort(e.currentTarget.value.replace(/\D/g, ''))}
-              type="tel"
-              size="sm"
-              style={{ width: '65px' }}
+              value={apiPort}
+              onChange={(e) =>
+                setApiPort(e.currentTarget.value.replace(/\D/g, ''))
+              }
+              style={{ width: 65 }}
             />
-            <Button 
-              variant="light" 
-              size="sm" 
-              onClick={() => onPingImg?.(getImgFullUrl())}
-              style={{ padding: '0 10px', minWidth: '50px' }}
+
+            {/* ✅ 保留 ping */}
+            <Button
+              variant="light"
+              size="sm"
+              onClick={() => onPingApi?.(getApiFullUrl())}
             >
               测试
             </Button>
           </Group>
         </Box>
 
-        {/* --- 保存并应用按钮 --- */}
-        <Button 
-          onClick={() => setConfirmModal(true)} 
-          color="green" 
-          size="sm" 
-          fullWidth 
-          mt={4}
+        {/* ===== IMAGE SERVER（无 ping）===== */}
+        <Box>
+          <Text fw={600} size="xs" c="dimmed">IMAGE SERVER</Text>
+
+          <Group gap={4} wrap="nowrap">
+            <TextInput
+              value={imgIp}
+              onChange={(e) => setImgIp(e.currentTarget.value)}
+              style={{ flex: 1 }}
+            />
+
+            <TextInput
+              value={imgPort}
+              onChange={(e) =>
+                setImgPort(e.currentTarget.value.replace(/\D/g, ''))
+              }
+              style={{ width: 65 }}
+            />
+          </Group>
+        </Box>
+
+        {/* ===== MQTT（纯配置）===== */}
+        <Box>
+          <Text fw={600} size="xs" c="dimmed">MQTT SERVER</Text>
+
+          <TextInput
+            placeholder="host:port (e.g. 127.0.0.1:1883)"
+            value={mqtt}
+            onChange={(e) => setMqtt(e.currentTarget.value)}
+          />
+        </Box>
+
+        {/* ===== SAVE ===== */}
+        <Button
+          onClick={() => setConfirmModal(true)}
+          color="green"
+          fullWidth
         >
           保存并应用配置
         </Button>
+
       </Stack>
 
-      {/* --- 手机端确认弹窗 --- */}
+      {/* ===== CONFIRM ===== */}
       <Modal
         opened={confirmModal}
         onClose={() => setConfirmModal(false)}
         title="确认修改"
         centered
-        size="85%"
-        radius="sm"
       >
-        <Stack gap="xs">
-          <Paper withBorder p="xs" bg="gray.0" style={{ fontSize: '13px' }}>
-            <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#868e96' }}>API: </span>
-              <strong style={{ wordBreak: 'break-all' }}>{getApiFullUrl()}</strong>
-            </div>
-            <div>
-              <span style={{ color: '#868e96' }}>图片: </span>
-              <strong style={{ wordBreak: 'break-all' }}>{getImgFullUrl()}</strong>
-            </div>
+        <Stack>
+          <Paper p="xs" bg="gray.0">
+            <div>API: {getApiFullUrl()}</div>
+            <div>IMAGE: {getImgFullUrl()}</div>
+            <div>MQTT: {getMqtt()}</div>
           </Paper>
 
-          <Group grow gap="xs" mt="sm">
-            <Button onClick={() => setConfirmModal(false)} variant="default" size="sm">
+          <Group grow>
+            <Button variant="default" onClick={() => setConfirmModal(false)}>
               取消
             </Button>
-            <Button onClick={handleSave} color="green" size="sm">
+            <Button onClick={handleSave} color="green">
               确认
             </Button>
           </Group>

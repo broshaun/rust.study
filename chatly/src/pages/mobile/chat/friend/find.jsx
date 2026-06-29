@@ -40,11 +40,6 @@ export const Find = () => {
         }
     };
 
-    const addFriend = async ({ user_id }) => {
-        if (!user_id) return null;
-        const result = await http.requestBodyJson("PUT", { user_id });
-        return result;
-    }
 
     const handleEmailChange = (value) => {
         setKeywordEmail(value);
@@ -57,9 +52,8 @@ export const Find = () => {
     };
 
     const handleAddFriend = async (userId) => {
-        addFriend({
-            user_id: userId,
-        });
+        if (!userId) return null;
+        await http.requestBodyJson("PUT", { user_id:userId });
         await afriends.refresh()
     };
 

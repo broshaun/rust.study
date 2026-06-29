@@ -8,7 +8,7 @@ import { loginCache } from "cache/loginCache";
 export const Nickname = () => {
     const navigate = useNavigate();
 
-    const [User, setUser] = useState([])
+    const [User, setUser] = useState(null)
     useEffect(() => {
         let isMounted = true;
         loginCache.fetch().catch(() => { });

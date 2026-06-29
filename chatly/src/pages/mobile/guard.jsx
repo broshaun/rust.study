@@ -29,8 +29,6 @@ export function ChatGuard() {
   }, [ready])
 
 
-
-
   const remainSeconds = useRemainSeconds();
 
   // ++++ 订阅列表 ++++
@@ -116,8 +114,6 @@ export function ChatGuard() {
   useEffect(() => {
     if (!db) return;
     if (!ready) return;
-
-    console.log('readyData+++++ ', readyData)
 
     get_after_message() // 离线消息加载
 

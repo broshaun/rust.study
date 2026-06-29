@@ -1,4 +1,4 @@
-import { apiBase, apiImgs, createHttpClient, currentModal } from "utils";
+import { apiBase, apiImgs, apiMqtt, createHttpClient, currentModal } from "utils";
 import { ProxySetting } from "./ui/ProxySetting";
 import { useState } from "react";
 import { http as http2 } from "utils";
@@ -9,6 +9,8 @@ export const Proxy = () => {
     const { http } = createHttpClient('/rpc/chat/ping/');
     const [api, setApi] = useState(() => apiBase.get())
     const [img, setImg] = useState(() => apiImgs.get())
+    const [mqtt, setMqtt] = useState(() => apiMqtt.get())
+
 
     async function handlePing() {
         try {
@@ -83,8 +85,10 @@ export const Proxy = () => {
         <ProxySetting
             apiBase={api}
             imgBase={img}
+            mqttBase={mqtt}
             onPingApi={handlePing}
             onPingImg={handlePingImgs}
+            onPingMqtt={()=>{}}
             onSave={handleSave}
         />
     </div>
