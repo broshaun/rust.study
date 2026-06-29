@@ -5,6 +5,7 @@ import { ImgUp } from './ui/ImageUpload';
 
 
 export function ImagSend() {
+    const navigate = useNavigate();
     const { msgSend } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
 
@@ -17,31 +18,33 @@ export function ImagSend() {
      */
     const { http: httpImg30 } = createHttpClient('/files/img30/');
     const uploadImg30 = async ({ file }) => {
-        console.log('file:', file);
         const { code, message, data } = await httpImg30.uploadFiles(file);
-        console.log('code:', code);
-        console.log('message:', message);
-        console.log('data:', data);
         if (code === 200 && data) {
             return data;
         }
         return;
     }
 
-    const navigate = useNavigate();
-    const upImg = async (files) => {
-        if (!files || files.length === 0) return;
-        const { id: groupId } = currentChat.getState().get('group')
+
+    const upImg = async (file) => {
+        console.log('file+++', file)
+
+        
 
         try {
-            for (const file of files) {
-                const imgFileName = await uploadImg30({ file });
-                await msgSend({ group_id: groupId, msgType: 'image', msgText: imgFileName });
-            }
+            const { id: groupId } = currentChat.getState().get('group')
+            const imgFileName = await uploadImg30({ file });
+            await msgSend({ group_id: groupId, msgType: 'image', msgText: imgFileName });
+
             await navigate('/mobile/chat/group/msgs/');
+            console.log('上传成功+++')
+            
+
         } catch (error) {
             console.error(error);
         }
+
+
     };
 
 
