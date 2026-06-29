@@ -14,7 +14,7 @@
 - cargo tauri build --target universal-apple-darwin 
 
 ## github action
-- git tag -d macos-v1.1.9
-- git tag macos-v1.1.9
-- git push origin macos-v1.1.9
-- git push origin macos-v1.1.9 -f
+- git tag -d macos-v1.1.10
+- git tag macos-v1.1.10
+- git push origin macos-v1.1.10
+- git push origin macos-v1.1.10 -f
