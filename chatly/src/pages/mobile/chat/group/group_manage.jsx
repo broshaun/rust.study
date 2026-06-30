@@ -1,21 +1,30 @@
 import { GroupEdit } from "./ui/GroupEdit";
-import { currentAppBar, createHttpClient, currentChat, useDateTime } from "utils";
+import { currentAppBar, createHttpClient, useDateTime } from "utils";
 import { useEffect, useCallback, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router";
+import { useNavigate, useOutletContext, useParams } from "react-router";
 import { my_groups } from "cache/my_groups";
+import { useLiveQuery } from "dexie-react-hooks";
 
 
 
 export const Manage = () => {
-    const { db, readyData } = useOutletContext();
+    const { db } = useOutletContext();
+    const { id } = useParams();
 
     const dt = useDateTime();
     const navigate = useNavigate();
-    const current = currentChat((state) => state.current);
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
+
+    const group = useLiveQuery(async () => {
+        return await db.table('groups').get(id)
+    }, [db,id],[])
+
+
+    console.log('group++',group)
+
     useEffect(() => {
         setLeftPath('/mobile/chat/group/')
         setTitle('群聊');
@@ -34,32 +43,6 @@ export const Manage = () => {
         }
     }, [httpFiles]);
 
-
-    const [group, setGroup] = useState({})
-    const [isPending, setIsPending] = useState(false);
-    const get_group = async () => {
-        const group = current.get("group");
-        if (!group) return;
-        setIsPending(true);
-        try {
-            const results = await http.getById(group?.id);
-            const { code, message, data } = results;
-            if (code !== 200) {
-                return {}
-            }
-            setGroup(data)
-            return data
-        } catch {
-            return {}
-        } finally {
-            setIsPending(false);
-        }
-    }
-    useEffect(() => {
-        get_group().catch(console.error)
-    }, [])
-
-
     const updateGroup = async ({ id, ...payload }) => {
         if (!id) return;
         Object.keys(payload).forEach((key) => {
@@ -72,7 +55,6 @@ export const Manage = () => {
             await db.table('groups').update(id, { timestamp: dt.getDateTimeStr() });
             await my_groups.refresh()
             await navigate('/mobile/chat/group/');
-            await get_group()
         } catch (error) {
             console.error("修改失败:", error);
         }
@@ -83,7 +65,7 @@ export const Manage = () => {
         const payload = { id };
         const results = await http.requestBodyJson('delete_group', payload)
         const { code } = results;
-        console.log('results+++', results)
+
         if (code === 200) {
             await db.table('groups').delete(id);
             await my_groups.refresh()
@@ -99,13 +81,11 @@ export const Manage = () => {
             group_notice: value.group_notice,
             admin_invite_only: value.admin_invite_only,
         });
-        await get_group()
     };
 
     return <div>
         <GroupEdit
             group={group}
-            loading={isPending}
             onUploadAvatar={uploadFile}
             onDelete={(value) => deteteGroup({ id: value.id })}
             onSubmit={handleUpdateGroup}

@@ -1,4 +1,4 @@
-import { currentAppBar, currentChat, useDateTime } from "utils";
+import { currentAppBar, useDateTime } from "utils";
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router";
 import { IconUserShare } from "@tabler/icons-react";
@@ -6,12 +6,11 @@ import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { my_groups } from "cache/my_groups";
 import { userId } from "utils/identity";
-
+import { loginCache } from "cache/loginCache";
 
 export const Item = () => {
-    const { db, readyData } = useOutletContext();
-    
-    const usrInfo = readyData?.usr
+    const { db } = useOutletContext();
+    const usrInfo = loginCache.get()
 
     const dt = useDateTime();
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -29,17 +28,15 @@ export const Item = () => {
     const navigate = useNavigate();
     // 打开群聊
     const openGroup = async (value) => {
-        currentChat.getState().set('group', { id: value?.id, name: value?.group_name })
         db.table("groups_dialog").put({ id: value?.id, signal: 'old', timestamp: dt.getDateTimeStr() }).catch(console.error);
-        await navigate('/mobile/chat/group/msgs')
+        await navigate(`/mobile/chat/group/msgs/${value?.id}`)
     }
 
     // 点击群头像
     const openGroupInfo = (value) => {
         const list = value?.administrator || [];
         if (list.includes(usrInfo?.id)) {
-            currentChat.getState().set('group', { id: value?.id })
-            navigate('/mobile/chat/group/update')
+            navigate(`/mobile/chat/group/update/${value?.id}`)
         }
     }
 

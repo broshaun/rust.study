@@ -1,12 +1,14 @@
 import { GroupMemberList } from "./ui/GroupMemberList"
-import { useNavigate, useOutletContext } from "react-router";
+import { useNavigate, useOutletContext, useParams } from "react-router";
 import { currentAppBar, createHttpClient } from "utils"
 import { useEffect, useState, } from "react";
-import { agroup_user } from "cache/group_user";
+import { loginCache } from "cache/loginCache";
 
 export const GroupUsers = () => {
-    const { readyData } = useOutletContext();
-    const currentUser = readyData?.usr
+    const { } = useOutletContext();
+    const currentUser = loginCache.get()
+    const { http } = createHttpClient('/rpc/chat/group/');
+    const { id: groupId } = useParams();
 
     const navigate = useNavigate();
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -15,28 +17,33 @@ export const GroupUsers = () => {
     const setRightPath = currentAppBar((state) => state.setRightPath);
     useEffect(() => {
         setTitle('群成员');
-        setLeftPath('/mobile/chat/group/msgs')
+        setLeftPath(`/mobile/chat/group/msgs/${groupId}`)
         setRightIcon(null)
         setRightPath(null)
     }, [])
 
-    const { http } = createHttpClient('/rpc/chat/group/')
+
+
     const [members, setMembers] = useState([])
+    const get_group_user = async (groupId) => {
+        const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
+
+        if (!results) throw new Error("获取失败");
+        const { code, data, message } = results;
+        if (code !== 200) throw new Error(message);
+        const guser = data.map((item) => ({
+            id: item.id,
+            user_id: item.user_id,
+            nickname: item.nickname,
+            ask_state: item.ask_state,
+            avatar_url: item.avatar_url,
+        }));
+        setMembers(guser)
+    }
+
     useEffect(() => {
-        let isMounted = true;
-        agroup_user.fetch().catch(() => { });
-        const unsubscribe = agroup_user.subscribe((next) => {
-            if (!isMounted) return;
-            const newData = Array.isArray(next?.data) ? next.data : [];
-            setMembers(newData);
-        });
-        return () => {
-            isMounted = false;
-            unsubscribe?.();
-        }
-    }, []);
-
-
+        get_group_user(groupId).catch(console.error)
+    }, [groupId])
 
     const leaveGroup = async ({ id }) => {
         const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
@@ -44,13 +51,13 @@ export const GroupUsers = () => {
         if (code !== 200) {
             throw new Error(message);
         }
-        await agroup_user.refresh()
+        await get_group_user(groupId)
         navigate('/mobile/chat/group/');
         return data;
     }
 
 
-    // console.log('members', members)
+    console.log('members', members)
 
     return <div>
         <GroupMemberList

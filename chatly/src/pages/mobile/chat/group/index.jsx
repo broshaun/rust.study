@@ -21,14 +21,14 @@ export const loaderData = async () => {
     const uid = userId.get();
     const ssid = sessionId.get();
     if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
-    const glist = await my_groups.fetch();
-    const usr = await loginCache.fetch();
-    return { uid, ssid, glist, usr };
+    await my_groups.fetch();
+    await loginCache.fetch();
+    return { uid, ssid };
 }
 
 const Group = () => {
-    const readyData = useLoaderData();
-    const db = getUserDB(readyData?.uid);
+    const {uid,ssid} = useLoaderData();
+    const db = getUserDB(uid);
     const { http } = createHttpClient('/rpc/chat/msg/group2/');
     const msgSend = async ({ group_id, msgType, msgText }) => {
         const results = await http.requestBodyJson('send', {
@@ -41,7 +41,7 @@ const Group = () => {
 
     return <div>
         <GlobalModal />
-        <Outlet context={{ msgSend, readyData, db }} />
+        <Outlet context={{ msgSend,db }} />
     </div>
 
 
@@ -59,7 +59,7 @@ export const RsGroup = [
                 element: <Item />
             },
             {
-                path: "update",
+                path: "update/:id",
                 element: <Manage />
             },
             {
@@ -71,19 +71,19 @@ export const RsGroup = [
                 element: <DelMember />
             },
             {
-                path: "msgs",
+                path: "msgs/:id",
                 element: <Msg />
             },
             {
-                path: "imgUp",
+                path: "imgUp/:id",
                 element: <ImagSend />
             },
             {
-                path: "smile",
+                path: "smile/:id",
                 element: <Smile />
             },
             {
-                path: "gusr",
+                path: "gusr/:id",
                 element: <GroupUsers />
             },
             {

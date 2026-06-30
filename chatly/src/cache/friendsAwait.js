@@ -13,8 +13,7 @@ async function get_await_friends() {
 }
 
 export const afriends = createQueryCache({
-    sessionId: () => sessionId.get(),
-    cacheKey: 'get_await_friends',
+    cacheKey: () => [sessionId.get(),'get_await_friends'],
     queryFn: get_await_friends,
     staleTime: 12 * 60 * 60 * 1000,
 });

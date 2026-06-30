@@ -1,16 +1,17 @@
-import { useNavigate, useOutletContext } from 'react-router';
-import { useState, useEffect } from "react";
-import { currentChat, createHttpClient, currentAppBar } from 'utils';
+import { useNavigate, useOutletContext, useParams } from 'react-router';
+import { useEffect } from "react";
+import { createHttpClient, currentAppBar } from 'utils';
 import { ImgUp } from './ui/ImageUpload';
 
 
 export function ImagSend() {
+    const { id: groupId } = useParams();
     const navigate = useNavigate();
     const { msgSend } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
 
     useEffect(() => {
-        setLeftPath('/mobile/chat/group/msgs/')
+        setLeftPath(`/mobile/chat/group/msgs/${groupId}`)
     }, [])
     /**
      * 上传图片服务
@@ -27,10 +28,9 @@ export function ImagSend() {
 
     const upImg = async (file) => {
         try {
-            const { id: groupId } = currentChat.getState().get('group')
             const imgFileName = await uploadImg30({ file });
             await msgSend({ group_id: groupId, msgType: 'image', msgText: imgFileName });
-            await navigate('/mobile/chat/group/msgs/');
+            await navigate(`/mobile/chat/group/msgs/${groupId}`);
         } catch (error) {
             console.error(error);
         }

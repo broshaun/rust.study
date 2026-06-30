@@ -4,7 +4,6 @@ import { tokenStore } from "utils";
 import { createHttpClient, currentModal, useDateTime } from 'utils';
 import { useLocalStorage } from "@mantine/hooks";
 import { LoginUI } from "./ui/LoginUI";
-import { loginCache } from "cache/loginCache";
 import { userId, sessionId } from "utils/identity";
 import { useAccountStorage } from "./hook/useAccountStorage";
 
@@ -33,7 +32,6 @@ export function Login() {
             userId.set(account)
             sessionId.new()
             tokenStore.set({ "token": data?.login_token, "login_expired": data?.login_expired })
-            await loginCache.fetch()
             setUser({ account, user: { ...data?.user, timestamp: dt.getDateTimeStr() } })
             navigate("/mobile/chat/");
             return data

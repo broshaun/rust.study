@@ -15,8 +15,7 @@ const queryFn = async () => {
 }
 
 export const my_groups = createQueryCache({
-    sessionId: () => sessionId.get(),
-    cacheKey: 'my_group_list',
+    cacheKey: () => [sessionId.get(), 'my_group_list'],
     queryFn: queryFn,
     staleTime: 12 * 60 * 60 * 1000,
 });

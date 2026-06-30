@@ -8,9 +8,9 @@ import { userId } from 'utils/identity';
 export const loaderData = async () => {
     const uid = userId.get();
     if (!uid) throw new Response("Unauthorized", { status: 401 });
-    const initialCache = await loginCache.fetch();
+    await loginCache.fetch();
     const db = getUserDB(uid);
-    return { uid, initialCache, db };
+    return { uid, db };
 }
 
 
@@ -18,7 +18,8 @@ export const Main = () => {
     /** 账号对应信息
      * 个人数据库
      */
-    const { initialCache: currentUser, db, uid } = useLoaderData();
+    const { db, uid } = useLoaderData();
+    const currentUser = loginCache.get()
     const { getDateTimeStr } = useDateTime();
     /**
      * 发送信息

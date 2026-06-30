@@ -5,12 +5,12 @@ import { clearAllImageCache } from "utils";
 
 
 export const ClearLogs = () => {
-    const { readyData } = useOutletContext();
+    const { uid } = useOutletContext();
     const navigate = useNavigate();
     const clear = async (click) => {
         await clearAllImageCache();
         if (click) {
-            await deleteUserDB(readyData?.uid)
+            await deleteUserDB(uid)
         }
         await navigate('/mobile/chat/self/')
     }

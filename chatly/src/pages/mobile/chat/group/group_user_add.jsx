@@ -8,12 +8,12 @@ import { GroupMemberSelector } from "./ui/GroupMemberSelector";
 export const AddMember = () => {
   const { db } = useOutletContext();
   
-  // const setTitle = currentAppBar((state) => state.setTitle);
+  const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
   const setRightPath = currentAppBar((state) => state.setRightPath);
   useEffect(() => {
-    // setTitle('');
+    setTitle('添加群成员');
     setLeftPath('/mobile/chat/group/gusr/')
     setRightIcon(null)
     setRightPath(null)

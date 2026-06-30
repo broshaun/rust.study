@@ -1,21 +1,21 @@
 import { EmojiList } from "./ui/EmojiList";
-import { currentAppBar, currentChat} from 'utils';
-import { useNavigate, useOutletContext } from 'react-router';
+import { currentAppBar } from 'utils';
+import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useState, useEffect } from "react";
 
 
 export function Smile() {
-    const {  msgSend } = useOutletContext();
+    const { id: groupId } = useParams();
+    const { msgSend } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     useEffect(() => {
-        setLeftPath('/mobile/chat/group/msgs/')
+        setLeftPath(`/mobile/chat/group/msgs/${groupId}`)
     }, [])
 
     const navigate = useNavigate();
     const sendSmile = async (text) => {
-        const {id:groupId} = currentChat.getState().get('group')
         await msgSend({ group_id: groupId, msgType: 'text', msgText: text });
-        navigate('/mobile/chat/group/msgs/');
+        navigate(`/mobile/chat/group/msgs/${groupId}`);
     }
 
     return <div>

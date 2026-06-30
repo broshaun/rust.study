@@ -1,12 +1,15 @@
 import { createHttpClient, currentChat } from 'utils';
 import { createQueryCache } from './helper/createQueryCache';
 import { sessionId } from 'utils/identity';
+import { useParams } from 'react-router';
 
 
 const queryFn = async () => {
     const { http } = createHttpClient('/rpc/chat/group/');
 
-    const { id: groupId } = currentChat.getState().get("group")
+    // const { id: groupId } = currentChat.getState().get("group")
+    const { id:groupId } = useParams();
+    console.log('groupId++',groupId)
     
     const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
     if (!results) throw new Error("获取失败");
@@ -22,8 +25,7 @@ const queryFn = async () => {
 }
 
 export const agroup_user = createQueryCache({
-    sessionId: () => sessionId.get(),
-    cacheKey: 'group_user_list',
+    cacheKey: () => [sessionId.get(),'group_user_list'],
     queryFn: queryFn,
     staleTime: 1 * 60 * 60 * 1000,
 });

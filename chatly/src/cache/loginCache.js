@@ -12,8 +12,7 @@ async function loginFn() {
 }
 
 export const loginCache = createQueryCache({
-    sessionId: ()=>sessionId.get(),
-    cacheKey: 'login-info',
+    cacheKey: () => [sessionId.get(), 'login-info'],
     queryFn: loginFn,
     staleTime: 12 * 60 * 60 * 1000,
 });

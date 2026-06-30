@@ -8,19 +8,20 @@ import { Nickname } from "./nickname";
 import { GlobalModal } from "utils";
 import { loginCache } from "cache/loginCache";
 import { useState, useEffect } from "react";
-import { userId } from "utils/identity";
+import { userId, sessionId } from "utils/identity";
 
 
 const loader = async () => {
     const uid = userId.get();
-    if (!uid) throw new Response("Unauthorized", { status: 401 });
+    const ssid = sessionId.get();
+    if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
     const initialCache = await loginCache.fetch();
-    return { uid, initialCache };
+    return { uid, ssid, initialCache };
 };
 
 export const MyInfo = () => {
-    const readyData = useLoaderData();
-    const [currentUser, setUser] = useState(readyData?.initialCache)
+    const { uid, ssid, initialCache } = useLoaderData();
+    const [currentUser, setUser] = useState(initialCache)
     useEffect(() => {
         let isMounted = true;
         const unsubscribe = loginCache.subscribe((next) => {
@@ -33,11 +34,11 @@ export const MyInfo = () => {
             isMounted = false;
             unsubscribe?.();
         }
-    }, []);
+    }, [ssid]);
 
     return <div>
         <GlobalModal />
-        <Outlet context={{ currentUser, readyData }} />
+        <Outlet context={{ currentUser, uid }} />
     </div>
 }
 

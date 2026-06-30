@@ -3,20 +3,18 @@ import { useNavigate,useOutletContext } from 'react-router';
 import { createHttpClient, currentModal, tokenStore, closeUserDB, useReady } from 'utils';
 import { useEffect } from "react";
 import { queryClient } from "cache";
-import { userId } from "utils/identity";
 
 
 
 export const Logout = () => {
   const navigate = useNavigate();
   const { http } = createHttpClient('/rpc/chat/login/')
-  const { readyData } = useOutletContext();
+  const { uid } = useOutletContext();
 
   const logout = async () => {
-    console.log('readyData',readyData)
     queryClient.clear()
     tokenStore.remove()
-    closeUserDB(readyData?.uid)
+    closeUserDB(uid)
     await http.post('DELETE');
     await navigate('/mobile/auth/user', { replace: true });
   }
