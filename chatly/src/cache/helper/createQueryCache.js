@@ -1,7 +1,6 @@
 import { QueryClient, QueryObserver } from '@tanstack/query-core';
 
 export const queryClient = new QueryClient();
-
 export const emptyState = {
     data: null,
     error: null,
@@ -10,20 +9,21 @@ export const emptyState = {
     isSuccess: false,
     isError: false,
 };
-
 const isInvalidKey = (key) => key.some((v) => v == null);
-const toState = (value) =>
-    value ? {
-        data: value.data ?? null,
-        error: value.error ?? null,
-        isPending: value.status === 'pending',
-        isFetching: value.fetchStatus === 'fetching',
-        isSuccess: value.status === 'success',
-        isError: value.status === 'error',
-    } : emptyState;
+const toState = (result) => {
+    if (!result) return emptyState;
+    return {
+        data: result.data ?? null,
+        error: result.error ?? null,
+        isPending: result.status === 'pending',
+        isSuccess: result.status === 'success',
+        isError: result.status === 'error',
+        isFetching: result.fetchStatus === 'fetching',
+    };
+};
 
 export function createQueryCache({
-    sessionId,        // ✔ 允许传 value（Session.get()）
+    sessionId,
     cacheKey,
     queryFn,
     staleTime = 0,
@@ -34,10 +34,7 @@ export function createQueryCache({
     if (typeof queryFn !== 'function') throw new Error('[createQueryCache] queryFn must be a function');
     if (!sessionId) throw new Error('[createQueryCache] sessionId is required');
     const resolveSessionId = () => {
-        if (typeof sessionId === 'function') {
-            return sessionId();
-        }
-        return sessionId;
+        return typeof sessionId === 'function' ? sessionId() : sessionId;
     };
     const getQueryKey = () => {
         const sid = resolveSessionId();
@@ -46,34 +43,25 @@ export function createQueryCache({
         if (isInvalidKey(key)) throw new Error('[createQueryCache] invalid queryKey');
         return key;
     };
-
     const optionsOf = () => {
         const queryKey = getQueryKey();
-        return {
-            queryKey,
-            staleTime,
-            retry,
-            retryDelay,
-            queryFn: async () => { return await queryFn() },
-        };
+        return { queryKey, staleTime, retry, retryDelay, queryFn: async () => await queryFn() };
     };
 
     const get = () => {
         const key = getQueryKey();
         const data = queryClient.getQueryData(key);
-        if (data !== undefined) return data;
-        return null;
+        return data ?? null;
     };
 
     const fetch = async () => {
-        const options = optionsOf();
-        return queryClient.fetchQuery(options);
+        return queryClient.fetchQuery(optionsOf());
     };
 
     const refresh = async () => {
         const key = getQueryKey();
         await queryClient.invalidateQueries({ queryKey: key });
-        return queryClient.fetchQuery(optionsOf());
+        return queryClient.refetchQueries({ queryKey: key });
     };
 
     const set = (data) => {
@@ -93,10 +81,17 @@ export function createQueryCache({
             throw new Error('[subscribe] callback must be a function');
         }
         const options = optionsOf();
-        queryClient.fetchQuery(options).catch((e) => { console.error('[queryCache fetch error]', e) });
-        const observer = new QueryObserver(queryClient, { ...options, enabled: false });
-        callback(toState(observer.getCurrentResult()));
-        return observer.subscribe((result) => callback(toState(result)));
+        const observer = new QueryObserver(queryClient, options);
+        const unsubscribe = observer.subscribe((result) => {
+            callback(toState(result));
+        });
+        queryClient.fetchQuery(options).catch((e) => {
+            console.error('[queryCache fetch error]', e);
+        });
+        return () => {
+            unsubscribe();
+            observer.destroy?.();
+        };
     };
 
     return {

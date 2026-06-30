@@ -25,7 +25,6 @@ export const Item = () => {
     const navigate = useNavigate();
     const [isPending, setIsPending] = useState(false);
     const [friendList, setFriendList] = useState([])
-
     useEffect(() => {
         let isMounted = true;
         afriends.fetch().catch(() => { });
