@@ -1,16 +1,13 @@
 import React, { useEffect } from "react";
 import { useOutletContext } from "react-router";
-import { useLocalStorage } from "@mantine/hooks";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
     useWinSize,
     currentChat,
     currentAppBar,
-    getUserDB,
     useDateTime,
 } from "utils";
 import { ChatBox } from "./ui/ChatBox";
-import { userId } from "utils/identity";
 import {
     IconMoodSmile,
     IconPhotoUp,
@@ -45,10 +42,11 @@ const TOOLS_CONFIG = [
 
 export function Msg() {
     const dt = useDateTime();
-    const db = getUserDB(userId.get());
+
+
     const current = currentChat((state) => state.current.get("friend"));
 
-    const { fnSendMsg } = useOutletContext();
+    const { fnSendMsg, db } = useOutletContext();
     const { winHeight } = useWinSize();
 
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -90,7 +88,7 @@ export function Msg() {
     );
 
     const msgTextSend = async (sendText) => {
-        if (!sendText)return;
+        if (!sendText) return;
         if (!current?.uid) return;
         await fnSendMsg({
             uid: current.uid,

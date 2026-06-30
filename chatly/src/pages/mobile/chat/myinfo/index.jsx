@@ -1,21 +1,28 @@
-import { Outlet, Navigate } from "react-router";
+import { Outlet, useLoaderData } from "react-router";
 import { Items } from "./items";
 import { Avatar2 } from "./avatar";
 import { Logout } from "./logout";
 import { PushDeer } from "./pushdeer";
 import { ClearLogs } from "./clear";
 import { Nickname } from "./nickname";
-import { GlobalModal, useReady } from "utils";
+import { GlobalModal } from "utils";
 import { loginCache } from "cache/loginCache";
+import { useState, useEffect } from "react";
+import { userId } from "utils/identity";
 
 
+const loader = async () => {
+    const uid = userId.get();
+    if (!uid) throw new Response("Unauthorized", { status: 401 });
+    const initialCache = await loginCache.fetch();
+    return { uid, initialCache };
+};
 
 export const MyInfo = () => {
-
-    const [currentUser, setUser] = useState({})
+    const readyData = useLoaderData();
+    const [currentUser, setUser] = useState(readyData?.initialCache)
     useEffect(() => {
         let isMounted = true;
-        loginCache.fetch().catch(() => { });
         const unsubscribe = loginCache.subscribe((next) => {
             if (!isMounted) return;
             const isObject = next?.data && typeof next.data === 'object';
@@ -28,28 +35,16 @@ export const MyInfo = () => {
         }
     }, []);
 
-
-
-    const { ready, data: readyData } = useReady(() => {
-        const uid = userId.get();
-        if (uid && currentUser) {
-            return { uid, currentUser };
-        }
-        return null;
-    }, [currentUser]);
-
-
-
-
     return <div>
         <GlobalModal />
-        <Outlet context={{ ready, readyData }} />
+        <Outlet context={{ currentUser, readyData }} />
     </div>
 }
 
 export const RsMyInfo = [
     {
         path: "self", element: <MyInfo />,
+        loader: loader,
         children: [
             {
                 index: true,

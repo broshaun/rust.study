@@ -25,26 +25,15 @@ export function ImagSend() {
         return;
     }
 
-
     const upImg = async (file) => {
-        console.log('file+++', file)
-
-        
-
         try {
             const { id: groupId } = currentChat.getState().get('group')
             const imgFileName = await uploadImg30({ file });
             await msgSend({ group_id: groupId, msgType: 'image', msgText: imgFileName });
-
             await navigate('/mobile/chat/group/msgs/');
-            console.log('上传成功+++')
-            
-
         } catch (error) {
             console.error(error);
         }
-
-
     };
 
 

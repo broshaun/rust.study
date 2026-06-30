@@ -21,7 +21,7 @@ export const DelMember = () => {
   const [gusrlist, setGusrlist] = useState([])
   useEffect(() => {
     let isMounted = true;
-    agroup_user.fetch().catch(() => { });
+    agroup_user.fetch().catch(console.error)
     const unsubscribe = agroup_user.subscribe((next) => {
       if (!isMounted) return;
       const newData = Array.isArray(next?.data) ? next.data : [];

@@ -1,5 +1,4 @@
-import { Outlet, Navigate } from "react-router";
-import { Main } from "./main"
+import { Main,loaderData } from "./main"
 import { Caller } from "./caller";
 import { Receiver } from "./receiver";
 import { Msg } from "./msg";
@@ -10,7 +9,9 @@ import { Smile } from "./smile";
 
 export const RsMsgs = [
     {
-        path: 'message', element: <Main />,
+        path: 'message', 
+        element: <Main />,
+        loader: loaderData,
         children: [
             {
                 index: true,

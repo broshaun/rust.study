@@ -1,17 +1,17 @@
 import { GroupEdit } from "./ui/GroupEdit";
-import { currentAppBar, createHttpClient, currentChat, useDateTime, getUserDB } from "utils";
+import { currentAppBar, createHttpClient, currentChat, useDateTime } from "utils";
 import { useEffect, useCallback, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useOutletContext } from "react-router";
 import { my_groups } from "cache/my_groups";
-import { userId } from "utils/identity";
+
 
 
 export const Manage = () => {
+    const { db, readyData } = useOutletContext();
+
     const dt = useDateTime();
     const navigate = useNavigate();
     const current = currentChat((state) => state.current);
-    const db = getUserDB(userId.get())
-
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -60,7 +60,6 @@ export const Manage = () => {
     }, [])
 
 
-
     const updateGroup = async ({ id, ...payload }) => {
         if (!id) return;
         Object.keys(payload).forEach((key) => {
@@ -84,15 +83,13 @@ export const Manage = () => {
         const payload = { id };
         const results = await http.requestBodyJson('delete_group', payload)
         const { code } = results;
-        console.log('results+++',results)
+        console.log('results+++', results)
         if (code === 200) {
             await db.table('groups').delete(id);
             await my_groups.refresh()
             await navigate('/mobile/chat/group/');
         };
     }
-
-
 
     const handleUpdateGroup = async (value) => {
         await updateGroup({
@@ -104,7 +101,6 @@ export const Manage = () => {
         });
         await get_group()
     };
-
 
     return <div>
         <GroupEdit

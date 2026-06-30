@@ -1,42 +1,30 @@
-import { Outlet } from 'react-router';
-import { createHttpClient, useDateTime, getUserDB, useReady } from 'utils';
+import { Outlet, useLoaderData } from 'react-router';
+import { createHttpClient, useDateTime, getUserDB } from 'utils';
 import { loginCache } from 'cache/loginCache';
 import { ObjectId } from "bson";
 import { userId } from 'utils/identity';
-import { useMemo } from 'react';
+
+
+export const loaderData = async () => {
+    const uid = userId.get();
+    if (!uid) throw new Response("Unauthorized", { status: 401 });
+    const initialCache = await loginCache.fetch();
+    const db = getUserDB(uid);
+    return { uid, initialCache, db };
+}
 
 
 export const Main = () => {
     /** 账号对应信息
      * 个人数据库
      */
-
-
-    const { ready, data: readyData } = useReady(() => {
-        const uid = userId.get();
-        const usr = loginCache.get();
-        if (uid && usr) {
-            return { uid, usr };
-        }
-        return null;
-    }, []);
-
-
-    const db = useMemo(() => {
-        if (!ready) return;
-        return getUserDB(readyData?.uid);
-    }, [ready])
-
-
+    const { initialCache: currentUser, db, uid } = useLoaderData();
     const { getDateTimeStr } = useDateTime();
-
     /**
      * 发送信息
      */
     const { http } = createHttpClient('/rpc/chat/msg/single2/');
     const fnSendMsg = async ({ uid, msgType, msgText }) => {
-        if (!ready)return;
-        const currentUser = readyData?.usr
 
         try {
             const results = await http.requestBodyJson('send', {
@@ -73,7 +61,7 @@ export const Main = () => {
         }
     }
 
-    return <Outlet context={{ fnSendMsg }} />
+    return <Outlet context={{ fnSendMsg, db, uid }} />
 
 }
 

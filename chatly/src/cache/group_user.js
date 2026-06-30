@@ -2,9 +2,12 @@ import { createHttpClient, currentChat } from 'utils';
 import { createQueryCache } from './helper/createQueryCache';
 import { sessionId } from 'utils/identity';
 
-const { http } = createHttpClient('/rpc/chat/group/');
+
 const queryFn = async () => {
+    const { http } = createHttpClient('/rpc/chat/group/');
+
     const { id: groupId } = currentChat.getState().get("group")
+    
     const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
     if (!results) throw new Error("获取失败");
     const { code, data, message } = results;
@@ -22,5 +25,5 @@ export const agroup_user = createQueryCache({
     sessionId: () => sessionId.get(),
     cacheKey: 'group_user_list',
     queryFn: queryFn,
-    staleTime: 12 * 60 * 60 * 1000,
+    staleTime: 1 * 60 * 60 * 1000,
 });

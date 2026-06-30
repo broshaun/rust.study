@@ -47,8 +47,8 @@ export function InviteGroup() {
 
     return <div>
         <GroupInviteMessageList data={data} loading={loading}
-            onAccept={(value) => { updateGroupAskState.mutate({ "id": value?.id, "ask_state": "agreed" }) }}
-            onReject={(value) => { updateGroupAskState.mutate({ "id": value?.id, "ask_state": "refuse" }) }}
+            onAccept={(value) => { updateGroupAskState({ "id": value?.id, "ask_state": "agreed" }) }}
+            onReject={(value) => { updateGroupAskState({ "id": value?.id, "ask_state": "refuse" }) }}
         />
     </div>
 }

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate, useOutletContext } from 'react-router';
 import { currentAppBar } from 'utils';
 import { Stack, Divider, NavLink } from '@mantine/core';
 import {
@@ -10,11 +10,10 @@ import {
     IconLogout,
     IconChevronRight
 } from '@tabler/icons-react';
-import React, { useEffect,useState } from "react";
-import { loginCache } from 'cache/loginCache';
-
+import React, { useEffect } from "react";
 
 export const Items = () => {
+    const { currentUser: apiInfo } = useOutletContext();
     const navigate = useNavigate();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -25,19 +24,6 @@ export const Items = () => {
         setRightPath(null);
     }, [])
 
-    const [apiInfo, setApiInfo] = useState({})
-    useEffect(() => {
-        let isMounted = true;
-        loginCache.fetch().catch(() => { });
-        const unsubscribe = loginCache.subscribe((next) => {
-            if (!isMounted) return;
-            setApiInfo(next?.data);
-        });
-        return () => {
-            isMounted = false;
-            unsubscribe?.();
-        }
-    }, []);
 
 
     return (
@@ -61,13 +47,13 @@ export const Items = () => {
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
                 onClick={() => { navigate("/mobile/chat/self/name/") }}
             />
-            <Divider ml={45} my={0} />
+            {/* <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="设置手机提醒"
                 leftSection={<IconDeviceMobileMessage size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
                 onClick={() => { navigate("/mobile/chat/self/pushdeer/") }}
-            />
+            /> */}
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="清空聊天记录"

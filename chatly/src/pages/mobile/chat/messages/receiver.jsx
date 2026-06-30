@@ -18,11 +18,8 @@ export function Receiver() {
   const navigate = useNavigate();
   const location = useLocation();
   const { ticket } = location.state || {};
-
-  console.log('接听ticket', ticket)
-
+  // console.log('接听ticket', ticket)
   const handleStopCall = () => {
-    console.log("123挂断退出")
     navigate('/mobile/chat/message/')
   }
 

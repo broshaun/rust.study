@@ -25,8 +25,8 @@ export const FriendRequests = () => {
         const unsubscribe = afriends.subscribe((next) => {
             if (!isMounted) return;
             setIsFetching(!!next?.isFetching);
-            const listData = Array.isArray(next?.data) ? next.data : [];
-            setFriendRequests(listData);
+            if (!next?.isSuccess) return;
+            setFriendRequests(next.data);
         });
         return () => {
             isMounted = false;

@@ -3,8 +3,9 @@ import { createQueryCache } from './helper/createQueryCache';
 import { sessionId } from 'utils/identity';
 
 
-const { http } = createHttpClient('/rpc/chat/friend/');
+
 const get_friends = async () => {
+    const { http } = createHttpClient('/rpc/chat/friend/');
     const results = await http.requestBodyJson("my_friends", {});
     if (!results) throw new Error("获取失败");
     const { code, data, message } = results;
@@ -19,5 +20,5 @@ export const afriends = createQueryCache({
     sessionId: () => sessionId.get(),
     cacheKey: 'my_friends',
     queryFn: get_friends,
-    staleTime: 12 * 60 * 60 * 1000,
+    staleTime: 1 * 60 * 60 * 1000,
 });

@@ -20,12 +20,7 @@ export function ImagSend() {
      */
     const { http: httpImg30 } = createHttpClient('/files/img30/'); // 保存图片的路由路径
     const uploadImg30 = async ({ file }) => {
-        console.log('file:', file);
         const { code, message, data } = await httpImg30.uploadFiles(file);
-        console.log('code:', code);
-        console.log('message:', message);
-        console.log('data:', data);
-
         if (code === 200 && data) {
             return data;
         }

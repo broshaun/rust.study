@@ -9,8 +9,32 @@ import { RsTest } from "./chat/test";
 import { AuthShell } from "./auth/main";
 import { RsUser } from "./auth/user";
 import { RsGroup } from "./chat/group";
+import { userId, deviceId } from "utils/identity"
+import { apiMqtt } from "utils/store/apiBase";
+import { tokenStore, getUserDB } from "utils";
 
 
+
+export const chatGuardLoader = async () => {
+    const uid = userId.get();
+    const did = deviceId.get();
+    const host = apiMqtt.get();
+    const token = tokenStore.get()?.token;
+    if (!uid || !did || !host || !token) {
+        return redirect("/mobile/auth/user");
+    }
+    const db = getUserDB(uid)
+    return { uid, did, host, token, db };
+};
+
+
+export const chatShellLoader = async () => {
+    const uid = userId.get();
+    if (!uid) {
+        throw new Response("Unauthorized", { status: 401 });
+    }
+    return { uid };
+}
 
 export const RsMobile = [
     {
@@ -32,6 +56,7 @@ export const RsMobile = [
             {
                 path: "chat",
                 element: <ChatGuard />,
+                loader: chatGuardLoader,
                 children: [
                     {
                         index: true,
@@ -39,6 +64,7 @@ export const RsMobile = [
                     },
                     {
                         element: <ChatShell />,
+                        loader: chatShellLoader,
                         children: [
                             ...RsFriend,
                             ...RsGroup,

@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react"
-import { useWinSize, currentAppBar, currentChat, getUserDB, useReady } from 'utils';
+import React, { useState, useEffect } from "react"
+import { useWinSize, currentAppBar, currentChat } from 'utils';
 import { liveQuery } from 'dexie';
 import { ChatBox } from "./ui/ChatBox"
 import { useOutletContext } from "react-router";
 import { IconDots } from "@tabler/icons-react";
-import { useLocalStorage } from "@mantine/hooks";
 import { IconMoodSmile, IconPhotoUp } from "@tabler/icons-react";
-import { userId } from "utils/identity";
 
 
 const TOOLS_CONFIG = [
@@ -28,19 +26,8 @@ const TOOLS_CONFIG = [
 ];
 
 export function Msg() {
+    const { msgSend, db } = useOutletContext();
     const group = currentChat((state) => state.current.get("group"));
-    const { ready, data: readyData } = useReady(() => {
-        const uid = userId.get();
-        if (uid) {
-            return { uid };
-        }
-        return null;
-    }, []);
-
-    const db = useMemo(() => {
-        if (!ready) return;
-        return getUserDB(readyData?.uid);
-    }, [ready])
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -63,7 +50,7 @@ export function Msg() {
     }, [group])
 
     const { winHeight } = useWinSize();
-    const { msgSend } = useOutletContext();
+
     const [msgs, setMsgs] = useState([]);
 
     useEffect(() => {

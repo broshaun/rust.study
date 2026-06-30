@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useListState } from "@mantine/hooks";
-import { getUserDB, currentChat, createHttpClient, currentAppBar, currentModal } from "utils";
-import { useNavigate } from "react-router";
+import { currentChat, createHttpClient, currentAppBar, currentModal } from "utils";
+import { useNavigate, useOutletContext } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
-import { userId } from "utils/identity";
 
 
 export const AddMember = () => {
+  const { db } = useOutletContext();
+  
   // const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
@@ -19,7 +20,7 @@ export const AddMember = () => {
   }, [])
 
   const { http } = createHttpClient('/rpc/chat/group/');
-  const db = getUserDB(userId.get());
+  
 
   const [friends, handlers] = useListState([]);
   useEffect(() => {

@@ -5,31 +5,16 @@ import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
 import { loginCache } from "cache/loginCache";
+import { useOutletContext } from "react-router";
 
 
 /**
  * 上传并更新头像
  */
 export const Avatar2 = () => {
-    const [currentUser, setUser] = useState({})
-    useEffect(() => {
-        let isMounted = true;
-        loginCache.fetch().catch(() => { });
-        const unsubscribe = loginCache.subscribe((next) => {
-            if (!isMounted) return;
-            const isObject = next?.data && typeof next.data === 'object';
-            const newData = isObject ? next.data : {};
-            setUser(newData);
-        });
-        return () => {
-            isMounted = false;
-            unsubscribe?.();
-        }
-    }, []);
-
+    const { currentUser } = useOutletContext();
     const { http: httpFiles } = createHttpClient('/files/avatar/');
     const { http: apiLogin } = createHttpClient('/rpc/chat/login/');
-
     const uploadFile = useCallback(async (file) => {
         if (!file) return;
         const results = await httpFiles.uploadFiles(file);

@@ -1,11 +1,13 @@
 import { GroupMemberList } from "./ui/GroupMemberList"
-import { useNavigate } from "react-router";
+import { useNavigate, useOutletContext } from "react-router";
 import { currentAppBar, createHttpClient } from "utils"
-import { useEffect, useState,  } from "react";
-import { loginCache } from "cache/loginCache";
+import { useEffect, useState, } from "react";
 import { agroup_user } from "cache/group_user";
 
 export const GroupUsers = () => {
+    const { readyData } = useOutletContext();
+    const currentUser = readyData?.usr
+
     const navigate = useNavigate();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -19,7 +21,6 @@ export const GroupUsers = () => {
     }, [])
 
     const { http } = createHttpClient('/rpc/chat/group/')
-    const currentUser = loginCache.get()
     const [members, setMembers] = useState([])
     useEffect(() => {
         let isMounted = true;

@@ -1,34 +1,17 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, Outlet } from 'react-router';
-import { getUserDB, createHttpClient, useDateTime, tokenStore, useRemainSeconds } from "utils"
+import { useNavigate, Outlet ,useLoaderData} from 'react-router';
+import { createHttpClient, useDateTime, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { loginCache, } from "cache/loginCache";
 import { my_groups } from "cache/my_groups";
-import { userId, deviceId } from "utils/identity"
-import { apiMqtt } from "utils/store/apiBase";
-import { useReady } from "utils";
+
 
 
 export function ChatGuard() {
-
-  const { ready, data: readyData } = useReady(() => {
-    const uid = userId.get();
-    const did = deviceId.get();
-    const host = apiMqtt.get();
-    const token = tokenStore.get()?.token;
-    if (uid && did && host && token) {
-      return { uid, did, host, token };
-    }
-    return null;
-  }, []);
-
-  const dt = useDateTime();
   const navigate = useNavigate();
-  const db = useMemo(() => {
-    return getUserDB(userId.get())
-  }, [ready])
-
-
+  const readyData = useLoaderData();
+  const dt = useDateTime();
+  const db = readyData?.db;
   const remainSeconds = useRemainSeconds();
 
   // ++++ 订阅列表 ++++
@@ -56,7 +39,6 @@ export function ChatGuard() {
     if (!currentUser?.id || !Array.isArray(mygroup)) return [];
     return [...mygroup.map(item => `chat/group/${item?.id}`), `chat/single/${currentUser.id}`];
   }, [currentUser?.id, mygroup])
-
 
   const { http: httpGMsg } = createHttpClient('/rpc/chat/msg/group2/');
   const { http: httpMsg } = createHttpClient('/rpc/chat/msg/single2/');
@@ -112,8 +94,8 @@ export function ChatGuard() {
 
 
   useEffect(() => {
-    if (!db) return;
-    if (!ready) return;
+    if (!readyData) return;
+
 
     get_after_message() // 离线消息加载
 
@@ -180,7 +162,7 @@ export function ChatGuard() {
         console.error("MQTT停止失败:", err);
       });
     };
-  }, [topics, db, ready])
+  }, [topics, readyData])
 
   useEffect(() => {
     if (!remainSeconds) return;

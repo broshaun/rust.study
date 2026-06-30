@@ -1,27 +1,17 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router";
-import { createHttpClient, currentAppBar, currentChat, useReady } from 'utils';
-import { getUserDB } from "utils";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router";
+import { createHttpClient, currentAppBar, currentChat } from 'utils';
 import { FriendInfo } from "./ui/FriendDetailUI";
 import { afriends } from "cache/friends";
-import { userId } from "utils/identity";
+
 
 
 export function Detail() {
+  const { db, readyData } = useOutletContext();
   const { http: http2 } = createHttpClient('/rpc/chat/friend/');
   const navigate = useNavigate();
-  const { ready, data: readyData } = useReady(() => {
-    const uid = userId.get();
-    if (uid) {
-      return { uid };
-    }
-    return null;
-  }, []);
 
-  const db = useMemo(() => {
-    if (!ready) return;
-    return getUserDB(readyData?.uid);
-  }, [ready])
+
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);

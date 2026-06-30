@@ -1,29 +1,14 @@
-import { Suspense, useEffect,useState } from "react";
-import { useNavigate } from 'react-router';
+import { Suspense, useEffect } from "react";
+import { useNavigate, useOutletContext } from 'react-router';
 import { createHttpClient, currentAppBar } from 'utils';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
 import { loginCache } from "cache/loginCache";
 
 
 export const Nickname = () => {
+    const { currentUser: User } = useOutletContext();
+
     const navigate = useNavigate();
-
-    const [User, setUser] = useState(null)
-    useEffect(() => {
-        let isMounted = true;
-        loginCache.fetch().catch(() => { });
-        const unsubscribe = loginCache.subscribe((next) => {
-            if (!isMounted) return;
-            const isObject = next?.data && typeof next.data === 'object';
-            const newData = isObject ? next.data : {};
-            setUser(newData);
-        });
-        return () => {
-            isMounted = false;
-            unsubscribe?.();
-        }
-    }, []);
-
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);
     useEffect(() => {

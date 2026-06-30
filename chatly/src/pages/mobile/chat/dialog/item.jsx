@@ -1,25 +1,14 @@
-import React, { useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from 'react-router';
-import { currentChat, currentAppBar, getUserDB, useDateTime, useReady } from 'utils';
+import React, { useEffect, useCallback } from "react";
+import { useNavigate, useOutletContext } from 'react-router';
+import { currentChat, currentAppBar, useDateTime } from 'utils';
 import { DialogList } from "./ui/DialogList";
 import { useLiveQuery } from "dexie-react-hooks";
-import { userId } from "utils/identity";
+
 
 export const Item = () => {
+    const { db, readyData } = useOutletContext();
     const dt = useDateTime();
     const navigate = useNavigate()
-    const { ready, data: readyData } = useReady(() => {
-        const uid = userId.get();
-        if (uid) {
-            return { uid };
-        }
-        return null;
-    }, []);
-
-    const db = useMemo(() => {
-        if (!ready) return;
-        return getUserDB(readyData?.uid);
-    }, [ready])
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setTitle = currentAppBar((state) => state.setTitle);

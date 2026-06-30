@@ -1,19 +1,20 @@
-import React, { useEffect, useCallback, useState ,useMemo} from "react";
-import { useNavigate } from 'react-router';
-import { currentAppBar, currentChat, getUserDB, useDateTime, useReady } from "utils";
+import React, { useEffect, useCallback, useState } from "react";
+import { useNavigate, useOutletContext } from 'react-router';
+import { currentAppBar, currentChat, useDateTime } from "utils";
 import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { afriends } from "cache/friends";
-import { userId } from "utils/identity";
 
 
 export const Item = () => {
+    const { db, readyData } = useOutletContext();
     const dt = useDateTime();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
+
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');
@@ -23,37 +24,22 @@ export const Item = () => {
 
     const navigate = useNavigate();
     const [isPending, setIsPending] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
     const [friendList, setFriendList] = useState([])
+
     useEffect(() => {
         let isMounted = true;
         afriends.fetch().catch(() => { });
         const unsubscribe = afriends.subscribe((next) => {
             if (!isMounted) return;
             setIsPending(!!next?.isPending);
-            setIsSuccess(!!next?.isSuccess);
-            const newData = Array.isArray(next?.data) ? next.data : [];
-            setFriendList(newData);
+            if (!next?.isSuccess) return;
+            setFriendList(next.data);
         });
         return () => {
             isMounted = false;
             unsubscribe?.();
         }
     }, []);
-
-    const { ready, data: readyData } = useReady(() => {
-        const uid = userId.get();
-        if (uid) {
-            return { uid };
-        }
-        return null;
-    }, []);
-
-    const db = useMemo(() => {
-        if (!ready) return;
-        return getUserDB(readyData?.uid);
-    }, [ready])
-
 
     const openMsgWindow = useCallback(async (select) => {
         const displayName = select.remark ?? select.nickname ?? select.email;
@@ -63,10 +49,9 @@ export const Item = () => {
     }, [navigate, db]);
 
     useEffect(() => {
-        if (!db) return;
-        if (!isSuccess) return;
         db.table("friends").bulkPut(friendList).catch(console.error);
-    }, [friendList, isSuccess, db]);
+    }, [friendList]);
+
 
     const finalFriends = useLiveQuery(async () => {
         if (!db) return;
@@ -74,8 +59,6 @@ export const Item = () => {
 
         return friends
     }, [db], []);
-
-    // console.log('finalFriends',finalFriends)
 
     return (
         <FriendList

@@ -3,16 +3,23 @@ import { RsMobile } from "pages/mobile";
 import { useRemainSeconds } from 'utils';
 
 
+const RootIndex = () => {
+  const remainSeconds = useRemainSeconds();
+  if (remainSeconds > 0) {
+    return <Navigate to="/mobile/chat" replace />;
+  }
+  return <Navigate to="/mobile/auth" replace />;
+};
+
+const router = createHashRouter([
+  {
+    index: true,
+    element: <RootIndex />
+  },
+  ...RsMobile
+]);
+
 const App = () => {
-  const remainSeconds = useRemainSeconds()
-  const router = createHashRouter([
-    {
-      index: true,
-      element: remainSeconds > 0 ? <Navigate to="/mobile/chat" replace /> : <Navigate to="/mobile/auth" replace />,
-      // element: <Navigate to="/mobile/auth" replace />,
-    },
-    ...RsMobile
-  ]);
   return <RouterProvider router={router} />;
 };
 

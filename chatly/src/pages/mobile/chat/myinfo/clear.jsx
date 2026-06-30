@@ -1,22 +1,13 @@
 import React, { useEffect, Suspense } from "react";
-import { useNavigate } from 'react-router';
+import { useNavigate, useOutletContext } from 'react-router';
 import { deleteUserDB, currentModal } from 'utils';
-import { clearAllImageCache, useReady } from "utils";
-import { userId } from "utils/identity";
+import { clearAllImageCache } from "utils";
 
 
 export const ClearLogs = () => {
-    const { ready, data: readyData } = useReady(() => {
-        const uid = userId.get();
-        if (uid) {
-            return { uid };
-        }
-        return null;
-    }, []);
-
+    const { readyData } = useOutletContext();
     const navigate = useNavigate();
     const clear = async (click) => {
-        if (!ready)return;
         await clearAllImageCache();
         if (click) {
             await deleteUserDB(readyData?.uid)
