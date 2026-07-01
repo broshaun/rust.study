@@ -1,5 +1,5 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './helper/createQueryCache';
+import { createQueryCache } from './helper/createQueryCache2';
 import { sessionId } from 'utils/identity';
 
 
@@ -16,7 +16,7 @@ const get_friends = async () => {
     return data || [];
 }
 
-export const afriends = createQueryCache({
+export const friend_list = createQueryCache({
     cacheKey: () => [sessionId.get(),'my_friends'],
     queryFn: get_friends,
     staleTime: 1 * 60 * 60 * 1000,

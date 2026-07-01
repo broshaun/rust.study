@@ -1,18 +1,11 @@
-import React, { useEffect } from "react";
-import { useOutletContext } from "react-router";
+import React, { useEffect,useState } from "react";
+import { useOutletContext, useParams } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import {
-    useWinSize,
-    currentChat,
-    currentAppBar,
-    useDateTime,
-} from "utils";
+import { useWinSize, currentAppBar, useDateTime } from "utils";
 import { ChatBox } from "./ui/ChatBox";
-import {
-    IconMoodSmile,
-    IconPhotoUp,
-    IconPhoneOutgoing
-} from '@tabler/icons-react';
+import { IconMoodSmile, IconPhotoUp, IconPhoneOutgoing } from '@tabler/icons-react';
+
+
 
 const TOOLS_CONFIG = [
     {
@@ -41,51 +34,55 @@ const TOOLS_CONFIG = [
 
 
 export function Msg() {
-    const dt = useDateTime();
-
-
-    const current = currentChat((state) => state.current.get("friend"));
-
     const { fnSendMsg, db } = useOutletContext();
     const { winHeight } = useWinSize();
+    const { id: friendId } = useParams();
+
+    console.log('friendId++',friendId)
+
+    const dt = useDateTime();
+
+    const [current,setCurrent] = useState()
+     useLiveQuery(async() => {
+        const data = await db.table('friends').get(friendId)
+        console.log('data++',data)
+        setCurrent(data)
+        // return data
+    },[db,friendId]);
+
+    console.log('current++', current)
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
+
     useEffect(() => {
-        setTitle(current?.displayName || "");
+        setTitle(current?.remark || current?.nickname || current?.email);
         setLeftPath("/mobile/chat/dialog/");
         setRightPath(null);
-    }, [current?.displayName, setTitle, setLeftPath, setRightPath]);
+    }, [current, setTitle, setLeftPath, setRightPath]);
 
     useEffect(() => {
         if (!db || !current?.uid) return;
-
         return () => {
             db.table("friends_dialog")
                 .update(current.uid, {
                     signal: "old",
                     unread: 0,
                     timestamp: dt.getDateTimeStr(),
-                })
-                .catch(console.error);
+                }).catch(console.error);
         };
     }, [db, current?.uid]);
 
-    const msgs = useLiveQuery(
-        async () => {
-            if (!db || !current?.uid) return [];
 
-            return await db
-                .table("message")
-                .where("uid")
-                .equals(current.uid)
-                .toArray();
-        },
-        [db, current?.uid],
-        []
-    );
+    const msgs = useLiveQuery(async () => {
+        return await db
+            .table("message")
+            .where("uid")
+            .equals(current.uid)
+            .toArray();
+    }, [db, current?.uid]);
 
     const msgTextSend = async (sendText) => {
         if (!sendText) return;

@@ -1,26 +1,28 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useListState } from "@mantine/hooks";
-import { currentChat, createHttpClient, currentAppBar, currentModal } from "utils";
-import { useNavigate, useOutletContext } from "react-router";
+import { createHttpClient, currentAppBar, currentModal } from "utils";
+import { useNavigate, useOutletContext, useParams } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
 
 
+// 群聊，添加群成员
 export const AddMember = () => {
+  const { id: groupId } = useParams();
   const { db } = useOutletContext();
-  
+
   const setTitle = currentAppBar((state) => state.setTitle);
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   const setRightIcon = currentAppBar((state) => state.setRightIcon);
   const setRightPath = currentAppBar((state) => state.setRightPath);
   useEffect(() => {
     setTitle('添加群成员');
-    setLeftPath('/mobile/chat/group/gusr/')
+    setLeftPath(`/mobile/chat/group/gusr/${groupId}`)
     setRightIcon(null)
     setRightPath(null)
   }, [])
 
   const { http } = createHttpClient('/rpc/chat/group/');
-  
+
 
   const [friends, handlers] = useListState([]);
   useEffect(() => {
@@ -49,13 +51,12 @@ export const AddMember = () => {
 
   const navigate = useNavigate();
   const handleConfirm = useCallback(async (value) => {
-    const { id: groupId } = currentChat.getState().get("group");
     if (!groupId) return;
     const users = Array.isArray(value?.users) ? value.users : [];
     const uids = users.map((item) => item.uid).filter(Boolean);
     if (!uids.length) return;
     await addgusr({ group_id: groupId, uids: uids })
-    await navigate('/mobile/chat/group/gusr/')
+    await navigate(`/mobile/chat/group/gusr/${groupId}`)
   }, [navigate, addgusr]);
 
   return (

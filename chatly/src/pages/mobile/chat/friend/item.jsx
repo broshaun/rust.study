@@ -4,7 +4,7 @@ import { currentAppBar, currentChat, useDateTime } from "utils";
 import { IconUserPlus } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
-import { afriends } from "cache/friends";
+import { friend_list } from "cache/friend_list";
 
 
 export const Item = () => {
@@ -27,8 +27,8 @@ export const Item = () => {
     const [friendList, setFriendList] = useState([])
     useEffect(() => {
         let isMounted = true;
-        afriends.fetch().catch(() => { });
-        const unsubscribe = afriends.subscribe((next) => {
+        friend_list.fetch().catch(() => { });
+        const unsubscribe = friend_list.subscribe((next) => {
             if (!isMounted) return;
             setIsPending(!!next?.isPending);
             if (!next?.isSuccess) return;
@@ -42,9 +42,9 @@ export const Item = () => {
 
     const openMsgWindow = useCallback(async (select) => {
         const displayName = select.remark ?? select.nickname ?? select.email;
-        currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
+        // currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
         await db.table("friends_dialog").put({ id: select?.uid, displayName: displayName, timestamp: dt.getDateTimeStr() });
-        await navigate('/mobile/chat/friend/detail/');
+        await navigate(`/mobile/chat/friend/detail/${select?.id}`);
     }, [navigate, db]);
 
     useEffect(() => {

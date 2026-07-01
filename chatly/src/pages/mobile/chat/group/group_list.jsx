@@ -4,10 +4,11 @@ import { useNavigate, useOutletContext } from "react-router";
 import { IconUserShare } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
-import { my_groups } from "cache/my_groups";
-import { userId } from "utils/identity";
+import { group_list } from "cache/group_list";
 import { loginCache } from "cache/loginCache";
 
+
+// 群聊列表
 export const Item = () => {
     const { db } = useOutletContext();
     const usrInfo = loginCache.get()
@@ -40,32 +41,16 @@ export const Item = () => {
         }
     }
 
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [groupList, setGroupList] = useState([])
     useEffect(() => {
-        if (!userId) {
-            setIsSuccess(false);
-            return;
-        };
-        let isMounted = true;
-        my_groups.fetch().catch(() => { });
-        const unsubscribe = my_groups.subscribe((next) => {
-            if (!isMounted) return;
-            setIsSuccess(!!next?.isSuccess);
-            const newData = Array.isArray(next?.data) ? next.data : [];
-            setGroupList(newData);
+        const unsubscribe = group_list.subscribe((state) => {
+            if (!state.isSuccess) return;
+            (async () => {
+                // console.log('state++',state)
+                db.table("groups").bulkPut(state.data);
+            })();
         });
-        return () => {
-            isMounted = false;
-            unsubscribe?.();
-        }
-    }, [userId]);
-
-    useEffect(() => {
-        if (!db) return;
-        if (!isSuccess) return;
-        db.table("groups").bulkPut(groupList).catch(console.error);
-    }, [groupList, isSuccess, db]);
+        return () => unsubscribe;
+    }, [db]);
 
     const finalGroups = useLiveQuery(async () => {
         if (!db) return;

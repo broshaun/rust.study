@@ -1,5 +1,5 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './helper/createQueryCache';
+import { createQueryCache } from './helper/createQueryCache2';
 import { sessionId } from 'utils/identity';
 
 
@@ -14,7 +14,7 @@ const queryFn = async () => {
     return data || [];
 }
 
-export const my_groups = createQueryCache({
+export const group_list = createQueryCache({
     cacheKey: () => [sessionId.get(), 'my_group_list'],
     queryFn: queryFn,
     staleTime: 12 * 60 * 60 * 1000,

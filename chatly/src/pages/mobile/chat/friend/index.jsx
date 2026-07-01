@@ -31,7 +31,7 @@ export const RsFriend = [
                 element: <Item />
             },
             {
-                path: "detail",
+                path: "detail/:id",
                 element: <Detail />
             },
             {

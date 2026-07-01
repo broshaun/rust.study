@@ -2,32 +2,32 @@ import { Item } from "./group_list";
 import { Manage } from "./group_manage";
 import { AddMember } from "./group_user_add";
 import { DelMember } from "./group_user_remove";
-import { Msg } from "./msg_text_send";
-import { ImagSend } from "./msg_img_send";
-import { Smile } from "./msg_smile_send";
-import { GroupUsers } from "./group_users";
+import { Msg } from "./msg_send";
+import { ImagSend } from "./msg_send_img";
+import { Smile } from "./msg_send_smile";
+import { GroupUsers } from "./group_user";
 import { CreateGroup } from "./group_add";
-import { InviteGroup } from "./group_invite"
+import { InviteGroup } from "./group_invite_msg"
 import { Outlet } from 'react-router';
 import { createHttpClient, GlobalModal, getUserDB } from 'utils';
-import { my_groups } from "cache/my_groups";
+import { group_list } from "cache/group_list";
 import { loginCache } from "cache/loginCache";
 import { useLoaderData } from "react-router";
 import { sessionId, userId } from "utils/identity";
 
 
-
+// 
 export const loaderData = async () => {
     const uid = userId.get();
     const ssid = sessionId.get();
     if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
-    await my_groups.fetch();
+    await group_list.fetch();
     await loginCache.fetch();
     return { uid, ssid };
 }
 
 const Group = () => {
-    const {uid,ssid} = useLoaderData();
+    const { uid, ssid } = useLoaderData();
     const db = getUserDB(uid);
     const { http } = createHttpClient('/rpc/chat/msg/group2/');
     const msgSend = async ({ group_id, msgType, msgText }) => {
@@ -41,7 +41,7 @@ const Group = () => {
 
     return <div>
         <GlobalModal />
-        <Outlet context={{ msgSend,db }} />
+        <Outlet context={{ msgSend, db }} />
     </div>
 
 
@@ -63,11 +63,11 @@ export const RsGroup = [
                 element: <Manage />
             },
             {
-                path: "addgusr",
+                path: "addgusr/:id",
                 element: <AddMember />
             },
             {
-                path: "delgusr",
+                path: "delgusr/:id",
                 element: <DelMember />
             },
             {

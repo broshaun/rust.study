@@ -3,7 +3,7 @@ import { useNavigate, Outlet ,useLoaderData} from 'react-router';
 import { createHttpClient, useDateTime, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { loginCache, } from "cache/loginCache";
-import { my_groups } from "cache/my_groups";
+import { group_list } from "cache/group_list";
 
 
 
@@ -19,13 +19,13 @@ export function ChatGuard() {
   const [currentUser, setUser] = useState(null)
   useEffect(() => {
     let isMounted = true;
-    loginCache.fetch().catch(() => { });
+
     const unsubscribe1 = loginCache.subscribe((next) => {
       if (!isMounted) return;
       setUser(next?.data);
     });
-    my_groups.fetch().catch(() => { });
-    const unsubscribe = my_groups.subscribe((next) => {
+
+    const unsubscribe = group_list.subscribe((next) => {
       if (!isMounted) return;
       setMyGroup(next?.data);
     });
@@ -35,10 +35,13 @@ export function ChatGuard() {
       unsubscribe1?.();
     }
   }, []);
+
   const topics = useMemo(() => {
     if (!currentUser?.id || !Array.isArray(mygroup)) return [];
     return [...mygroup.map(item => `chat/group/${item?.id}`), `chat/single/${currentUser.id}`];
   }, [currentUser?.id, mygroup])
+
+  // console.log('topics++',topics)
 
   const { http: httpGMsg } = createHttpClient('/rpc/chat/msg/group2/');
   const { http: httpMsg } = createHttpClient('/rpc/chat/msg/single2/');
@@ -83,20 +86,13 @@ export function ChatGuard() {
         await db.table('gmsgs').bulkPut(messages)
       }
     }
-
     after_friend_message().catch(console.error)
     after_group_message().catch(console.error)
-
   }
-
-
-
 
 
   useEffect(() => {
     if (!readyData) return;
-
-
     get_after_message() // 离线消息加载
 
     const channel = new Channel();
@@ -146,6 +142,8 @@ export function ChatGuard() {
     };
 
     const { uid, did, host, token } = readyData;
+
+    // console.log('readyData++',readyData)
 
     invoke("subscribe", {
       clientId: `${uid}:${did}`,

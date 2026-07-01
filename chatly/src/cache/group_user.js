@@ -1,13 +1,11 @@
-import { createHttpClient, currentChat } from 'utils';
-import { createQueryCache } from './helper/createQueryCache';
+import { createHttpClient } from 'utils';
+import { createQueryCache } from './helper/createQueryCache2';
 import { sessionId } from 'utils/identity';
 import { useParams } from 'react-router';
 
 
 const queryFn = async () => {
     const { http } = createHttpClient('/rpc/chat/group/');
-
-    // const { id: groupId } = currentChat.getState().get("group")
     const { id:groupId } = useParams();
     console.log('groupId++',groupId)
     

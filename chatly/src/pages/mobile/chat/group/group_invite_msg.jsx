@@ -2,9 +2,9 @@ import { GroupInviteMessageList } from "./ui/InviteGroupCard";
 import { currentAppBar, createHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";
-import { my_groups } from "cache/my_groups";
+import { group_list } from "cache/group_list";
 
-
+// 邀请群消息
 export function InviteGroup() {
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -39,7 +39,7 @@ export function InviteGroup() {
     const updateGroupAskState = async ({ id, ask_state }) => {
         const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
         if (results?.code === 200) {
-            await my_groups.refresh()
+            await group_list.refresh()
             return results?.data;
         }
         return []

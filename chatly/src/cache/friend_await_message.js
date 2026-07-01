@@ -1,5 +1,5 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './helper/createQueryCache';
+import { createQueryCache } from './helper/createQueryCache2';
 import { sessionId } from 'utils/identity';
 
 
@@ -12,7 +12,7 @@ async function get_await_friends() {
     return res.data ?? [];
 }
 
-export const afriends = createQueryCache({
+export const friend_await_message = createQueryCache({
     cacheKey: () => [sessionId.get(),'get_await_friends'],
     queryFn: get_await_friends,
     staleTime: 12 * 60 * 60 * 1000,

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendRequestList } from "./ui/FriendRequestList";
-import { afriends } from "cache/friendsAwait";
+import { friend_await_message } from "cache/friend_await_message";
 
 export const FriendRequests = () => {
   const { http } = createHttpClient("/rpc/chat/friend/");
@@ -21,8 +21,8 @@ export const FriendRequests = () => {
     const [isFetching, setIsFetching] = useState(false);
     useEffect(() => {
         let isMounted = true;
-        afriends.fetch().catch(() => { });
-        const unsubscribe = afriends.subscribe((next) => {
+        friend_await_message.fetch().catch(() => { });
+        const unsubscribe = friend_await_message.subscribe((next) => {
             if (!isMounted) return;
             setIsFetching(!!next?.isFetching);
             if (!next?.isSuccess) return;
@@ -46,7 +46,7 @@ export const FriendRequests = () => {
     <FriendRequestList
       isRefetching={isFetching}
       onRefetch={async () => {
-        await afriends.refresh()
+        await friend_await_message.refresh()
       }}
       friendRequests={friendRequests}
       onAcceptFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "agree" })}

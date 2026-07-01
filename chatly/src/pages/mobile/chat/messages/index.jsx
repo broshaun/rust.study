@@ -9,7 +9,7 @@ import { Smile } from "./smile";
 
 export const RsMsgs = [
     {
-        path: 'message', 
+        path: 'message/:id', 
         element: <Main />,
         loader: loaderData,
         children: [
@@ -22,19 +22,19 @@ export const RsMsgs = [
                 element: <P2PPcmVoiceTest />
             },
             {
-                path: "caller",
+                path: "caller/:id",
                 element: <Caller />
             },
             {
-                path: "receiver",
+                path: "receiver/:id",
                 element: <Receiver />
             },
             {
-                path: "imgUp",
+                path: "imgUp/:id",
                 element: <ImagSend />
             },
             {
-                path: "smile",
+                path: "smile/:id",
                 element: <Smile />
             },
         ]

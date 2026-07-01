@@ -1,5 +1,5 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './helper/createQueryCache';
+import { createQueryCache } from './helper/createQueryCache2';
 import { sessionId } from 'utils/identity';
 
 
@@ -16,3 +16,11 @@ export const loginCache = createQueryCache({
     queryFn: loginFn,
     staleTime: 12 * 60 * 60 * 1000,
 });
+
+
+// export const loginCache = createQueryCache({
+//     cacheKey: () => [sessionId.get(), 'login-info'],
+//     queryFn: loginFn,
+//     storage: true
+
+// });

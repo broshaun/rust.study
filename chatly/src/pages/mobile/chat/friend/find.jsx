@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendSearch } from "./ui/FriendSearch";
 import { IconUserExclamation } from "@tabler/icons-react";
-import { afriends } from "cache/friends";
+import { friend_list } from "cache/friend_list";
 
 
 export const Find = () => {
@@ -54,7 +54,7 @@ export const Find = () => {
     const handleAddFriend = async (userId) => {
         if (!userId) return null;
         await http.requestBodyJson("PUT", { user_id:userId });
-        await afriends.refresh()
+        await friend_list.refresh()
     };
 
     return (

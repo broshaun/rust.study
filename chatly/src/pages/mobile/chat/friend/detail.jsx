@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router";
-import { createHttpClient, currentAppBar, currentChat } from 'utils';
+import { useNavigate, useOutletContext, useParams } from "react-router";
+import { createHttpClient, currentAppBar } from 'utils';
 import { FriendInfo } from "./ui/FriendDetailUI";
-import { afriends } from "cache/friends";
+import { friend_list } from "cache/friend_list";
 
 
 
 export function Detail() {
+  const { id: friendId } = useParams();
   const { db, readyData } = useOutletContext();
   const { http: http2 } = createHttpClient('/rpc/chat/friend/');
   const navigate = useNavigate();
@@ -27,15 +28,12 @@ export function Detail() {
 
   useEffect(() => {
     return () => {
-      afriends.refresh().catch(console.error)
+      friend_list.refresh().catch(console.error)
     }
   }, [])
 
-
-  const current_friend = currentChat((state) => state.current.get("friend"));
-  const friendId = current_friend?.id
+  // 获取用户信息
   const [friend, setFriend] = useState()
-
   async function get_friend(friendId) {
     if (!friendId) return;
     try {
@@ -52,7 +50,7 @@ export function Detail() {
     get_friend(friendId).catch(console.error)
   }, [friendId])
 
-
+  // 删除好友
   async function deleteFriend(id) {
     try {
       if (!id) return;
@@ -61,7 +59,7 @@ export function Detail() {
       await db.table('friends').where('id').equals(id).delete();
       await db.table('friends_dialog').where('id').equals(id).delete();
       await navigate("/mobile/chat/friend/");
-      await get_friend()
+      await get_friend(friendId)
     } catch (error) {
       console.error(error)
     }
@@ -71,21 +69,19 @@ export function Detail() {
   async function updRemark({ id, remark }) {
     if (!id) return;
     await http2.requestBodyJson('set_friend', { id, remark });
-    await afriends.refresh()
     await get_friend(friendId)
   }
 
-  async function openMsgWindow(friend) {
-    if (!friend?.id) return;
-    await navigate('/mobile/chat/message/');
+  async function openMsgWindow() {
+    await navigate(`/mobile/chat/message/${friendId}`);
   }
 
   return (
     <FriendInfo
       friend={friend}
-      onRemarkChange={(remark) => { updRemark({ id: friend.id, remark }) }}
+      onRemarkChange={(remark) => { updRemark({ id: friendId, remark }) }}
       onChat={openMsgWindow}
-      onDelete={(friend) => { deleteFriend(friend.id) }}
+      onDelete={(friend) => { deleteFriend(friendId) }}
     />
   );
 }

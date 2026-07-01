@@ -1,19 +1,25 @@
-import { useNavigate, useOutletContext } from 'react-router';
+import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { P2PCallCaller } from "./ui/P2PCallCaller";
-import { currentAppBar, currentChat } from 'utils';
+import { currentAppBar } from 'utils';
 import { useEffect } from "react"
 
 
 export function Caller() {
+  const { fnSendMsg, db } = useOutletContext();
+  const { id: friendId } = useParams();
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
-  const current = currentChat(
-    (state) => state.current.get("friend")
-  );
+
+  const current = useLiveQuery(async () => {
+    return await db.table('friends').get(friendId)
+  })
+
+  
+
   useEffect(() => {
     setLeftPath('/mobile/chat/message/')
   }, [])
 
-  const { fnSendMsg, db } = useOutletContext();
+
   const msgPhoneSend = async (ticket) => {
     if (ticket) {
       await fnSendMsg({ uid: current?.uid, msgType: 'phone', msgText: ticket })
@@ -27,14 +33,13 @@ export function Caller() {
 
   const navigate = useNavigate();
   const handleStopCall = () => {
-    console.log("挂断退出")
     navigate('/mobile/chat/message/')
   }
 
   return <div>
     <P2PCallCaller
       avatar={current?.avatar_url}
-      name={current?.displayName}
+      name={current?.remark || current?.nickname || current?.email}
       onStartCall={handleStartCall}
       onStopCall={handleStopCall}
     />

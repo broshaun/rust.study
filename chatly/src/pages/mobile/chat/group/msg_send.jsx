@@ -56,9 +56,9 @@ export function Msg() {
         const msg = await db.table('gmsgs').where('group_id').equals(groupId).toArray()
         return msg
     }, [db, groupId], [])
+
     const msgTextSend = async (sendText) => {
         if (sendText) {
-            if (groupId) return;
             await msgSend({ group_id: groupId, msgType: 'text', msgText: sendText })
         }
     }

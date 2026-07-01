@@ -12,6 +12,8 @@ import { RsGroup } from "./chat/group";
 import { userId, deviceId } from "utils/identity"
 import { apiMqtt } from "utils/store/apiBase";
 import { tokenStore, getUserDB } from "utils";
+import { group_list } from "cache/group_list";
+import { loginCache } from "cache/loginCache";
 
 
 
@@ -23,6 +25,8 @@ export const chatGuardLoader = async () => {
     if (!uid || !did || !host || !token) {
         return redirect("/mobile/auth/user");
     }
+    await group_list.fetch();
+    await loginCache.fetch();
     const db = getUserDB(uid)
     return { uid, did, host, token, db };
 };

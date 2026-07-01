@@ -71,15 +71,26 @@ export function createQueryCache({
         return true;
     };
 
+    // 以下多了没有初始值会执行初始值fetchQuery
+    // const subscribe = (callback) => {
+    //     if (typeof callback !== 'function') return () => {};
+    //     const key = resolveKey();
+    //     const options = optionsOf(key);
+    //     const observer = new QueryObserver(queryClient, options);
+    //     const currentResult = observer.getCurrentResult();
+    //     callback(toState(currentResult));
+    //     const shouldFetch = currentResult.isStale || (currentResult.status === 'pending' && observer.getCurrentQuery()?.state.fetchStatus !== 'fetching');
+    //     if (shouldFetch) queryClient.fetchQuery(options).catch(() => {});
+    //     const unsubscribe = observer.subscribe((result) => callback(toState(result)));
+    //     return unsubscribe;
+    // };
+
     const subscribe = (callback) => {
-        if (typeof callback !== 'function') return () => {};
+        if (typeof callback !== 'function') return () => { };
         const key = resolveKey();
         const options = optionsOf(key);
         const observer = new QueryObserver(queryClient, options);
-        const currentResult = observer.getCurrentResult();
-        callback(toState(currentResult));
-        const shouldFetch = currentResult.isStale || (currentResult.status === 'pending' && observer.getCurrentQuery()?.state.fetchStatus !== 'fetching');
-        if (shouldFetch) queryClient.fetchQuery(options).catch(() => {});
+        callback(toState(observer.getCurrentResult()));
         const unsubscribe = observer.subscribe((result) => callback(toState(result)));
         return unsubscribe;
     };

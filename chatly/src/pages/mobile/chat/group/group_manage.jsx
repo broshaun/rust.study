@@ -2,14 +2,14 @@ import { GroupEdit } from "./ui/GroupEdit";
 import { currentAppBar, createHttpClient, useDateTime } from "utils";
 import { useEffect, useCallback, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
-import { my_groups } from "cache/my_groups";
+import { group_list } from "cache/group_list";
 import { useLiveQuery } from "dexie-react-hooks";
 
 
-
+// 群管理
 export const Manage = () => {
     const { db } = useOutletContext();
-    const { id } = useParams();
+    const { id: groupId } = useParams();
 
     const dt = useDateTime();
     const navigate = useNavigate();
@@ -19,8 +19,8 @@ export const Manage = () => {
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
     const group = useLiveQuery(async () => {
-        return await db.table('groups').get(id)
-    }, [db,id],[])
+        return await db.table('groups').get(groupId)
+    }, [db,groupId],[])
 
 
     console.log('group++',group)
@@ -53,7 +53,7 @@ export const Manage = () => {
             const { code, data } = results;
             if (code !== 200) return;
             await db.table('groups').update(id, { timestamp: dt.getDateTimeStr() });
-            await my_groups.refresh()
+            await group_list.refresh()
             await navigate('/mobile/chat/group/');
         } catch (error) {
             console.error("修改失败:", error);
@@ -68,7 +68,7 @@ export const Manage = () => {
 
         if (code === 200) {
             await db.table('groups').delete(id);
-            await my_groups.refresh()
+            await group_list.refresh()
             await navigate('/mobile/chat/group/');
         };
     }
