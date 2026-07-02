@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate, Outlet, useLoaderData } from 'react-router';
 import { createHttpClient, useDateTime, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
-import { useAsyncEffect, useSet, useUpdateEffect } from "ahooks";
+import { useSet, useUpdateEffect } from "ahooks";
 import { loginCache, } from "cache/loginCache";
 import { group_list } from "cache/group_list";
 import { ObjectId } from "bson";
@@ -28,7 +28,8 @@ export function ChatGuard() {
     return () => unsubscribe;
   }, []);
 
-  // console.log('topics++', topics)
+  console.log('topics++', topics)
+  console.log('Array.from(topics)++', Array.from(topics))
 
   // 单聊离线消息
   const { http: httpMsg } = createHttpClient('/rpc/chat/msg/single2/');
@@ -81,10 +82,12 @@ export function ChatGuard() {
     }
   }
 
-  useAsyncEffect(async () => {
+  useEffect(() => {
     if (!readyData) return;
-    await after_friend_message();
-    await after_group_message();
+    if (!topics)return;
+
+    after_friend_message().catch(console.error);
+    after_group_message().catch(console.error);
 
     const channel = new Channel();
     channel.onmessage = async (msg) => {
@@ -127,7 +130,7 @@ export function ChatGuard() {
     };
 
     const { uid, did, host, token } = readyData;
-    await invoke("subscribe", {
+    invoke("subscribe", {
       clientId: `${uid}:${did}`,
       host: host,
       port: 1883,
@@ -135,8 +138,12 @@ export function ChatGuard() {
       password: token,
       topics: Array.from(topics),
       onMessage: channel,
-    })
-    return async () => await invoke("unsubscribe");
+    }).catch(console.error)
+
+
+    return () => {
+      invoke("unsubscribe").catch(console.error);
+    }
   }, [topics, readyData])
 
   useUpdateEffect(() => {

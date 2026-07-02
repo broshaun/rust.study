@@ -14,7 +14,6 @@ export function Smile() {
 
     const navigate = useNavigate();
     const sendSmile = async (text) => {
-        console.log('fas表情',text)
         await fnSendMsg({  msgType: 'text', msgText: text });
         await navigate(`/mobile/chat/message/${friendId}`);
     }

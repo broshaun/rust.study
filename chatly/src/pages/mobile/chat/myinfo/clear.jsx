@@ -9,9 +9,9 @@ export const ClearLogs = () => {
     const navigate = useNavigate();
     const clear = async (click) => {
         await clearAllImageCache();
-        if (click) {
-            await deleteUserDB(uid)
-        }
+        // if (click) {
+        //     await deleteUserDB(uid)
+        // }
         await navigate('/mobile/chat/self/')
     }
     const { open } = currentModal();
