@@ -91,8 +91,6 @@ export function Msg() {
         });
     };
 
-    console.log('getToolsConfig(friendId)',getToolsConfig(friendId))
-
     return (
         <ChatBox
             messages={msgs}

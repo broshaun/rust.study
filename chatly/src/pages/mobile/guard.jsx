@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, Outlet ,useLoaderData} from 'react-router';
+import React, { useEffect } from "react";
+import { useNavigate, Outlet, useLoaderData } from 'react-router';
 import { createHttpClient, useDateTime, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
+import { useAsyncEffect, useSet, useUpdateEffect } from "ahooks";
 import { loginCache, } from "cache/loginCache";
 import { group_list } from "cache/group_list";
+import { ObjectId } from "bson";
 
 
 
@@ -15,90 +17,80 @@ export function ChatGuard() {
   const remainSeconds = useRemainSeconds();
 
   // ++++ 订阅列表 ++++
-  const [mygroup, setMyGroup] = useState(null)
-  const [currentUser, setUser] = useState(null)
+  const currentUser = loginCache.get()
+  const [topics, { add, remove, reset }] = useSet([`chat/single/${currentUser.id}`]);
   useEffect(() => {
-    let isMounted = true;
-
-    const unsubscribe1 = loginCache.subscribe((next) => {
-      if (!isMounted) return;
-      setUser(next?.data);
-    });
-
     const unsubscribe = group_list.subscribe((next) => {
-      if (!isMounted) return;
-      setMyGroup(next?.data);
+      if (!next?.isSuccess) return;
+      reset();
+      next?.data?.forEach(item => add(`chat/group/${item?.id}`));
     });
-    return () => {
-      isMounted = false;
-      unsubscribe?.();
-      unsubscribe1?.();
-    }
+    return () => unsubscribe;
   }, []);
 
-  const topics = useMemo(() => {
-    if (!currentUser?.id || !Array.isArray(mygroup)) return [];
-    return [...mygroup.map(item => `chat/group/${item?.id}`), `chat/single/${currentUser.id}`];
-  }, [currentUser?.id, mygroup])
+  // console.log('topics++', topics)
 
-  // console.log('topics++',topics)
-
-  const { http: httpGMsg } = createHttpClient('/rpc/chat/msg/group2/');
+  // 单聊离线消息
   const { http: httpMsg } = createHttpClient('/rpc/chat/msg/single2/');
-
-  // 离线消息
-  const get_after_message = () => {
-    const after_friend_message = async () => {
-      const maxItem = await db.table('message').orderBy('id').last()
-      let last_id = maxItem?.id
-      if (!last_id) last_id = '000000000000000000000000';
-      const { code, data } = await httpMsg.requestBodyJson('get_after_messges', { last_id })
-      if (code === 200) {
-        const messages = data.map(item => ({
-          id: item.id,
-          avatar_url: item.avatar_url,
-          uid: item.user_id,
-          type: item.msg_type,
-          content: item.msg_text,
-          timestamp: item.created_at,
-          sentByMe: item.sentByMe,
-        }));
-        await db.table('message').bulkPut(messages)
-      }
+  const after_friend_message = async () => {
+    const maxItem = await db.table('message').orderBy('id').last()
+    let last_id = maxItem?.id
+    if (!last_id) {
+      const oneWeekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const timestampSec = Math.floor(oneWeekAgoMs / 1000);
+      last_id = ObjectId.createFromTime(timestampSec).toString();
     }
-
-    const after_group_message = async () => {
-      const maxItem = await db.table('message').orderBy('id').last()
-      let last_id = maxItem?.id
-      if (!last_id) last_id = '000000000000000000000000';
-      const { code, data } = await httpGMsg.requestBodyJson('get_after_messges', { last_id })
-      if (code === 200) {
-        const messages = data.map(item => ({
-          id: item.id,
-          avatar_url: item.avatar_url,
-          group_id: item.group_id,
-          nickname: item.nickname,
-          type: item.msg_type,
-          content: item.msg_text,
-          timestamp: item.created_at,
-          sentByMe: item.sentByMe,
-        }));
-        await db.table('gmsgs').bulkPut(messages)
-      }
+    const { code, data } = await httpMsg.requestBodyJson('get_after_messges', { last_id })
+    if (code === 200) {
+      const messages = data.map(item => ({
+        id: item.id,
+        avatar_url: item.avatar_url,
+        uid: item.user_id,
+        type: item.msg_type,
+        content: item.msg_text,
+        timestamp: item.created_at,
+        sentByMe: item.sentByMe,
+      }));
+      await db.table('message').bulkPut(messages)
     }
-    after_friend_message().catch(console.error)
-    after_group_message().catch(console.error)
   }
 
+  // 群聊离线消息
+  const { http: httpGMsg } = createHttpClient('/rpc/chat/msg/group2/');
+  const after_group_message = async () => {
+    const maxItem = await db.table('message').orderBy('id').last()
+    let last_id = maxItem?.id
+    if (!last_id) {
+      const oneWeekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const timestampSec = Math.floor(oneWeekAgoMs / 1000);
+      last_id = ObjectId.createFromTime(timestampSec).toString();
+    }
+    const { code, data } = await httpGMsg.requestBodyJson('get_after_messges', { last_id })
+    if (code === 200) {
+      const messages = data.map(item => ({
+        id: item.id,
+        avatar_url: item.avatar_url,
+        group_id: item.group_id,
+        nickname: item.nickname,
+        type: item.msg_type,
+        content: item.msg_text,
+        timestamp: item.created_at,
+        sentByMe: item.sentByMe,
+      }));
+      await db.table('gmsgs').bulkPut(messages)
+    }
+  }
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!readyData) return;
-    get_after_message() // 离线消息加载
+    await after_friend_message();
+    await after_group_message();
 
     const channel = new Channel();
     channel.onmessage = async (msg) => {
       console.log("MQTT消息:", msg);
       console.log('msg?.topic', msg?.topic)
+
       if (msg?.topic.startsWith("chat/single/")) {
         const { type, fromId, messageId } = JSON.parse(msg?.payload || "{}");
         const { code, data } = await httpMsg.requestBodyJson('get_message', { ids: [messageId] })
@@ -113,11 +105,8 @@ export function ChatGuard() {
           sentByMe: false,
         }));
         await db.table('message').bulkPut(messages);
-        await db.table('friends_dialog').put({
-          id: fromId,
-          timestamp: dt.getDateTimeStr(),
-          signal: "news",
-        });
+        await db.table('friends_dialog').put({ id: fromId, timestamp: dt.getDateTimeStr(), signal: "news" });
+
       } else if (msg?.topic.startsWith("chat/group/")) {
         const { type, groupId, messageId } = JSON.parse(msg?.payload || "{}");
         const { code, data } = await httpGMsg.requestBodyJson('get_message', { ids: [messageId] })
@@ -133,41 +122,27 @@ export function ChatGuard() {
           sentByMe: item.sentByMe,
         }));
         await db.table('gmsgs').bulkPut(messages);
-        await db.table('groups_dialog').put({
-          id: groupId,
-          timestamp: dt.getDateTimeStr(),
-          signal: "news",
-        });
+        await db.table('groups_dialog').put({ id: groupId, timestamp: dt.getDateTimeStr(), signal: "news" });
       }
     };
 
     const { uid, did, host, token } = readyData;
-
-    // console.log('readyData++',readyData)
-
-    invoke("subscribe", {
+    await invoke("subscribe", {
       clientId: `${uid}:${did}`,
       host: host,
       port: 1883,
       username: "jwt",
       password: token,
-      topics: topics,
+      topics: Array.from(topics),
       onMessage: channel,
-    }).catch((err) => { console.error("MQTT订阅失败:", err); });
-
-    return () => {
-      invoke("unsubscribe").catch((err) => {
-        console.error("MQTT停止失败:", err);
-      });
-    };
+    })
+    return async () => await invoke("unsubscribe");
   }, [topics, readyData])
 
-  useEffect(() => {
-    if (!remainSeconds) return;
-    if (remainSeconds > 0 && remainSeconds < 10) {
-      navigate('/user/login/', { replace: true });
-    }
+  useUpdateEffect(() => {
+    if (remainSeconds > 0 && remainSeconds < 10) navigate('/mobile/auth/user/', { replace: true });
   }, [remainSeconds])
+
 
   return <Outlet />
 }

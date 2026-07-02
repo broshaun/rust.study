@@ -23,8 +23,6 @@ export const Main = () => {
     const { db, msgFriend } = useLoaderData();
     const currentUser = loginCache.get()
     const { getDateTimeStr } = useDateTime();
-    console.log('msgFriend++',msgFriend)
-
 
     /**
      * 发送信息
