@@ -1,5 +1,5 @@
 import { P2PCallReceiver } from "./ui/P2PCallReceiver";
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation,useParams } from 'react-router';
 import { currentAppBar, currentChat } from 'utils';
 import { useEffect } from "react"
 
@@ -7,12 +7,11 @@ import { useEffect } from "react"
 
 
 export function Receiver() {
-  const current = currentChat(
-    (state) => state.current.get("friend")
-  );
+  const { id: friendId } = useParams();
+  const { fnSendMsg, msgFriend: current } = useOutletContext();
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
   useEffect(() => {
-    setLeftPath('/mobile/chat/message/')
+    setLeftPath(`/mobile/chat/message/${friendId}`)
   }, [])
 
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export function Receiver() {
   const { ticket } = location.state || {};
   // console.log('接听ticket', ticket)
   const handleStopCall = () => {
-    navigate('/mobile/chat/message/')
+    navigate(`/mobile/chat/message/${friendId}`)
   }
 
   return <div>

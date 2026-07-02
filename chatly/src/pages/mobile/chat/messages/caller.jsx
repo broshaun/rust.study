@@ -5,35 +5,28 @@ import { useEffect } from "react"
 
 
 export function Caller() {
-  const { fnSendMsg, db } = useOutletContext();
+  const { fnSendMsg, msgFriend: current } = useOutletContext();
   const { id: friendId } = useParams();
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
 
-  const current = useLiveQuery(async () => {
-    return await db.table('friends').get(friendId)
-  })
-
-  
-
   useEffect(() => {
-    setLeftPath('/mobile/chat/message/')
+    setLeftPath(`/mobile/chat/message/${friendId}`)
   }, [])
-
 
   const msgPhoneSend = async (ticket) => {
     if (ticket) {
-      await fnSendMsg({ uid: current?.uid, msgType: 'phone', msgText: ticket })
+      await fnSendMsg({ msgType: 'phone', msgText: ticket })
     }
   }
 
   const handleStartCall = (ticket) => {
-    console.log('开启通话,ticket:', ticket)
+    // console.log('开启通话,ticket:', ticket)
     msgPhoneSend(ticket)
   }
 
   const navigate = useNavigate();
   const handleStopCall = () => {
-    navigate('/mobile/chat/message/')
+    navigate(`/mobile/chat/message/${friendId}`)
   }
 
   return <div>

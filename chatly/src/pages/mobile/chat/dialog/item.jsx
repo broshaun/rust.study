@@ -22,10 +22,9 @@ export const Item = () => {
 
     const openMsgWindow = useCallback(async (select) => {
         if (!select?.id) return;
-        const displayName = select.remark ?? select.nickname ?? select.email ?? select.id;
-        currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
         await db.table("friends_dialog").update(select?.id, { signal: 'old', timestamp: dt.getDateTimeStr() })
-        await navigate('/mobile/chat/message')
+        // console.log('select?.id',select?.id)
+        await navigate(`/mobile/chat/message/${select?.id}`)
     }, [navigate, db])
 
     // 关闭聊天

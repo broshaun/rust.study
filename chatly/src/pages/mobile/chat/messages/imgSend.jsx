@@ -1,17 +1,16 @@
-import { useNavigate, useOutletContext } from 'react-router';
+import { useNavigate, useOutletContext,useParams } from 'react-router';
 import { useState, useEffect } from "react";
-import { currentChat, createHttpClient, currentAppBar } from 'utils';
+import { createHttpClient, currentAppBar } from 'utils';
 import { ImgUp } from './ui/ImageUpload';
 
 
 export function ImagSend() {
+    const { id: friendId } = useParams();
     const { fnSendMsg } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
-    const current_friend = currentChat(
-        (state) => state.current.get("friend")
-    );
+
     useEffect(() => {
-        setLeftPath('/mobile/chat/message/')
+        setLeftPath(`/mobile/chat/message/${friendId}`)
     }, [])
 
     /**
@@ -35,7 +34,7 @@ export function ImagSend() {
         try {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
-                await fnSendMsg({ uid: current_friend?.uid, msgType: 'image', msgText: imgFileName });
+                await fnSendMsg({  msgType: 'image', msgText: imgFileName });
             }
         } catch (error) {
             console.error(error);
@@ -44,9 +43,9 @@ export function ImagSend() {
 
     useEffect(() => {
         if (isUploadingStart) {
-            navigate('/mobile/chat/message/');
+            navigate(`/mobile/chat/message/${friendId}`);
         }
-    }, []);
+    }, [isUploadingStart]);
 
     return <div style={{ padding: '20px' }}>
         <ImgUp height={48} onClick={upImg} />

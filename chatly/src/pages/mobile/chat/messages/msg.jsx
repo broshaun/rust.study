@@ -1,63 +1,59 @@
-import React, { useEffect,useState } from "react";
-import { useOutletContext, useParams } from "react-router";
+import React, { useEffect, useState } from "react";
+import { useOutletContext, useParams, useLoaderData } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useWinSize, currentAppBar, useDateTime } from "utils";
 import { ChatBox } from "./ui/ChatBox";
 import { IconMoodSmile, IconPhotoUp, IconPhoneOutgoing } from '@tabler/icons-react';
+import { getUserDB } from "utils";
+import { sessionId, userId } from "utils/identity";
 
 
-
-const TOOLS_CONFIG = [
+const getToolsConfig = (friendId) => [
     {
         id: 'smile',
         icon: IconMoodSmile,
         label: '表情',
-        path: '/mobile/chat/message/smile',
+        path: `/mobile/chat/message/${friendId}/smile`,
         color: 'grape'
     },
     {
         id: 'imgUp',
         icon: IconPhotoUp,
         label: '发送图片',
-        path: '/mobile/chat/message/imgUp',
+        path: `/mobile/chat/message/${friendId}/imgUp`,
         color: 'teal'
     },
     {
         id: 'call',
         icon: IconPhoneOutgoing,
         label: '发起通话',
-        path: '/mobile/chat/message/caller',
+        path: `/mobile/chat/message/${friendId}/caller`,
         color: 'green'
     },
 ];
 
-
+export async function loaderMsg({ params }) {
+    const uid = userId.get();
+    const ssid = sessionId.get();
+    if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
+    const db = getUserDB(uid)
+    const { id: friendId } = params;
+    const current = await db.table('friends').get(friendId)
+    return { current, db, friendId }
+}
 
 export function Msg() {
-    const { fnSendMsg, db } = useOutletContext();
+    const { fnSendMsg } = useOutletContext();
+    const { current, db, friendId } = useLoaderData()
     const { winHeight } = useWinSize();
-    const { id: friendId } = useParams();
-
-    console.log('friendId++',friendId)
-
     const dt = useDateTime();
-
-    const [current,setCurrent] = useState()
-     useLiveQuery(async() => {
-        const data = await db.table('friends').get(friendId)
-        console.log('data++',data)
-        setCurrent(data)
-        // return data
-    },[db,friendId]);
-
-    console.log('current++', current)
 
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-
     useEffect(() => {
+        if (!current) return;
         setTitle(current?.remark || current?.nickname || current?.email);
         setLeftPath("/mobile/chat/dialog/");
         setRightPath(null);
@@ -77,6 +73,7 @@ export function Msg() {
 
 
     const msgs = useLiveQuery(async () => {
+        if (!current?.uid) return []
         return await db
             .table("message")
             .where("uid")
@@ -94,13 +91,12 @@ export function Msg() {
         });
     };
 
-
-    // console.log('msgs',msgs)
+    console.log('getToolsConfig(friendId)',getToolsConfig(friendId))
 
     return (
         <ChatBox
             messages={msgs}
-            tools={TOOLS_CONFIG}
+            tools={getToolsConfig(friendId)}
             height={winHeight - 55}
             onSend={msgTextSend}
         />
