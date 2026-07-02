@@ -1,7 +1,7 @@
 import { EmojiList } from "./ui/EmojiList";
-import { currentAppBar, currentChat } from 'utils';
+import { currentAppBar } from 'utils';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 
 
 export function Smile() {
