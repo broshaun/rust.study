@@ -1,44 +1,37 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Outlet, useNavigate,useLoaderData } from "react-router";
+import { Outlet, useNavigate, useLoaderData } from "react-router";
 import { useWinSize, useDateTime, currentAppBar, GlobalAppBar } from 'utils';
 import { IconLabel } from 'components';
 import { AppShell, Group, Center } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconUserCircle } from "@tabler/icons-react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useUpdateEffect } from "ahooks";
 
 
 
 export function ChatShell() {
   const navigate = useNavigate();
   const readyData = useLoaderData();
+  const db = readyData?.db;
   const isShowBack = currentAppBar((state) => state.leftPath !== null);
 
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
-  const db = readyData?.db;
 
   const [msgDot, setMsgDot] = useState(false);
-  const messageChanged = useLiveQuery(async () => {
-    if (!db) return;
-    return  db.table("message").limit(1).toArray();
-  }, [db]);
-
-  useEffect(() => {
-    if (messageChanged) {
-      setMsgDot(true);
-    }
-  }, [messageChanged]);
+  const messageCount = useLiveQuery(async() => await db.table("message").count(), [db]);
+  useUpdateEffect(() => {
+    if (!messageCount) return;
+    setMsgDot(true)
+  }, [messageCount])
 
   const [gmsgDot, setGmsgDot] = useState(false);
-  const gmsgChanged = useLiveQuery(async () => {
-    if (!db) return;
-    return db.table("groups_dialog").limit(1).toArray();
-  }, [db]);
-  useEffect(() => {
-    if (gmsgChanged) {
-      setGmsgDot(true);
-    }
-  }, [gmsgChanged]);
+  const gmsgCount = useLiveQuery(async() => await db.table("gmsgs").count(), [db]);
+  useUpdateEffect(() => {
+    if (!gmsgCount) return;
+    setGmsgDot(true)
+  }, [gmsgCount])
+
 
   const visibleItems = useMemo(() => {
     return [
@@ -48,7 +41,7 @@ export function ChatShell() {
       { key: 'self', icon: <IconLabel icon={IconUserCircle} label='我的' onClick={() => { navigate('/mobile/chat/self/'); }} /> },
       // { key: 'test', icon: <IconLabel icon={IconFlask} label='测试' onClick={() => { navigate('/mobile/chat/test/test4/'); }} /> },
     ]
-  }, [isMobile, navigate, getTimestampMs, msgDot,gmsgDot]);
+  }, [isMobile, navigate, getTimestampMs, msgDot, gmsgDot]);
 
 
   return (

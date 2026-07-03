@@ -62,12 +62,7 @@ export function Msg() {
     useEffect(() => {
         if (!db || !current?.uid) return;
         return () => {
-            db.table("friends_dialog")
-                .update(current.uid, {
-                    signal: "old",
-                    unread: 0,
-                    timestamp: dt.getDateTimeStr(),
-                }).catch(console.error);
+            db.table("friends_dialog").update(current.uid, { signal: "old", unread: 0, timestamp: dt.getDateTimeStr() }).catch(console.error);
         };
     }, [db, current?.uid]);
 

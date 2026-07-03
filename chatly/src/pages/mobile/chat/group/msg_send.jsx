@@ -36,8 +36,8 @@ export function Msg() {
     useEffect(() => {
         if (!db) return;
         return () => {
-            if (groupId) return;
-            db.table("groups_dialog").put({ id: groupId, signal: "old", unread: 0, }).catch(console.error);
+            if (!groupId) return;
+            db.table("groups_dialog").put({ id: groupId, signal: "old", unread: 0 }).catch(console.error);
         };
     }, [db, groupId]);
 

@@ -45,7 +45,6 @@ export const Item = () => {
         const unsubscribe = group_list.subscribe((state) => {
             if (!state.isSuccess) return;
             (async () => {
-                // console.log('state++',state)
                 db.table("groups").bulkPut(state.data);
             })();
         });

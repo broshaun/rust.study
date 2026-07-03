@@ -37,7 +37,8 @@ export const chatShellLoader = async () => {
     if (!uid) {
         throw new Response("Unauthorized", { status: 401 });
     }
-    return { uid };
+    const db = getUserDB(uid)
+    return { uid,db };
 }
 
 export const RsMobile = [
