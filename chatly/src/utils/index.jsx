@@ -16,4 +16,4 @@ export { currentModal, GlobalModal } from './global/currentModal';
 export { currentAwait } from './global/currentAwait';
 
 export { useDateTime } from './dateTimeUtils';
-export { getUserDB, closeUserDB, deleteUserDB } from './db/DBUser';
+export { getUserDB, closeUserDB, deleteUserDB,clearAllUserDB } from './db/DBUser';

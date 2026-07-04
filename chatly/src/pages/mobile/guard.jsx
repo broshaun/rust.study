@@ -6,6 +6,8 @@ import { useSet, useUpdateEffect, useRequest } from "ahooks";
 import { loginCache, } from "cache/loginCache";
 import { group_list } from "cache/group_list";
 import { ObjectId } from "bson";
+import { friend_await_message } from "cache/friend_await_message";
+import { group_invite_msg } from "cache/group_invite_msg";
 
 
 
@@ -77,7 +79,7 @@ export function ChatGuard() {
         const timestampSec = Math.floor(oneWeekAgoMs / 1000);
         last_id = ObjectId.createFromTime(timestampSec).toString();
       }
-      console.log('last_id++',last_id)
+      console.log('last_id++', last_id)
       const { code, message, data } = await httpGMsg.requestBodyJson('get_after_messges', { last_id })
       if (code !== 200) throw new Error(message);
       const messages = data.map(item => ({
@@ -95,18 +97,16 @@ export function ChatGuard() {
     {
       manual: false,
       onSuccess: async (messages) => {
-        console.log('获取离线消息messages', messages)
-        // await db.table('gmsgs').bulkPut(messages)
         messages.forEach(async (msg) => {
           await db.table('gmsgs').put(msg)
-          // await db.table('groups_dialog').put({ id: msg?.group_id, timestamp: dt.getDateTimeStr(), signal: "news" });
+          await db.table('groups_dialog').put({ id: msg?.group_id, timestamp: dt.getDateTimeStr(), signal: "news" });
         })
       }
     })
 
   // 获取朋友消息
   const { runAsync: getFriendMessage } = useRequest(
-    async ({ type, fromId, messageId }) => {
+    async (messageId) => {
       const { code, message, data } = await httpMsg.requestBodyJson('get_message', { ids: [messageId] })
       if (code !== 200) throw new Error(message);
       const messages = data.map(item => ({
@@ -124,7 +124,6 @@ export function ChatGuard() {
       manual: true,
       onSuccess: async (messages) => {
         messages.forEach(async (msg) => {
-          // console.log('msg++', msg)
           await db.table('message').put(msg);
           await db.table('friends_dialog').put({ id: msg.uid, timestamp: dt.getDateTimeStr(), signal: "news" });
         })
@@ -137,7 +136,7 @@ export function ChatGuard() {
 
   // 获取群消息
   const { runAsync: getGroupMessage } = useRequest(
-    async ({ type, groupId, messageId }) => {
+    async (messageId) => {
       const { code, message, data } = await httpGMsg.requestBodyJson('get_message', { ids: [messageId] })
       if (code !== 200) throw new Error(message);
       const messages = data.map(item => ({
@@ -156,7 +155,6 @@ export function ChatGuard() {
       manual: true,
       onSuccess: async (messages) => {
         messages.forEach(async (msg) => {
-          console.log('msg++', msg)
           await db.table('gmsgs').put(msg);
           await db.table('groups_dialog').put({ id: msg?.group_id, timestamp: dt.getDateTimeStr(), signal: "news" });
         })
@@ -174,12 +172,24 @@ export function ChatGuard() {
     const channel = new Channel();
     channel.onmessage = async (msg) => {
       console.log("MQTT消息:", msg);
-      console.log('msg?.topic', msg?.topic)
 
       if (msg?.topic.startsWith("chat/single/")) {
-        await getFriendMessage(JSON.parse(msg?.payload))
+        const { type, fromId, messageId } = JSON.parse(msg?.payload)
+        if (type === 'single') {
+          await getFriendMessage(messageId);
+        }
+        else if (type === 'add_friend') {
+          await friend_await_message.refresh();
+        }
+
       } else if (msg?.topic.startsWith("chat/group/")) {
-        await getGroupMessage(JSON.parse(msg?.payload))
+        const { type, groupId, messageId } = JSON.parse(msg?.payload)
+        if (type === 'group') {
+          await getGroupMessage(messageId);
+        }
+        else if (type === 'invite_members') {
+          await group_invite_msg.refresh()
+        }
       }
     };
 

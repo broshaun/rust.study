@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { useNavigate, useOutletContext } from 'react-router';
-import { createHttpClient, currentModal, tokenStore, closeUserDB } from 'utils';
+import { createHttpClient, currentModal, tokenStore, closeUserDB,clearAllUserDB } from 'utils';
 import { useEffect } from "react";
 import { queryClient } from "cache";
 
@@ -14,7 +14,8 @@ export const Logout = () => {
   const logout = async () => {
     queryClient.clear()
     tokenStore.remove()
-    closeUserDB(uid)
+    // closeUserDB(uid)
+    clearAllUserDB()
     await http.post('DELETE');
     await navigate('/mobile/auth/user', { replace: true });
   }

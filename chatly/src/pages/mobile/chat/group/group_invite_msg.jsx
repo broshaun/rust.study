@@ -3,6 +3,9 @@ import { currentAppBar, createHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";
 import { group_list } from "cache/group_list";
+import { group_invite_msg } from "cache/group_invite_msg";
+import { useUnmount } from "ahooks";
+
 
 // 邀请群消息
 export function InviteGroup() {
@@ -11,23 +14,15 @@ export function InviteGroup() {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-    const { http } = createHttpClient('/rpc/chat/group/');
-    const groupInviteMsg = async () => {
-        const results = await http.requestBodyJson('group_admin_invite_msg', {})
-        if (results?.code !== 200) {
-            throw new Error(results?.message);
-        }
-        return results.data
-    }
 
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    useEffect(() => {
-        setLoading(true);
-        groupInviteMsg()
-            .then(setData)
-            .finally(() => setLoading(false));
-    }, []);
+    const data = group_invite_msg.get();
+
+
+    useUnmount(() => {
+        (async () => {
+            await group_invite_msg.refresh()
+        })()
+    })
 
     useEffect(() => {
         setTitle('群邀请')
@@ -36,6 +31,7 @@ export function InviteGroup() {
         setRightPath('/mobile/chat/group/addg/')
     }, [])
 
+    const { http } = createHttpClient('/rpc/chat/group/');
     const updateGroupAskState = async ({ id, ask_state }) => {
         const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
         if (results?.code === 200) {
@@ -46,7 +42,7 @@ export function InviteGroup() {
     }
 
     return <div>
-        <GroupInviteMessageList data={data} loading={loading}
+        <GroupInviteMessageList data={data}
             onAccept={(value) => { updateGroupAskState({ "id": value?.id, "ask_state": "agreed" }) }}
             onReject={(value) => { updateGroupAskState({ "id": value?.id, "ask_state": "refuse" }) }}
         />

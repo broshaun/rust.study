@@ -21,6 +21,35 @@ const toState = (value) => {
         isError: value.status === 'error',
     };
 };
+const createLocalStorage = () => {
+    const prefix = 'QueryClient:';
+    const keyOf = (key) => prefix + (Array.isArray(key) ? key.join(':') : String(key));
+    return {
+        get: (key) => {
+            try {
+                const raw = localStorage.getItem(keyOf(key));
+                return raw ? JSON.parse(raw).data : null;
+            } catch {
+                return null;
+            }
+        },
+        set: (key, data) => {
+            try {
+                localStorage.setItem(keyOf(key), JSON.stringify({ data, ts: Date.now() }));
+            } catch (e) {
+                console.warn('[localStorage set failed]', e);
+            }
+        },
+        remove: (key) => {
+            try {
+                localStorage.removeItem(keyOf(key));
+            } catch (e) {
+                console.warn('[localStorage remove failed]', e);
+            }
+
+        },
+    };
+};
 
 export const queryClient = new QueryClient();
 export function createQueryCache({
@@ -29,9 +58,11 @@ export function createQueryCache({
     staleTime = 0,
     retry = 1,
     retryDelay = 1000,
+    storage = false,
 }) {
     if (!cacheKey) throw new Error('[createQueryCache] cacheKey is required');
     if (typeof queryFn !== 'function') throw new Error('[createQueryCache] queryFn must be a function');
+    const storageAdapter = storage ? createLocalStorage() : null;
 
     const resolveKey = () => {
         const k = typeof cacheKey === 'function' ? cacheKey() : cacheKey;
@@ -49,50 +80,66 @@ export function createQueryCache({
     });
 
     const get = () => {
-        return queryClient.getQueryData(resolveKey()) ?? null;
+        const key = resolveKey();
+        if (storageAdapter) {
+            const cached = storageAdapter.get(key);
+            if (cached !== null) return cached;
+        }
+        return queryClient.getQueryData(key) ?? null;
     };
 
-    const fetch = () => {
-        return queryClient.fetchQuery(optionsOf());
+    const fetch = async () => {
+        const key = resolveKey();
+        if (storageAdapter) {
+            const cached = storageAdapter.get(key);
+            if (cached) {
+                queryClient.setQueryData(key, cached);
+            }
+        }
+        return await queryClient.fetchQuery(optionsOf(key));
     };
 
     const refresh = async () => {
         const key = resolveKey();
         await queryClient.invalidateQueries({ queryKey: key });
-        return queryClient.fetchQuery(optionsOf(key));
+        const data = await queryClient.fetchQuery(optionsOf(key));
+        if (storageAdapter && data !== undefined) {
+            storageAdapter.set(key, data);
+        }
+        return data;
     };
 
     const set = (data) => {
-        return queryClient.setQueryData(resolveKey(), data);
+        const key = resolveKey();
+        if (storageAdapter) {
+            storageAdapter.set(key, data);
+        }
+        return queryClient.setQueryData(key, data);
     };
 
     const remove = () => {
-        queryClient.removeQueries({ queryKey: resolveKey(), exact: true });
+        const key = resolveKey();
+        queryClient.removeQueries({ queryKey: key, exact: true });
+        if (storageAdapter) {
+            storageAdapter.remove(key)
+        }
         return true;
     };
-
-    // 以下多了没有初始值会执行初始值fetchQuery
-    // const subscribe = (callback) => {
-    //     if (typeof callback !== 'function') return () => {};
-    //     const key = resolveKey();
-    //     const options = optionsOf(key);
-    //     const observer = new QueryObserver(queryClient, options);
-    //     const currentResult = observer.getCurrentResult();
-    //     callback(toState(currentResult));
-    //     const shouldFetch = currentResult.isStale || (currentResult.status === 'pending' && observer.getCurrentQuery()?.state.fetchStatus !== 'fetching');
-    //     if (shouldFetch) queryClient.fetchQuery(options).catch(() => {});
-    //     const unsubscribe = observer.subscribe((result) => callback(toState(result)));
-    //     return unsubscribe;
-    // };
 
     const subscribe = (callback) => {
         if (typeof callback !== 'function') return () => { };
         const key = resolveKey();
         const options = optionsOf(key);
         const observer = new QueryObserver(queryClient, options);
-        callback(toState(observer.getCurrentResult()));
-        const unsubscribe = observer.subscribe((result) => callback(toState(result)));
-        return unsubscribe;
+        const emit = (result) => {
+            const state = toState(result);
+            callback(state);
+            if (storageAdapter && state.isSuccess) {
+                storageAdapter.set(key, state.data);
+            }
+        };
+        emit(observer.getCurrentResult());
+        return observer.subscribe(emit);
     };
 
     return {

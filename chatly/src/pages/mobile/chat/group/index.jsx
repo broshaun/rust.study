@@ -14,6 +14,7 @@ import { group_list } from "cache/group_list";
 import { loginCache } from "cache/loginCache";
 import { useLoaderData } from "react-router";
 import { sessionId, userId } from "utils/identity";
+import { group_invite_msg } from "cache/group_invite_msg";
 
 
 // 
@@ -23,6 +24,7 @@ export const loaderData = async () => {
     if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
     await group_list.fetch();
     await loginCache.fetch();
+    await group_invite_msg.fetch();
     return { uid, ssid };
 }
 

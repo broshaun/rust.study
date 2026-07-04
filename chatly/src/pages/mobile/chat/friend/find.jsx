@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendSearch } from "./ui/FriendSearch";
-import { IconUserExclamation } from "@tabler/icons-react";
+import { IconUserPlus } from "@tabler/icons-react";
 import { friend_list } from "cache/friend_list";
 
 
@@ -17,8 +17,8 @@ export const Find = () => {
     useEffect(() => {
         setLeftPath("/mobile/chat/friend/");
         setTitle("好友查找");
-        setRightIcon(<IconUserExclamation />);
-        setRightPath('/mobile/chat/friend/await/');
+        setRightIcon(null)
+        setRightPath(null)
     }, []);
 
 
@@ -53,7 +53,7 @@ export const Find = () => {
 
     const handleAddFriend = async (userId) => {
         if (!userId) return null;
-        await http.requestBodyJson("PUT", { user_id:userId });
+        await http.requestBodyJson("PUT", { user_id: userId });
         await friend_list.refresh()
     };
 

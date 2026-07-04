@@ -1,10 +1,12 @@
 import React, { useEffect, useCallback, useState } from "react";
 import { useNavigate, useOutletContext } from 'react-router';
-import { currentAppBar, currentChat, useDateTime } from "utils";
-import { IconUserPlus } from "@tabler/icons-react";
+import { currentAppBar, useDateTime } from "utils";
+import { IconUserExclamation,IconUser } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { friend_list } from "cache/friend_list";
+import { friend_await_message } from "cache/friend_await_message";
+
 
 
 export const Item = () => {
@@ -15,41 +17,51 @@ export const Item = () => {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
+
+    const [RIcon, setRIcon] = useState(<IconUser/>);
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');
-        setRightIcon(<IconUserPlus />)
-        setRightPath('/mobile/chat/friend/find/')
-    }, [])
+        setRightIcon(RIcon);
+        setRightPath('/mobile/chat/friend/await/');
+    }, [RIcon])
 
     const navigate = useNavigate();
     const [isPending, setIsPending] = useState(false);
-    const [friendList, setFriendList] = useState([])
+
     useEffect(() => {
-        let isMounted = true;
-        friend_list.fetch().catch(() => { });
         const unsubscribe = friend_list.subscribe((next) => {
-            if (!isMounted) return;
             setIsPending(!!next?.isPending);
             if (!next?.isSuccess) return;
-            setFriendList(next.data);
+            db.table("friends").bulkPut(next.data).catch(console.error);
+
         });
         return () => {
-            isMounted = false;
             unsubscribe?.();
         }
+
     }, []);
+
+    
+    useEffect(() => {
+        const unsubscribe = friend_await_message.subscribe((state) => {
+            if (!state.isSuccess) return;
+            if (state.data.length > 0) {
+                setRIcon(<IconUserExclamation color="red"/>)
+            } else {
+                setRIcon(<IconUser/>)
+            }
+        })
+        return () => unsubscribe;
+    }, [])
+
 
     const openMsgWindow = useCallback(async (select) => {
         const displayName = select.remark ?? select.nickname ?? select.email;
-        // currentChat.getState().set('friend', { id: select?.id, uid: select?.uid, displayName: displayName, avatar_url: select?.avatar_url })
         await db.table("friends_dialog").put({ id: select?.uid, displayName: displayName, timestamp: dt.getDateTimeStr() });
         await navigate(`/mobile/chat/friend/detail/${select?.id}`);
     }, [navigate, db]);
 
-    useEffect(() => {
-        db.table("friends").bulkPut(friendList).catch(console.error);
-    }, [friendList]);
 
 
     const finalFriends = useLiveQuery(async () => {

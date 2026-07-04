@@ -5,22 +5,20 @@ const dbCache = new Map();
 export const getUserDB = (userId) => {
   if (!userId) return null;
 
-  // 1. 如果缓存里有，先拿出来检查
+  const dbName = String(userId);
+
+  // 1. 检查缓存及实例可用性
   if (dbCache.has(userId)) {
     const cachedDb = dbCache.get(userId);
-    
-    // 🔥【核心加固】：如果这个实例曾经被别的地方 .close() 了，或者还没打开就死锁了
-    // 我们必须把它从缓存中抹去，重新 new 一个，否则后续所有的读写都会报 DatabaseClosedError
-    if (cachedDb && !cachedDb.isOpen() && cachedDb.hasBeenClosed?.()) {
-      console.warn(`[Dexie] 检测到用户 ${userId} 的数据库已被物理关闭，正在从缓存中移除并准备重建...`);
+    if (cachedDb && !cachedDb.isOpen() && cachedDb._closed) {
+      console.warn(`[Dexie] 数据库 ${dbName} 已关闭，正在重建...`);
       dbCache.delete(userId);
     } else {
       return cachedDb;
     }
   }
 
-  // 2. 创建全新的独立隔离数据库
-  const dbName = `chatDB_${userId}`;
+  // 2. 创建干净、无前缀的独立数据库
   const db = new Dexie(dbName);
   
   db.version(18).stores({
@@ -32,9 +30,8 @@ export const getUserDB = (userId) => {
     gmsgs: 'id, group_id, timestamp',
   });
 
-  // 🔥【体验优化】：显式调用 open() 并捕获初次连接错误
   db.open().catch((err) => {
-    console.error(`[Dexie] 数据库 ${dbName} 异步打开失败:`, err);
+    console.error(`[Dexie] 数据库 ${dbName} 打开失败:`, err);
   });
 
   dbCache.set(userId, db);
@@ -44,21 +41,33 @@ export const getUserDB = (userId) => {
 export const closeUserDB = (userId) => {
   const db = dbCache.get(userId);
   if (db) {
-    try {
-      db.close();
-    } catch {}
+    try { db.close(); } catch {}
     dbCache.delete(userId);
-    console.log(`[Dexie] 已成功关闭并注销用户 ${userId} 的本地数据库`);
+    console.log(`[Dexie] 已关闭并注销数据库: ${userId}`);
   }
 };
 
 export const deleteUserDB = async (userId) => {
-  const dbName = `chatDB_${userId}`;
-  closeUserDB(userId); // 复用上面的清理逻辑
+  if (!userId) return;
+  closeUserDB(userId); 
   try {
-    await Dexie.delete(dbName);
-    console.log(`[Dexie] 已成功物理物理删除用户 ${userId} 的本地数据库文件`);
+    await Dexie.delete(String(userId));
+    console.log(`[Dexie] 已成功物理删除数据库: ${userId}`);
   } catch (err) {
-    console.error(`[Dexie] 删除用户 ${userId} 数据库文件失败:`, err);
+    console.error(`[Dexie] 删除数据库 ${userId} 失败:`, err);
+  }
+};
+
+export const clearAllUserDB = async () => {
+  for (const [userId, db] of dbCache.entries()) {
+    try { db.close(); } catch {}
+  }
+  dbCache.clear();
+  try {
+    const dbNames = await Dexie.getDatabaseNames();
+    await Promise.all(dbNames.map(name => Dexie.delete(name)));
+    console.log('[Dexie] 已成功清空本域名下的所有本地数据库');
+  } catch (err) {
+    console.error('[Dexie] 清空所有数据库失败:', err);
   }
 };

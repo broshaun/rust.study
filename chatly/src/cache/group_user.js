@@ -1,6 +1,6 @@
 import { createHttpClient } from 'utils';
 import { createQueryCache } from './helper/createQueryCache2';
-import { sessionId } from 'utils/identity';
+import { userId } from 'utils/identity';
 import { useParams } from 'react-router';
 
 
@@ -23,7 +23,8 @@ const queryFn = async () => {
 }
 
 export const agroup_user = createQueryCache({
-    cacheKey: () => [sessionId.get(),'group_user_list'],
-    queryFn: queryFn,
+    scope: () => userId.get(),
+    cacheKey: () => 'group_user_list',
+    queryFn: () => queryFn(),
     staleTime: 1 * 60 * 60 * 1000,
 });

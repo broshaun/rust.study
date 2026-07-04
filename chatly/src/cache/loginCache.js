@@ -1,9 +1,10 @@
 import { createHttpClient } from 'utils';
 import { createQueryCache } from './helper/createQueryCache2';
-import { sessionId } from 'utils/identity';
+import { userId } from 'utils/identity';
 
 
 async function loginFn() {
+    console.log('执行成功')
     const { http } = createHttpClient('/rpc/chat/login/');
     const res = await http.requestBodyJson('info', {});
     if (!res) throw new Error('获取失败');
@@ -12,15 +13,11 @@ async function loginFn() {
 }
 
 export const loginCache = createQueryCache({
-    cacheKey: () => [sessionId.get(), 'login-info'],
-    queryFn: loginFn,
+    scope: () => userId.get(),
+    cacheKey: 'login-info',
+    queryFn: () => loginFn(),
     staleTime: 12 * 60 * 60 * 1000,
+    // storage: true
 });
 
 
-// export const loginCache = createQueryCache({
-//     cacheKey: () => [sessionId.get(), 'login-info'],
-//     queryFn: loginFn,
-//     storage: true
-
-// });

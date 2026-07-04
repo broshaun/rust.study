@@ -1,11 +1,13 @@
 import { currentAppBar, useDateTime } from "utils";
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router";
-import { IconUserShare } from "@tabler/icons-react";
+import { IconUsers,IconMessageUser } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { group_list } from "cache/group_list";
 import { loginCache } from "cache/loginCache";
+import { group_invite_msg } from "cache/group_invite_msg";
+
 
 
 // 群聊列表
@@ -19,12 +21,28 @@ export const Item = () => {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
+    const [RIcon, setRIcon] = useState(<IconUsers/>);
     useEffect(() => {
         setTitle('群聊')
         setLeftPath(null)
-        setRightIcon(<IconUserShare />)
+        setRightIcon(RIcon)
         setRightPath('/mobile/chat/group/ingmsg/')
+    }, [RIcon])
+
+
+
+    useEffect(() => {
+        const unsubscribe = group_invite_msg.subscribe((state) => {
+            if (!state.isSuccess) return;
+            if (state.data.length > 0) {
+                setRIcon(<IconMessageUser color="red" />)
+            } else {
+                setRIcon(<IconUsers />)
+            }
+        })
+        return () => unsubscribe;
     }, [])
+
 
     const navigate = useNavigate();
     // 打开群聊
