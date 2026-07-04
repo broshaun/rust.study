@@ -82,7 +82,7 @@ export function ChatGuard() {
         const timestampSec = Math.floor(oneWeekAgoMs / 1000);
         last_id = ObjectId.createFromTime(timestampSec).toString();
       }
-      console.log('last_id++', last_id)
+
       const { code, message, data } = await httpGMsg.requestBodyJson('get_after_messges', { last_id })
       if (code !== 200) throw new Error(message);
       const messages = data.map(item => ({

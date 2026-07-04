@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState } from "react";
 import { useNavigate, useOutletContext } from 'react-router';
 import { currentAppBar, useDateTime } from "utils";
-import { IconUserExclamation,IconUser } from "@tabler/icons-react";
+import { IconUserExclamation, IconUser } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { friend_list } from "cache/friend_list";
@@ -18,7 +18,7 @@ export const Item = () => {
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
 
-    const [RIcon, setRIcon] = useState(<IconUser/>);
+    const [RIcon, setRIcon] = useState(<IconUser />);
     useEffect(() => {
         setLeftPath(null)
         setTitle('好友列表');
@@ -42,14 +42,18 @@ export const Item = () => {
 
     }, []);
 
-    
+
     useEffect(() => {
         const unsubscribe = friend_await_message.subscribe((state) => {
             if (!state.isSuccess) return;
             if (state.data.length > 0) {
-                setRIcon(<IconUserExclamation color="red"/>)
+                setRIcon(
+                    <IconUserExclamation color="red"
+                            
+                    />
+                )
             } else {
-                setRIcon(<IconUser/>)
+                setRIcon(<IconUser />)
             }
         })
         return () => unsubscribe;

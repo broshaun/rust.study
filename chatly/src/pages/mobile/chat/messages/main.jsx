@@ -29,7 +29,6 @@ export const Main = () => {
     const { http } = createHttpClient('/rpc/chat/msg/single2/');
     const fnSendMsg = async ({ msgType, msgText }) => {
 
-
         try {
             const results = await http.requestBodyJson('send', {
                 user_id: msgFriend.uid,
@@ -37,7 +36,7 @@ export const Main = () => {
                 msg_text: msgText
             });
             if (!results) return;
-            console.log('results++',results)
+            // console.log('results++',results)
             if (results?.code === 200) {
                 await db.table('message').put({
                     id: new ObjectId().toString(),
