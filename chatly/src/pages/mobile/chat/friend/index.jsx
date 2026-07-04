@@ -3,7 +3,7 @@ import { Item } from "./item";
 import { Detail } from "./detail";
 import { Find } from "./find";
 import { FriendRequests } from "./await";
-import { sessionId, userId } from "utils/identity";
+import { userId } from "utils/identity";
 import { getUserDB } from "utils";
 import { friend_list } from "cache/friend_list";
 
@@ -11,10 +11,8 @@ import { friend_list } from "cache/friend_list";
 
 export const loaderData = async () => {
     const uid = userId.get();
-    const ssid = sessionId.get();
-    if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
     await friend_list.fetch()
-    return { uid, ssid };
+    return { uid };
 }
 
 export const Friend = () => {

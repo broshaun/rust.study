@@ -4,7 +4,7 @@ import { tokenStore } from "utils";
 import { createHttpClient, currentModal, useDateTime } from 'utils';
 import { useLocalStorage } from "@mantine/hooks";
 import { LoginUI } from "./ui/LoginUI";
-import { userId, sessionId } from "utils/identity";
+import { userId } from "utils/identity";
 import { useAccountStorage } from "./hook/useAccountStorage";
 import { useRequest } from "ahooks";
 import { LoadingOverlay } from "@mantine/core";
@@ -37,7 +37,6 @@ export function Login() {
         manual: true,
         onSuccess: async (data) => {
             userId.set(account)
-            sessionId.new()
             tokenStore.set({ "token": data?.login_token, "login_expired": data?.login_expired })
             setUser({ account, user: { ...data?.user, timestamp: dt.getDateTimeStr() } })
             navigate("/mobile/chat/");

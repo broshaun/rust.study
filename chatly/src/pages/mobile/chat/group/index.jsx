@@ -13,23 +13,21 @@ import { createHttpClient, GlobalModal, getUserDB } from 'utils';
 import { group_list } from "cache/group_list";
 import { loginCache } from "cache/loginCache";
 import { useLoaderData } from "react-router";
-import { sessionId, userId } from "utils/identity";
+import { userId } from "utils/identity";
 import { group_invite_msg } from "cache/group_invite_msg";
 
 
 // 
 export const loaderData = async () => {
     const uid = userId.get();
-    const ssid = sessionId.get();
-    if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
     await group_list.fetch();
     await loginCache.fetch();
     await group_invite_msg.fetch();
-    return { uid, ssid };
+    return { uid };
 }
 
 const Group = () => {
-    const { uid, ssid } = useLoaderData();
+    const { uid } = useLoaderData();
     const db = getUserDB(uid);
     const { http } = createHttpClient('/rpc/chat/msg/group2/');
     const msgSend = async ({ group_id, msgType, msgText }) => {

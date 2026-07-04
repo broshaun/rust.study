@@ -5,7 +5,7 @@ import { useWinSize, currentAppBar, useDateTime } from "utils";
 import { ChatBox } from "./ui/ChatBox";
 import { IconMoodSmile, IconPhotoUp, IconPhoneOutgoing } from '@tabler/icons-react';
 import { getUserDB } from "utils";
-import { sessionId, userId } from "utils/identity";
+import { userId } from "utils/identity";
 
 
 const getToolsConfig = (friendId) => [
@@ -34,8 +34,6 @@ const getToolsConfig = (friendId) => [
 
 export async function loaderMsg({ params }) {
     const uid = userId.get();
-    const ssid = sessionId.get();
-    if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
     const db = getUserDB(uid)
     const { id: friendId } = params;
     const current = await db.table('friends').get(friendId)

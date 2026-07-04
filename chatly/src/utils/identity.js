@@ -12,17 +12,6 @@ export const userId = {
     },
 };
 
-export const Tenant = {
-    get() {
-        let id = localStorage.getItem('tenant');
-        if (!id) throw new Error("[identity] tenantId missing");
-        return id;
-    },
-    set(id) {
-        if (id) localStorage.setItem('tenant', id);
-    },
-};
-
 export const sessionId = {
     get() {
         let sid = sessionStorage.getItem('sessionId')

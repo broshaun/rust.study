@@ -8,7 +8,6 @@ import { userId } from 'utils/identity';
 export const loaderData = async ({params}) => {
     const { id: friendId } = params;
     const uid = userId.get();
-    if (!uid) throw new Response("Unauthorized", { status: 401 });
     await loginCache.fetch();
     const db = getUserDB(uid);
     const msgFriend = await db.table('friends').get(friendId)

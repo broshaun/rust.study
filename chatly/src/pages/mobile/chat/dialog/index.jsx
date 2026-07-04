@@ -1,6 +1,6 @@
 import { Outlet, useLoaderData } from "react-router";
 import { Item } from "./item";
-import { userId, sessionId } from "utils/identity";
+import { userId } from "utils/identity";
 import { getUserDB } from "utils";
 
 
@@ -8,9 +8,7 @@ import { getUserDB } from "utils";
 
 export const loaderData = async () => {
     const uid = userId.get();
-    const ssid = sessionId.get();
-    if (!uid && !ssid) throw new Response("Unauthorized", { status: 401 });
-    return { uid, ssid };
+    return { uid };
 }
 
 export const Dialog = () => {
