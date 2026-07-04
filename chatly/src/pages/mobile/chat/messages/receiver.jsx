@@ -1,6 +1,6 @@
 import { P2PCallReceiver } from "./ui/P2PCallReceiver";
 import { useNavigate, useLocation,useParams } from 'react-router';
-import { currentAppBar, currentChat } from 'utils';
+import { currentAppBar } from 'utils';
 import { useEffect } from "react"
 
 

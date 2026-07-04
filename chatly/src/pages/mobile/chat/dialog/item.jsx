@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback } from "react";
 import { useNavigate, useOutletContext } from 'react-router';
-import { currentChat, currentAppBar, useDateTime } from 'utils';
+import {  currentAppBar, useDateTime } from 'utils';
 import { DialogList } from "./ui/DialogList";
 import { useLiveQuery } from "dexie-react-hooks";
 
