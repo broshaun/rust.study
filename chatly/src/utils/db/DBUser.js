@@ -22,6 +22,7 @@ export const getUserDB = (userId) => {
   const db = new Dexie(dbName);
   
   db.version(18).stores({
+    cache: 'id, timestamp',
     message: 'id, uid, timestamp',
     friends: 'id, uid, updated_at, *ask_state',
     friends_dialog: 'id, timestamp, signal',
