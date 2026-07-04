@@ -37,6 +37,7 @@ export const Main = () => {
                 msg_text: msgText
             });
             if (!results) return;
+            console.log('results++',results)
             if (results?.code === 200) {
                 await db.table('message').put({
                     id: new ObjectId().toString(),

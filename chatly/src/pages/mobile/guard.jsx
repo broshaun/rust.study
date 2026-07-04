@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useMemo } from "react";
 import { useNavigate, Outlet, useLoaderData } from 'react-router';
 import { createHttpClient, useDateTime, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
@@ -20,7 +20,10 @@ export function ChatGuard() {
 
   // ++++ 订阅列表 ++++
   const currentUser = loginCache.get()
-  const [topics, { add, remove, reset }] = useSet([`chat/single/${currentUser?.id}`]);
+  const initialTopics = useMemo(() => {
+    return currentUser?.id ? [`chat/single/${currentUser.id}`] : [];
+  }, [currentUser?.id]);
+  const [topics, { add, remove, reset }] = useSet(initialTopics);
   useEffect(() => {
     const unsubscribe = group_list.subscribe((next) => {
       if (!next?.isSuccess) return;
@@ -30,7 +33,7 @@ export function ChatGuard() {
     return () => unsubscribe;
   }, []);
 
-  // console.log('topics++', topics)
+
   // console.log('Array.from(topics)++', Array.from(topics))
 
   // 单聊离线消息
