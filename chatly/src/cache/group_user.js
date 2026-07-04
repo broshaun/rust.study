@@ -1,5 +1,5 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './helper/createQueryCache2';
+import { createQueryCache } from './helper/createQueryCache';
 import { userId } from 'utils/identity';
 import { useParams } from 'react-router';
 

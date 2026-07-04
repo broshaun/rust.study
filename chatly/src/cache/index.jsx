@@ -1,1 +1,1 @@
-export { createQueryCache, queryClient } from './helper/createQueryCache2'
+export { createQueryCache, queryClient } from './helper/createQueryCache'
