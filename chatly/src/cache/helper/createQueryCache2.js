@@ -22,7 +22,6 @@ const toState = (value) => {
 
 // 缓存 localforage 数据库实例
 const dbInstances = new Map();
-
 const createLocalForageStorage = (getActiveScope, cacheKey) => {
   const getDb = () => {
     const dbName = String(getActiveScope() || 'QueryClientDefaultDB');
@@ -80,12 +79,7 @@ export function createQueryCache({
 
   const getAsync = async () => {
     if (!storageAdapter) return get();
-    const key = resolveKey();
-    const memoryData = queryClient.getQueryData(key);
-    if (memoryData !== undefined && memoryData !== null) return memoryData;
-    const cached = await storageAdapter.get();
-    if (cached !== null) queryClient.setQueryData(key, cached);
-    return cached;
+    return await storageAdapter.get();
   };
 
   const fetch = async () => {
@@ -125,10 +119,9 @@ export function createQueryCache({
     if (typeof callback !== 'function') return () => { };
     const key = resolveKey();
     const observer = new QueryObserver(queryClient, optionsOf(key));
-    const emit = async (result) => {
+    const emit = (result) => {
       const state = toState(result);
       callback(state);
-      if (storageAdapter && state.isSuccess) await storageAdapter.set(state.data);
     };
     emit(observer.getCurrentResult());
     return observer.subscribe(emit);
