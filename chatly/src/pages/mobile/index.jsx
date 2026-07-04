@@ -13,7 +13,7 @@ import { userId, deviceId } from "utils/identity"
 import { apiMqtt } from "utils/store/apiBase";
 import { tokenStore, getUserDB } from "utils";
 import { group_list } from "cache/group_list";
-import { loginCache } from "cache/loginCache";
+import { loginCache,loginCache2 } from "cache/loginCache";
 
 
 
@@ -27,6 +27,8 @@ export const chatGuardLoader = async () => {
     }
     await group_list.fetch();
     await loginCache.fetch();
+    await loginCache2.fetch();
+    
     const db = getUserDB(uid)
     return { uid, did, host, token, db };
 };

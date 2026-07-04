@@ -1,11 +1,12 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './helper/createQueryCache';
+import { createStorageCache, createQueryCache } from './helper';
 import { userId } from 'utils/identity';
-
+import { getUserDB } from 'utils';
 
 
 async function loginFn() {
     console.log('执行成功')
+    const db = getUserDB(userId.get())
 
 
     const { http } = createHttpClient('/rpc/chat/login/');
@@ -19,7 +20,18 @@ export const loginCache = createQueryCache({
     scope: () => userId.get(),
     cacheKey: 'login-info',
     queryFn: () => loginFn(),
-    staleTime: 12 * 60 * 60 * 1000,
+    staleTime: Infinity,
+
 });
 
+
+
+
+
+export const loginCache2 = createStorageCache({
+    scope: () => userId.get(),
+    cacheKey: 'login-info2',
+    queryFn: () => loginFn(),
+    stored: () => getUserDB(userId.get()).cache // Dexie db.version(18).stores({ cache: 'id, timestamp',
+});
 
