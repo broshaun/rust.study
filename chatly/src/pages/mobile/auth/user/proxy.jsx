@@ -73,12 +73,17 @@ export const Proxy = () => {
     }
 
 
-    const handleSave = (newApi, newImg) => {
+    const handleSave = (newApi, newImg, newMqtt) => {
+        console.log('newMqtt++', newMqtt)
         apiBase.set(newApi);
         apiImgs.set(newImg);
+        apiMqtt.set(newMqtt)
         setApi(newApi);
         setImg(newImg);
-        console.log('新配置：', newApi, newImg);
+        setImg(newMqtt)
+        console.log('新配置newApi', newApi);
+        console.log('新配置newImg', newImg);
+        console.log('新配置newMqtt', newMqtt);
     };
 
     return <div>
@@ -88,7 +93,7 @@ export const Proxy = () => {
             mqttBase={mqtt}
             onPingApi={handlePing}
             onPingImg={handlePingImgs}
-            onPingMqtt={()=>{}}
+            onPingMqtt={() => { }}
             onSave={handleSave}
         />
     </div>
