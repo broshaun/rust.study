@@ -46,7 +46,8 @@ export const Item = () => {
     useEffect(() => {
         const unsubscribe = friend_await_message.subscribe((state) => {
             if (!state.isSuccess) return;
-            if (state.data.length > 0) {
+            const isInvite = state.data.some(({ ask_state = [] }) => (ask_state?.includes("await") && !ask_state?.includes("agree")))
+            if (isInvite) {
                 setRIcon(<IconUserExclamation color="red" />)
             } else {
                 setRIcon(<IconUser />)

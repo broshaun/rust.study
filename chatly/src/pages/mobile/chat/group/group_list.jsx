@@ -1,7 +1,7 @@
 import { currentAppBar, useDateTime } from "utils";
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router";
-import { IconUsers,IconMessageUser } from "@tabler/icons-react";
+import { IconUsers, IconMessageUser } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { group_list } from "cache/group_list";
@@ -21,7 +21,7 @@ export const Item = () => {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-    const [RIcon, setRIcon] = useState(<IconUsers/>);
+    const [RIcon, setRIcon] = useState(<IconUsers />);
     useEffect(() => {
         setTitle('群聊')
         setLeftPath(null)
@@ -34,7 +34,8 @@ export const Item = () => {
     useEffect(() => {
         const unsubscribe = group_invite_msg.subscribe((state) => {
             if (!state.isSuccess) return;
-            if (state.data.length > 0) {
+            const isInvite = state.data.some(({ ask_state = [] }) => (ask_state?.includes("invite") && !ask_state?.includes("agreed")))
+            if (isInvite) {
                 setRIcon(<IconMessageUser color="red" />)
             } else {
                 setRIcon(<IconUsers />)
