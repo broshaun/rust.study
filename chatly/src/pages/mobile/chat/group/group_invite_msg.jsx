@@ -40,7 +40,7 @@ export function InviteGroup() {
         }
         return []
     }
-
+    console.log('data++',data)
     return <div>
         <GroupInviteMessageList data={data}
             onAccept={(value) => { updateGroupAskState({ "id": value?.id, "ask_state": "agreed" }) }}

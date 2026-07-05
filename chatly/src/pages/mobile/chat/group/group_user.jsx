@@ -28,7 +28,7 @@ export const GroupUsers = () => {
     const [members, setMembers] = useState([])
     const get_group_user = async (groupId) => {
         const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
-        if (!results) throw new Error("获取失败");
+        console.log('results++',results)
         const { code, data, message } = results;
         if (code !== 200) throw new Error(message);
         const guser = data.map((item) => ({
