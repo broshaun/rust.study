@@ -47,11 +47,7 @@ export const Item = () => {
         const unsubscribe = friend_await_message.subscribe((state) => {
             if (!state.isSuccess) return;
             if (state.data.length > 0) {
-                setRIcon(
-                    <IconUserExclamation color="red"
-                            
-                    />
-                )
+                setRIcon(<IconUserExclamation color="red" />)
             } else {
                 setRIcon(<IconUser />)
             }
