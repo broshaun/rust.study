@@ -1,14 +1,12 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import {
   Stack,
-  Card,
   Group,
   Text,
   Button,
   Box,
   Center,
   Loader,
-  Badge,
 } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { SafeAvatar } from "components";
@@ -18,124 +16,141 @@ const STATE = {
   REFUSE: "refuse",
   DELETE: "delete",
   AGREE: "agree",
+  LEAVE: "leave",
 };
 
 const STATUS_MAP = {
-  [STATE.AGREE]: {
-    label: "已通过",
-    desc: "已通过好友请求",
-    color: "green",
-    disabled: true,
-  },
-  [STATE.REFUSE]: {
-    label: "已拒绝",
-    desc: "已拒绝好友请求",
-    color: "gray",
-    disabled: false,
-  },
-  [STATE.DELETE]: {
-    label: "已删除",
-    desc: "该好友已删除",
-    color: "red",
-    disabled: false,
-  },
-  [STATE.AWAIT]: {
-    label: "待通过",
-    desc: "请求添加你为好友",
-    color: "blue",
-    disabled: false,
-  },
+  [STATE.AWAIT]: { label: "待通过", color: "blue" },
+  [STATE.AGREE]: { label: "已通过", color: "green" },
+  [STATE.REFUSE]: { label: "已拒绝", color: "gray" },
+  [STATE.DELETE]: { label: "已删除", color: "red" },
+  [STATE.LEAVE]: { label: "已离开", color: "orange" },
 };
 
-const DEFAULT_STATUS = {
-  label: "未知状态",
-  desc: "暂无状态信息",
-  color: "gray",
-  disabled: true,
-};
+const VALID_STATES = Object.values(STATE);
 
-function getRequestStatus(user) {
-  const states = user.ask_state ?? [];
+function resolveStatus(states) {
+  if (!Array.isArray(states)) return STATE.AWAIT;
 
-  if (states.includes(STATE.AGREE)) return STATUS_MAP[STATE.AGREE];
-  if (states.includes(STATE.REFUSE)) return STATUS_MAP[STATE.REFUSE];
-  if (states.includes(STATE.DELETE)) return STATUS_MAP[STATE.DELETE];
-  if (states.includes(STATE.AWAIT)) return STATUS_MAP[STATE.AWAIT];
+  for (let i = states.length - 1; i >= 0; i--) {
+    if (VALID_STATES.includes(states[i])) return states[i];
+  }
 
-  return DEFAULT_STATUS;
+  return STATE.AWAIT;
 }
 
-const FriendRequestCard = memo(
-  function FriendRequestCard({ version, user, onAcceptFriend, onRejectFriend }) {
+function StatusRibbon({ status }) {
+  return (
+    <Box
+      style={{
+        position: "absolute",
+        top: 8,
+        right: -30,
+        width: 100,
+        height: 22,
+        lineHeight: "22px",
+        textAlign: "center",
+        fontSize: 10,
+        fontWeight: 600,
+        color: "white",
+        backgroundColor: `var(--mantine-color-${status.color}-6)`,
+        transform: "rotate(45deg)",
+        transformOrigin: "center",
+        pointerEvents: "none",
+        zIndex: 1,
+      }}
+    >
+      {status.label}
+    </Box>
+  );
+}
+
+const FriendRequestItem = memo(
+  function FriendRequestItem({ user, onAcceptFriend, onRejectFriend }) {
+    const serverStatus = useMemo(
+      () => resolveStatus(user?.ask_state),
+      [user?.ask_state]
+    );
+
+    const [localStatus, setLocalStatus] = useState(serverStatus);
     const [loadingAction, setLoadingAction] = useState(null);
 
     useEffect(() => {
+      setLocalStatus(serverStatus);
       setLoadingAction(null);
-    }, [version]);
+    }, [serverStatus, user?.updated_at]);
 
     if (!user) return null;
 
-    const status = getRequestStatus(user);
-    const name = user.nickname || user.email || "未知用户";
+    const status = STATUS_MAP[localStatus] || STATUS_MAP[STATE.AWAIT];
+    const isPending = localStatus === STATE.AWAIT;
+    const isLocked = !isPending || Boolean(loadingAction);
 
-    const handleAccept = async () => {
-      if (status.disabled || loadingAction) return;
+    const handleAction = async (action) => {
+      if (isLocked) return;
 
-      try {
-        setLoadingAction(STATE.AGREE);
-        await onAcceptFriend?.(user);
-      } finally {
-        setLoadingAction(null);
-      }
-    };
-
-    const handleReject = async () => {
-      if (status.disabled || loadingAction) return;
+      const previousStatus = localStatus;
+      const handler = action === STATE.AGREE ? onAcceptFriend : onRejectFriend;
 
       try {
-        setLoadingAction(STATE.REFUSE);
-        await onRejectFriend?.(user);
+        setLoadingAction(action);
+        setLocalStatus(action); // 关键：点击后立即变成最终状态，按钮消失，不可再操作
+        await handler?.(user);
+      } catch (error) {
+        setLocalStatus(previousStatus); // 失败回滚
       } finally {
         setLoadingAction(null);
       }
     };
 
     return (
-      <Card withBorder radius="lg" p="sm">
-        <Group align="center" wrap="nowrap">
-          <SafeAvatar size={48} stretch url={user.avatar_url} />
+      <Box
+        py="sm"
+        px="sm"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          backgroundColor: isPending ? "white" : "var(--mantine-color-gray-0)",
+          borderBottom: "1px solid var(--mantine-color-gray-2)",
+          opacity: isPending ? 1 : 0.72,
+        }}
+      >
+        <StatusRibbon status={status} />
+
+        <Group align="flex-start" wrap="nowrap" gap="sm" pr={34}>
+          <SafeAvatar size={46} stretch url={user.avatar_url} />
 
           <Box flex={1} style={{ minWidth: 0 }}>
-            <Group gap={6} wrap="nowrap">
-              <Text fw={600} size="sm" truncate>
-                {name}
-              </Text>
-
-              <Badge size="xs" variant="light" color={status.color}>
-                {status.label}
-              </Badge>
-            </Group>
-
-            <Text size="xs" c="dimmed" truncate>
-              {user.email || "-"}
+            <Text size="10px" c="gray.5" lh={1.2}>
+              {user.updated_at || ""}
             </Text>
 
-            <Text size="xs" c="dimmed" mt={3}>
-              {status.desc}
+            <Text fw={600} size="sm" truncate mt={4}>
+              {user.nickname || "未知用户"}
+            </Text>
+
+            <Text size="xs" c="dimmed" truncate mt={4}>
+              {user.email || "-"}
             </Text>
           </Box>
         </Group>
 
-        {!status.disabled && (
-          <Group grow mt="sm" gap="xs">
+        {isPending && (
+          <Group justify="flex-end" mt="xs" gap="xs">
             <Button
               size="xs"
               radius="xl"
               variant="light"
               color="gray"
               loading={loadingAction === STATE.REFUSE}
-              disabled={Boolean(loadingAction)}
-              onClick={handleReject}
+              disabled={isLocked}
+              onClick={() => handleAction(STATE.REFUSE)}
+              styles={{
+                root: {
+                  height: 28,
+                  padding: "0 14px",
+                },
+              }}
             >
               拒绝
             </Button>
@@ -144,18 +159,25 @@ const FriendRequestCard = memo(
               size="xs"
               radius="xl"
               loading={loadingAction === STATE.AGREE}
-              disabled={Boolean(loadingAction)}
-              onClick={handleAccept}
+              disabled={isLocked}
+              onClick={() => handleAction(STATE.AGREE)}
+              styles={{
+                root: {
+                  height: 28,
+                  padding: "0 16px",
+                },
+              }}
             >
               通过
             </Button>
           </Group>
         )}
-      </Card>
+      </Box>
     );
   },
   (prev, next) =>
-    prev.version === next.version &&
+    prev.user?.updated_at === next.user?.updated_at &&
+    prev.user?.ask_state === next.user?.ask_state &&
     prev.onAcceptFriend === next.onAcceptFriend &&
     prev.onRejectFriend === next.onRejectFriend
 );
@@ -164,12 +186,14 @@ export const FriendRequestList = memo(function FriendRequestList({
   isLoadingRequests = false,
   isRefetching = false,
   friendRequests = [],
-
   onRefetch,
   onAcceptFriend,
   onRejectFriend,
 }) {
-  const visibleRequests = friendRequests.filter(Boolean);
+  const visibleRequests = useMemo(
+    () => friendRequests.filter(Boolean),
+    [friendRequests]
+  );
 
   if (isLoadingRequests) {
     return (
@@ -180,21 +204,29 @@ export const FriendRequestList = memo(function FriendRequestList({
   }
 
   return (
-    <Stack gap="xs" p="sm">
+    <Box bg="white">
       <style>
         {`
           @keyframes friend-refresh-spin {
-            from {
-              transform: rotate(0deg);
-            }
-            to {
-              transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
         `}
       </style>
 
-      <Group justify="space-between" wrap="nowrap">
+      <Group
+        justify="space-between"
+        wrap="nowrap"
+        px="sm"
+        py="xs"
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 2,
+          backgroundColor: "white",
+          borderBottom: "1px solid var(--mantine-color-gray-2)",
+        }}
+      >
         <Text fw={600} size="sm">
           好友请求
         </Text>
@@ -209,9 +241,8 @@ export const FriendRequestList = memo(function FriendRequestList({
             border: "none",
             background: "transparent",
             padding: 4,
-            margin: 0,
-            width: 28,
-            height: 28,
+            width: 30,
+            height: 30,
             borderRadius: 999,
             cursor: isRefetching ? "default" : "pointer",
             display: "flex",
@@ -233,7 +264,7 @@ export const FriendRequestList = memo(function FriendRequestList({
                 : undefined,
             }}
           >
-            <IconRefresh size={16} />
+            <IconRefresh size={17} />
           </Box>
         </Box>
       </Group>
@@ -243,16 +274,17 @@ export const FriendRequestList = memo(function FriendRequestList({
           暂无好友请求
         </Text>
       ) : (
-        visibleRequests.map((user) => (
-          <FriendRequestCard
-            key={user.id}
-            version={user.updated_at}
-            user={user}
-            onAcceptFriend={onAcceptFriend}
-            onRejectFriend={onRejectFriend}
-          />
-        ))
+        <Stack gap={0}>
+          {visibleRequests.map((user) => (
+            <FriendRequestItem
+              key={user.id}
+              user={user}
+              onAcceptFriend={onAcceptFriend}
+              onRejectFriend={onRejectFriend}
+            />
+          ))}
+        </Stack>
       )}
-    </Stack>
+    </Box>
   );
 });

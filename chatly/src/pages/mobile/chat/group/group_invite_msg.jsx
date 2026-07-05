@@ -13,11 +13,7 @@ export function InviteGroup() {
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
-
-
     const data = group_invite_msg.get();
-
-
     useUnmount(() => {
         (async () => {
             await group_invite_msg.refresh()
@@ -40,7 +36,8 @@ export function InviteGroup() {
         }
         return []
     }
-    console.log('data++',data)
+
+   
     return <div>
         <GroupInviteMessageList data={data}
             onAccept={(value) => { updateGroupAskState({ "id": value?.id, "ask_state": "agreed" }) }}

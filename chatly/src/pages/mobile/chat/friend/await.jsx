@@ -44,12 +44,13 @@ export const FriendRequests = () => {
 
   }
 
+
+   console.log('friendRequests++',friendRequests)
+
   return (
     <FriendRequestList
       isRefetching={isFetching}
-      onRefetch={async () => {
-        await friend_await_message.refresh()
-      }}
+      onRefetch={async () => {await friend_await_message.refresh()}}
       friendRequests={friendRequests}
       onAcceptFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "agree" })}
       onRejectFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "refuse" })}
