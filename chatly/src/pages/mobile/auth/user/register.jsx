@@ -8,6 +8,16 @@ export function Register() {
     const { http } = createHttpClient('/rpc/chat/register/');
     async function register({ account, password }) {
         if (!account || !password) throw new Error("请输入账号密码...");
+        const phoneRegex = /^1[3-9]\d{9}$/;
+        if (!phoneRegex.test(account)) {
+            throw new Error("手机号格式不正确");
+        }
+
+        // 🔒 密码长度校验
+        if (password.length < 6) {
+            throw new Error("密码至少6位");
+        }
+
         const results = await http.requestBodyJson("PUT", {
             email: account,
             pass_word: password,
