@@ -78,7 +78,7 @@ export function Detail() {
       friend={friend}
       onRemarkChange={(remark) => { updRemark({ id: friendId, remark }) }}
       onChat={openMsgWindow}
-      onDelete={(friend) => { deleteFriend(friendId) }}
+      onDelete={() => { deleteFriend(friendId) }}
     />
   );
 }

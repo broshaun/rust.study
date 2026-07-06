@@ -9,7 +9,7 @@ import { useRequest } from "ahooks";
 // 群成员列表
 export const GroupUsers = () => {
     const { db } = useOutletContext();
-
+    const { open, close } = currentModal();
     const [currentUser, setUser] = useState({})
     useEffect(() => {
         loginCache2.getAsync().then(setUser)
@@ -30,6 +30,8 @@ export const GroupUsers = () => {
         setRightPath(null)
     }, [])
 
+
+    // 获取群成员
     const get_group_user = async (groupId) => {
         const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
         console.log('results++', results)
@@ -44,7 +46,7 @@ export const GroupUsers = () => {
         }));
         return guser
     }
-    const { data: members } = useRequest(() => get_group_user(groupId),
+    const { data: members, refreshAsync } = useRequest(() => get_group_user(groupId),
         {
             manual: false,
             ready: !!groupId,
@@ -53,20 +55,31 @@ export const GroupUsers = () => {
         })
 
 
-    const { open, close } = currentModal();
+    // 离开群
     const leaveGroup = async ({ id }) => {
         const results = await http.requestBodyJson('group_ask_state', { id, ask_state: 'leave' })
         const { code, message, data } = results;
-        if (code !== 200) {
+        if (code !== 200) throw new Error(message);
+        return data
+    }
+    const { runAsync } = useRequest(async ({ id }) => await leaveGroup({ id }), {
+        manual: true,
+        onSuccess: async (data) => {
+            // console.log('data++', data)
+            await group_list2.refresh();
+            await navigate('/mobile/chat/group/');
+        },
+        onError: async (error) => {
+            // console.log('error++',error)
             open({
-                title: "邀请失败",
-                message: message,
+                title: "群消息",
+                message: error?.message || String(error),
                 onConfirm: () => close(),
                 onCancel: null
             })
         }
-        await navigate('/mobile/chat/group/');
-    }
+    })
+
 
     return <div>
         <GroupMemberList
@@ -76,7 +89,7 @@ export const GroupUsers = () => {
             onExitGroup={async () => {
                 await group_list2.refresh();
                 const id = members.find(item => item.user_id === currentUser?.id)?.id;
-                await leaveGroup({ id })
+                await runAsync({ id })
             }}
         />
     </div>

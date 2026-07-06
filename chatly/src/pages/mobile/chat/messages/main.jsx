@@ -24,7 +24,7 @@ export const Main = () => {
     // console.log('currentUser++',currentUser)
 
     const msgFriend = friends.find(item => item.id === friendId);
-    console.log('msgFriend++',msgFriend)
+    // console.log('msgFriend++',msgFriend)
 
 
 

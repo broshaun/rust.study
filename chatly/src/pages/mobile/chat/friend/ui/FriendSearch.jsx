@@ -50,10 +50,10 @@ function getUserAction(user, isLocalPending = false) {
 
   if (isMutualFriend) {
     return {
-      text: "已是好友",
+      text: "发起请求",
       status: "已是好友",
-      type: "friend",
-      disabled: true,
+      type: "add",
+      disabled: false,
     };
   }
 

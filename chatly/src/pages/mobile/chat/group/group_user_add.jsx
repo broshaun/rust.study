@@ -1,8 +1,9 @@
 import { useCallback, useEffect } from "react";
-import { useListState } from "@mantine/hooks";
 import { createHttpClient, currentAppBar, currentModal } from "utils";
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import { GroupMemberSelector } from "./ui/GroupMemberSelector";
+import { useLiveQuery } from "dexie-react-hooks";
+// import { }
 
 
 // 群聊，添加群成员
@@ -24,20 +25,23 @@ export const AddMember = () => {
   const { http } = createHttpClient('/rpc/chat/group/');
 
 
-  const [friends, handlers] = useListState([]);
-  useEffect(() => {
+  const friends = useLiveQuery(async () => {
     if (!db) return;
-    db.table("friends").where("ask_state").equals("agree").toArray().then((list) => {
-      handlers.setState(list)
-    })
-  }, [db]);
+    const { data: friends = [] } = await db.cache.get('my_friends')
+    return friends
+  }, [db], []);
 
 
   const { open, close } = currentModal();
   const addgusr = async ({ group_id, uids }) => {
+    console.log('group_id',group_id)
+    console.log('uids',uids)
+
+
     if (!group_id) return;
     const results = await http.requestBodyJson('group_user_add_list', { group_id, uids })
     const { code, message, data } = results;
+    console.log('results++', results)
     if (code !== 200) {
       open({
         title: "邀请失败",
@@ -46,7 +50,7 @@ export const AddMember = () => {
         onCancel: null
       })
     }
-    return data;
+
   }
 
   const navigate = useNavigate();
@@ -57,7 +61,7 @@ export const AddMember = () => {
     if (!uids.length) return;
     await addgusr({ group_id: groupId, uids: uids })
     await navigate(`/mobile/chat/group/gusr/${groupId}`)
-  }, [navigate, addgusr]);
+  }, [navigate, addgusr, groupId]);
 
   return (
     <GroupMemberSelector

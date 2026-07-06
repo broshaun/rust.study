@@ -7,6 +7,7 @@ import { IconMessage, IconUsers, IconUser, IconUserCircle } from "@tabler/icons-
 import { useLiveQuery } from "dexie-react-hooks";
 import { useUpdateEffect } from "ahooks";
 import { friend_await_message } from "cache/friend_await_message";
+import { group_invite_msg } from "cache/group_invite_msg";
 
 
 
@@ -19,6 +20,7 @@ export function ChatShell() {
   const { getTimestampMs } = useDateTime();
   const { isMobile } = useWinSize();
 
+  // 好友消息图标提示
   const [msgDot, setMsgDot] = useState(false);
   const messageCount = useLiveQuery(async () => await db.table("message").count(), [db]);
   useUpdateEffect(() => {
@@ -26,13 +28,26 @@ export function ChatShell() {
     setMsgDot(true)
   }, [messageCount])
 
+  // 群消息图标提示
   const [gmsgDot, setGmsgDot] = useState(false);
   const gmsgCount = useLiveQuery(async () => await db.table("gmsgs").count(), [db]);
   useUpdateEffect(() => {
     if (!gmsgCount) return;
     setGmsgDot(true)
   }, [gmsgCount])
+  // 群邀请消息图标提示
+  useEffect(() => {
+    group_invite_msg.subscribe((state) => {
+      if (!state.isSuccess) return;
+      // console.log('state++',state)
+      const isInvite = state.data.some(({ ask_state = [] }) => (ask_state?.includes("invite") && !ask_state?.includes("agreed")))
+      if (isInvite) {
+        setGmsgDot(true)
+      }
+    })
+  }, [])
 
+  // 好友请求消息图标提示
   const [friendDot, setFriendDot] = useState(false);
   useEffect(() => {
     const unsubscribe = friend_await_message.subscribe((state) => {

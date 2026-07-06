@@ -25,7 +25,7 @@ export const Item = () => {
     }, [RIcon])
 
     const navigate = useNavigate();
-    
+
     useEffect(() => {
         const unsubscribe = friend_await_message.subscribe((state) => {
             if (!state.isSuccess) return;
@@ -49,8 +49,8 @@ export const Item = () => {
 
     const finalFriends = useLiveQuery(async () => {
         if (!db) return;
-        const friends = await db.cache.get('my_friends')
-        return friends?.data || []
+        const { data: friends = [] } = await db.cache.get('my_friends')
+        return friends
     }, [db], []);
 
     // console.log('finalFriends++',finalFriends)

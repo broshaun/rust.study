@@ -51,6 +51,7 @@ export const Find = () => {
     };
 
     const handleAddFriend = async (userId) => {
+        console.log('userId++',userId)
         if (!userId) return null;
         await http.requestBodyJson("PUT", { user_id: userId });
         await friend_await_message.refresh()
