@@ -2,7 +2,7 @@ import { CreateGroupView } from "./ui/CreateGroupView"
 import { currentAppBar, createHttpClient } from "utils";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { group_list } from "cache/group_list";
+import { group_list2 } from "cache/group_list";
 
 // 创建群
 export function CreateGroup() {
@@ -23,7 +23,7 @@ export function CreateGroup() {
         const results = await http.requestBodyJson('create_group', { group_name })
         const { code, data } = results;
         if (code === 200) {
-            await group_list.refresh();
+            await group_list2.refresh();
             await navigate('/mobile/chat/group/');
         }
         return data || true;

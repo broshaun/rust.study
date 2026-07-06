@@ -1,8 +1,8 @@
 import { GroupEdit } from "./ui/GroupEdit";
 import { currentAppBar, createHttpClient, useDateTime } from "utils";
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
-import { group_list } from "cache/group_list";
+import { group_list2 } from "cache/group_list";
 import { useLiveQuery } from "dexie-react-hooks";
 
 
@@ -19,11 +19,11 @@ export const Manage = () => {
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
     const group = useLiveQuery(async () => {
-        return await db.table('groups').get(groupId)
-    }, [db,groupId],[])
+        if (!db) return;
+        const { data: groups = [] } = await db.cache.get('my_group_list')
+        return groups.find(item => item.id === groupId);
+    }, [db, groupId], [])
 
-
-    console.log('group++',group)
 
     useEffect(() => {
         setLeftPath('/mobile/chat/group/')
@@ -52,8 +52,7 @@ export const Manage = () => {
             const results = await http.requestBodyJson('update_group', { id, ...payload });
             const { code, data } = results;
             if (code !== 200) return;
-            await db.table('groups').update(id, { timestamp: dt.getDateTimeStr() });
-            await group_list.refresh()
+            await group_list2.refresh()
             await navigate('/mobile/chat/group/');
         } catch (error) {
             console.error("修改失败:", error);
@@ -67,8 +66,7 @@ export const Manage = () => {
         const { code } = results;
 
         if (code === 200) {
-            await db.table('groups').delete(id);
-            await group_list.refresh()
+            await group_list2.refresh()
             await navigate('/mobile/chat/group/');
         };
     }

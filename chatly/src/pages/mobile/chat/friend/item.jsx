@@ -4,7 +4,6 @@ import { currentAppBar, useDateTime } from "utils";
 import { IconUserExclamation, IconUser } from "@tabler/icons-react";
 import { FriendList } from "./ui/FriendList";
 import { useLiveQuery } from "dexie-react-hooks";
-import { friend_list } from "cache/friend_list";
 import { friend_await_message } from "cache/friend_await_message";
 
 
@@ -17,7 +16,6 @@ export const Item = () => {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
 
-
     const [RIcon, setRIcon] = useState(<IconUser />);
     useEffect(() => {
         setLeftPath(null)
@@ -27,22 +25,7 @@ export const Item = () => {
     }, [RIcon])
 
     const navigate = useNavigate();
-    const [isPending, setIsPending] = useState(false);
-
-    useEffect(() => {
-        const unsubscribe = friend_list.subscribe((next) => {
-            setIsPending(!!next?.isPending);
-            if (!next?.isSuccess) return;
-            db.table("friends").bulkPut(next.data).catch(console.error);
-
-        });
-        return () => {
-            unsubscribe?.();
-        }
-
-    }, []);
-
-
+    
     useEffect(() => {
         const unsubscribe = friend_await_message.subscribe((state) => {
             if (!state.isSuccess) return;
@@ -53,7 +36,7 @@ export const Item = () => {
                 setRIcon(<IconUser />)
             }
         })
-        return () => unsubscribe;
+        return () => unsubscribe?.();
     }, [])
 
 
@@ -64,18 +47,17 @@ export const Item = () => {
     }, [navigate, db]);
 
 
-
     const finalFriends = useLiveQuery(async () => {
         if (!db) return;
-        const friends = await db.table("friends").where("ask_state").equals("agree").toArray();
-
-        return friends
+        const friends = await db.cache.get('my_friends')
+        return friends?.data || []
     }, [db], []);
+
+    // console.log('finalFriends++',finalFriends)
 
     return (
         <FriendList
             friends={finalFriends}
-            isPending={isPending}
             onItemClick={openMsgWindow}
         // onAvatarClick={openProfile}
         />

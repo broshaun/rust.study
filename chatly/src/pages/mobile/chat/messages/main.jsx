@@ -3,15 +3,15 @@ import { createHttpClient, useDateTime, getUserDB } from 'utils';
 import { loginCache2 } from 'cache/loginCache';
 import { ObjectId } from "bson";
 import { userId } from 'utils/identity';
+import { friend_list2 } from 'cache/friend_list';
 
 
-export const loaderData = async ({ params }) => {
-    const { id: friendId } = params;
+export const loaderData = async () => {
     const uid = userId.get();
     const currentUser = await loginCache2.fetch();
     const db = getUserDB(uid);
-    const msgFriend = await db.table('friends').get(friendId)
-    return { db, msgFriend, currentUser };
+    const friends = await friend_list2.getAsync()
+    return { db, friends, currentUser };
 }
 
 
@@ -19,8 +19,15 @@ export const Main = () => {
     /** 账号对应信息
      * 个人数据库
      */
-    const { db, msgFriend, currentUser } = useLoaderData();
+    const { db, friends, currentUser } = useLoaderData();
+    const { id: friendId } = useParams();
     // console.log('currentUser++',currentUser)
+
+    const msgFriend = friends.find(item => item.id === friendId);
+    console.log('msgFriend++',msgFriend)
+
+
+
     const { getDateTimeStr } = useDateTime();
 
     /**

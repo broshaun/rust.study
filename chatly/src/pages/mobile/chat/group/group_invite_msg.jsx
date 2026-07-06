@@ -2,7 +2,7 @@ import { GroupInviteMessageList } from "./ui/InviteGroupCard";
 import { currentAppBar, createHttpClient } from "utils";
 import { useEffect, useState } from "react";
 import { IconUsersPlus } from "@tabler/icons-react";
-import { group_list } from "cache/group_list";
+import { group_list2 } from "cache/group_list";
 import { group_invite_msg } from "cache/group_invite_msg";
 import { useUnmount } from "ahooks";
 
@@ -31,7 +31,7 @@ export function InviteGroup() {
     const updateGroupAskState = async ({ id, ask_state }) => {
         const results = await http.requestBodyJson("group_ask_state", { id, ask_state });
         if (results?.code === 200) {
-            await group_list.refresh()
+            await group_list2.refresh()
             return results?.data;
         }
         return []

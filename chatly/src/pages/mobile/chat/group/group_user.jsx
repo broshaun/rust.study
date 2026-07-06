@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext, useParams } from "react-router";
 import { currentAppBar, createHttpClient, currentModal } from "utils"
 import { useEffect, useState, } from "react";
 import { loginCache2 } from "cache/loginCache";
-import { group_list } from "cache/group_list";
+import { group_list2 } from "cache/group_list";
 import { useRequest } from "ahooks";
 
 // 群成员列表
@@ -74,9 +74,7 @@ export const GroupUsers = () => {
             onAddMember={() => navigate(`/mobile/chat/group/addgusr/${groupId}`)}
             onRemoveMember={() => navigate(`/mobile/chat/group/delgusr/${groupId}`)}
             onExitGroup={async () => {
-                await db.table('groups').delete(groupId)
-                await group_list.refresh();
-
+                await group_list2.refresh();
                 const id = members.find(item => item.user_id === currentUser?.id)?.id;
                 await leaveGroup({ id })
             }}

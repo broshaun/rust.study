@@ -36,16 +36,14 @@ export async function loaderMsg({ params }) {
     const uid = userId.get();
     const db = getUserDB(uid)
     const { id: friendId } = params;
-    const current = await db.table('friends').get(friendId)
-    return { current, db, friendId }
+    return { db, friendId }
 }
 
 export function Msg() {
-    const { fnSendMsg } = useOutletContext();
-    const { current, db, friendId } = useLoaderData()
+    const { fnSendMsg, msgFriend: current } = useOutletContext();
+    const { db, friendId } = useLoaderData()
     const { winHeight } = useWinSize();
     const dt = useDateTime();
-
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightPath = currentAppBar((state) => state.setRightPath);

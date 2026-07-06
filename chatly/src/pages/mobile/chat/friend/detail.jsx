@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import { createHttpClient, currentAppBar } from 'utils';
 import { FriendInfo } from "./ui/FriendDetailUI";
-import { friend_list } from "cache/friend_list";
+import { friend_list2 } from "cache/friend_list";
+import { useRequest, useUnmount } from "ahooks";
 
 
 
@@ -26,29 +27,25 @@ export function Detail() {
     setRightPath(null)
   }, [])
 
-  useEffect(() => {
-    return () => {
-      friend_list.refresh().catch(console.error)
-    }
-  }, [])
+  useUnmount(() => {
+    friend_list2.refresh().catch(console.error)
+  })
 
   // 获取用户信息
-  const [friend, setFriend] = useState()
   async function get_friend(friendId) {
     if (!friendId) return;
-    try {
-      const results = await http2.getById(friendId);
-      if (!results) throw new Error("获取失败");
-      const { code, data } = results;
-      if (code === 200) {
-        setFriend(data)
-      }
-    } catch { }
+    const results = await http2.getById(friendId);
+    const { code, message, data } = results;
+    if (code !== 200) throw new Error(message);
+    return data
   }
 
-  useEffect(() => {
-    get_friend(friendId).catch(console.error)
-  }, [friendId])
+  const { data: friend,refreshAsync } = useRequest(() => get_friend(friendId), {
+    manual: false,
+    onError: console.error
+  })
+
+
 
   // 删除好友
   async function deleteFriend(id) {
@@ -56,10 +53,10 @@ export function Detail() {
       if (!id) return;
       await http2.requestBodyJson('DELETE', { id });
       await db.table('message').where('uid').equals(id).delete();
-      await db.table('friends').where('id').equals(id).delete();
+      await friend_list2.refresh()
       await db.table('friends_dialog').where('id').equals(id).delete();
       await navigate("/mobile/chat/friend/");
-      await get_friend(friendId)
+
     } catch (error) {
       console.error(error)
     }
@@ -69,7 +66,7 @@ export function Detail() {
   async function updRemark({ id, remark }) {
     if (!id) return;
     await http2.requestBodyJson('set_friend', { id, remark });
-    await get_friend(friendId)
+    await refreshAsync()
   }
 
   async function openMsgWindow() {

@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback } from "react";
 import { useNavigate, useOutletContext } from 'react-router';
-import {  currentAppBar, useDateTime } from 'utils';
+import { currentAppBar, useDateTime } from 'utils';
 import { DialogList } from "./ui/DialogList";
 import { useLiveQuery } from "dexie-react-hooks";
 
@@ -39,7 +39,12 @@ export const Item = () => {
     const finalDialog = useLiveQuery(async () => {
         if (!db) return;
         const dialog = await db.table("friends_dialog").toArray();
-        const friends = await db.table("friends").where("ask_state").equals("agree").toArray();
+        console.log('db++',db)
+        const aa = await db.cache.get('my_friends');
+        console.log('aa++',aa)
+
+        const { data: friends = [] } = await db.cache.get('my_friends');
+        console.log('friends++',friends)
         const friendMap = new Map(friends.map(item => [item.uid, item]))
         return dialog.filter(d => friendMap.has(d.id)).map(d => ({ ...d, ...friendMap.get(d.id) }))
     }, [db], []);

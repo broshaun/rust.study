@@ -1,18 +1,17 @@
-import React, { useEffect, useMemo, useLayoutEffect, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate, Outlet, useLoaderData } from 'react-router';
 import { createHttpClient, useDateTime, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { useSet, useRequest, useUpdateEffect } from "ahooks";
-import { loginCache2 } from "cache/loginCache";
-import { group_list } from "cache/group_list";
 import { ObjectId } from "bson";
 import { friend_await_message } from "cache/friend_await_message";
 import { group_invite_msg } from "cache/group_invite_msg";
 import { userId, deviceId } from "utils/identity"
 import { apiMqtt } from "utils/store/apiBase";
 import { tokenStore, getUserDB } from "utils";
-import { group_list } from "cache/group_list";
 import { loginCache2 } from "cache/loginCache";
+import { group_list2 } from "cache/group_list";
+import { useLiveQuery } from "dexie-react-hooks";
 
 
 export const chatGuardLoader = async () => {
@@ -24,38 +23,30 @@ export const chatGuardLoader = async () => {
     return redirect("/mobile/auth/user");
   }
   const db = getUserDB(uid)
-  await group_list.fetch();
-  await loginCache2.fetch();
-  return { uid, did, host, token, db };
+  await group_list2.fetch();
+  const currentUser = await loginCache2.fetch();
+  return { uid, did, host, token, db, currentUser };
 };
 
 export function ChatGuard() {
   const navigate = useNavigate();
-  const { uid, did, host, token, db } = useLoaderData();
+  const { uid, did, host, token, db, currentUser } = useLoaderData();
   const dt = useDateTime();
   const remainSeconds = useRemainSeconds();
-  const [topics, { add, reset }] = useSet();
-  const { refreshAsync, loading } = useRequest(
-    () => loginCache2.getAsync(),
-    {
-      manual: false,
-      onSuccess: (data) => {
-        reset();
-        add(`chat/single/${data.id}`);
-      }
-    }
-  );
-  // console.log('topics++', topics)
-  useEffect(() => {
-    const unsubscribe = group_list.subscribe(async (next) => {
-      if (!next?.isSuccess) return;
-      await refreshAsync();
-      next?.data?.forEach(item => add(`chat/group/${item?.id}`));
-    });
-    return unsubscribe;
-  }, []);
 
-  // console.log('Array.from(topics)++', Array.from(topics))
+  const initialTopcs = useMemo(() => {
+    return [`chat/single/${currentUser?.id}`]
+  }, [currentUser?.id])
+
+  const [topics, { add, reset }] = useSet(initialTopcs);
+  useLiveQuery(async () => {
+    if (!db) return;
+    reset();
+    const groups = (await db.cache.get('my_group_list'))?.data || [];
+    groups.forEach(item => add(`chat/group/${item?.id}`));
+  }, [db])
+
+  // console.log('topics++', topics)
 
   // 单聊离线消息
   const { http: httpMsg } = createHttpClient('/rpc/chat/msg/single2/');
@@ -190,7 +181,7 @@ export function ChatGuard() {
   )
 
   useEffect(() => {
-    if (loading) return;
+    // if (loading) return;
     if (!uid && !did && !host && !token) return;
     if (!topics) return;
 
@@ -230,7 +221,7 @@ export function ChatGuard() {
     return () => {
       invoke("unsubscribe").catch(console.error);
     }
-  }, [loading, topics, uid, did, host, token])
+  }, [topics, uid, did, host, token])
 
   useUpdateEffect(() => {
     if (remainSeconds > 0 && remainSeconds < 10) navigate('/mobile/auth/user/', { replace: true });

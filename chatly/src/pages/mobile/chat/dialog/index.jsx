@@ -2,12 +2,13 @@ import { Outlet, useLoaderData } from "react-router";
 import { Item } from "./item";
 import { userId } from "utils/identity";
 import { getUserDB } from "utils";
-
+import { friend_list2 } from "cache/friend_list";
 
 
 
 export const loaderData = async () => {
     const uid = userId.get();
+    await friend_list2.fetch()
     return { uid };
 }
 

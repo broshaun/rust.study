@@ -73,13 +73,13 @@ export function createStorageCache({
         return true;
     };
 
-    const subscribe = (callback) => {
-        if (typeof callback !== 'function') return () => { };
-        const observer = new QueryObserver(queryClient, optionsOf());
-        const emit = (result) => callback(toState(result));
-        emit(observer.getCurrentResult());
-        return observer.subscribe(emit);
-    };
+    // const subscribe = (callback) => {
+    //     if (typeof callback !== 'function') return () => { };
+    //     const observer = new QueryObserver(queryClient, optionsOf());
+    //     const emit = (result) => callback(toState(result));
+    //     emit(observer.getCurrentResult());
+    //     return observer.subscribe(emit);
+    // };
 
     return {
         getAsync,
@@ -87,6 +87,6 @@ export function createStorageCache({
         refresh,
         set,
         remove,
-        subscribe
+        // subscribe
     };
 }

@@ -11,7 +11,6 @@ export const emptyState = Object.freeze({
     isError: false
 });
 
-
 const toState = (v) => v ? {
     data: v.data ?? null, error: v.error,
     isPending: v.status === 'pending', isFetching: v.fetchStatus === 'fetching',
@@ -33,21 +32,15 @@ export function createQueryCache({
         return s ? [s, cacheKey] : [cacheKey];
     };
     const optionsOf = (key) => ({ queryKey: key || resolveKey(), staleTime, retry, retryDelay, queryFn });
-
     const get = () => queryClient.getQueryData(resolveKey());
-
     const fetch = async () => queryClient.fetchQuery(optionsOf());
-
     const refresh = async () => {
         const opts = optionsOf();
         opts.staleTime = 0;
         return queryClient.fetchQuery(opts);
     };
-    
     const set = (data) => queryClient.setQueryData(resolveKey(), data);
-
     const remove = () => (queryClient.removeQueries({ queryKey: resolveKey(), exact: true }), true);
-
     const subscribe = (callback) => {
         if (typeof callback !== 'function') return () => { };
         const observer = new QueryObserver(queryClient, optionsOf());

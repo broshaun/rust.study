@@ -1,6 +1,7 @@
 import { createHttpClient } from 'utils';
-import { createQueryCache } from './helper';
+import { createQueryCache, createStorageCache } from './helper';
 import { userId } from 'utils/identity';
+import { getUserDB } from 'utils';
 
 
 const queryFn = async () => {
@@ -19,4 +20,12 @@ export const group_list = createQueryCache({
     cacheKey: 'my_group_list',
     queryFn: () => queryFn(),
     staleTime: 12 * 60 * 60 * 1000,
+});
+
+
+export const group_list2 = createStorageCache({
+    scope: () => userId.get(),
+    cacheKey: 'my_group_list',
+    queryFn: () => queryFn(),
+    stored: () => getUserDB(userId.get()).cache
 });

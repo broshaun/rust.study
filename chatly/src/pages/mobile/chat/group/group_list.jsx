@@ -4,7 +4,6 @@ import { useNavigate, useOutletContext } from "react-router";
 import { IconUsers, IconMessageUser } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
-import { group_list } from "cache/group_list";
 import { loginCache2 } from "cache/loginCache";
 import { group_invite_msg } from "cache/group_invite_msg";
 
@@ -63,19 +62,9 @@ export const Item = () => {
         }
     }
 
-    useEffect(() => {
-        const unsubscribe = group_list.subscribe((state) => {
-            if (!state.isSuccess) return;
-            (async () => {
-                db.table("groups").bulkPut(state.data);
-            })();
-        });
-        return () => unsubscribe;
-    }, [db]);
-
     const finalGroups = useLiveQuery(async () => {
         if (!db) return;
-        const groups = await db.table("groups").toArray();
+        const groups = (await db.cache.get('my_group_list'))?.data
         const dialog = await db.table("groups_dialog").toArray()
         const groupMap = new Map(dialog.map(item => [item.id, item]))
         return groups.map(group => ({ ...group, ...groupMap.get(group.id) }))

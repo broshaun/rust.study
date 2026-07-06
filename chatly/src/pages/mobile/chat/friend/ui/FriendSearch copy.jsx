@@ -14,17 +14,31 @@ import {
 import { IconSearch } from "@tabler/icons-react";
 import { SafeAvatar } from "components";
 
-// 辅助函数：安全获取 ask_state 数组
-function getAskState(relationObj) {
-  if (!relationObj || !Array.isArray(relationObj.ask_state)) return [];
-  return relationObj.ask_state;
-}
+const STATE = {
+  AWAIT: "await",
+  REFUSE: "refuse",
+  DELETE: "delete",
+  AGREE: "agree",
+};
 
 function isValidObject(value) {
   return value && typeof value === "object" && Object.keys(value).length > 0;
 }
 
+function getStates(record) {
+  const value = record?.ask_state;
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function hasState(record, state) {
+  return getStates(record).includes(state);
+}
+
 function getUserAction(user, isLocalPending = false) {
+  const myself = user?.myself; // 我这边的好友关系
+  const friend = user?.friend; // 对方那边的好友关系
+
   if (isLocalPending) {
     return {
       text: "等待",
@@ -34,21 +48,38 @@ function getUserAction(user, isLocalPending = false) {
     };
   }
 
-  const myState = getAskState(user?.myself);
-  const friendState = getAskState(user?.friend);
+  const hasDelete =
+    hasState(myself, STATE.DELETE) || hasState(friend, STATE.DELETE);
 
-  const myAwait = myState.includes("await");
-  const myAgree = myState.includes("agree");
-  const friendAwait = friendState.includes("await");
-  const friendAgree = friendState.includes("agree");
+  const hasRefuse =
+    hasState(myself, STATE.REFUSE) || hasState(friend, STATE.REFUSE);
 
-  // 1. 双向好友：任意一方达成了 [await, agree]（请求并满足通过），或者双方都单向 agree
-  const isMutualFriend =
-    (myAwait && myAgree) ||
-    (friendAwait && friendAgree) ||
-    (myAgree && friendAgree);
+  const hasAgree =
+    hasState(myself, STATE.AGREE) || hasState(friend, STATE.AGREE);
 
-  if (isMutualFriend) {
+  const hasMyselfAwait = hasState(myself, STATE.AWAIT);
+  const hasFriendAwait = hasState(friend, STATE.AWAIT);
+
+  // delete 必须优先于 agree
+  if (hasDelete) {
+    return {
+      text: "添加",
+      status: "好友已删除",
+      type: "add",
+      disabled: false,
+    };
+  }
+
+  if (hasRefuse) {
+    return {
+      text: "重新添加",
+      status: "好友申请已拒绝",
+      type: "add",
+      disabled: false,
+    };
+  }
+
+  if (hasAgree) {
     return {
       text: "已是好友",
       status: "已是好友",
@@ -57,8 +88,7 @@ function getUserAction(user, isLocalPending = false) {
     };
   }
 
-  // 2. 我申请了对方，对方还没通过：我方有 await 且未满足双向
-  if (myAwait && !myAgree) {
+  if (hasMyselfAwait) {
     return {
       text: "等待",
       status: "等待对方通过",
@@ -67,27 +97,15 @@ function getUserAction(user, isLocalPending = false) {
     };
   }
 
-  // 3. 对方申请了我，等待我处理：对方有 await 且未满足双向
-  if (friendAwait && !friendAgree) {
+  if (hasFriendAwait) {
     return {
       text: "去处理",
       status: "对方请求添加你",
       type: "received",
-      disabled: false, // 改为 false，允许用户点击去处理（如果 onAddFriend 支持该操作）
+      disabled: true,
     };
   }
 
-  // 4. 对方单向加了我 (friend 为 ["agree"])，或者纯陌生人状态
-  if (friendAgree && !myAgree) {
-    return {
-      text: "通过申请",
-      status: "对方已将你加为好友",
-      type: "add",
-      disabled: false,
-    };
-  }
-
-  // 5. 默认状态：未添加
   return {
     text: "添加",
     status: "未添加",
@@ -111,15 +129,12 @@ const SearchUserCard = memo(function SearchUserCard({ user, onAddFriend }) {
   const name = user?.nickname || user?.email || "未知用户";
 
   const handleAddFriend = async () => {
-    // 允许 "add" 类型触发操作
-    if (action.type !== "add" && action.type !== "received") return;
+    if (action.type !== "add") return;
 
     try {
       setIsSubmitting(true);
       await onAddFriend?.(user.id, user);
       setIsLocalPending(true);
-    } catch (error) {
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -150,7 +165,6 @@ const SearchUserCard = memo(function SearchUserCard({ user, onAddFriend }) {
           loading={isSubmitting}
           disabled={action.disabled || isSubmitting}
           onClick={handleAddFriend}
-          variant={action.type === "add" ? "filled" : "light"}
         >
           {action.text}
         </Button>

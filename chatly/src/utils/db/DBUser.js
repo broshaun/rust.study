@@ -21,12 +21,12 @@ export const getUserDB = (userId) => {
   // 2. 创建干净、无前缀的独立数据库
   const db = new Dexie(dbName);
   
-  db.version(18).stores({
+  db.version(19).stores({
     cache: 'id, timestamp',
-    message: 'id, uid, timestamp',
-    friends: 'id, uid, updated_at, *ask_state',
+    // friends: 'id, uid, updated_at, *ask_state',
     friends_dialog: 'id, timestamp, signal',
-    groups: 'id, updated_at, is_delete',
+    message: 'id, uid, timestamp',
+    // groups: 'id, updated_at, is_delete',
     groups_dialog: 'id, timestamp, signal',
     gmsgs: 'id, group_id, timestamp',
   });

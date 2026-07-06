@@ -5,13 +5,13 @@ import { Find } from "./find";
 import { FriendRequests } from "./await";
 import { userId } from "utils/identity";
 import { getUserDB } from "utils";
-import { friend_list } from "cache/friend_list";
+import { friend_list2 } from "cache/friend_list";
 
 
 
 export const loaderData = async () => {
     const uid = userId.get();
-    await friend_list.fetch()
+    await friend_list2.fetch()
     return { uid };
 }
 

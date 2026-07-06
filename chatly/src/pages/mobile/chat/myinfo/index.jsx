@@ -5,34 +5,26 @@ import { Logout } from "./logout";
 import { PushDeer } from "./pushdeer";
 import { ClearLogs } from "./clear";
 import { Nickname } from "./nickname";
-import { GlobalModal } from "utils";
+import { GlobalModal, getUserDB } from "utils";
 import { loginCache2 } from "cache/loginCache";
-import { useState, useEffect } from "react";
 import { userId } from "utils/identity";
+import { useLiveQuery } from "dexie-react-hooks";
 
 
 const loader = async () => {
     const uid = userId.get();
-    const initialCache = await loginCache2.fetch();
-    return { uid, initialCache };
+    const db = getUserDB(uid)
+    await loginCache2.fetch();
+    return { uid, db };
 };
 
 export const MyInfo = () => {
-    const { uid, initialCache } = useLoaderData();
-    const [currentUser, setUser] = useState(initialCache)
-    useEffect(() => {
-        let isMounted = true;
-        const unsubscribe = loginCache2.subscribe((next) => {
-            if (!isMounted) return;
-            const isObject = next?.data && typeof next.data === 'object';
-            const newData = isObject ? next.data : {};
-            setUser(newData);
-        });
-        return () => {
-            isMounted = false;
-            unsubscribe?.();
-        }
-    }, []);
+    const { uid, db } = useLoaderData();
+    const currentUser = useLiveQuery(async () => {
+        if (!db) return {};
+        const currentUser = await db.cache.get('login-info2')
+        return currentUser?.data || {}
+    }, [db])
 
     return <div>
         <GlobalModal />

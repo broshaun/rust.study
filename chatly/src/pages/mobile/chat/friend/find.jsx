@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendSearch } from "./ui/FriendSearch";
-import { IconUserPlus } from "@tabler/icons-react";
-import { friend_list } from "cache/friend_list";
+import { friend_await_message } from "cache/friend_await_message";
 
 
 export const Find = () => {
@@ -54,7 +53,7 @@ export const Find = () => {
     const handleAddFriend = async (userId) => {
         if (!userId) return null;
         await http.requestBodyJson("PUT", { user_id: userId });
-        await friend_list.refresh()
+        await friend_await_message.refresh()
     };
 
     return (

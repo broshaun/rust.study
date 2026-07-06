@@ -41,14 +41,19 @@ export function Msg() {
         };
     }, [db, groupId]);
 
+    const group = useLiveQuery(async () => {
+        if (!db) return;
+        const { data: groups = [] } = await db.cache.get('my_group_list')
+        return groups.find(item => item.id === groupId);
+    }, [db, groupId], [])
+
     useEffect(() => {
-        db.table('groups').get(groupId).then((group) => {
-            setTitle(group?.name)
-            setLeftPath(`/mobile/chat/group/`)
-            setRightIcon(<IconDots />)
-            setRightPath(`/mobile/chat/group/gusr/${groupId}`)
-        })
-    }, [groupId])
+        if (Array.isArray(group) && group.length === 0) return;
+        setTitle(group?.group_name)
+        setLeftPath(`/mobile/chat/group/`)
+        setRightIcon(<IconDots />)
+        setRightPath(`/mobile/chat/group/gusr/${groupId}`)
+    }, [groupId, group])
 
     const { winHeight } = useWinSize();
     const msgs = useLiveQuery(async () => {
