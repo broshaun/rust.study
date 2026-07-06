@@ -53,7 +53,7 @@ export function Detail() {
       if (!id) return;
       await http2.requestBodyJson('DELETE', { id });
       await db.table('message').where('uid').equals(id).delete();
-      await friend_list2.refresh()
+      await friend_list2.refresh();
       await db.table('friends_dialog').where('id').equals(id).delete();
       await navigate("/mobile/chat/friend/");
 
