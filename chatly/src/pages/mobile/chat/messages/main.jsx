@@ -1,17 +1,17 @@
-import { Outlet, useLoaderData,useParams } from 'react-router';
+import { Outlet, useLoaderData, useParams } from 'react-router';
 import { createHttpClient, useDateTime, getUserDB } from 'utils';
-import { loginCache } from 'cache/loginCache';
+import { loginCache2 } from 'cache/loginCache';
 import { ObjectId } from "bson";
 import { userId } from 'utils/identity';
 
 
-export const loaderData = async ({params}) => {
+export const loaderData = async ({ params }) => {
     const { id: friendId } = params;
     const uid = userId.get();
-    await loginCache.fetch();
+    const currentUser = await loginCache2.fetch();
     const db = getUserDB(uid);
     const msgFriend = await db.table('friends').get(friendId)
-    return { db, msgFriend };
+    return { db, msgFriend, currentUser };
 }
 
 
@@ -19,8 +19,8 @@ export const Main = () => {
     /** 账号对应信息
      * 个人数据库
      */
-    const { db, msgFriend } = useLoaderData();
-    const currentUser = loginCache.get()
+    const { db, msgFriend, currentUser } = useLoaderData();
+    // console.log('currentUser++',currentUser)
     const { getDateTimeStr } = useDateTime();
 
     /**

@@ -5,7 +5,7 @@ import { IconUsers, IconMessageUser } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { group_list } from "cache/group_list";
-import { loginCache } from "cache/loginCache";
+import { loginCache2 } from "cache/loginCache";
 import { group_invite_msg } from "cache/group_invite_msg";
 
 
@@ -13,7 +13,10 @@ import { group_invite_msg } from "cache/group_invite_msg";
 // 群聊列表
 export const Item = () => {
     const { db } = useOutletContext();
-    const usrInfo = loginCache.get()
+    const [usrInfo, setUsrInfo] = useState({})
+    useEffect(() => {
+        loginCache2.getAsync().then(setUsrInfo)
+    })
 
     const dt = useDateTime();
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -53,7 +56,7 @@ export const Item = () => {
     }
 
     // 点击群头像
-    const openGroupInfo = (value) => {
+    const openGroupInfo = async (value) => {
         const list = value?.administrator || [];
         if (list.includes(usrInfo?.id)) {
             navigate(`/mobile/chat/group/update/${value?.id}`)

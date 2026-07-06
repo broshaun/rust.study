@@ -2,7 +2,14 @@ import { QueryObserver } from '@tanstack/query-core';
 import { queryClient } from './createClient';
 
 
-export const emptyState = Object.freeze({ data: null, error: null, isPending: false, isFetching: false, isSuccess: false, isError: false });
+export const emptyState = Object.freeze({
+    data: null,
+    error: null,
+    isPending: false,
+    isFetching: false,
+    isSuccess: false,
+    isError: false
+});
 
 
 const toState = (v) => v ? {

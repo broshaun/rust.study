@@ -11,7 +11,7 @@ import { InviteGroup } from "./group_invite_msg"
 import { Outlet } from 'react-router';
 import { createHttpClient, GlobalModal, getUserDB } from 'utils';
 import { group_list } from "cache/group_list";
-import { loginCache } from "cache/loginCache";
+import { loginCache2 } from "cache/loginCache";
 import { useLoaderData } from "react-router";
 import { userId } from "utils/identity";
 import { group_invite_msg } from "cache/group_invite_msg";
@@ -21,7 +21,7 @@ import { group_invite_msg } from "cache/group_invite_msg";
 export const loaderData = async () => {
     const uid = userId.get();
     await group_list.fetch();
-    await loginCache.fetch();
+    await loginCache2.fetch();
     await group_invite_msg.fetch();
     return { uid };
 }
@@ -38,6 +38,9 @@ const Group = () => {
         });
         console.log('发送结果results', results)
     }
+
+    
+
 
     return <div>
         <GlobalModal />

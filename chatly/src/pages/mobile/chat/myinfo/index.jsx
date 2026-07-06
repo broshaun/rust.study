@@ -6,14 +6,14 @@ import { PushDeer } from "./pushdeer";
 import { ClearLogs } from "./clear";
 import { Nickname } from "./nickname";
 import { GlobalModal } from "utils";
-import { loginCache } from "cache/loginCache";
+import { loginCache2 } from "cache/loginCache";
 import { useState, useEffect } from "react";
 import { userId } from "utils/identity";
 
 
 const loader = async () => {
     const uid = userId.get();
-    const initialCache = await loginCache.fetch();
+    const initialCache = await loginCache2.fetch();
     return { uid, initialCache };
 };
 
@@ -22,7 +22,7 @@ export const MyInfo = () => {
     const [currentUser, setUser] = useState(initialCache)
     useEffect(() => {
         let isMounted = true;
-        const unsubscribe = loginCache.subscribe((next) => {
+        const unsubscribe = loginCache2.subscribe((next) => {
             if (!isMounted) return;
             const isObject = next?.data && typeof next.data === 'object';
             const newData = isObject ? next.data : {};

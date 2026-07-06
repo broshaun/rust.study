@@ -5,7 +5,6 @@ import {
     IconUserCircle,
     IconMail,
     IconId,
-    IconDeviceMobileMessage,
     IconTrash,
     IconLogout,
     IconChevronRight

@@ -2,14 +2,19 @@ import { GroupMemberList } from "./ui/GroupMemberList"
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import { currentAppBar, createHttpClient, currentModal } from "utils"
 import { useEffect, useState, } from "react";
-import { loginCache } from "cache/loginCache";
+import { loginCache2 } from "cache/loginCache";
 import { group_list } from "cache/group_list";
-
+import { useRequest } from "ahooks";
 
 // 群成员列表
 export const GroupUsers = () => {
     const { db } = useOutletContext();
-    const currentUser = loginCache.get()
+
+    const [currentUser, setUser] = useState({})
+    useEffect(() => {
+        loginCache2.getAsync().then(setUser)
+    }, [])
+
     const { http } = createHttpClient('/rpc/chat/group/');
     const { id: groupId } = useParams();
 
@@ -25,10 +30,9 @@ export const GroupUsers = () => {
         setRightPath(null)
     }, [])
 
-    const [members, setMembers] = useState([])
     const get_group_user = async (groupId) => {
         const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
-        console.log('results++',results)
+        console.log('results++', results)
         const { code, data, message } = results;
         if (code !== 200) throw new Error(message);
         const guser = data.map((item) => ({
@@ -38,12 +42,15 @@ export const GroupUsers = () => {
             ask_state: item.ask_state,
             avatar_url: item.avatar_url,
         }));
-        setMembers(guser)
+        return guser
     }
-
-    useEffect(() => {
-        get_group_user(groupId).catch(console.error)
-    }, [groupId])
+    const { data: members } = useRequest(() => get_group_user(groupId),
+        {
+            manual: false,
+            ready: !!groupId,
+            refreshDeps: [groupId],
+            onError: console.error,
+        })
 
 
     const { open, close } = currentModal();
@@ -69,7 +76,7 @@ export const GroupUsers = () => {
             onExitGroup={async () => {
                 await db.table('groups').delete(groupId)
                 await group_list.refresh();
-                
+
                 const id = members.find(item => item.user_id === currentUser?.id)?.id;
                 await leaveGroup({ id })
             }}

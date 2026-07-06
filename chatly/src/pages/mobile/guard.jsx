@@ -1,38 +1,59 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useLayoutEffect, useState } from "react";
 import { useNavigate, Outlet, useLoaderData } from 'react-router';
 import { createHttpClient, useDateTime, useRemainSeconds } from "utils"
 import { invoke, Channel } from "@tauri-apps/api/core";
-import { useSet, useUpdateEffect, useRequest } from "ahooks";
-import { loginCache, } from "cache/loginCache";
+import { useSet, useRequest, useUpdateEffect } from "ahooks";
+import { loginCache2 } from "cache/loginCache";
 import { group_list } from "cache/group_list";
 import { ObjectId } from "bson";
 import { friend_await_message } from "cache/friend_await_message";
 import { group_invite_msg } from "cache/group_invite_msg";
+import { userId, deviceId } from "utils/identity"
+import { apiMqtt } from "utils/store/apiBase";
+import { tokenStore, getUserDB } from "utils";
+import { group_list } from "cache/group_list";
+import { loginCache2 } from "cache/loginCache";
 
 
+export const chatGuardLoader = async () => {
+  const uid = userId.get();
+  const did = deviceId.get();
+  const host = apiMqtt.get();
+  const token = tokenStore.get()?.token;
+  if (!uid || !did || !host || !token) {
+    return redirect("/mobile/auth/user");
+  }
+  const db = getUserDB(uid)
+  await group_list.fetch();
+  await loginCache2.fetch();
+  return { uid, did, host, token, db };
+};
 
 export function ChatGuard() {
   const navigate = useNavigate();
-  const readyData = useLoaderData();
+  const { uid, did, host, token, db } = useLoaderData();
   const dt = useDateTime();
-  const db = readyData?.db;
   const remainSeconds = useRemainSeconds();
-
-  // ++++ 订阅列表 ++++
-  const currentUser = loginCache.get()
-  const initialTopics = useMemo(() => {
-    return currentUser?.id ? [`chat/single/${currentUser.id}`] : [];
-  }, [currentUser?.id]);
-  const [topics, { add, remove, reset }] = useSet(initialTopics);
+  const [topics, { add, reset }] = useSet();
+  const { refreshAsync, loading } = useRequest(
+    () => loginCache2.getAsync(),
+    {
+      manual: false,
+      onSuccess: (data) => {
+        reset();
+        add(`chat/single/${data.id}`);
+      }
+    }
+  );
+  // console.log('topics++', topics)
   useEffect(() => {
-    const unsubscribe = group_list.subscribe((next) => {
+    const unsubscribe = group_list.subscribe(async (next) => {
       if (!next?.isSuccess) return;
-      reset();
+      await refreshAsync();
       next?.data?.forEach(item => add(`chat/group/${item?.id}`));
     });
-    return () => unsubscribe;
+    return unsubscribe;
   }, []);
-
 
   // console.log('Array.from(topics)++', Array.from(topics))
 
@@ -169,9 +190,10 @@ export function ChatGuard() {
   )
 
   useEffect(() => {
-    if (!readyData) return;
+    if (loading) return;
+    if (!uid && !did && !host && !token) return;
     if (!topics) return;
-    const { uid, did, host, token } = readyData;
+
     const channel = new Channel();
     channel.onmessage = async (msg) => {
       console.log("MQTT消息:", msg);
@@ -208,7 +230,7 @@ export function ChatGuard() {
     return () => {
       invoke("unsubscribe").catch(console.error);
     }
-  }, [topics, readyData])
+  }, [loading, topics, uid, did, host, token])
 
   useUpdateEffect(() => {
     if (remainSeconds > 0 && remainSeconds < 10) navigate('/mobile/auth/user/', { replace: true });

@@ -4,7 +4,7 @@ import { SafeAvatar } from 'components';
 import { Grid, Group, Center } from "@mantine/core";
 import { currentAppBar } from "utils";
 import { ImageUpload } from "./ui/ImageUpload";
-import { loginCache } from "cache/loginCache";
+import { loginCache2 } from "cache/loginCache";
 import { useOutletContext } from "react-router";
 
 
@@ -20,7 +20,7 @@ export const Avatar2 = () => {
         const results = await httpFiles.uploadFiles(file);
         if (!results?.data) return;
         await apiLogin.post('update', { avatar_url: results.data });
-        await loginCache.refresh()
+        await loginCache2.refresh()
     }, [httpFiles, apiLogin]);
 
     const setLeftPath = currentAppBar((state) => state.setLeftPath);

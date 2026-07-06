@@ -2,7 +2,7 @@ import { Suspense, useEffect } from "react";
 import { useNavigate, useOutletContext } from 'react-router';
 import { createHttpClient, currentAppBar } from 'utils';
 import { NicknameEditPage } from "./ui/NicknameEditPage";
-import { loginCache } from "cache/loginCache";
+import { loginCache2 } from "cache/loginCache";
 
 
 export const Nickname = () => {
@@ -30,7 +30,7 @@ export const Nickname = () => {
         if (code !== 200) {
             throw new Error(message || '更新失败');
         }
-        await loginCache.refresh()
+        await loginCache2.refresh()
         await navigate('/mobile/chat/self/')
     }
     return <Suspense fallback={<div>加载中...</div>}>

@@ -16,22 +16,18 @@ async function loginFn() {
     return res.data ?? {};
 }
 
-export const loginCache = createQueryCache({
-    scope: () => userId.get(),
-    cacheKey: 'login-info',
-    queryFn: () => loginFn(),
-    staleTime: Infinity,
+// export const loginCache = createQueryCache({
+//     scope: () => userId.get(),
+//     cacheKey: 'login-info',
+//     queryFn: () => loginFn(),
+//     staleTime: Infinity,
 
-});
-
-
-
-
+// });
 
 export const loginCache2 = createStorageCache({
     scope: () => userId.get(),
     cacheKey: 'login-info2',
     queryFn: () => loginFn(),
-    stored: () => getUserDB(userId.get()).cache // Dexie db.version(18).stores({ cache: 'id, timestamp',
+    stored: () => getUserDB(userId.get()).cache
 });
 
