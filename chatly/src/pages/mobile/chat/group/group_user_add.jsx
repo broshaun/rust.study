@@ -41,7 +41,7 @@ export const AddMember = () => {
     if (!group_id) return;
     const results = await http.requestBodyJson('group_user_add_list', { group_id, uids })
     const { code, message, data } = results;
-    console.log('results++', results)
+    // console.log('results++', results)
     if (code !== 200) {
       open({
         title: "邀请失败",

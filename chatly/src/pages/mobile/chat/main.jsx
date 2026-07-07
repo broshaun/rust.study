@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Outlet, useNavigate, useLoaderData } from "react-router";
+import { Outlet, useNavigate, useLoaderData,useLocation } from "react-router";
 import { useWinSize, useDateTime, currentAppBar, GlobalAppBar } from 'utils';
 import { IconLabel } from 'components';
 import { AppShell, Group, Center } from "@mantine/core";
@@ -13,6 +13,7 @@ import { group_invite_msg } from "cache/group_invite_msg";
 
 export function ChatShell() {
   const navigate = useNavigate();
+  const location = useLocation();
   const readyData = useLoaderData();
   const db = readyData?.db;
   const isShowBack = currentAppBar((state) => state.leftPath !== null);
@@ -24,22 +25,21 @@ export function ChatShell() {
   const [msgDot, setMsgDot] = useState(false);
   const messageCount = useLiveQuery(async () => await db.table("message").count(), [db]);
   useUpdateEffect(() => {
-    if (!messageCount) return;
-    setMsgDot(true)
+    if (!messageCount || location.pathname.startsWith('/mobile/chat/message')) return;
+      setMsgDot(true)
   }, [messageCount])
 
   // 群消息图标提示
   const [gmsgDot, setGmsgDot] = useState(false);
   const gmsgCount = useLiveQuery(async () => await db.table("gmsgs").count(), [db]);
   useUpdateEffect(() => {
-    if (!gmsgCount) return;
+    if (!gmsgCount || location.pathname.startsWith('/mobile/chat/group')) return;
     setGmsgDot(true)
   }, [gmsgCount])
   // 群邀请消息图标提示
   useEffect(() => {
     group_invite_msg.subscribe((state) => {
       if (!state.isSuccess) return;
-      // console.log('state++',state)
       const isInvite = state.data.some(({ ask_state = [] }) => (ask_state?.includes("invite") && !ask_state?.includes("agreed")))
       if (isInvite) {
         setGmsgDot(true)

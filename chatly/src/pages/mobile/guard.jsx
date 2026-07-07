@@ -30,6 +30,7 @@ export const chatGuardLoader = async () => {
 
 export function ChatGuard() {
   const navigate = useNavigate();
+  
   const { uid, did, host, token, db, currentUser } = useLoaderData();
   const dt = useDateTime();
   const remainSeconds = useRemainSeconds();

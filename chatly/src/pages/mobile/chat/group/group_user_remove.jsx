@@ -23,8 +23,7 @@ export const DelMember = () => {
 
   const { http } = createHttpClient('/rpc/chat/group/');
 
-
-
+  
   const get_group_user = async (groupId) => {
     const results = await http.requestBodyJson("group_user_list", { "group_id": groupId });
     const { code, data, message } = results;

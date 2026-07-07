@@ -10,8 +10,10 @@ export function Receiver() {
   const { id: friendId } = useParams();
   const { fnSendMsg, msgFriend: current } = useOutletContext();
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
+  const setRightPath = currentAppBar((state) => state.setRightPath);
   useEffect(() => {
     setLeftPath(`/mobile/chat/message/${friendId}`)
+    setRightPath(null)
   }, [])
 
   const navigate = useNavigate();

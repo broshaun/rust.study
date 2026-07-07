@@ -8,8 +8,10 @@ export function Smile() {
     const { id: friendId } = useParams()
     const { fnSendMsg } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
     useEffect(() => {
         setLeftPath(`/mobile/chat/message/${friendId}`)
+        setRightPath(null)
     }, [])
 
     const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import { useNavigate, useOutletContext,useParams } from 'react-router';
+import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { useState, useEffect } from "react";
 import { createHttpClient, currentAppBar } from 'utils';
 import { ImgUp } from './ui/ImageUpload';
@@ -8,9 +8,11 @@ export function ImagSend() {
     const { id: friendId } = useParams();
     const { fnSendMsg } = useOutletContext();
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setRightPath = currentAppBar((state) => state.setRightPath);
 
     useEffect(() => {
-        setLeftPath(`/mobile/chat/message/${friendId}`)
+        setLeftPath(`/mobile/chat/message/${friendId}`);
+        setRightPath(null);
     }, [])
 
     /**
@@ -34,7 +36,7 @@ export function ImagSend() {
         try {
             for (const file of files) {
                 const imgFileName = await uploadImg30({ file });
-                await fnSendMsg({  msgType: 'image', msgText: imgFileName });
+                await fnSendMsg({ msgType: 'image', msgText: imgFileName });
             }
         } catch (error) {
             console.error(error);

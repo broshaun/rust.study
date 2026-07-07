@@ -22,10 +22,12 @@ export function Offline() {
     const { db, friends, currentUser } = useLoaderData();
     const { open, close } = currentModal();
     const { http } = createHttpClient('/rpc/chat/msg/single2/');
-
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
+    const setRightIcon = currentAppBar((state) => state.setRightIcon);
+
     useEffect(() => {
         setLeftPath(`/mobile/chat/message/${friendId}`)
+        setRightIcon(null)
     }, [])
 
 

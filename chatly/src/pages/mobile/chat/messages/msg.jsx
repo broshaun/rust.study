@@ -57,6 +57,9 @@ export function Msg() {
         setRightIcon(<IconMessageDots />)
     }, [current, setTitle, setLeftPath, setRightPath, setRightIcon]);
 
+
+
+
     useEffect(() => {
         if (!db || !current?.uid) return;
         return () => {

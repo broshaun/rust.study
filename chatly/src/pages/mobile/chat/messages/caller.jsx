@@ -8,10 +8,11 @@ export function Caller() {
   const { fnSendMsg, msgFriend: current } = useOutletContext();
   const { id: friendId } = useParams();
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
-  
+  const setRightPath = currentAppBar((state) => state.setRightPath);
 
   useEffect(() => {
     setLeftPath(`/mobile/chat/message/${friendId}`)
+    setRightPath(null)
   }, [])
 
   const msgPhoneSend = async (ticket) => {
@@ -21,7 +22,6 @@ export function Caller() {
   }
 
   const handleStartCall = (ticket) => {
-    // console.log('开启通话,ticket:', ticket)
     msgPhoneSend(ticket)
   }
 

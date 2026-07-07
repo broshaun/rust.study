@@ -1,22 +1,23 @@
 import { currentAppBar, useDateTime } from "utils";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router";
 import { IconUsers, IconMessageUser } from "@tabler/icons-react";
 import { GroupList } from "./ui/GroupList";
 import { useLiveQuery } from "dexie-react-hooks";
 import { loginCache2 } from "cache/loginCache";
 import { group_invite_msg } from "cache/group_invite_msg";
-
+import { useRequest } from "ahooks";
 
 
 // 群聊列表
 export const Item = () => {
     const { db } = useOutletContext();
-    const [usrInfo, setUsrInfo] = useState({})
-    useEffect(() => {
-        loginCache2.getAsync().then(setUsrInfo)
+    const { data: usrInfo, loading } = useRequest(loginCache2.getAsync, {
+        manual: false
     })
 
+
+    // console.log('usrInfo+++', usrInfo)
 
     const dt = useDateTime();
     const setTitle = currentAppBar((state) => state.setTitle);
@@ -55,17 +56,19 @@ export const Item = () => {
         await navigate(`/mobile/chat/group/msgs/${value?.id}`)
     }
 
+
     // 点击群头像
-    const openGroupInfo = async (value) => {
+    const openGroupInfo = useCallback(async (value) => {
+        if (loading) return;
         const list = value?.administrator || [];
         if (list.includes(usrInfo?.id)) {
             navigate(`/mobile/chat/group/update/${value?.id}`)
         }
-    }
+    }, [loading])
 
     const finalGroups = useLiveQuery(async () => {
         if (!db) return;
-        const groups = (await db.cache.get('my_group_list'))?.data
+        const { data: groups = [] } = await db.cache.get('my_group_list')
         const dialog = await db.table("groups_dialog").toArray()
         const groupMap = new Map(dialog.map(item => [item.id, item]))
         const a = groups.map(group => ({ ...group, ...groupMap.get(group.id) })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
@@ -73,7 +76,7 @@ export const Item = () => {
     }, [db], []);
 
 
-    // console.log('finalGroups',finalGroups)
+    // console.log('finalGroups', finalGroups)
 
     return (
         <GroupList
