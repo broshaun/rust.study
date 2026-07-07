@@ -17,8 +17,8 @@ keytool -genkeypair \
 ```
 
 
-- git tag -d android-v1.1.10
-- git tag android-v1.1.10
-- git push origin android-v1.1.10
+- git tag -d android-v1.2.0
+- git tag android-v1.2.0
+- git push origin android-v1.2.0
 ### 强制覆盖标签
-- git push origin android-v1.1.10 -f  
+- git push origin android-v1.2.0 -f  
