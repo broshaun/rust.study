@@ -1,5 +1,5 @@
 import { Outlet, useLoaderData, useParams } from 'react-router';
-import { createHttpClient, useDateTime, getUserDB } from 'utils';
+import { createHttpClient, useDateTime, getUserDB, GlobalModal } from 'utils';
 import { loginCache2 } from 'cache/loginCache';
 import { ObjectId } from "bson";
 import { userId } from 'utils/identity';
@@ -72,7 +72,11 @@ export const Main = () => {
         }
     }
 
-    return <Outlet context={{ fnSendMsg, db, msgFriend }} />
+    return <div>
+        <GlobalModal />
+        <Outlet context={{ fnSendMsg, db, msgFriend }} />
+    </div>
+    
 
 }
 

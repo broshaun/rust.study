@@ -5,6 +5,7 @@ import { Msg,loaderMsg } from "./msg";
 import { P2PPcmVoiceTest } from "./ui/P2PPcmVoiceTest"
 import { ImagSend } from "./imgSend";
 import { Smile } from "./smile";
+import { Offline,loaderOffline } from "./offline";
 
 
 export const RsMsgs = [
@@ -37,6 +38,11 @@ export const RsMsgs = [
             {
                 path: "smile",
                 element: <Smile />
+            },
+            {
+                path: "offline",
+                element: <Offline />,
+                loader: loaderOffline
             },
         ]
     }

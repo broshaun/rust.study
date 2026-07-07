@@ -8,6 +8,7 @@ export function Caller() {
   const { fnSendMsg, msgFriend: current } = useOutletContext();
   const { id: friendId } = useParams();
   const setLeftPath = currentAppBar((state) => state.setLeftPath);
+  
 
   useEffect(() => {
     setLeftPath(`/mobile/chat/message/${friendId}`)

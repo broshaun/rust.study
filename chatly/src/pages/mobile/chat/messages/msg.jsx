@@ -3,7 +3,7 @@ import { useOutletContext, useParams, useLoaderData } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useWinSize, currentAppBar, useDateTime } from "utils";
 import { ChatBox } from "./ui/ChatBox";
-import { IconMoodSmile, IconPhotoUp, IconPhoneOutgoing } from '@tabler/icons-react';
+import { IconMoodSmile, IconPhotoUp, IconPhoneOutgoing, IconMessageDots } from '@tabler/icons-react';
 import { getUserDB } from "utils";
 import { userId } from "utils/identity";
 
@@ -47,13 +47,15 @@ export function Msg() {
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightPath = currentAppBar((state) => state.setRightPath);
+    const setRightIcon = currentAppBar((state) => state.setRightIcon);
 
     useEffect(() => {
         if (!current) return;
         setTitle(current?.remark || current?.nickname || current?.email);
         setLeftPath("/mobile/chat/dialog/");
-        setRightPath(null);
-    }, [current, setTitle, setLeftPath, setRightPath]);
+        setRightPath(`/mobile/chat/message/${friendId}/offline/`);
+        setRightIcon(<IconMessageDots />)
+    }, [current, setTitle, setLeftPath, setRightPath, setRightIcon]);
 
     useEffect(() => {
         if (!db || !current?.uid) return;
