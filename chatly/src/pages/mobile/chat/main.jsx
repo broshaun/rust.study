@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Outlet, useNavigate, useLoaderData,useLocation } from "react-router";
+import { Outlet, useNavigate, useLoaderData, useLocation } from "react-router";
 import { useWinSize, useDateTime, currentAppBar, GlobalAppBar } from 'utils';
 import { IconLabel } from 'components';
 import { AppShell, Group, Center } from "@mantine/core";
@@ -8,10 +8,41 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useUpdateEffect } from "ahooks";
 import { friend_await_message } from "cache/friend_await_message";
 import { group_invite_msg } from "cache/group_invite_msg";
-
+import { useSafeArea } from "utils";
 
 
 export function ChatShell() {
+
+  window.addEventListener('safeAreaChanged', (event) => {
+    const { top, bottom, keyboardHeight, keyboardVisible } = event.detail;
+    console.log('Safe area changed:', event.detail);
+  });
+
+
+  const style = getComputedStyle(
+    document.documentElement
+  );
+
+  const top1 = parseFloat(
+    style.getPropertyValue('--safe-area-top')
+  ) || 0;
+
+  const bottom1 = parseFloat(
+    style.getPropertyValue('--safe-area-bottom')
+  ) || 0;
+
+
+  console.log({
+    top1,
+    bottom1
+  });
+
+  const { top, bottom } = useSafeArea()
+
+  console.log('top', top)
+  console.log('bottom', bottom)
+
+
   const navigate = useNavigate();
   const location = useLocation();
   const readyData = useLoaderData();
@@ -26,7 +57,7 @@ export function ChatShell() {
   const messageCount = useLiveQuery(async () => await db.table("message").count(), [db]);
   useUpdateEffect(() => {
     if (!messageCount || location.pathname.startsWith('/mobile/chat/message')) return;
-      setMsgDot(true)
+    setMsgDot(true)
   }, [messageCount])
 
   // 群消息图标提示
@@ -74,6 +105,9 @@ export function ChatShell() {
 
 
   return (
+
+
+ 
     <AppShell
       padding={0}
       header={{ height: 55 }}
@@ -82,6 +116,9 @@ export function ChatShell() {
     >
       <AppShell.Header>
         <GlobalAppBar />
+        <div>
+          {top1}
+        </div>
       </AppShell.Header>
       <AppShell.Main>
 

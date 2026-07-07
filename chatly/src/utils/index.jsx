@@ -1,7 +1,10 @@
 
 export { usePcmCapture } from './hooks/usePcmCapture';
 export { usePcmPlayback } from './hooks/usePcmPlayback';
+
 export { useWinSize } from './hooks/useWinSize';
+export { useSafeArea} from './hooks/useSafeArea';
+
 export { useCachedImage, clearAllImageCache } from './hooks/useCachedImage';
 
 export { apiBase, apiImgs,apiMqtt } from './store/apiBase'

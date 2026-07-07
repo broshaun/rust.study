@@ -35,6 +35,7 @@ tauri = { version = "2.11.2", features = ["protocol-asset"] }
 rumqttc = "0.25"
 dashmap = "6"
 xtra = { version = "0.6", features = ["tokio", "macros"] }
+tauri-plugin-edge-to-edge = "0.3.3"
 
 [profile.release]
 panic = "abort"
