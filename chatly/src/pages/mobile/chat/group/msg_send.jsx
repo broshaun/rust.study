@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { useWinSize, currentAppBar } from 'utils';
+import { useWinSize, currentAppBar,useDateTime } from 'utils';
 import { ChatBox } from "./ui/ChatBox"
 import { useOutletContext, useParams } from "react-router";
 import { IconDots } from "@tabler/icons-react";
@@ -32,12 +32,13 @@ export function Msg() {
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
+    const dt = useDateTime();
 
     useEffect(() => {
         if (!db) return;
         return () => {
             if (!groupId) return;
-            db.table("groups_dialog").put({ id: groupId, signal: "old", unread: 0 }).catch(console.error);
+            db.table("groups_dialog").put({ id: groupId, signal: "old", timestamp: dt.getDateTimeStr() }).catch(console.error);
         };
     }, [db, groupId]);
 

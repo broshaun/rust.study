@@ -17,6 +17,7 @@ export const Item = () => {
         loginCache2.getAsync().then(setUsrInfo)
     })
 
+
     const dt = useDateTime();
     const setTitle = currentAppBar((state) => state.setTitle);
     const setLeftPath = currentAppBar((state) => state.setLeftPath);
@@ -67,7 +68,8 @@ export const Item = () => {
         const groups = (await db.cache.get('my_group_list'))?.data
         const dialog = await db.table("groups_dialog").toArray()
         const groupMap = new Map(dialog.map(item => [item.id, item]))
-        return groups.map(group => ({ ...group, ...groupMap.get(group.id) }))
+        const a = groups.map(group => ({ ...group, ...groupMap.get(group.id) })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        return a
     }, [db], []);
 
 

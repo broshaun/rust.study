@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createHttpClient, currentAppBar } from "utils";
 import { FriendSearch } from "./ui/FriendSearch";
 import { friend_await_message } from "cache/friend_await_message";
+import { useRequest } from "ahooks";
 
 
 export const Find = () => {
@@ -21,23 +22,17 @@ export const Find = () => {
     }, []);
 
 
-    const [isSearching, setIsSearching] = useState(false);
-    const [findByUser, setFindByUser] = useState(null);
-    const searchFriend = async ({ email }) => {
-        if (!email?.trim()) return null;
-        try {
-            setIsSearching(true);
+    const { data: findByUser, loading: isSearching, runAsync } = useRequest(
+        async ({ email }) => {
+            if (!email?.trim()) return null;
             const result = await http.requestBodyJson("find", { email });
             const data = result?.data ?? null;
-            setFindByUser(data);
             return data;
-        } catch (err) {
-            setFindByUser(null);
-            console.error(err)
-        } finally {
-            setIsSearching(false);
-        }
-    };
+        },
+        {
+            manual: true,
+            onError: console.error
+        })
 
 
     const handleEmailChange = (value) => {
@@ -45,13 +40,11 @@ export const Find = () => {
     };
 
     const handleSearch = (email) => {
-        searchFriend({
-            email,
-        });
+        runAsync({ email });
     };
 
     const handleAddFriend = async (userId) => {
-        console.log('userId++',userId)
+        console.log('userId++', userId)
         if (!userId) return null;
         await http.requestBodyJson("PUT", { user_id: userId });
         await friend_await_message.refresh()

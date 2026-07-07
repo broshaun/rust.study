@@ -7,7 +7,8 @@ import {
     IconId,
     IconTrash,
     IconLogout,
-    IconChevronRight
+    IconChevronRight,
+    IconDeviceMobileMessage
 } from '@tabler/icons-react';
 import React, { useEffect } from "react";
 
@@ -46,13 +47,13 @@ export const Items = () => {
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
                 onClick={() => { navigate("/mobile/chat/self/name/") }}
             />
-            {/* <Divider ml={45} my={0} />
+            <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
-                label="设置手机提醒"
+                label="设置离线接收"
                 leftSection={<IconDeviceMobileMessage size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
                 onClick={() => { navigate("/mobile/chat/self/pushdeer/") }}
-            /> */}
+            />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}
                 label="清空聊天记录"

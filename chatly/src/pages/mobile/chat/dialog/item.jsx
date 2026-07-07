@@ -41,7 +41,8 @@ export const Item = () => {
         const dialog = await db.table("friends_dialog").toArray();
         const { data: friends = [] } = await db.cache.get('my_friends');
         const friendMap = new Map(friends.map(item => [item.uid, item]))
-        return dialog.filter(d => friendMap.has(d.id)).map(d => ({ ...d, ...friendMap.get(d.id) }))
+        const a = dialog.filter(d => friendMap.has(d.id)).map(d => ({ ...d, ...friendMap.get(d.id) }));
+        return a.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     }, [db], []);
 
     return (

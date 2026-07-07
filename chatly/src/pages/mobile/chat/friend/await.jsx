@@ -4,7 +4,7 @@ import { FriendRequestList } from "./ui/FriendRequestList";
 import { friend_await_message } from "cache/friend_await_message";
 import { IconUserPlus } from "@tabler/icons-react";
 import { friend_list2 } from "cache/friend_list";
-import { useUnmount } from "ahooks";
+import { useRequest } from "ahooks";
 import { userId } from "utils/identity";
 
 
@@ -29,14 +29,11 @@ export const FriendRequests = () => {
     setRightPath('/mobile/chat/friend/find/')
   }, []);
 
-  useUnmount(() => {
-    friend_list2.refresh();
-    friend_await_message.refresh();
-  })
-
+  const [loading, setLoding] = useState(false)
   const [friendRequests, setFriendRequests] = useState([])
   useEffect(() => {
     const unsubscribe = friend_await_message.subscribe((next) => {
+      setLoding(next?.isFetching)
       if (!next?.isSuccess) return;
       setFriendRequests(next.data);
     });
@@ -44,21 +41,30 @@ export const FriendRequests = () => {
   }, []);
 
   // 处理朋友请求
-  async function updateFriendRequest({ id, ask_state }) {
-    if (!id || !ask_state) return;
-    const result = await http.requestBodyJson("PATCH", { id, ask_state });
-    return result;
-  }
+  const { runAsync } = useRequest(
+    async ({ id, ask_state }) => {
+      if (!id || !ask_state) new Error('异常参数');
+      const result = await http.requestBodyJson("PATCH", { id, ask_state });
+      return result;
+    },
+    {
+      manual: true,
+      onError: console.error,
+      onSuccess: async () => {
+        await friend_await_message.refresh()
+        await friend_list2.refresh()
+      }
+    }
+  )
 
-
-  console.log('friendRequests++', friendRequests)
 
   return (
     <FriendRequestList
+      isLoadingRequests={loading}
       onRefetch={() => friend_await_message.refresh()}
       friendRequests={friendRequests}
-      onAcceptFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "agree" })}
-      onRejectFriend={(user) => updateFriendRequest({ id: user.id, ask_state: "refuse" })}
+      onAcceptFriend={(user) => runAsync({ id: user.id, ask_state: "agree" })}
+      onRejectFriend={(user) => runAsync({ id: user.id, ask_state: "refuse" })}
     />
   );
 };
