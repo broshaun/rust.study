@@ -8,7 +8,7 @@ import { getUserDB } from 'utils';
 const get_friends = async () => {
     const { http } = createHttpClient('/rpc/chat/friend/');
     const results = await http.requestBodyJson("my_friends", {});
-    console.log('results++',results)
+    console.log('results++', results)
     const { code, data, message } = results;
     if (code !== 200) {
         console.error(message)
@@ -26,8 +26,8 @@ const get_friends = async () => {
 
 
 export const friend_list2 = createStorageCache({
-    scope: () => userId.get(),
+    stored: () => getUserDB(userId.get()).cache,
     cacheKey: 'my_friends',
-    queryFn: ()=> get_friends(),
-    stored: () => getUserDB(userId.get()).cache
+    queryFn: () => get_friends(),
+
 });

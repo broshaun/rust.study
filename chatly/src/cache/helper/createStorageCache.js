@@ -1,85 +1,60 @@
-import { QueryObserver } from '@tanstack/query-core';
-import { queryClient } from './createClient';
-
-
-export const emptyState = Object.freeze({
-    data: null,
-    error: null,
-    isPending: false,
-    isFetching: false,
-    isSuccess: false,
-    isError: false
-});
-
-
-const toState = (v) => v ? {
-    data: v.data ?? null, error: v.error,
-    isPending: v.status === 'pending', isFetching: v.fetchStatus === 'fetching',
-    isSuccess: v.status === 'success', isError: v.status === 'error',
-} : emptyState;
+// 🎯 仅用于网络请求并发去重的 Promise 锁
+const inflight = new Map();
 
 export function createStorageCache({
-    scope = null,
+    stored,
     cacheKey,
-    queryFn,
-    retry = 1,
-    retryDelay = 1000,
-    stored = null
+    queryFn
 }) {
-    if (!cacheKey || typeof cacheKey !== 'string' || typeof queryFn !== 'function') throw new Error('[createStorageCache] Invalid parameters');
+    // 1. 严格参数校验 (坏数据直接拦截，这是最基础的易维护保障)
+    if (!stored || (typeof stored !== 'object' && typeof stored !== 'function')) throw new Error('[Cache] Invalid stored');
+    if (!cacheKey || typeof cacheKey !== 'string') throw new Error('[Cache] Invalid cacheKey');
+    if (typeof queryFn !== 'function') throw new Error('[Cache] Invalid queryFn');
 
-    const resolveKey = () => {
-        const s = typeof scope === 'function' ? scope() : scope;
-        return s ? [s, cacheKey] : [cacheKey];
-    };
-
-    const optionsOf = () => ({ queryKey: resolveKey(), staleTime: Infinity, gcTime: Infinity, retry, retryDelay, queryFn });
-
-    // 🎯 统一提取底层 DB 读写查删，彻底消灭外层的重复 try-catch 噪音代码
     const getTbl = () => typeof stored === 'function' ? stored() : stored;
-    const dbGet = async () => { try { const t = getTbl(); return t ? (await t.get(cacheKey))?.data ?? null : null; } catch { return null; } };
-    const dbPut = async (data) => { try { const t = getTbl(); if (t) await t.put({ id: cacheKey, data, timestamp: Date.now() }); } catch { } };
-    const dbDel = async () => { try { const t = getTbl(); if (t) await t.delete(cacheKey); } catch { } };
-
-    const getAsync = () => dbGet();
-
-    const fetch = async () => {
-        const cached = await dbGet();
-        // cached != null 同时等价于排除 null 和 undefined
-        if (cached != null) return queryClient.setQueryData(resolveKey(), cached), cached;
-
-        const data = await queryClient.fetchQuery(optionsOf());
-        if (data !== undefined) await dbPut(data);
-        return data;
+    // 2. 底层 DB 原子操作 (try-catch 保证持久化层哪怕崩了，业务也不卡死)
+    const getAsync = async () => {
+        try {
+            return (await getTbl()?.get(cacheKey))?.data ?? null;
+        } catch { return null; }
+    };
+    const dbPut = async (data) => {
+        try {
+            await getTbl()?.put({ id: cacheKey, data, timestamp: Date.now() });
+        } catch { }
+    };
+    const dbDel = async () => {
+        try {
+            await getTbl()?.delete(cacheKey);
+        } catch { }
+    };
+    const dbClear = async () => {
+        try {
+            await getTbl()?.clear();
+        } catch { }
+    };
+    // 3. 核心网络请求去重锁 (性能核心：多处同时 fetch 只有 1 个网络请求)
+    const safeNetworkFetch = async () => {
+        if (inflight.has(cacheKey)) return inflight.get(cacheKey);
+        const promise = (async () => {
+            try {
+                const data = await queryFn();
+                if (data !== undefined) await dbPut(data); // 写入 DB，由你的外部数据库监听器感知
+                return data;
+            } finally {
+                inflight.delete(cacheKey); // 只要请求完立刻释放，零内存残留
+            }
+        })();
+        inflight.set(cacheKey, promise);
+        return promise;
     };
 
-    const refresh = async () => {
-        const opts = optionsOf();
-        opts.staleTime = 0; // 主动刷新穿透内存
-
-        const data = await queryClient.fetchQuery(opts);
-        if (data !== undefined) await dbPut(data);
-        return data;
-    };
-
-    const set = async (data) => {
-        await dbPut(data);
-        return queryClient.setQueryData(resolveKey(), data);
-    };
-
-    const remove = async () => {
-        queryClient.removeQueries({ queryKey: resolveKey(), exact: true });
-        await dbDel();
-        return true;
-    };
-
-    // const subscribe = (callback) => {
-    //     if (typeof callback !== 'function') return () => { };
-    //     const observer = new QueryObserver(queryClient, optionsOf());
-    //     const emit = (result) => callback(toState(result));
-    //     emit(observer.getCurrentResult());
-    //     return observer.subscribe(emit);
-    // };
+    // 4. 极致扁平的 API 导出 (零冗余逻辑，执行路径最短，性能最高)
+    const fetch = async () => (await getAsync()) ?? safeNetworkFetch();
+    const refresh = async () => safeNetworkFetch();
+    const set = async (data) => (await dbPut(data), data);
+    const remove = async () => (await dbDel(), true);
+    const clear = async () => { inflight.clear(); await dbClear(); return true; };
 
     return {
         getAsync,
@@ -87,6 +62,6 @@ export function createStorageCache({
         refresh,
         set,
         remove,
-        // subscribe
+        clear
     };
 }

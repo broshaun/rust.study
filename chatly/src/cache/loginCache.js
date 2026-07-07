@@ -5,10 +5,6 @@ import { getUserDB } from 'utils';
 
 
 async function loginFn() {
-    console.log('执行成功')
-    const db = getUserDB(userId.get())
-
-
     const { http } = createHttpClient('/rpc/chat/login/');
     const res = await http.requestBodyJson('info', {});
     if (!res) throw new Error('获取失败');
@@ -25,7 +21,6 @@ async function loginFn() {
 // });
 
 export const loginCache2 = createStorageCache({
-    scope: () => userId.get(),
     cacheKey: 'login-info2',
     queryFn: () => loginFn(),
     stored: () => getUserDB(userId.get()).cache

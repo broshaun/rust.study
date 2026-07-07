@@ -24,8 +24,8 @@ export const group_list = createQueryCache({
 
 
 export const group_list2 = createStorageCache({
-    scope: () => userId.get(),
+    stored: () => getUserDB(userId.get()).cache,
     cacheKey: 'my_group_list',
     queryFn: () => queryFn(),
-    stored: () => getUserDB(userId.get()).cache
+    
 });
