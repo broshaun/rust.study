@@ -33,6 +33,7 @@ export function Msg() {
     const setRightIcon = currentAppBar((state) => state.setRightIcon);
     const setRightPath = currentAppBar((state) => state.setRightPath);
     const dt = useDateTime();
+    const { top, bottom } = getSafeArea()
 
     useEffect(() => {
         if (!db) return;
@@ -72,7 +73,7 @@ export function Msg() {
     return <div>
         <ChatBox
             tools={getToolsConfig(groupId)}
-            height={winHeight - 55}
+            height={winHeight - 55 - top - bottom}
             messages={msgs}
             onSend={(v) => { msgTextSend(v) }}
         />

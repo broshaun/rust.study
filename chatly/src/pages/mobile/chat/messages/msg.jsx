@@ -40,6 +40,7 @@ export async function loaderMsg({ params }) {
 }
 
 export function Msg() {
+     const { top, bottom } = getSafeArea()
     const { fnSendMsg, msgFriend: current } = useOutletContext();
     const { db, friendId } = useLoaderData()
     const { winHeight } = useWinSize();
@@ -91,7 +92,7 @@ export function Msg() {
         <ChatBox
             messages={msgs}
             tools={getToolsConfig(friendId)}
-            height={winHeight - 55}
+            height={winHeight - 55 - top - bottom}
             onSend={msgTextSend}
         />
     );

@@ -79,31 +79,31 @@ export function ChatShell() {
 
   return (
 
-      <AppShell
-        padding={0}
-        header={{ height: 55 + top }}
-        footer={{ height: 55 + bottom, collapsed: isShowBack }}
-        transitionDuration={0}
-      >
+    <AppShell
+      padding={0}
+      header={{ height: 55 + top }}
+      footer={{ height: 55 + bottom, collapsed: isShowBack }}
+      transitionDuration={0}
+    >
 
-        <AppShell.Header pt={top}>
-          <GlobalAppBar />
-        </AppShell.Header>
-        <AppShell.Main>
+      <AppShell.Header pt={top}>
+        <GlobalAppBar />
+      </AppShell.Header>
+      <AppShell.Main>
 
-          <Outlet />
+        <Outlet />
 
-        </AppShell.Main>
-        <AppShell.Footer pb={bottom}>
-          <Group grow gap={1} h="100%"  >
-            {
-              visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
-            }
-          </Group>
-    
-        </AppShell.Footer>
+      </AppShell.Main>
+      <AppShell.Footer pb={bottom}>
+        <Group grow gap={1} h="100%"  >
+          {
+            visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
+          }
+        </Group>
 
-      </AppShell>
+      </AppShell.Footer>
+
+    </AppShell>
 
   );
 }
