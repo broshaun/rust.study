@@ -18,3 +18,4 @@
 ### 运行并绑定虚拟机
 - cargo tauri ios dev 
 - pnpm tauri ios dev 
+- pnpm tauri ios dev --open

@@ -12,16 +12,7 @@ import { useSafeArea } from "utils";
 
 
 export function ChatShell() {
-
-  window.addEventListener('safeAreaChanged', (event) => {
-    const { top, bottom, keyboardHeight, keyboardVisible } = event.detail;
-    console.log('Safe area changed:', event.detail);
-  });
-
-
-
   const { top, bottom } = useSafeArea()
-
   console.log('top', top)
   console.log('bottom', bottom)
 
@@ -99,7 +90,7 @@ export function ChatShell() {
       footer={{ height: 55, collapsed: isShowBack }}
       transitionDuration={0}
     >
-      <AppShell.Header>
+      <AppShell.Header pt={top}>
         <GlobalAppBar />
         <div>
           {top}
@@ -110,7 +101,7 @@ export function ChatShell() {
         <Outlet />
 
       </AppShell.Main>
-      <AppShell.Footer>
+      <AppShell.Footer pb={bottom}>
         <Group h="100%" grow gap={1} >
           {
             visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
