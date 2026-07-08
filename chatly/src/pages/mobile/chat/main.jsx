@@ -9,23 +9,10 @@ import { useUpdateEffect } from "ahooks";
 import { friend_await_message } from "cache/friend_await_message";
 import { group_invite_msg } from "cache/group_invite_msg";
 import { getSafeArea } from "utils";
-import { getDeviceInfo } from "tauri-plugin-device-info-api";
-
-// Get device information
-const device = await getDeviceInfo();
-// console.log(device);
-// const battery = await getBatteryInfo();
-// console.log(battery);
-// const network = await getNetworkInfo();
-// console.log(network);
-// const store = await getStorageInfo();
-// console.log(store);
-// const display = await getDisplayInfo();
-// console.log(display);
 
 
 export function ChatShell() {
-  const { top, bottom } = getSafeArea(device.model)
+  const { top, bottom } = getSafeArea()
   // console.log('top', top)
   // console.log('bottom', bottom)
 

@@ -9,7 +9,8 @@ import { getDeviceInfo } from "tauri-plugin-device-info-api";
 const device = await getDeviceInfo();
 
 export function AuthShell() {
-  const { top, bottom } = getSafeArea(device.model)
+  
+  const { top, bottom } = getSafeArea(device)
   const navigate = useNavigate();
 
   const drawerMenu = [
