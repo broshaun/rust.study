@@ -5,7 +5,6 @@ use p2p::p2p_commands;
 mod net;
 mod mq;
 mod actor;
-mod safe_area;
 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -39,7 +38,6 @@ pub fn run() {
             mq::mqtt::unsubscribe,
 
             actor::test::test,
-            safe_area::get_safe_area,
             
         ])
         .run(tauri::generate_context!())
