@@ -6,6 +6,7 @@ import { ChatBox } from "./ui/ChatBox";
 import { IconMoodSmile, IconPhotoUp, IconPhoneOutgoing, IconMessageDots } from '@tabler/icons-react';
 import { getUserDB } from "utils";
 import { userId } from "utils/identity";
+import { getSafeArea } from "utils";
 
 
 const getToolsConfig = (friendId) => [

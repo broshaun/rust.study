@@ -5,6 +5,7 @@ import { useOutletContext, useParams } from "react-router";
 import { IconDots } from "@tabler/icons-react";
 import { IconMoodSmile, IconPhotoUp } from "@tabler/icons-react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { getSafeArea } from "utils";
 
 
 // 变成一个纯函数，谁调用谁传 groupId 进来
