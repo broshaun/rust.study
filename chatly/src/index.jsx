@@ -4,6 +4,8 @@ import "@mantine/core/styles.css";
 import { MantineProvider, Box } from "@mantine/core";
 import App from "./App";
 import { theme } from "./theme";
+import "./index.css";
+
 
 const rootElement = document.getElementById("root");
 
@@ -14,14 +16,9 @@ if (!rootElement) {
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <MantineProvider theme={theme} defaultColorScheme="light">
-      <Box
-        style={{
-          paddingTop: "var(--safe-area-top, 0px)",
-          paddingBottom: "var(--safe-area-bottom, 0px)",
-        }}
-      >
+
         <App />
-      </Box>
+
 
 
     </MantineProvider>

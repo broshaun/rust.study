@@ -1,6 +1,7 @@
-import { useState,useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export function useSafeArea() {
+
+export function useSafeArea(){
 
     const [safeArea,setSafeArea] = useState({
         top:0,
@@ -10,54 +11,61 @@ export function useSafeArea() {
 
     useEffect(()=>{
 
-        const get = ()=>{
-
-            const style =
-                getComputedStyle(
-                    document.documentElement
-                );
-
-
-            const top =
-                style.getPropertyValue(
-                    "--safe-area-top"
-                ) ||
-                style.getPropertyValue(
-                    "--safe-area-inset-top"
-                );
+        const topEl = document.createElement("div");
+        topEl.style.cssText = `
+            position: fixed;
+            top:0;
+            height: env(safe-area-inset-top);
+            width:0;
+            visibility:hidden;
+        `;
 
 
-            const bottom =
-                style.getPropertyValue(
-                    "--safe-area-bottom"
-                ) ||
-                style.getPropertyValue(
-                    "--safe-area-inset-bottom"
-                );
+        const bottomEl = document.createElement("div");
+        bottomEl.style.cssText = `
+            position: fixed;
+            bottom:0;
+            height: env(safe-area-inset-bottom);
+            width:0;
+            visibility:hidden;
+        `;
 
+
+        document.body.appendChild(topEl);
+        document.body.appendChild(bottomEl);
+
+
+        const update = ()=>{
 
             setSafeArea({
-                top: parseFloat(top) || 0,
-                bottom: parseFloat(bottom) || 0,
+                top: topEl.offsetHeight,
+                bottom: bottomEl.offsetHeight,
             });
+
         };
 
 
-        get();
+        update();
 
 
         window.addEventListener(
-            "safeAreaChanged",
-            get
+            "resize",
+            update
         );
 
 
         return ()=>{
+
             window.removeEventListener(
-                "safeAreaChanged",
-                get
+                "resize",
+                update
             );
+
+            topEl.remove();
+            bottomEl.remove();
+
         };
+
 
     },[]);
 

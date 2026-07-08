@@ -19,28 +19,13 @@ export function ChatShell() {
   });
 
 
-  const style = getComputedStyle(
-    document.documentElement
-  );
-
-  const top1 = parseFloat(
-    style.getPropertyValue('--safe-area-top')
-  ) || 0;
-
-  const bottom1 = parseFloat(
-    style.getPropertyValue('--safe-area-bottom')
-  ) || 0;
-
-
-  console.log({
-    top1,
-    bottom1
-  });
 
   const { top, bottom } = useSafeArea()
 
   console.log('top', top)
   console.log('bottom', bottom)
+
+
 
 
   const navigate = useNavigate();
@@ -117,7 +102,7 @@ export function ChatShell() {
       <AppShell.Header>
         <GlobalAppBar />
         <div>
-          {top1}
+          {top}
         </div>
       </AppShell.Header>
       <AppShell.Main>
