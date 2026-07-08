@@ -13,7 +13,7 @@ export const loaderOffline = async () => {
     const uid = userId.get();
     const currentUser = await loginCache2.fetch();
     const db = getUserDB(uid);
-    const friends = await friend_list2.getAsync()
+    const friends = await friend_list2.get()
     return { db, friends, currentUser };
 }
 

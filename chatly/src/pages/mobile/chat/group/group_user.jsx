@@ -12,7 +12,7 @@ export const GroupUsers = () => {
     const { open, close } = currentModal();
     const [currentUser, setUser] = useState({})
     useEffect(() => {
-        loginCache2.getAsync().then(setUser)
+        loginCache2.get().then(setUser)
     }, [])
 
     const { http } = createHttpClient('/rpc/chat/group/');

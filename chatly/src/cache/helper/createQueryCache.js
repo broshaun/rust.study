@@ -1,6 +1,6 @@
-import { QueryObserver } from '@tanstack/query-core';
-import { queryClient } from './createClient';
+import { QueryObserver,QueryClient } from '@tanstack/query-core';
 
+export const queryClient = new QueryClient();
 
 export const emptyState = Object.freeze({
     data: null,

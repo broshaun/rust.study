@@ -12,7 +12,7 @@ import { useRequest } from "ahooks";
 // 群聊列表
 export const Item = () => {
     const { db } = useOutletContext();
-    const { data: usrInfo, loading } = useRequest(loginCache2.getAsync, {
+    const { data: usrInfo, loading } = useRequest(loginCache2.get, {
         manual: false
     })
 
