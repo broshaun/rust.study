@@ -3,8 +3,13 @@ import { Outlet, useNavigate } from "react-router";
 import { IconLabel } from 'components';
 import { Stack, Drawer, Title, AppShell, Burger, Divider } from "@mantine/core";
 import { useDisclosure } from '@mantine/hooks';
+import { getSafeArea } from "utils";
+import { getDeviceInfo } from "tauri-plugin-device-info-api";
+
+const device = await getDeviceInfo();
 
 export function AuthShell() {
+  const { top, bottom } = getSafeArea(device.model)
   const navigate = useNavigate();
 
   const drawerMenu = [
@@ -51,10 +56,10 @@ export function AuthShell() {
         </Stack>
       </Drawer>
 
-      <AppShell padding={10} header={{ height: 45 }} >
-        <AppShell.Header >
+      <AppShell padding={10} header={{ height: 45 + top }} >
+        <AppShell.Header pt={top}>
           <Burger onClick={open} color="gray" m="sm" size="sm" />
-        </AppShell.Header>
+        </AppShell.Header >
         <AppShell.Main>
           <Outlet />
         </AppShell.Main>

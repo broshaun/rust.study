@@ -3,7 +3,7 @@ export { usePcmCapture } from './hooks/usePcmCapture';
 export { usePcmPlayback } from './hooks/usePcmPlayback';
 
 export { useWinSize } from './hooks/useWinSize';
-export { useSafeArea} from './hooks/useSafeArea';
+export { getSafeArea} from './hooks/getSafeArea';
 
 export { useCachedImage, clearAllImageCache } from './hooks/useCachedImage';
 

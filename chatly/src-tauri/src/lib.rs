@@ -40,6 +40,7 @@ pub fn run() {
             actor::test::test,
             
         ])
+        .plugin(tauri_plugin_device_info::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

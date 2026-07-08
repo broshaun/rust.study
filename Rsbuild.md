@@ -68,6 +68,9 @@ For iOS development, run:
   pnpm add zustand @tanstack/query-core @tanstack/react-virtual
   pnpm add bson ahooks localforage
 
+
+  cargo add tauri-plugin-device-info
+
 ```
 
 

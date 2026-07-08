@@ -22,6 +22,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router": "^7.17.0",
+    "tauri-plugin-device-info-api": "^1.0.1",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

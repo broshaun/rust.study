@@ -2,22 +2,32 @@ import React, { useEffect, useMemo, useState } from "react"
 import { Outlet, useNavigate, useLoaderData, useLocation } from "react-router";
 import { useWinSize, useDateTime, currentAppBar, GlobalAppBar } from 'utils';
 import { IconLabel } from 'components';
-import { AppShell, Group, Center } from "@mantine/core";
+import { AppShell, Group, Center, Box } from "@mantine/core";
 import { IconMessage, IconUsers, IconUser, IconUserCircle } from "@tabler/icons-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useUpdateEffect } from "ahooks";
 import { friend_await_message } from "cache/friend_await_message";
 import { group_invite_msg } from "cache/group_invite_msg";
-import { useSafeArea } from "utils";
+import { getSafeArea } from "utils";
+import { getDeviceInfo } from "tauri-plugin-device-info-api";
+
+// Get device information
+const device = await getDeviceInfo();
+// console.log(device);
+// const battery = await getBatteryInfo();
+// console.log(battery);
+// const network = await getNetworkInfo();
+// console.log(network);
+// const store = await getStorageInfo();
+// console.log(store);
+// const display = await getDisplayInfo();
+// console.log(display);
 
 
 export function ChatShell() {
-  const { top, bottom } = useSafeArea()
-  console.log('top', top)
-  console.log('bottom', bottom)
-
-
-
+  const { top, bottom } = getSafeArea(device.model)
+  // console.log('top', top)
+  // console.log('bottom', bottom)
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -82,32 +92,31 @@ export function ChatShell() {
 
   return (
 
+      <AppShell
+        padding={0}
+        header={{ height: 55 + top }}
+        footer={{ height: 55 + bottom, collapsed: isShowBack }}
+        transitionDuration={0}
+      >
 
- 
-    <AppShell
-      padding={0}
-      header={{ height: 55 }}
-      footer={{ height: 55, collapsed: isShowBack }}
-      transitionDuration={0}
-    >
-      <AppShell.Header pt={top}>
-        <GlobalAppBar />
-        <div>
-          {top}
-        </div>
-      </AppShell.Header>
-      <AppShell.Main>
+        <AppShell.Header pt={top}>
+          <GlobalAppBar />
+        </AppShell.Header>
+        <AppShell.Main>
 
-        <Outlet />
+          <Outlet />
 
-      </AppShell.Main>
-      <AppShell.Footer pb={bottom}>
-        <Group h="100%" grow gap={1} >
-          {
-            visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
-          }
-        </Group>
-      </AppShell.Footer>
-    </AppShell>
+        </AppShell.Main>
+        <AppShell.Footer pb={bottom}>
+          <Group grow gap={1} h="100%"  >
+            {
+              visibleItems.map((item) => <Center key={item.key}>{item.icon}</Center>)
+            }
+          </Group>
+    
+        </AppShell.Footer>
+
+      </AppShell>
+
   );
 }
