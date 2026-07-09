@@ -5,6 +5,7 @@ import {
     IconUserCircle,
     IconMail,
     IconId,
+    IconKey,
     IconTrash,
     IconLogout,
     IconChevronRight,
@@ -60,6 +61,13 @@ export const Items = () => {
                 leftSection={<IconTrash size={20} stroke={1.5} />}
                 rightSection={<IconChevronRight size={16} stroke={1.5} />}
                 onClick={() => navigate("/mobile/chat/self/clear/")}
+            />
+            <Divider ml={45} my={0} />
+            <NavLink py={15} px={25}
+                label="密码修改"
+                leftSection={<IconKey size={20} stroke={1.5} />}
+                rightSection={<IconChevronRight size={16} stroke={1.5} />}
+                onClick={() => navigate("/mobile/chat/self/password/")}
             />
             <Divider ml={45} my={0} />
             <NavLink py={15} px={25}

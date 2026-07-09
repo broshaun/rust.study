@@ -9,6 +9,7 @@ import { GlobalModal, getUserDB } from "utils";
 import { loginCache2 } from "cache/loginCache";
 import { userId } from "utils/identity";
 import { useLiveQuery } from "dexie-react-hooks";
+import { Password } from "./password";
 
 
 const loader = async () => {
@@ -60,6 +61,10 @@ export const RsMyInfo = [
             {
                 path: "lgout",
                 element: <Logout />,
+            },
+            {
+                path: "password",
+                element: <Password />,
             },
         ]
     }
