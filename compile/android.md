@@ -18,8 +18,8 @@ keytool -genkeypair \
 
 
 正常部署
-- git tag android-v1.2.10
-- git push origin android-v1.2.10
+- git tag android-v1.3.01
+- git push origin android-v1.3.01
 
 
 - git tag -d android-v1.2.1
