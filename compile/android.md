@@ -20,10 +20,3 @@ keytool -genkeypair \
 正常部署
 - git tag android-v1.3.01
 - git push origin android-v1.3.01
-
-
-- git tag -d android-v1.2.1
-- git tag android-v1.2.1
-- git push origin android-v1.2.1
-### 强制覆盖标签
-- git push origin android-v1.2.0 -f  
