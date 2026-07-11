@@ -12,13 +12,6 @@ async function loginFn() {
     return res.data ?? {};
 }
 
-// export const loginCache = createQueryCache({
-//     scope: () => userId.get(),
-//     cacheKey: 'login-info',
-//     queryFn: () => loginFn(),
-//     staleTime: Infinity,
-
-// });
 
 export const loginCache2 = createStorageCache({
     cacheKey: 'login-info2',

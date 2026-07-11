@@ -6,9 +6,9 @@ import { userId } from 'utils/identity';
 
 async function get_await_group() {
     const { http } = createHttpClient('/rpc/chat/group/');
-    const results = await http.requestBodyJson('group_admin_invite_msg', {})
-    if (results.code !== 200) throw new Error(results.message);
-    return results.data;
+    const { code, data, message } = await http.requestBodyJson('group_admin_invite_msg', {})
+    if (code !== 200) throw new Error(message);
+    return data;
 }
 
 export const group_invite_msg = createQueryCache({
