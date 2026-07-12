@@ -12,63 +12,12 @@ import { tokenStore, getUserDB } from "utils";
 import { loginCache2 } from "cache/loginCache";
 import { group_list2 } from "cache/group_list";
 import { useLiveQuery } from "dexie-react-hooks";
-import { create } from 'zustand'
 
-export const useAuthStore = create((set, get) => {
-  return {
-    loading: false,
-    ready: false,
-    error: null,
-    cache: {},
 
-    initCache: async () => {
-      const state = get();
-      try {
-        set({ loading: true, error: null })
-        if (!state.ready) {
-          const uid = userId.get()
-          const db = getUserDB(uid)
-          const did = deviceId.get();
-          const host = apiMqtt.get();
-          const token = tokenStore.get()?.token;
-          const loginCache = await loginCache2.fetch();
-          const groupCache = await group_list2.fetch();
-          set({ ready: true, cache: { uid, did, host, token, db, loginCache, groupCache } });
-        };
-      } catch (err) {
-        set({ error: err })
-        throw err
-      } finally {
-        set({ loading: false })
-      }
-    },
 
-    get: () => {
-      return cache;
-    },
-
-    refresh: async () => {
-      const state = get();
-      try {
-        set({ loading: true, error: null })
-        const loginCache = await loginCache2.fetch();
-        const groupCache = await group_list2.fetch();
-        set({ cache: { loginCache, groupCache } });
-      } catch {
-        set({ error: err })
-        throw err
-      } finally {
-        set({ loading: false })
-      }
-    },
-
-  }
-})
 
 export const chatGuardLoader = async () => {
-  const store = useAuthStore.getState();
-  await store.initCache()
-  const currentUser = await loginCache2.get();
+  const currentUser = await loginCache2.fetch();
   return { currentUser };
 };
 
@@ -78,11 +27,10 @@ export function ChatGuard() {
 
   const navigate = useNavigate();
   const { currentUser } = useLoaderData();
-  const { cache: { uid, did, host, token, db, loginCache, groupCache }, loading, error } = useAuthStore();
+  const { loading, ready, error } = useAuthStore();
 
-  console.log('loginCache++', loginCache)
-  console.log('groupCache++', groupCache)
-  console.log('cache++', { uid, did, host, token, db })
+  console.log('currentUser++', currentUser)
+  console.log('ready++', ready)
   console.log('error++', error)
   console.log('loading++', loading)
 

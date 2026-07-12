@@ -14,6 +14,8 @@ import { group_list2 } from "cache/group_list";
 import { useLiveQuery } from "dexie-react-hooks";
 
 
+
+
 export const chatGuardLoader = async () => {
   const uid = userId.get();
   const did = deviceId.get();
@@ -30,7 +32,7 @@ export const chatGuardLoader = async () => {
 
 export function ChatGuard() {
   const navigate = useNavigate();
-  
+
   const { uid, did, host, token, db, currentUser } = useLoaderData();
   const dt = useDateTime();
   const remainSeconds = useRemainSeconds();
@@ -43,7 +45,7 @@ export function ChatGuard() {
   useLiveQuery(async () => {
     if (!db) return;
     reset();
-    const groups = (await db.cache.get('my_group_list'))?.data || [];
+    const { data: groups = [] } = await db.cache.get('my_group_list');
     groups.forEach(item => add(`chat/group/${item?.id}`));
   }, [db])
 
