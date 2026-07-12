@@ -9,12 +9,13 @@ import { group_list2 } from "cache/group_list";
 export const useAuthStore1 = create((set, get) => {
     return {
         loading: false,
+        ready: false,
         data: {},
         error: null,
 
         initCache: async () => {
             const state = get();
-            if (state.loading) return;
+            if (state.ready || state.loading) return;
             try {
                 set({ loading: true, error: null })
                 const uid = userId.get();
@@ -23,6 +24,7 @@ export const useAuthStore1 = create((set, get) => {
                 const host = apiMqtt.get();
                 const token = tokenStore.get()?.token;
                 set({ data: { uid, db, did, host, token } })
+                set({ ready: true })
             } catch (err) {
                 set({ error: err })
                 throw err
@@ -33,9 +35,6 @@ export const useAuthStore1 = create((set, get) => {
 
     }
 });
-
-
-
 
 
 export const useAuthStore = create((set, get) => {
