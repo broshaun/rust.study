@@ -37,7 +37,7 @@ pub fn run() {
             mq::mqtt::subscribe,
             mq::mqtt::unsubscribe,
 
-            actor::test::test,
+            // actor::manage::test,
             
         ])
         .plugin(tauri_plugin_device_info::init())

@@ -212,6 +212,12 @@ export function ChatGuard() {
       }
     };
 
+    console.log("clientId:" ,`${uid}:${did}`)
+    console.log("host:" ,`${host}`)
+    console.log("password:", token)
+    console.log("topics:" ,Array.from(topics))
+
+    
     invoke("subscribe", {
       clientId: `${uid}:${did}`,
       host: host,
